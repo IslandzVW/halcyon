@@ -1,0 +1,192 @@
+yum -y install cronie cronie-anacron crontabs
+service crond start
+yum -y install ntp
+chkconfig ntpd on
+ntpdate pool.ntp.org
+service ntpd start
+
+/etc/sysctl.conf 
+
+	vm.swappiness = 1
+
+
+mkdir /opt/cassandra
+mkdir /opt/cassandra/commitlog
+mkdir /opt/cassandra/data
+mkdir /opt/cassandra/log
+mkdir /opt/cassandra/saved_caches
+
+data_file_directories:
+    - /opt/cassandra/data
+
+# commit log
+commitlog_directory: /opt/cassandra/commitlog
+
+# saved caches
+saved_caches_directory: /opt/cassandra/saved_caches
+
+log4j-server.properties:
+log4j.appender.R.File=/opt/cassandra/log/system.log
+
+echo "CASS_HOME=/opt/cassandra/apache-cassandra-1.0.8" > /etc/profile.d/cassandra.sh
+echo "PATH=${CASS_HOME}/bin:${PATH}" >> /etc/profile.d/cassandra.sh
+
+ln -s /opt/cassandra/apache-cassandra-1.0.8/conf/ /etc/cassandra
+
+groupadd -g 555 cassandra
+useradd -u 555 -g cassandra -c "Cassandra" cassandra -d /opt/cassandra -s /bin/bash
+
+mkdir /var/run/cassandra
+chown cassandra:cassandra /var/run/cassandra
+touch /var/run/cassandra.pid
+
+mkdir /var/log/cassandra
+chown cassandra:cassandra /var/log/cassandra
+
+cp /etc/skel/.* /opt/cassandra/
+chown -R cassandra:cassandra /opt/cassandra
+chown cassandra:cassandra /var/run/cassandra.pid
+passwd cassandra
+
+---------
+[root@inv1 ~]# cat /etc/init.d/cassandra
+#!/bin/bash
+# init script for Cassandra.
+# chkconfig: 2345 90 10
+# description: Cassandra
+
+. /etc/rc.d/init.d/functions
+
+CASS_HOME=/opt/cassandra/apache-cassandra-1.0.8
+CASS_BIN=$CASS_HOME/bin/cassandra
+CASS_LOG=/opt/cassandra/log/cassandra.out
+CASS_USER="cassandra"
+CASS_PID=/var/run/cassandra/cassandra.pid
+
+if [ ! -f $CASS_BIN ]; then
+  echo "File not found: $CASS_BIN"
+  exit 1
+fi
+
+RETVAL=0
+
+start() {
+  if [ -f $CASS_PID ] && checkpid `cat $CASS_PID`; then
+    echo "Cassandra is already running."
+    exit 0
+  fi
+  echo -n $"Starting $prog: "
+  daemon --user $CASS_USER $CASS_BIN -p $CASS_PID >> $CASS_LOG 2>&1
+  usleep 500000
+  RETVAL=$?
+  echo
+  return $RETVAL
+}
+
+stop() {
+  # check if the process is already stopped by seeing if the pid file exists.
+  if [ ! -f $CASS_PID ]; then
+    echo "Cassandra is already stopped."
+    exit 0
+  fi
+  echo -n $"Stopping $prog: "
+  if kill `cat $CASS_PID`; then
+    RETVAL=0
+    echo_success
+  else
+    RETVAL=1
+    echo_failure
+  fi
+  echo
+  [ $RETVAL = 0 ]
+}
+
+status_fn() {
+  if [ -f $CASS_PID ] && checkpid `cat $CASS_PID`; then
+    echo "Cassandra is running."
+    exit 0
+  else
+    echo "Cassandra is stopped."
+    exit 1
+  fi
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  status)
+    status_fn
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  *)
+    echo $"Usage: $prog {start|stop|restart|status}"
+    RETVAL=3
+esac
+
+exit $RETVAL
+-----------
+
+chmod +x /etc/init.d/cassandra
+chkconfig --add cassandra
+chkconfig cassandra on
+
+
+/etc/logrotate.d/cassandra:
+
+/opt/cassandra/log/cassandra.out
+{
+    copytruncate
+    daily
+    rotate 8
+    size 100M
+    compress
+    missingok
+}
+
+
+[root@inv1 ~]# cat ~/nodetool-repair.sh
+cd /opt/cassandra/apache-cassandra-1.0.8
+bin/nodetool -h 10.0.1.x repair
+date >> /tmp/nodetool-repair.log
+
+crontab -e sample:
+0 0 * * 2 ~/nodetool-repair.sh
+
+chmod +x /root/nodetool-repair.sh
+
+
+node 0: 0
+node 1: 42535295865117307932921825928971026432
+node 2: 85070591730234615865843651857942052864
+node 3: 127605887595351923798765477786913079296
+
+
+Ulimit Settings:
+
+/etc/security/limits.conf
+cassandra       hard    nofile          16384
+cassandra       soft    nofile          16384
+cassandra       hard    memlock         unlimited
+cassandra       soft    memlock         unlimited
+
+
+
+Upgrading:
+
+cd /opt/cassandra
+wget http://archive.apache.org/dist/cassandra/1.0.8/apache-cassandra-1.0.8-bin.tar.gz
+tar zxvf apache-cassandra-1.0.8-bin.tar.gz
+wget -P apache-cassandra-1.0.6/lib https://github.com/downloads/twall/jna/jna.jar
+cp apache-cassandra-1.0.6/lib/mx4j-tools.jar apache-cassandra-1.0.8/lib
+cp apache-cassandra-1.0.6/lib/jna.jar apache-cassandra-1.0.8/lib
+chown -R cassandra:cassandra apache-cassandra-1.0.8/
+cp apache-cassandra-1.0.6/conf/*.* apache-cassandra-1.0.8/conf
+bin/nodetool -h 10.0.1.245 snapshot
+

@@ -1,0 +1,7 @@
+Function: botPauseMovement(key botID);
+
+Pauses any movement that the bot currently has until botResumeMovement is called.
+
+botID - ID of the bot that will be paused.
+
+Example: bot Navigation Path.lsl

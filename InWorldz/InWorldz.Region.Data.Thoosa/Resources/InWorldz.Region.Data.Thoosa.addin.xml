@@ -1,0 +1,13 @@
+<Addin id="InWorldz.Region.Data.Thoosa" version="1.0">
+  <Runtime>
+    <Import assembly="InWorldz.Region.Data.Thoosa.dll"/>
+  </Runtime>
+
+  <Dependencies>
+    <Addin id="OpenSim" version="0.5" />
+  </Dependencies>
+
+  <Extension path = "/OpenSim/RegionModules">
+    <RegionModule id="InWorldzThoosa" type="InWorldz.Region.Data.Thoosa.ThoosaModule" />
+  </Extension>
+</Addin>

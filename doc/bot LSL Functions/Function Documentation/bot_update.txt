@@ -1,0 +1,27 @@
+event bot_update(key botID, integer flag, list parameters);
+
+This event is fired under a few circumstances which are the following:
+	Move is completed - this means that the bot has fully completed it's move, and is fired when the bot has finished moving to all positions in the navigation list or when the bot has finished moving to an avatar.
+		Flag:
+			BOT_MOVE_COMPLETE
+		Parameters:
+			vector currentBotPosition - position of the bot in the sim
+	Moved to new position - this is fired when the bot has finished moving to the next node in the position list. This is only fired with botSetNavigationPositions.
+		Flag:
+			BOT_MOVE_UPDATE
+		Parameters:
+			integer nextNode - the next node in the position list that the bot will attempt to move towards.
+			vector currentBotPosition - position of the bot in the sim
+	Move failed - this means that the bot failed to move to the given position. This will be fired if the avatar has had to teleport to the next location because it could not move toward the goal position for longer than the amount of time specified.
+		Flag:
+			BOT_MOVE_FAILED
+		Parameters:
+			integer nextNode - the next node in the position list that the bot will attempt to move towards.
+			vector currentBotPosition - position of the bot in the sim
+	Avatar lost - this means that the bot has failed to follow the avatar and has given up. This will be fired once the bot is further away from the user it is following than the specified distance passed into botFollowAvatar.
+		Flag:
+			BOT_MOVE_AVATAR_LOST
+		Parameters:
+			vector avatarPosition - position of the user that the bot failed to follow
+			float distanceAway - distance between the bot and the user
+			vector currentBotPosition - position of the bot in the sim

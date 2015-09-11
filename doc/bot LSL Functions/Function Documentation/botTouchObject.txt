@@ -1,0 +1,8 @@
+Function: botTouchObject(key botID, key objectID);
+
+Causes the bot with the given ID "botID" to touch an object with the ID "objectID".
+
+botID - ID of the bot that will touch an object
+objectID - ID of the object that the bot will touch.
+
+Example: bot Touch Object.lsl

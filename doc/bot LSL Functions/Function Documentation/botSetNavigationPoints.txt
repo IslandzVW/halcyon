@@ -1,0 +1,18 @@
+Function: botSetNavigationPoints(key botID, list positions, list movementTypes, list options);
+
+Causes the bot with the ID "botID" to begin navigating along the given path.
+
+botID - ID of the bot that will begin navigating the path.
+positions - list of positions that the bot will be navigating along. This can contain both vector positions to move around and float values that specify wait times (in seconds). If a vector is specified, the corresponding position in the movementTypes list must NOT be BOT_TRAVELMODE_WAIT. If a float is specified, the corresponding position in the movementTypes list must be BOT_TRAVELMODE_WAIT.
+movementTypes - list of modes of travel that the bot will utilize when moving between the given positions. The valid values are BOT_TRAVELMODE_WALK,
+BOT_TRAVELMODE_RUN, BOT_TRAVELMODE_FLY, BOT_TRAVELMODE_TELEPORT, and BOT_TRAVELMODE_WAIT.
+options - options that will specify how the bot will move between positions. 
+	This can contain the following keys:
+		BOT_MOVEMENT_TYPE - sets whether the bot will stop moving at the end of the position list or whether the bot will go back to the beginning of the list and re-traverse the position list.
+			Valid values are:
+				BOT_MOVEMENT_FLAG_NONE - the bot will stop moving once all positions in the list have been moved to.
+				BOT_MOVEMENT_FLAG_FOLLOW_INDEFINITELY - follow the list indefinitely until the bot's movement is stopped by botStopMovement.
+		BOT_MOVEMENT_TELEPORT_AFTER - the amount of time (in seconds) that the bot will be allowed to be stuck while attempting to move to the next position in the list before teleporting to the position it is attempting to move to.
+			Takes a float that is the number of seconds to wait before teleporting to the next position node.
+
+Example: bot Navigation Path.lsl

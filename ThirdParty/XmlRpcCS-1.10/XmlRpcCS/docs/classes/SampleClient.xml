@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SampleClient</name>
+    </assembly>
+    <members>
+        <member name="T:Sample.SampleClient">
+            <summary>A very basic XML-RPC client example.</summary>
+            <remarks>This is a basic client that calls several methods of the server including one
+            intentionally bad one. One of the methods called works on the server.exe but is
+            not exposed in the expose.exe, this gives you an idea of the error generated.</remarks>
+        </member>
+        <member name="M:Sample.SampleClient.WriteEntry(System.String,Nwc.XmlRpc.LogLevel)">
+            <summary><c>LoggerDelegate</c> compliant method that does logging to Console.
+            This method filters out the <c>LogLevel.Information</c> chatter.</summary>
+        </member>
+        <member name="M:Sample.SampleClient.Main(System.String[])">
+            <summary>Main application method.</summary>
+            <remarks> Simply sets up logging and then an <c>XmlRpcRequest</c> instance. Then
+            Calls <c>sample.Ping</c>, <c>sample.Echo</c> and <c>sample.Broken</c> in sequence.
+            The <c>XmlRpcResponse</c> from each call is then displayed. Faults are checked for.
+            </remarks>
+        </member>
+    </members>
+</doc>

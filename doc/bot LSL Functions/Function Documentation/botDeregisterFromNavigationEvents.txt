@@ -1,0 +1,10 @@
+Function: botDeregisterFromNavigationEvents(key botID);
+
+Deregisters the script from bot_update events that were previously set by botRegisterToCollisionEvents.
+
+botID - ID of the bot that will stop forwarding on bot_update events.
+
+Example: bot Navigation Event Registration.lsl
+
+See Also:
+	botRegisterForNavigationEvents

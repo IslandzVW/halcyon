@@ -1,0 +1,19 @@
+Function: botSensorRepeat(key botID, string name, key id, integer type, float range, float arc, float rate);
+
+Performs a single scan from the position of the bot for name and id with type within range meters and arc radians of forward vector and repeats every rate seconds. It does not perform the first scan until rate seconds have passed.
+
+botID - ID of the bot whose position will be used for the sensor.
+name - object or avatar name.
+id - avatar or object UUID that is in the same region.
+type - mask (AGENT, AGENT_BY_LEGACY_NAME, AGENT_BY_USERNAME, ACTIVE, PASSIVE, and/or SCRIPTED).
+range - range from 0.0 to 96.0.
+arc - the max angle between the local x-axis of the prim and detectable objects, range 0.0 to PI.
+rate - how often a sensor/no_sensor will be queued.
+
+Example: bot Sensor Commands.lsl
+
+See Also:
+	botSensor,
+	botSensorRemove,
+	sensor event,
+	no_sensor event

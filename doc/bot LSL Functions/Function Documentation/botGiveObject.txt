@@ -1,0 +1,9 @@
+Function: botGiveObject(key botID, key destination, string inventory);
+
+Causes the bot with the given ID "botID" to send the inventory item with the name "inventory" to the user whose key is "destination". Bots can only give inventory items to other users in the sim.
+
+botID - ID of the bot who will give the object to the user
+destination - ID of the user in the sim who will receive the inventory item.
+inventory - name of the inventory item that will be sent to the user
+
+Example: bot Give Object.lsl

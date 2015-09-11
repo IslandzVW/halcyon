@@ -1,0 +1,7 @@
+Function: botRemoveBot(key botID);
+
+Removes a bot with the given ID "botID" from the sim.
+
+botID - ID of the bot that will be removed from the sim.
+
+Example: bot Creation.lsl

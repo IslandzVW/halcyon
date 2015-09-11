@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RequestXmlTest</name>
+    </assembly>
+    <members>
+        <member name="T:Sample.RequestXmlTest">
+            <remarks>
+             This example simple deserializes and request from a file and the reserializes
+             it to display.  Tests the request deserializer and serializer. </remarks>
+        </member>
+        <member name="M:Sample.RequestXmlTest.WriteEntry(System.String,Nwc.XmlRpc.LogLevel)">
+            <summary><c>LoggerDelegate</c> compliant method that does logging to Console.
+            This method filters out the <c>LogLevel.Information</c> chatter.</summary>
+        </member>
+        <member name="M:Sample.RequestXmlTest.Main(System.String[])">
+            <summary>Classes Main method.</summary>
+            <remarks>This method opens an XML file as a <c>StreamReader</c> and then asks
+            <c>XmlRpcRequestDeserializer.Parse</c> to deserialize it into an <c>XmlRpcRequest</c>. The 
+            resultant request is now displayed.
+            </remarks>
+        </member>
+    </members>
+</doc>

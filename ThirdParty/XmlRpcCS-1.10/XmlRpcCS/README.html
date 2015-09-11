@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>XmlRpcCS</title>
+</head>
+<body bgcolor="#FFFFFF" text="#000000">
+<h1>XmlRpcCS</h1>
+<h2>Download</h2>
+Homepage: <a href="http://opaque.ods.org/XmlRpcCS/">XmlRpcCS</a><br>
+Package: <a href="http://opaque.ods.org/XmlRpcCS/XmlRpcCS-1.10.zip">XmlRpcCS-1.10.zip</a>
+<h2>Introduction</h2>
+This package provides a simple XML-RPC client and server for C#
+applications. Possibly any .NET applications though I've not tested
+that. It's pure C#, using the stock .NET assemblies and nothing else.<p>The
+goals of XmlRpcCS were to keep it small and simple. The motivation was to write
+something that was easy to use while being flexible. </p>
+<h2>Notable Features</h2>
+<ul>
+  <li>Fully XML-RPC specification compliant, including key extensions. </li>
+  <li>Simple client (XmlRpcRequest) </li>
+  <li>Complete single class embeddable server (XmlRpcServer) </li>
+  <li>XML-RPC System object implemented (XmlRpcSystemObject) </li>
+  <li>Method level exposure granularity (XmlRpcExposedAttribute)</li>
+  <li>Mono support (See <a href="docs/MONO.html">Mono</a>)  </li>
+  <li>.NET Compact Framework support (See <a href="docs/CF.html">CF</a>). </li>
+  <li>Option of dynamic local proxies.</li>
+</ul>
+<h2>Prerequisites to Build
+</h2>
+<ul>
+  <li>Have .NET SDK loaded (version &gt;= 1.0) </li>
+  <li>Have csc and friends in your PATH. </li>
+  <li>Put nant/bin into your PATH (nant is an OpenSource C# build tool,
+minimal binaries included in ./nant)</li>
+</ul>
+<h2>To Build</h2>
+In a command shell:
+<pre>   nant -find all
+</pre>
+<h2>Basic Test</h2>
+Open two command shells, in one:
+<pre>     SampleServer
+</pre>
+In the other:
+<pre>     SampleClient
+</pre>
+<h2>Documentation</h2>
+<ul>
+  <li>
+The API documentation: <a href="docs/classes/XmlRpcCS.html">Documentation</a></li>
+  <li>
+The descriptions of the type mapping: <a href="docs/TYPES.html">Types</a></li>
+  <li>
+A UML doodle about the serialize/deserialize
+class inheritance: <a href="docs/XmlRpcSerialization.png">Serialization</a></li>
+</ul>
+<h2>Sample Code</h2>
+Under src/samples there are examples. Read the <a href="docs/EXAMPLES.html">Examples</a> for more info.
+<h2>Unit Tests</h2>
+<p>Under tests/ there are some basic unit tests. To run them have NUnit
+installed, edit the path to NUnit in xmlrpccs.build and then:</p>
+<pre>	nant -find unit-tests</pre>
+<p>Why didn't I use nant's nunit task you ask?&nbsp; It's rather broken.</p>
+<h2>License</h2>
+XmlRpcCS is under the BSD license. See: <a href="LICENSE.html">License</a> 
+<h2>References</h2>
+<ul>
+  <li><a href="http://xmlrpc.org">xmlrpc.org</a> To learn more about
+XML-RPC. </li>
+  <li><a href="http://nant.sourceforge.net">nant.sourceforge.net</a> To
+learn more about nant. </li>
+  <li><a href="http://nunit.sourceforge.net">nunit.sourceforge.net</a>
+To learn more about NUnit unit testing.</li>
+  <li><a href="http://go-mono.net">go-mono.net</a> To learn more about
+the mono project
+  </li>
+</ul>
+<h2>To Do</h2>
+<ul>
+  <li>Support system object &quot;capabilities&quot; method</li>
+  <li>Improve system object's &quot;methodHelp&quot; support - rip from XML docs somehow.</li>
+  <li>Method overloading based on arguements</li>
+  <li>More unit tests</li>
+  <li>Tutorial doc</li>
+</ul>
+<h2>Changes</h2>
+<table border="1">
+  <tbody>
+    <tr>
+      <th>Version</th>
+      <th>Date</th>
+      <th>Changes</th>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">1.10
+      </td>
+      <td style="vertical-align: top;">200300617</td>
+      <td style="vertical-align: top;">Support for dynamic local proxies.<br>
+      Bug fix to XmlRpcException.ToString()<br>
+      Bug fix to XmlRpcServer Stop/Start
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">1.9
+      </td>
+      <td style="vertical-align: top;">20030425</td>
+      <td style="vertical-align: top;">.NET Compact Framework compatible<br>
+      XSL method doc extraction for system.methodHelp<br>
+        Stop() method on XmlRpcServer (Thanks: &quot;Chris&quot; &lt;chris@bartling.net&gt;)
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">1.8
+      </td>
+      <td style="vertical-align: top;">20030415
+      </td>
+      <td style="vertical-align: top;">Threaded XML-RPC responses behind the
+        XmlRpcServer<br>
+Collection types moved to interfaces at all levels.<br>
+methodHelp system method basic implementation.<br>
+Bug fix, null returns throw an exception.<br>
+AssemblyInfo standard class added.<br>
+        mime type &quot;test&quot; -&gt; &quot;text&quot; typo fix (Thanks:
+        &quot;Tony&quot; &lt;platoduck@hotmail.com&gt;)<br>
+        Request buffering fix. (Thanks:&nbsp; &quot;Tony&quot; &lt;platoduck@hotmail.com&gt;)
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">1.7<br>
+      </td>
+      <td style="vertical-align: top;">20030404<br>
+      </td>
+      <td style="vertical-align: top;">build cleanups<br>
+        initial mono support<br>
+bugfix in XmlRpcServer's string building
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">1.6</td>
+      <td valign="top">20030325</td>
+      <td> Fixed a deserializer bug with structs in structs<br>
+Better look to documentation I think<br>
+Google example<br>
+Some performance improvements<br>
+A few unit tests.</td>
+    </tr>
+    <tr>
+      <td valign="top">1.5</td>
+      <td valign="top">20030301</td>
+      <td> Improve document formatting and content.<br>
+Some code refactoring.
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">1.4</td>
+      <td valign="top">20030217</td>
+      <td> XLST for /doc XML -&gt; HTML<br>
+Documentation
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">1.3</td>
+      <td valign="top">20030210</td>
+      <td> Boxcaring supported (major speed up under correct conditions!)<br>
+Request deserializer bug fix<br>
+Various refactorings, particularly Invoke method<br>
+Samples improved<br>
+Notes improved </td>
+    </tr>
+    <tr>
+      <td valign="top">1.2</td>
+      <td valign="top">20030130</td>
+      <td> Introspection via "system" object<br>
+Added optional XmlRpcExposed Attribute<br>
+Moved to using "is" operator...damn C# is syntax fat<br>
+Fix known deserializer bug pertaining to containers (array/struct) in
+containers </td>
+    </tr>
+    <tr>
+      <td valign="top">1.1</td>
+      <td valign="top">20030128</td>
+      <td> Bug fix in request deserializer<br>
+Better samples<br>
+response.FaultCode/.FaultString added<br>
+indentation on the XML in ToString of request/response </td>
+    </tr>
+    <tr>
+      <td valign="top">1.0</td>
+      <td valign="top">20030125</td>
+      <td> Support for base64<br>
+Use .NET's XmlWriter<br>
+Centralize XML-RPC tokens into XmlRpcXmlTokens
+      </td>
+    </tr>
+  </tbody>
+</table>
+<address> <a href="mailto:nwc@bigfoot.com">nwc@bigfoot.com</a> </address>
+</body>
+</html>

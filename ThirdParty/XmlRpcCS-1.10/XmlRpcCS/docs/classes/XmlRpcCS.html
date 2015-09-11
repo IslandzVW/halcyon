@@ -1,0 +1,3068 @@
+<html><header><title>Assembly: XmlRpcCS</title></header><body><A name="index"></A><TABLE cellspacing="0" cellpadding="10" width="100%" BGCOLOR="#9999FF" border="1">
+      <TR>
+        <TD WIDTH="100%" ALIGN="LEFT">
+          <H1>Assmebly: XmlRpcCS</H1>
+        </TD>
+      </TR>
+    </TABLE>
+    <table border="0" width="100%">
+      <tr>
+        <td bgcolor="#000000" width="100%">
+          <h2>
+            <font color="#FFFFFF">Class Index</font>
+          </h2>
+        </td>
+      </tr>
+    </table>
+    <table cellspacing="5">
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.Context">Nwc.XmlRpc.Context</a></td>
+        <td>Parser context, we maintain contexts in a stack to avoiding recursion. </td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.Logger">Nwc.XmlRpc.Logger</a></td>
+        <td>
+            Logging singleton with swappable output delegate.
+            </td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.Logger.LoggerDelegate">Nwc.XmlRpc.Logger.LoggerDelegate</a></td>
+        <td>Delegate definition for logging.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.LogLevel">Nwc.XmlRpc.LogLevel</a></td>
+        <td>Define levels of logging.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.SimpleHttpRequest">Nwc.XmlRpc.SimpleHttpRequest</a></td>
+        <td>Very basic HTTP request handler.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcBoxcarRequest">Nwc.XmlRpc.XmlRpcBoxcarRequest</a></td>
+        <td>Class that collects individual  <CODE>XmlRpcRequest</CODE>  objects and submits them as a boxcarred request.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcClientProxy">Nwc.XmlRpc.XmlRpcClientProxy</a></td>
+        <td>This class provides support for creating local proxies of XML-RPC remote objects</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcDeserializer">Nwc.XmlRpc.XmlRpcDeserializer</a></td>
+        <td>Basic XML-RPC data deserializer.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcErrorCodes">Nwc.XmlRpc.XmlRpcErrorCodes</a></td>
+        <td>Standard XML-RPC error codes.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcException">Nwc.XmlRpc.XmlRpcException</a></td>
+        <td>An XML-RPC Exception.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcExposedAttribute">Nwc.XmlRpc.XmlRpcExposedAttribute</a></td>
+        <td>
+            Simple tagging attribute to indicate participation is XML-RPC exposure.
+            </td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcRequest">Nwc.XmlRpc.XmlRpcRequest</a></td>
+        <td>Class supporting the request side of an XML-RPC transaction.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcRequestDeserializer">Nwc.XmlRpc.XmlRpcRequestDeserializer</a></td>
+        <td>Class to deserialize XML data representing a request.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcRequestSerializer">Nwc.XmlRpc.XmlRpcRequestSerializer</a></td>
+        <td>Class responsible for serializing an XML-RPC request.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcResponder">Nwc.XmlRpc.XmlRpcResponder</a></td>
+        <td>The class is a container of the context of an XML-RPC dialog on the server side.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcResponse">Nwc.XmlRpc.XmlRpcResponse</a></td>
+        <td>Class designed to represent an XML-RPC response.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcResponseDeserializer">Nwc.XmlRpc.XmlRpcResponseDeserializer</a></td>
+        <td>Class to deserialize XML data representing a response.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcResponseSerializer">Nwc.XmlRpc.XmlRpcResponseSerializer</a></td>
+        <td>Class responsible for serializing an XML-RPC response.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcSerializer">Nwc.XmlRpc.XmlRpcSerializer</a></td>
+        <td>Base class of classes serializing data to XML-RPC's XML format.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcServer">Nwc.XmlRpc.XmlRpcServer</a></td>
+        <td>A restricted HTTP server for use with XML-RPC.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcSystemObject">Nwc.XmlRpc.XmlRpcSystemObject</a></td>
+        <td> XML-RPC System object implementation of extended specifications.</td>
+      </tr>
+      <tr>
+        <td valign="top"><a href="#T:Nwc.XmlRpc.XmlRpcXmlTokens">Nwc.XmlRpc.XmlRpcXmlTokens</a></td>
+        <td>Class collecting  <CODE>String</CODE>  tokens that are part of XML-RPC files.</td>
+      </tr>
+    </table>
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.Context"></a><h2>Class Nwc.XmlRpc.Context
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Parser context, we maintain contexts in a stack to avoiding recursion.  
+	
+
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.Logger"></a><h2>Class Nwc.XmlRpc.Logger
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	
+            Logging singleton with swappable output delegate.
+             
+            This singleton provides a centralized log. The actual WriteEntry calls are passed
+            off to a delegate however. Having a delegate do the actual logginh allows you to
+            implement different logging mechanism and have them take effect throughout the system.
+            
+	
+
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Fields</h3>
+        </td>
+      </tr>
+    </table>
+	    <table>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.Logger.Delegate"></a><i><b>Delegate</b></i></td>
+		    <td ALIGN="LEFT">
+	The LoggerDelegate that will recieve WriteEntry requests. 
+	
+</td>
+		    </tr>
+	    
+	    </table>
+	
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.Logger.WriteEntry(System.String,Nwc.XmlRpc.LogLevel)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>WriteEntry(System.String,Nwc.XmlRpc.LogLevel)</b></td>
+      </tr>
+    </table>
+	
+            Method logging events are sent to.
+             
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>message</i></td>
+        <td>The message  <CODE>String</CODE>  to log.</td>
+      </tr>
+      <tr>
+        <td><i>level</i></td>
+        <td>The  <CODE>LogLevel</CODE>  of your message.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.Logger.LoggerDelegate"></a><h2>Class Nwc.XmlRpc.Logger.LoggerDelegate
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Delegate definition for logging. 
+	
+
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.LogLevel"></a><h2>Class Nwc.XmlRpc.LogLevel
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Define levels of logging.  This duplicates
+            similar enumerations in System.Diagnostics.EventLogEntryType. The 
+            duplication was merited because .NET Compact Framework lacked the EventLogEntryType enum.
+	
+
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Fields</h3>
+        </td>
+      </tr>
+    </table>
+	    <table>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.LogLevel.Error"></a><i><b>Error</b></i></td>
+		    <td ALIGN="LEFT">
+	Error level, implies a significant problem. 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.LogLevel.Information"></a><i><b>Information</b></i></td>
+		    <td ALIGN="LEFT">
+	Information level, log entry for informational reasons only. 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.LogLevel.Warning"></a><i><b>Warning</b></i></td>
+		    <td ALIGN="LEFT">
+	Warning level, indicates a possible problem. 
+	
+</td>
+		    </tr>
+	    
+	    </table>
+	
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.SimpleHttpRequest"></a><h2>Class Nwc.XmlRpc.SimpleHttpRequest
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Very basic HTTP request handler. This class is designed to accept a TcpClient and treat it as an HTTP request.
+             It will do some basic header parsing and manage the input and output streams associated
+             with the request.
+	
+
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.SimpleHttpRequest.Client"></a><i><b>Client</b></i></td>
+		    <td ALIGN="LEFT">
+	The  <CODE>TcpClient</CODE>  with the request. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.SimpleHttpRequest.FilePath"></a><i><b>FilePath</b></i></td>
+		    <td ALIGN="LEFT">
+	The "path" which is part of any HTTP request. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.SimpleHttpRequest.FilePathDir"></a><i><b>FilePathDir</b></i></td>
+		    <td ALIGN="LEFT">
+	The directory portion of the "path" which is part of any HTTP request. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.SimpleHttpRequest.FilePathFile"></a><i><b>FilePathFile</b></i></td>
+		    <td ALIGN="LEFT">
+	The file portion of the "path" which is part of any HTTP request. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.SimpleHttpRequest.HttpMethod"></a><i><b>HttpMethod</b></i></td>
+		    <td ALIGN="LEFT">
+	The type of HTTP request (i.e. PUT, GET, etc.). 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.SimpleHttpRequest.Input"></a><i><b>Input</b></i></td>
+		    <td ALIGN="LEFT">
+	The input  <CODE>StreamReader</CODE>  associated with the request. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.SimpleHttpRequest.Output"></a><i><b>Output</b></i></td>
+		    <td ALIGN="LEFT">
+	The output  <CODE>StreamWriter</CODE>  associated with the request. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.SimpleHttpRequest.Protocol"></a><i><b>Protocol</b></i></td>
+		    <td ALIGN="LEFT">
+	The level of the HTTP protocol. 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Constructors</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.SimpleHttpRequest.#ctor(System.Net.Sockets.TcpClient)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>SimpleHttpRequest(System.Net.Sockets.TcpClient)</b></td>
+      </tr>
+    </table>
+	A constructor which accepts the TcpClient. It creates the associated input and output streams, determines the request type,
+            and parses the remaining HTTP header.
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>client</i></td>
+        <td>The  <CODE>TcpClient</CODE>  associated with the HTTP connection.</td>
+      </tr>
+    </table>
+		
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.SimpleHttpRequest.Close"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Close ( )</b></td>
+      </tr>
+    </table>
+	
+            Close the  <CODE>SimpleHttpRequest</CODE> . This flushes and closes all associated io streams.
+             
+	
+<br>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.SimpleHttpRequest.ToString"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>ToString ( )</b></td>
+      </tr>
+    </table>
+	
+             Format the object contents into a useful string representation.
+              
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>String</CODE>  representation of the  <CODE>SimpleHttpRequest</CODE>  as the HttpMethod FilePath Protocol.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcBoxcarRequest"></a><h2>Class Nwc.XmlRpc.XmlRpcBoxcarRequest
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Class that collects individual  <CODE>XmlRpcRequest</CODE>  objects and submits them as a boxcarred request. A boxcared request is when a number of request are collected before being sent via XML-RPC, and then are sent via
+             a single HTTP connection. This results in a speed up from reduced connection time.  The results are then retuned collectively
+             as well.
+            
+	
+		<br><b>See Also:</b> <a href="#T:Nwc.XmlRpc.XmlRpcRequest">Nwc.XmlRpc.XmlRpcRequest</a> 
+	
+
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Fields</h3>
+        </td>
+      </tr>
+    </table>
+	    <table>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcBoxcarRequest.Requests"></a><i><b>Requests</b></i></td>
+		    <td ALIGN="LEFT">
+	ArrayList to collect the requests to boxcar. 
+	
+</td>
+		    </tr>
+	    
+	    </table>
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcBoxcarRequest.MethodName"></a><i><b>MethodName</b></i></td>
+		    <td ALIGN="LEFT">
+	Returns the  <CODE>String</CODE>  "system.multiCall" which is the server method that handles boxcars. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcBoxcarRequest.Params"></a><i><b>Params</b></i></td>
+		    <td ALIGN="LEFT">
+	The  <CODE>ArrayList</CODE>  of boxcarred  <I>Requests</I>  as properly formed parameters. 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Constructors</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcBoxcarRequest.#ctor"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>XmlRpcBoxcarRequest ( )</b></td>
+      </tr>
+    </table>
+	Basic constructor. 
+	
+<br>
+		
+	
+
+	
+	
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcClientProxy"></a><h2>Class Nwc.XmlRpc.XmlRpcClientProxy
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	This class provides support for creating local proxies of XML-RPC remote objects 
+            To create a local proxy you need to create a local C# interface and then, via createProxy
+            associate that interface with a remote object at a given URL.
+            
+	
+
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcClientProxy.createProxy(System.String,System.String,System.Type)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>createProxy(System.String,System.String,System.Type)</b></td>
+      </tr>
+    </table>
+	Factory method to create proxies. 
+            To create a local proxy you need to create a local C# interface with methods that mirror those of the server object.
+            Next, pass that interface into  <CODE>createProxy</CODE>  along with the object name and URL of the remote object and 
+            cast the resulting object to the specifice interface.
+            
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>remoteObjectName</i></td>
+        <td> <CODE>String</CODE>  The name of the remote object.</td>
+      </tr>
+      <tr>
+        <td><i>url</i></td>
+        <td> <CODE>String</CODE>  The URL of the remote object.</td>
+      </tr>
+      <tr>
+        <td><i>anInterface</i></td>
+        <td> <CODE>Type</CODE>  The typeof() of a C# interface.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>Object</CODE>  A proxy for your specified interface. Cast to appropriate type.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcClientProxy.Invoke(System.Runtime.Remoting.Messaging.IMessage)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Invoke(System.Runtime.Remoting.Messaging.IMessage)</b></td>
+      </tr>
+    </table>
+	The local method dispatcher - do not invoke. 
+	
+<br>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcDeserializer"></a><h2>Class Nwc.XmlRpc.XmlRpcDeserializer
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Basic XML-RPC data deserializer. Uses  <CODE>XmlTextReader</CODE>  to parse the XML data. This level of the class 
+            only handles the tokens common to both Requests and Responses. This class is not useful in and of itself
+            but is designed to be subclassed.
+	
+
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Fields</h3>
+        </td>
+      </tr>
+    </table>
+	    <table>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcDeserializer._name"></a><i><b>_name</b></i></td>
+		    <td ALIGN="LEFT">
+	Protected reference to last name field. 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcDeserializer._text"></a><i><b>_text</b></i></td>
+		    <td ALIGN="LEFT">
+	Protected reference to last text. 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcDeserializer._value"></a><i><b>_value</b></i></td>
+		    <td ALIGN="LEFT">
+	Protected reference to last deserialized value. 
+	
+</td>
+		    </tr>
+	    
+	    </table>
+	
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Constructors</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcDeserializer.#ctor"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>XmlRpcDeserializer ( )</b></td>
+      </tr>
+    </table>
+	Basic constructor. 
+	
+<br>
+		
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcDeserializer.Deserialize(System.IO.TextReader)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Deserialize(System.IO.TextReader)</b></td>
+      </tr>
+    </table>
+	Static method that parses XML data into a response using the Singleton. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>xmlData</i></td>
+        <td> <CODE>StreamReader</CODE>  containing an XML-RPC response.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>Object</CODE>  object resulting from the deserialization.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcDeserializer.Deserialize(System.String)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Deserialize(System.String)</b></td>
+      </tr>
+    </table>
+	Static method that parses XML in a  <CODE>String</CODE>  into a 
+            request using the Singleton. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>xmlData</i></td>
+        <td> <CODE>String</CODE>  containing an XML-RPC request.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>XmlRpcRequest</CODE>  object resulting from the parse.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcDeserializer.DeserializeNode(System.Xml.XmlTextReader)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>DeserializeNode(System.Xml.XmlTextReader)</b></td>
+      </tr>
+    </table>
+	Protected method to parse a node in an XML-RPC XML stream. Method deals with elements common to all XML-RPC data, subclasses of 
+            this object deal with request/response spefic elements.
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>reader</i></td>
+        <td> <CODE>XmlTextReader</CODE>  of the in progress parsing data stream.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcDeserializer.PopContext"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>PopContext ( )</b></td>
+      </tr>
+    </table>
+	Pop a Context of the stack, an Array or Struct has closed. 
+	
+<br>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcDeserializer.PushContext"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>PushContext ( )</b></td>
+      </tr>
+    </table>
+	Push a Context on the stack, an Array or Struct has opened. 
+	
+<br>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcDeserializer.Reset"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Reset ( )</b></td>
+      </tr>
+    </table>
+	Reset the internal state of the deserializer. 
+	
+<br>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcErrorCodes"></a><h2>Class Nwc.XmlRpc.XmlRpcErrorCodes
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Standard XML-RPC error codes. 
+	
+
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Fields</h3>
+        </td>
+      </tr>
+    </table>
+	    <table>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.APPLICATION_ERROR"></a><i><b>APPLICATION_ERROR</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.APPLICATION_ERROR_MSG"></a><i><b>APPLICATION_ERROR_MSG</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.PARSE_ERROR_ENCODING"></a><i><b>PARSE_ERROR_ENCODING</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.PARSE_ERROR_ENCODING_MSG"></a><i><b>PARSE_ERROR_ENCODING_MSG</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.PARSE_ERROR_MALFORMED"></a><i><b>PARSE_ERROR_MALFORMED</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.PARSE_ERROR_MALFORMED_MSG"></a><i><b>PARSE_ERROR_MALFORMED_MSG</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.SERVER_ERROR_METHOD"></a><i><b>SERVER_ERROR_METHOD</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.SERVER_ERROR_METHOD_MSG"></a><i><b>SERVER_ERROR_METHOD_MSG</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.SERVER_ERROR_PARAMS"></a><i><b>SERVER_ERROR_PARAMS</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.SERVER_ERROR_PARAMS_MSG"></a><i><b>SERVER_ERROR_PARAMS_MSG</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.TRANSPORT_ERROR"></a><i><b>TRANSPORT_ERROR</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcErrorCodes.TRANSPORT_ERROR_MSG"></a><i><b>TRANSPORT_ERROR_MSG</b></i></td>
+		    <td ALIGN="LEFT">
+	 
+	
+</td>
+		    </tr>
+	    
+	    </table>
+	
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcException"></a><h2>Class Nwc.XmlRpc.XmlRpcException
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	An XML-RPC Exception. Maps a C# exception to an XML-RPC fault. Normal exceptions
+            include a message so this adds the code needed by XML-RPC.
+	
+
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcException.FaultCode"></a><i><b>FaultCode</b></i></td>
+		    <td ALIGN="LEFT">
+	The value of the faults code, i.e. the faultCode. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcException.FaultString"></a><i><b>FaultString</b></i></td>
+		    <td ALIGN="LEFT">
+	The value of the faults message, i.e. the faultString. 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Constructors</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcException.#ctor(System.Int32,System.String)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>XmlRpcException(System.Int32,System.String)</b></td>
+      </tr>
+    </table>
+	Instantiate an  <CODE>XmlRpcException</CODE>  with a code and message. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>code</i></td>
+        <td> <CODE>Int</CODE>  faultCode associated with this exception.</td>
+      </tr>
+      <tr>
+        <td><i>message</i></td>
+        <td> <CODE>String</CODE>  faultMessage associated with this exception.</td>
+      </tr>
+    </table>
+		
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcException.ToString"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>ToString ( )</b></td>
+      </tr>
+    </table>
+	Format the message to include the code. 
+	
+<br>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcExposedAttribute"></a><h2>Class Nwc.XmlRpc.XmlRpcExposedAttribute
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	
+            Simple tagging attribute to indicate participation is XML-RPC exposure.
+             
+            If present at the class level it indicates that this class does explicitly 
+            expose methods. If present at the method level it denotes that the method
+            is exposed.
+            
+	
+
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcExposedAttribute.ExposedMethod(System.Object,System.String)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>ExposedMethod(System.Object,System.String)</b></td>
+      </tr>
+    </table>
+	Check if  <I>obj</I> . <I>methodName</I>  is an XML-RPC exposed method. A method is considered to be exposed if it exists and, either, the object does not use the XmlRpcExposed attribute,
+            or the object does use the XmlRpcExposed attribute and the method has the XmlRpcExposed attribute as well.
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>Boolean</CODE>  true if the  method is exposed.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcExposedAttribute.ExposedObject(System.Object)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>ExposedObject(System.Object)</b></td>
+      </tr>
+    </table>
+	Check if  <I>obj</I>  is an object utilizing the XML-RPC exposed Attribute. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>obj</i></td>
+        <td> <CODE>Object</CODE>  of a class or method to check for attribute.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>Boolean</CODE>  true if attribute present.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcExposedAttribute.IsExposed(System.Reflection.MemberInfo)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>IsExposed(System.Reflection.MemberInfo)</b></td>
+      </tr>
+    </table>
+	Check if  <I>mi</I>  is XML-RPC exposed. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>mi</i></td>
+        <td> <CODE>MemberInfo</CODE>  of a class or method to check for attribute.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>Boolean</CODE>  true if attribute present.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcRequest"></a><h2>Class Nwc.XmlRpc.XmlRpcRequest
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Class supporting the request side of an XML-RPC transaction. 
+	
+
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Fields</h3>
+        </td>
+      </tr>
+    </table>
+	    <table>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcRequest._params"></a><i><b>_params</b></i></td>
+		    <td ALIGN="LEFT">
+	 <CODE>ArrayList</CODE>  containing the parameters. 
+	
+</td>
+		    </tr>
+	    
+	    </table>
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcRequest.MethodName"></a><i><b>MethodName</b></i></td>
+		    <td ALIGN="LEFT">
+	 <CODE>String</CODE>  conntaining the method name, both object and method, that the request will be sent to. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcRequest.MethodNameMethod"></a><i><b>MethodNameMethod</b></i></td>
+		    <td ALIGN="LEFT">
+	 <CODE>String</CODE>  method name portion of the object.method name. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcRequest.MethodNameObject"></a><i><b>MethodNameObject</b></i></td>
+		    <td ALIGN="LEFT">
+	 <CODE>String</CODE>  object name portion of the method name. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcRequest.Params"></a><i><b>Params</b></i></td>
+		    <td ALIGN="LEFT">
+	 <CODE>ArrayList</CODE>  conntaining the parameters for the request. 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Constructors</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcRequest.#ctor"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>XmlRpcRequest ( )</b></td>
+      </tr>
+    </table>
+	Instantiate an  <CODE>XmlRpcRequest</CODE>  
+	
+<br>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcRequest.#ctor(System.String,System.Collections.IList)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>XmlRpcRequest(System.String,System.Collections.IList)</b></td>
+      </tr>
+    </table>
+	Instantiate an  <CODE>XmlRpcRequest</CODE>  for a specified method and parameters. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>methodName</i></td>
+        <td> <CODE>String</CODE>  designating the object.method on the server the request
+            should be directed to.</td>
+      </tr>
+      <tr>
+        <td><i>parameters</i></td>
+        <td> <CODE>ArrayList</CODE>  of XML-RPC type parameters to invoke the request with.</td>
+      </tr>
+    </table>
+		
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcRequest.Invoke(System.String)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Invoke(System.String)</b></td>
+      </tr>
+    </table>
+	Invoke this request on the server. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>url</i></td>
+        <td> <CODE>String</CODE>  The url of the XML-RPC server.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>Object</CODE>  The value returned from the method invocation on the server.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Exceptions</b></i></td>
+      </tr>
+      <tr>
+        <td valign="top"><i><b>Nwc.XmlRpc.XmlRpcException</b></i></td>
+        <td>If an exception generated on the server side.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcRequest.Send(System.String,System.Int32)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Send(System.String,System.Int32)</b></td>
+      </tr>
+    </table>
+	Send the request to the server. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>url</i></td>
+        <td> <CODE>String</CODE>  The url of the XML-RPC server.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>XmlRpcResponse</CODE>  The response generated.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcRequest.ToString"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>ToString ( )</b></td>
+      </tr>
+    </table>
+	Produce  <CODE>String</CODE>  representation of the object. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>String</CODE>  representation of the object.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcRequestDeserializer"></a><h2>Class Nwc.XmlRpc.XmlRpcRequestDeserializer
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Class to deserialize XML data representing a request. 
+	
+
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcRequestDeserializer.Singleton"></a><i><b>Singleton</b></i></td>
+		    <td ALIGN="LEFT">
+	A static singleton instance of this deserializer. 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcRequestDeserializer.Deserialize(System.IO.TextReader)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Deserialize(System.IO.TextReader)</b></td>
+      </tr>
+    </table>
+	Static method that parses XML data into a request using the Singleton. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>xmlData</i></td>
+        <td> <CODE>StreamReader</CODE>  containing an XML-RPC request.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>XmlRpcRequest</CODE>  object resulting from the parse.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcRequestSerializer"></a><h2>Class Nwc.XmlRpc.XmlRpcRequestSerializer
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Class responsible for serializing an XML-RPC request. This class handles the request envelope, depending on  <CODE>XmlRpcSerializer</CODE> 
+            to serialize the payload.
+	
+		<br><b>See Also:</b> <a href="#T:Nwc.XmlRpc.XmlRpcSerializer">Nwc.XmlRpc.XmlRpcSerializer</a> 
+	
+
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcRequestSerializer.Singleton"></a><i><b>Singleton</b></i></td>
+		    <td ALIGN="LEFT">
+	A static singleton instance of this deserializer. 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcRequestSerializer.Serialize(System.Xml.XmlWriter,System.Object)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Serialize(System.Xml.XmlWriter,System.Object)</b></td>
+      </tr>
+    </table>
+	Serialize the  <CODE>XmlRpcRequest</CODE>  to the output stream. 
+	
+		<br><b>See Also:</b> <a href="#T:Nwc.XmlRpc.XmlRpcRequest">Nwc.XmlRpc.XmlRpcRequest</a> 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>output</i></td>
+        <td>An  <CODE>XmlTextWriter</CODE>  stream to write data to.</td>
+      </tr>
+      <tr>
+        <td><i>obj</i></td>
+        <td>An  <CODE>XmlRpcRequest</CODE>  to serialize.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcResponder"></a><h2>Class Nwc.XmlRpc.XmlRpcResponder
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	The class is a container of the context of an XML-RPC dialog on the server side. Instances of this class maintain the context for an individual XML-RPC server
+            side dialog. Namely they manage an inbound deserializer and an outbound serializer. 
+	
+
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcResponder.HttpReq"></a><i><b>HttpReq</b></i></td>
+		    <td ALIGN="LEFT">
+	The SimpleHttpRequest based on the TcpClient. 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Constructors</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcResponder.#ctor(Nwc.XmlRpc.XmlRpcServer,System.Net.Sockets.TcpClient)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>XmlRpcResponder(Nwc.XmlRpc.XmlRpcServer,System.Net.Sockets.TcpClient)</b></td>
+      </tr>
+    </table>
+	Basic constructor. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>server</i></td>
+        <td>XmlRpcServer that this XmlRpcResponder services.</td>
+      </tr>
+      <tr>
+        <td><i>client</i></td>
+        <td>TcpClient with the connection.</td>
+      </tr>
+    </table>
+		
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcResponder.Close"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Close ( )</b></td>
+      </tr>
+    </table>
+	Close all contained resources, both the HttpReq and client. 
+	
+<br>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcResponder.Finalize"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Finalize ( )</b></td>
+      </tr>
+    </table>
+	Call close to insure proper shutdown. 
+	
+<br>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcResponder.Respond"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Respond ( )</b></td>
+      </tr>
+    </table>
+	Respond using this responders HttpReq. 
+	
+<br>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcResponder.Respond(Nwc.XmlRpc.SimpleHttpRequest)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Respond(Nwc.XmlRpc.SimpleHttpRequest)</b></td>
+      </tr>
+    </table>
+	Handle an HTTP request containing an XML-RPC request. This method deserializes the XML-RPC request, invokes the 
+            described method, serializes the response (or fault) and sends the XML-RPC response
+            back as a valid HTTP page.
+            
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>httpReq</i></td>
+        <td> <CODE>SimpleHttpRequest</CODE>  containing the request.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcResponse"></a><h2>Class Nwc.XmlRpc.XmlRpcResponse
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Class designed to represent an XML-RPC response. 
+	
+
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Fields</h3>
+        </td>
+      </tr>
+    </table>
+	    <table>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcResponse.IsFault"></a><i><b>IsFault</b></i></td>
+		    <td ALIGN="LEFT">
+	 <CODE>bool</CODE>  indicating if this response represents a fault. 
+	
+</td>
+		    </tr>
+	    
+	    </table>
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcResponse.FaultCode"></a><i><b>FaultCode</b></i></td>
+		    <td ALIGN="LEFT">
+	The faultCode if this is a fault. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcResponse.FaultString"></a><i><b>FaultString</b></i></td>
+		    <td ALIGN="LEFT">
+	The faultString if this is a fault. 
+	
+</td>
+		    </tr>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcResponse.Value"></a><i><b>Value</b></i></td>
+		    <td ALIGN="LEFT">
+	The data value of the response, may be fault data. 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Constructors</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcResponse.#ctor"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>XmlRpcResponse ( )</b></td>
+      </tr>
+    </table>
+	Basic constructor 
+	
+<br>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcResponse.#ctor(System.Int32,System.String)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>XmlRpcResponse(System.Int32,System.String)</b></td>
+      </tr>
+    </table>
+	Constructor for a fault. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>code</i></td>
+        <td> <CODE>int</CODE>  the numeric faultCode value.</td>
+      </tr>
+      <tr>
+        <td><i>message</i></td>
+        <td> <CODE>String</CODE>  the faultString value.</td>
+      </tr>
+    </table>
+		
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcResponse.SetFault(System.Int32,System.String)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>SetFault(System.Int32,System.String)</b></td>
+      </tr>
+    </table>
+	Set this response to be a fault. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>code</i></td>
+        <td> <CODE>int</CODE>  the numeric faultCode value.</td>
+      </tr>
+      <tr>
+        <td><i>message</i></td>
+        <td> <CODE>String</CODE>  the faultString value.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcResponse.ToString"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>ToString ( )</b></td>
+      </tr>
+    </table>
+	Form a useful string representation of the object, in this case the XML response. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>String</CODE>  The XML serialized XML-RPC response.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcResponseDeserializer"></a><h2>Class Nwc.XmlRpc.XmlRpcResponseDeserializer
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Class to deserialize XML data representing a response. 
+	
+
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcResponseDeserializer.Singleton"></a><i><b>Singleton</b></i></td>
+		    <td ALIGN="LEFT">
+	A static singleton instance of this deserializer. 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcResponseDeserializer.Deserialize(System.IO.TextReader)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Deserialize(System.IO.TextReader)</b></td>
+      </tr>
+    </table>
+	Static method that parses XML data into a response using the Singleton. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>xmlData</i></td>
+        <td> <CODE>StreamReader</CODE>  containing an XML-RPC response.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>XmlRpcResponse</CODE>  object resulting from the parse.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcResponseSerializer"></a><h2>Class Nwc.XmlRpc.XmlRpcResponseSerializer
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Class responsible for serializing an XML-RPC response. This class handles the response envelope, depending on XmlRpcSerializer
+            to serialize the payload.
+	
+		<br><b>See Also:</b> <a href="#T:Nwc.XmlRpc.XmlRpcSerializer">Nwc.XmlRpc.XmlRpcSerializer</a> 
+	
+
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcResponseSerializer.Singleton"></a><i><b>Singleton</b></i></td>
+		    <td ALIGN="LEFT">
+	A static singleton instance of this deserializer. 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcResponseSerializer.Serialize(System.Xml.XmlWriter,System.Object)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Serialize(System.Xml.XmlWriter,System.Object)</b></td>
+      </tr>
+    </table>
+	Serialize the  <CODE>XmlRpcResponse</CODE>  to the output stream. 
+	
+		<br><b>See Also:</b> <a href="#T:Nwc.XmlRpc.XmlRpcResponse">Nwc.XmlRpc.XmlRpcResponse</a> 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>output</i></td>
+        <td>An  <CODE>XmlTextWriter</CODE>  stream to write data to.</td>
+      </tr>
+      <tr>
+        <td><i>obj</i></td>
+        <td>An  <CODE>Object</CODE>  to serialize.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcSerializer"></a><h2>Class Nwc.XmlRpc.XmlRpcSerializer
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Base class of classes serializing data to XML-RPC's XML format. This class handles the basic type conversions like Integer to &lt;i4&gt;. 
+	
+		<br><b>See Also:</b> <a href="#T:Nwc.XmlRpc.XmlRpcXmlTokens">Nwc.XmlRpc.XmlRpcXmlTokens</a> 
+	
+
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcSerializer.Serialize(System.Object)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Serialize(System.Object)</b></td>
+      </tr>
+    </table>
+	Serialize the  <CODE>XmlRpcRequest</CODE>  to a String. Note this may represent a real memory hog for a large request.
+	
+		<br><b>See Also:</b> <a href="#T:Nwc.XmlRpc.XmlRpcRequest">Nwc.XmlRpc.XmlRpcRequest</a> 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>obj</i></td>
+        <td>An  <CODE>Object</CODE>  to serialize.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>String</CODE>  containing XML-RPC representation of the request.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcSerializer.Serialize(System.Xml.XmlWriter,System.Object)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Serialize(System.Xml.XmlWriter,System.Object)</b></td>
+      </tr>
+    </table>
+	Serialize the  <CODE>XmlRpcRequest</CODE>  to the output stream. 
+	
+		<br><b>See Also:</b> <a href="#T:Nwc.XmlRpc.XmlRpcRequest">Nwc.XmlRpc.XmlRpcRequest</a> 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>output</i></td>
+        <td>An  <CODE>XmlTextWriter</CODE>  stream to write data to.</td>
+      </tr>
+      <tr>
+        <td><i>obj</i></td>
+        <td>An  <CODE>Object</CODE>  to serialize.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcSerializer.SerializeObject(System.Xml.XmlWriter,System.Object)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>SerializeObject(System.Xml.XmlWriter,System.Object)</b></td>
+      </tr>
+    </table>
+	 Serialize the object to the output stream.
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>output</i></td>
+        <td>An  <CODE>XmlTextWriter</CODE>  stream to write data to.</td>
+      </tr>
+      <tr>
+        <td><i>obj</i></td>
+        <td>An  <CODE>Object</CODE>  to serialize.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcServer"></a><h2>Class Nwc.XmlRpc.XmlRpcServer
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	A restricted HTTP server for use with XML-RPC. It only handles POST requests, and only POSTs representing XML-RPC calls.
+            In addition to dispatching requests it also provides a registry for request handlers. 
+            
+	
+
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcServer.Item(System.String)"></a><i><b>Item(System.String)</b></i></td>
+		    <td ALIGN="LEFT">
+	Retrieve a handler by name. 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Constructors</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.#ctor(System.Int32)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>XmlRpcServer(System.Int32)</b></td>
+      </tr>
+    </table>
+	Basic constructor. This constructor sets up a TcpListener listening on the
+            given port. It also calls a Thread on the method StartListen(). IPAddress.Any
+            is assumed as the address here.
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>port</i></td>
+        <td> <CODE>Int</CODE>  value of the port to listen on.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.#ctor(System.Net.IPAddress,System.Int32)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>XmlRpcServer(System.Net.IPAddress,System.Int32)</b></td>
+      </tr>
+    </table>
+	Constructor with port and address. This constructor sets up a TcpListener listening on the
+            given port and address. It also calls a Thread on the method StartListen().
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>address</i></td>
+        <td> <CODE>IPAddress</CODE>  value of the address to listen on.</td>
+      </tr>
+      <tr>
+        <td><i>port</i></td>
+        <td> <CODE>Int</CODE>  value of the port to listen on.</td>
+      </tr>
+    </table>
+		
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.Add(System.String,System.Object)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Add(System.String,System.Object)</b></td>
+      </tr>
+    </table>
+	
+            Add an XML-RPC handler object by name.
+             
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>name</i></td>
+        <td> <CODE>String</CODE>  XML-RPC dispatch name of this object.</td>
+      </tr>
+      <tr>
+        <td><i>obj</i></td>
+        <td> <CODE>Object</CODE>  The object that is the XML-RPC handler.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.GetEnumerator"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>GetEnumerator ( )</b></td>
+      </tr>
+    </table>
+	Get an enumeration of my XML-RPC handlers. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>IEnumerable</CODE>  the handler enumeration.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.HttpHeader(System.String,System.String,System.Int64,System.String,System.IO.TextWriter)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>HttpHeader(System.String,System.String,System.Int64,System.String,System.IO.TextWriter)</b></td>
+      </tr>
+    </table>
+	
+            This function send the Header Information to the client (Browser)
+             
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>sHttpVersion</i></td>
+        <td>HTTP Version</td>
+      </tr>
+      <tr>
+        <td><i>sMIMEHeader</i></td>
+        <td>Mime Type</td>
+      </tr>
+      <tr>
+        <td><i>iTotBytes</i></td>
+        <td>Total Bytes to be sent in the body</td>
+      </tr>
+      <tr>
+        <td><i>sStatusCode</i></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><i>output</i></td>
+        <td>Socket reference</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.Invoke(Nwc.XmlRpc.XmlRpcRequest)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Invoke(Nwc.XmlRpc.XmlRpcRequest)</b></td>
+      </tr>
+    </table>
+	Invoke a method described in a request. 
+	
+		<br><b>See Also:</b> <a href="#M:Nwc.XmlRpc.XmlRpcSystemObject.Invoke(System.Object,System.String,System.Collections.IList)">Nwc.XmlRpc.XmlRpcSystemObject.Invoke(System.Object,System.String,System.Collections.IList)</a>  <a href="#M:Nwc.XmlRpc.XmlRpcServer.Invoke(System.String,System.String,System.Collections.IList)">Nwc.XmlRpc.XmlRpcServer.Invoke(System.String,System.String,System.Collections.IList)</a> 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>req</i></td>
+        <td> <CODE>XmlRpcRequest</CODE>  containing a method descriptions.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.Invoke(System.String,System.String,System.Collections.IList)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Invoke(System.String,System.String,System.Collections.IList)</b></td>
+      </tr>
+    </table>
+	Invoke a method on a named handler. 
+	
+		<br><b>See Also:</b> <a href="#M:Nwc.XmlRpc.XmlRpcSystemObject.Invoke(System.Object,System.String,System.Collections.IList)">Nwc.XmlRpc.XmlRpcSystemObject.Invoke(System.Object,System.String,System.Collections.IList)</a> 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>objectName</i></td>
+        <td> <CODE>String</CODE>  The name of the handler.</td>
+      </tr>
+      <tr>
+        <td><i>methodName</i></td>
+        <td> <CODE>String</CODE>  The name of the method to invoke on the handler.</td>
+      </tr>
+      <tr>
+        <td><i>parameters</i></td>
+        <td> <CODE>IList</CODE>  The parameters to invoke the method with.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.MethodName(System.String)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>MethodName(System.String)</b></td>
+      </tr>
+    </table>
+	Return a C# object.method name for and XML-RPC object.method name pair. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>methodName</i></td>
+        <td>The XML-RPC object.method.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>String</CODE>  of form object.method for the underlying C# method.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.Start"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Start ( )</b></td>
+      </tr>
+    </table>
+	Start the server. 
+	
+<br>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.StartListen"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>StartListen ( )</b></td>
+      </tr>
+    </table>
+	
+            This method Accepts new connections and dispatches them when appropriate.
+             
+	
+<br>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.Stop"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Stop ( )</b></td>
+      </tr>
+    </table>
+	Stop the server. 
+	
+<br>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcServer.WaitCallback(System.Object)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>WaitCallback(System.Object)</b></td>
+      </tr>
+    </table>
+	The method the thread pool invokes when a thread is available to handle an HTTP request. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>responder</i></td>
+        <td>TcpClient from the socket accept.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcSystemObject"></a><h2>Class Nwc.XmlRpc.XmlRpcSystemObject
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	 XML-RPC System object implementation of extended specifications. 
+	
+
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Properties</h3>
+        </td>
+      </tr>
+    </table>
+		<table>
+		
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="P:Nwc.XmlRpc.XmlRpcSystemObject.MethodHelp"></a><i><b>MethodHelp</b></i></td>
+		    <td ALIGN="LEFT">
+	Static  <CODE>IDictionary</CODE>  to hold mappings of method name to associated documentation String 
+	
+</td>
+		    </tr>
+		
+		</table>
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Constructors</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcSystemObject.#ctor(Nwc.XmlRpc.XmlRpcServer)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>XmlRpcSystemObject(Nwc.XmlRpc.XmlRpcServer)</b></td>
+      </tr>
+    </table>
+	Constructor. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>server</i></td>
+        <td> <CODE>XmlRpcServer</CODE>  server to be the system object for.</td>
+      </tr>
+    </table>
+		
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcSystemObject.Invoke(System.Object,System.String,System.Collections.IList)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Invoke(System.Object,System.String,System.Collections.IList)</b></td>
+      </tr>
+    </table>
+	Invoke a method on a given object. Using reflection, and respecting the  <CODE>XmlRpcExposed</CODE>  attribute,
+            invoke the  <I>methodName</I>  method on the  <I>target</I> 
+            instance with the  <I>parameters</I>  provided. All this packages other  <CODE>Invoke</CODE>  methods 
+            end up calling this.
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>Object</CODE>  the value the invoked method returns.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Exceptions</b></i></td>
+      </tr>
+      <tr>
+        <td valign="top"><i><b>Nwc.XmlRpc.XmlRpcException</b></i></td>
+        <td>If method does not exist, is not exposed, parameters invalid, or invocation
+            results in an exception. Note, the  <CODE>XmlRpcException.Code</CODE>  will indicate cause.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcSystemObject.listMethods"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>listMethods ( )</b></td>
+      </tr>
+    </table>
+	List methods available on all handlers of this server. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>IList</CODE>  An array of  <CODE>Strings</CODE> , each  <CODE>String</CODE>  will have form "object.method".</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcSystemObject.methodHelp(System.String)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>methodHelp(System.String)</b></td>
+      </tr>
+    </table>
+	Help for given method signature. Not implemented yet. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>name</i></td>
+        <td> <CODE>String</CODE>  The object.method name to look up.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>String</CODE>  help text. Rich HTML text.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcSystemObject.methodSignature(System.String)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>methodSignature(System.String)</b></td>
+      </tr>
+    </table>
+	Given a method name return the possible signatures for it. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>name</i></td>
+        <td> <CODE>String</CODE>  The object.method name to look up.</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>IList</CODE>  Of arrays of signatures.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Nwc.XmlRpc.XmlRpcSystemObject.multiCall(System.Collections.IList)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>multiCall(System.Collections.IList)</b></td>
+      </tr>
+    </table>
+	Boxcarring support method. 
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>calls</i></td>
+        <td> <CODE>IList</CODE>  of calls</td>
+      </tr>
+    </table>
+    <table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Returns</b></i></td>
+      </tr>
+      <tr>
+        <td> <CODE>ArrayList</CODE>  of results/faults.</td>
+      </tr>
+    </table>
+		
+	
+
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Nwc.XmlRpc.XmlRpcXmlTokens"></a><h2>Class Nwc.XmlRpc.XmlRpcXmlTokens
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Class collecting  <CODE>String</CODE>  tokens that are part of XML-RPC files. 
+	
+
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Fields</h3>
+        </td>
+      </tr>
+    </table>
+	    <table>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.ALT_INT"></a><i><b>ALT_INT</b></i></td>
+		    <td ALIGN="LEFT">
+	Alternate integer field indicator. Corresponds to the &lt;int&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.ARRAY"></a><i><b>ARRAY</b></i></td>
+		    <td ALIGN="LEFT">
+	Array field indicator.. Corresponds to the &lt;array&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.BASE64"></a><i><b>BASE64</b></i></td>
+		    <td ALIGN="LEFT">
+	Base64 field indicator. Corresponds to the &lt;base64&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.BOOLEAN"></a><i><b>BOOLEAN</b></i></td>
+		    <td ALIGN="LEFT">
+	Boolean field indicator. Corresponds to the &lt;boolean&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.DATA"></a><i><b>DATA</b></i></td>
+		    <td ALIGN="LEFT">
+	Data token. Corresponds to the &lt;data&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.DATETIME"></a><i><b>DATETIME</b></i></td>
+		    <td ALIGN="LEFT">
+	Date field indicator. Corresponds to the &lt;dateTime.iso8601&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.DOUBLE"></a><i><b>DOUBLE</b></i></td>
+		    <td ALIGN="LEFT">
+	Double field indicator. Corresponds to the &lt;double&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.FAULT"></a><i><b>FAULT</b></i></td>
+		    <td ALIGN="LEFT">
+	Fault response token. Corresponds to the &lt;fault&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.FAULT_CODE"></a><i><b>FAULT_CODE</b></i></td>
+		    <td ALIGN="LEFT">
+	FaultCode token. Corresponds to the &lt;faultCode&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.FAULT_STRING"></a><i><b>FAULT_STRING</b></i></td>
+		    <td ALIGN="LEFT">
+	FaultString token. Corresponds to the &lt;faultString&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.INT"></a><i><b>INT</b></i></td>
+		    <td ALIGN="LEFT">
+	Integer field integer. Corresponds to the &lt;i4&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.ISO_DATETIME"></a><i><b>ISO_DATETIME</b></i></td>
+		    <td ALIGN="LEFT">
+	C# formatting string to describe an ISO 8601 date. 
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.MEMBER"></a><i><b>MEMBER</b></i></td>
+		    <td ALIGN="LEFT">
+	Member token. Corresponds to the &lt;member&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.METHOD_CALL"></a><i><b>METHOD_CALL</b></i></td>
+		    <td ALIGN="LEFT">
+	MethodCall token. Corresponds to the &lt;methodCall&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.METHOD_NAME"></a><i><b>METHOD_NAME</b></i></td>
+		    <td ALIGN="LEFT">
+	MethodName token. Corresponds to the &lt;methodName&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.METHOD_RESPONSE"></a><i><b>METHOD_RESPONSE</b></i></td>
+		    <td ALIGN="LEFT">
+	MethodResponse token Corresponds to the &lt;methodResponse&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.NAME"></a><i><b>NAME</b></i></td>
+		    <td ALIGN="LEFT">
+	Name token. Corresponds to the &lt;name&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.PARAM"></a><i><b>PARAM</b></i></td>
+		    <td ALIGN="LEFT">
+	Param token. Corresponds to the &lt;param&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.PARAMS"></a><i><b>PARAMS</b></i></td>
+		    <td ALIGN="LEFT">
+	Params token. Corresponds to the &lt;params&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.STRING"></a><i><b>STRING</b></i></td>
+		    <td ALIGN="LEFT">
+	String field indicator. Corresponds to the &lt;string&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.STRUCT"></a><i><b>STRUCT</b></i></td>
+		    <td ALIGN="LEFT">
+	Stuct field indicator. Corresponds to the &lt;struct&gt; tag.
+	
+</td>
+		    </tr>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Nwc.XmlRpc.XmlRpcXmlTokens.VALUE"></a><i><b>VALUE</b></i></td>
+		    <td ALIGN="LEFT">
+	Value token. Corresponds to the &lt;value&gt; tag.
+	
+</td>
+		    </tr>
+	    
+	    </table>
+	
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+</body>
+</html>

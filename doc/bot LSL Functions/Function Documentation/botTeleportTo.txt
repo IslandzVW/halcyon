@@ -1,0 +1,8 @@
+Function: botTeleportTo(key botID, vector newPosition);
+
+Causes the bot with the ID "botID" to teleport to a new position "newPosition" within the current region.
+
+botID - ID of the bot who will teleport to a new location.
+newPosition - position in the sim that the bot will teleport to.
+
+Example: bot Teleport To.lsl

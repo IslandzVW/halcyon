@@ -1,0 +1,69 @@
+Index: Controller.cpp
+===================================================================
+--- Controller.cpp	(revision 98498)
++++ Controller.cpp	(working copy)
+@@ -38,33 +38,35 @@
+ 	return (_controller == NULL);
+ }
+ 
+-void Controller::Move(Vector3 displacement, TimeSpan elapsedTime)
++ControllerFlag Controller::Move(Vector3 displacement, TimeSpan elapsedTime)
+ {
+ 	auto filter = gcnew ControllerFilters();
+ 		filter->ActiveGroups = 0xFFFFFFFF;
+ 		filter->FilterFlags = SceneQueryFilterFlag::Static | SceneQueryFilterFlag::Dynamic;
+ 
+-	Move(displacement, elapsedTime, 0.001f, filter, nullptr);
++	return Move(displacement, elapsedTime, 0.001f, filter, nullptr);
+ }
+-void Controller::Move(Vector3 displacement, TimeSpan elapsedTime, float minimumDistance, ControllerFilters^ filters, [Optional] ObstacleContext^ obstacles)
++ControllerFlag Controller::Move(Vector3 displacement, TimeSpan elapsedTime, float minimumDistance, ControllerFilters^ filters, [Optional] ObstacleContext^ obstacles)
+ {
+ 	auto disp = MathUtil::Vector3ToPxVec3(displacement);
+ 	auto et = (float)elapsedTime.TotalSeconds;
+ 	auto f = ControllerFilters::ToUnmanaged(filters);
+ 	auto oc = (obstacles == nullptr ? NULL : obstacles->UnmanagedPointer);
+ 
+-	_controller->move(disp, minimumDistance, et, f, oc);
++	PxU32 retFlags = _controller->move(disp, minimumDistance, et, f, oc);
+ 
+ 	// TODO: Not the cleanest way of cleaning up the memory that ControllerFilter allocates
+ 	if (f.mFilterData != NULL)
+ 	{
+ 		delete f.mFilterData;
+ 	}
++
++	return (ControllerFlag)retFlags;
+ }
+ 
+-void Controller::ReportSceneChanged()
++void Controller::InvalidateCache()
+ {
+-	_controller->reportSceneChanged();
++	_controller->invalidateCache();
+ }
+ 
+ PhysX::ControllerManager^ Controller::ControllerManager::get()
+Index: Controller.h
+===================================================================
+--- Controller.h	(revision 98498)
++++ Controller.h	(working copy)
+@@ -37,15 +37,15 @@
+ 				virtual bool get();
+ 			}
+ 
+-			void Move(Vector3 displacement, TimeSpan elapsedTime);
+-			void Move(Vector3 displacement, TimeSpan elapsedTime, float minimumDistance, ControllerFilters^ filters, [Optional] ObstacleContext^ obstacles);
++			ControllerFlag Move(Vector3 displacement, TimeSpan elapsedTime);
++			ControllerFlag Move(Vector3 displacement, TimeSpan elapsedTime, float minimumDistance, ControllerFilters^ filters, [Optional] ObstacleContext^ obstacles);
+ 
+ 			/// <summary>
+ 			/// The character controller uses caching in order to speed up collision testing, this caching
+ 			/// can not detect when static objects have changed in the scene. You need to call this method
+ 			/// when such changes have been made. 
+ 			/// </summary>
+-			void ReportSceneChanged();
++			void InvalidateCache();
+ 
+ 			//
+ 

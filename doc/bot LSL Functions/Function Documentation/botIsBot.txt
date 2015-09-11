@@ -1,0 +1,7 @@
+Function: integer botIsBot(key userID);
+
+Returns TRUE if the ID "userID" is the key of a bot and FALSE if a bot does not exist with the given ID.
+
+userID - ID that will be checked whether a bot exists with the given ID.
+
+Example: bot Information.lsl

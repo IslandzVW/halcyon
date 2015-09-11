@@ -1,0 +1,40 @@
+Index: RigidBody.cpp
+===================================================================
+--- RigidBody.cpp	(revision 98498)
++++ RigidBody.cpp	(working copy)
+@@ -30,6 +30,15 @@
+ 	this->UnmanagedPointer->clearForce(ToUnmanagedEnum(PxForceMode, mode), wake);
+ }
+ 
++void RigidBody::AddTorque(Vector3 force)
++{
++	AddTorque(force, ForceMode::Force, true);
++}
++void RigidBody::AddTorque(Vector3 force, ForceMode mode, bool wake)
++{
++	this->UnmanagedPointer->addTorque(MathUtil::Vector3ToPxVec3(force), ToUnmanagedEnum(PxForceMode, mode), wake);
++}
++
+ void RigidBody::ClearTorque()
+ {
+ 	ClearTorque(ForceMode::Force, true);
+Index: RigidBody.h
+===================================================================
+--- RigidBody.h	(revision 98498)
++++ RigidBody.h	(working copy)
+@@ -40,6 +40,15 @@
+ 			void ClearForce(ForceMode mode, bool wake);
+ 			
+ 			/// <summary>
++			/// Applies an impulsive torque defined in the global coordinate frame to the actor. 
++			/// </summary>
++			void AddTorque(Vector3 force);
++			/// <summary>
++			/// Applies an impulsive torque defined in the global coordinate frame to the actor. 
++			/// </summary>
++			void AddTorque(Vector3 force, ForceMode mode, bool wake);
++
++			/// <summary>
+ 			/// Clears the impulsive torque defined in the global coordinate frame to the actor.
+ 			/// </summary>
+ 			void ClearTorque();

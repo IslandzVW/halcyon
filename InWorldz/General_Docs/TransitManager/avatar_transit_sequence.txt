@@ -1,0 +1,421 @@
+Avatar Transit Sequence
+-------------------------------------------------------
+
+General Notes
+-------------------------------------
+- 	Avatars only have a presence in the scene after they have made a UDP connection.
+	This makes sense because SP is the object used to communicate with the viewer,
+	if there is no viewer there is nothing to talk to
+
+- 	During a crossing we should never have to wait for an SP. 
+	Crossings are made to adjacent regions which should already have a 
+	child connection from the viewer and a child SP. If we're waiting
+	for an SP, something is horribly wrong.
+
+-	We need to ensure that all the important UDP comms make it through. We'll squelch all major
+	traffic until a crossing completes to try to accomplish this
+
+	
+OLD/Existing Transit Sequence is below	
+---------------------------------------------------------------------------------------------------
+
+Teleporting
+-------------------------------------
+SceneCommunicationsService.cs: 
+	RequestTeleportToLocation():
+	
+		If sim is not a neighbor, we first set up a new child agent on the remote sim.
+		The current m_interregionCommsOut.SendCreateChildAgent code doesnt actually appear to 
+		set up a child SP at all, but merely records the
+		Session and circuit information so that the following calls will succeed.
+		
+		if (!avatar.IsRegionVisibleFromAgent(newRegionX, newRegionY))
+			agentCircuit.CapsPath = CapsUtil.GetRandomCapsObjectPath(); <-- we only set a new caps path if the agent doesnt already have a presence on the new region 
+		
+		m_interregionCommsOut.SendCreateChildAgent(reg.RegionHandle, agentCircuit, out reason); <-- Sending Side
+			<-- NOTE this doesnt actually create a child SP!! The name is misleading
+			<-- What it does do is prepare the region for an incoming child agent
+			Receiving Side -->
+				Scene.cs: 
+					NewUserConnection() ->
+					NewSceneUser()
+						//a bunch of stuff to validate the user to make sure they're allowed to be on the region
+						CapsModule.SetAgentCapsSeeds(agent); <-- sets information about the current known child regions
+						CapsModule.CreateCaps(agent.AgentID); <-- create new caps for this agent
+						m_authenticateHandler.AddNewCircuit(agent.circuitcode, agent); <-- this sets up the agent session ids for auth
+		
+		//the following two messages are only sent in the case where we dont yet have a child on the destination
+		{
+			eq.EnableSimulator(reg.RegionHandle, endPoint, avatar.UUID)	<-- makes the client send a UseCircuitCode message to the destination
+											<-- ES will also set up a child SP, in here (CV ctor) we're loading group information
+											<-- which could be a slow op. we should pass that from the previous region
+																		
+			eq.EstablishAgentCommunication(avatar.UUID, endPoint, capsPath) <-- EstablishAgentCommunication connects the viewer to caps
+		}
+		//else if we have a child agent already, we adjust the caps path
+		{
+			agentCircuit.CapsPath = avatar.Scene.CapsModule.GetChildSeed(avatar.UUID, reg.RegionHandle);
+			capsPath = "http://" + reg.ExternalHostName + ":" + reg.HttpPort
+						+ "/CAPS/" + agentCircuit.CapsPath + "0000/";
+		}
+		
+		SendChildAgentUpdate2(avatar, null, null, reg.RegionHandle, reg, position, AgentLocomotionFlags.Teleport); <-- Sending Side
+			Receiving Side -->
+				Scene.cs:
+					IncomingChildAgentDataUpdate2()
+						WaitScenePresence(data.AgentID, 5000); //this waits for ANY SP. So in the neighbor case we shouldnt have to wait at all
+						SP.ChildAgentDataUpdate2(data) -->
+							//returns if the agent is not child
+							//copies data from the agent info to the child agent
+							//rezzes attachments and starts scripts right away (bug/race? root SP not ready yet)
+	
+		eq.TeleportFinishEvent(reg.RegionHandle, 13, endPoint, 4, teleportFlags, capsPath, avatar.UUID); <-- Sending Side 
+			<-- Sending eq.TeleportFinishEvent causes the viewer to send a CompleteMovement packet...
+			Receiving Side -->
+				ScenePresence.cs:
+					CompleteMovement() -->
+						MakeRootAgent(pos)
+							//sets the agent's position in the scene
+							//sets m_isChildAgent to false
+							//sets the height variable for the agent (why here?)
+							
+						PostProcessMakeRootAgent();
+							//adds the avatar to the physics scene sets 
+							//sends our avatar's animations to all other avatars
+							
+			
+
+Crossing walk/fly/attachment push
+Also crossing on a prim takes this path for each avatar after the 
+object has been crossed over
+-------------------------------------
+SceneCommunicationsService.cs: 
+	DoCrossAgentToNewRegionWorker()
+		SendChildAgentUpdate2(agent, sceneObjectGroup, part, newRegionHandle, neighbourRegion, pos, AgentLocomotionFlags.Crossing);
+			<--- See teleport for receiving side info
+		
+		eq.CrossRegion(newRegionHandle, pos, agent.Velocity, neighbourRegion.ExternalEndPoint,
+                                capsPath, agent.UUID, agent.ControllingClient.SessionId);
+			<-- Sending eq.CrossRegion causes the viewer to send a CompleteMovement packet...
+			<-- See teleport for completemovement receiving end
+								
+
+		if (!WaitForCallback(agent.UUID))
+			<-- Waits for the destination region to make a releaseagent callback
+			Sending Side --> 
+				ScenePresence.cs: 
+					CompleteMovement() -->
+						<-- The sending side seems to do an awful lot before releasing the 
+						<-- agent from the previous region. It should probably release the
+						<-- agent from the previous region before performing any major work
+				
+
+		agent.CloseDistantChildAgents(newRegionHandle, pos);
+			<-- This sends messages to now distant regions to close the 
+			<-- child agent connections they have. This seems wrong
+			<-- i would think the destination region should tell the client 
+			<-- to close them instead
+			
+		agent.MakeChildAgent(newRegionHandle);         
+		
+		
+		
+		
+		
+Proposed/NEW Transit sequence
+---------------------------------------------------------------------------------------------------
+
+The new transit sequence will be comprised of multiple stages.
+Each stage will be able to be broadcast to a set of listeners that may change their behaviour 
+based on the current transit stage for an avatar
+
+Sending Sequence
+----------------------------------------
+Stage 1: Transit begin
+	An avatar has hit a region border or has requested a teleport. This stage marks the avatar
+	in transit and signals listeners. Two of those listeners are the aperture texture/mesh server
+	and general UDP LLClientView update comms. 
+		- Stage one should inform aperture to pause all transfers. Once the pause message is sent
+			we can return and allow stage 1 to continue processing. This can happen in sync since
+			aperture is local and should respond very quickly
+		- Stage one should inform UDP to pause all high frequency updates and wait for the task
+			queue to flush. This portion should run async since we don't know how long the flush
+			will take. Making sure this flush has completed ensures that we have spare bandwidth
+			to make the transfer as well as that we won't send a late update in the case when a 
+			user is crossing on a prim. Timeout for this async task will be 5 seconds and a timeout
+			is not fatal to the transit
+
+Stage 2: Establish a child presence on new region
+	During this stage, we verify that the client has a child presence on the destination region.
+	If they do not, we send a presence creation message and wait async for the destination region
+	to inform us that it has the UDP connection from the travelling avatar. Once we get an async
+	child creation callback from the avatar we can proceed to stage 3.
+	
+Stage 3: Send avatar to the new region
+	We update the destination region with all the information it needs to know to make the child
+	presence a root. This includes the root's new location on the region and velocity information.
+	This call also includes information about the avatar's attachments and states.
+	
+
+Receiving Sequence
+-------------------------------------
+Stage 1: Child presence creation
+	When a child presence is created, it is important to know if we plan on it being upgraded 
+	to a root at a later time. If the intention of this creation is for the presence to be
+	upgraded that means the avatar is crossing over to this region and we should disable UDP and
+	texture/mesh HTTP as described in the sending sequence.
+	
+		- If this is a true child presence and is being created because this is a child region of
+			the root that the avatar is on, stage 1 ends as soon as the viewer makes contact with 
+			this simulation on UDP. In this case this is the final transit stage and our only job
+			is to tell the sender that we have successfully created the presence.
+		- If this is a child presence being established to prepare for a root upgrade, we tell the 
+			sending region we have created the presence and wait for it to move forward with stage 2
+			
+Stage 2: Receive and set up root presence on this region
+	Once we get the childagentupdate message from the other region we can now set up the root presence
+	on this region. After this stage is over we inform the aperture and UDP comms to resume normal updates
+	but the avatar is still considered in-transit at this point until the completion of stage 3
+	
+Stage 3: Establish all child agent links
+	The final stage of a crossing is that we tell the SP to configure remote presences on our visible
+	neighbor regions. Until the async callbacks for this stage complete, we are not considered fully in this
+	region and can not leave. Once the callbacks complete we should have a good view of what regions
+	currently have child presences.
+
+	
+Observers for avatar transit stages
+-------------------------------------
+	Currently, LLCV and aperture caps need to be able to observe state/stage changes in the transit
+	manager to change their behaviour accordingly. We will hook this up via a generic mechanism that
+	will also tell the transit manager whether it needs to wait for a callback from the observer to 
+	continue to the next stage
+	
+		In the receiver:
+		- Object.HandleTransitStateChange(scenePresence, newState) : AsyncTaskInfo
+		
+		Callback to the transit manager on completion:
+		- AvatarTransitController.AsyncTaskCompleted(scenePresence, taskId)
+
+Teleporting
+-------------------------------------
+
+AvatarTransitController.TryBeginTransit() -->
+	<-- If the avatar is already in transit, returns false and the caller must abort
+	
+	SP.BeginTransit(callback = this.SPReadyForTransit); 
+		<-- should freeze physics, attachment scripts
+		<-- pause all UDP traffic and flush
+		<-- pause all aperture http traffic
+
+AvatarTransitController.SPReadyForTransit() -->
+		
+	if (!SP.HasPresenceOnRegion(region)) <--- HasPresenceOnRegion will call into the SP's AvatarRemotePresences object to determine if we have a presence there
+		<-- The avatar does not have an agent on the region we want to cross into, 
+		<-- we need to create a presence there
+		SP.EstablishPresenceOnRegion(region, callback = this.OnEstablishPresenceResult)
+	else
+		this.OnEstablishPresenceResult(true, region, SP) <-- this is not a direct call, but will place work on the AvatarTransitController queue
+
+AvatarTransitController.OnEstablishPresenceResult(result) -->
+	
+	if (result != SPCreateSuccess)
+		<-- No success, report back the issue to the client and restore
+		SP.ReportFailure
+		this.TransitFailureRollback()
+		
+	else
+		<-- we have an SP, time to make our move
+		SendChildAgentUpdate2(avatar, null, null, reg.RegionHandle, reg, position, AgentLocomotionFlags.Teleport/Crossing etc);
+		eq.TeleportFinishEvent(reg.RegionHandle, 13, endPoint, 4, teleportFlags, capsPath, avatar.UUID); 
+			<-- OR
+		eq.CrossRegion(newRegionHandle, pos, agent.Velocity, neighbourRegion.ExternalEndPoint,
+                                capsPath, agent.UUID, agent.ControllingClient.SessionId);
+	
+	
+
+New style connection setup
+--------------------------------------------------------------------------
+General Notes:
+
+	- The initiator of a new connection is always a grid service or simulator. This means
+		that effectively a user's connection first "comes to life" by an internal signal
+		we're sending it either from the user server or another sim. We can use this fact
+		to manage the lifetimes of all the connection component parts.
+		
+
+CURRENT General connection establishment
+---------------------------------
+Login
+---------------
+* User server calls expect_user on the simulator
+UserLoginService.cs
+	PrepareLoginToRegion():
+		const string METHOD_NAME = "expect_user";
+		XmlRpcRequest GridReq = new XmlRpcRequest(METHOD_NAME, SendParams);
+		XmlRpcResponse GridResp = GridReq.Send(Util.XmlRpcRequestURI(regionInfo.httpServerURI, METHOD_NAME), 6000); <-- Sending Side
+		Receiving side -->
+			LLProxyLoginModule.cs
+				ExpectUser() ->
+					Scene.cs
+						NewUserLogin() ->
+							NewSceneUser():
+								AuthenticateUser(agent, out reason) 
+									//do we really need to do this here? The message should be
+									//coming from a trusted source. If there is trust protection here
+									//we really shouldn't need to double check
+									
+								AuthorizeUser(agent, out reason)
+								
+								CapsModule.SetAgentCapsSeeds(agent);
+									//the current caps seeds for foreign and the local region is
+									//stored here. on login this list will be empty, but on TP
+									//this should contain the list of all the old child seeds
+									//if this user becomes root, we need to close the children
+									//that no longer apply to this region
+								
+								
+								ScenePresence sp = m_sceneGraph.GetScenePresence(agent.AgentID);
+								if (sp != null)
+									// this really shouldnt happen. But let's think of cases where it could
+										// - Logged out and back in before the removal from scene was finalized
+										// - Some kind of deadlock in the logout process
+									// Best course of action?
+										// forcibly terminate the existing SP and related connection objects
+										// before adding new ones?
+									sp.AdjustKnownSeeds(); 
+									return true;
+								
+								CapsModule.CreateCaps(agent.AgentID);
+								m_authenticateHandler.AddNewCircuit(agent.circuitcode, agent);
+								if (isInitialLogin && !agent.child)
+									userinfo.SetNeedsInitialRez();
+Teleport
+-------------
+(Same as above)
+SceneCommunicationsService.cs: 
+	RequestTeleportToLocation():
+		if (!avatar.IsRegionVisibleFromAgent(newRegionX, newRegionY))
+			agentCircuit.CapsPath = CapsUtil.GetRandomCapsObjectPath(); <-- we only set a new caps path if the agent doesnt already have a presence on the new region 
+		
+		m_interregionCommsOut.SendCreateChildAgent(reg.RegionHandle, agentCircuit, out reason); <-- Sending Side
+			<-- NOTE this doesnt actually create a child SP!! The name is misleading
+			<-- What it does do is prepare the region for an incoming child agent
+			Receiving Side -->
+				Scene.cs: 
+					NewUserConnection() ->
+					NewSceneUser()
+						//a bunch of stuff to validate the user to make sure they're allowed to be on the region
+						CapsModule.SetAgentCapsSeeds(agent); <-- sets information about the current known child regions
+						CapsModule.CreateCaps(agent.AgentID); <-- create new caps for this agent
+						m_authenticateHandler.AddNewCircuit(agent.circuitcode, agent); <-- this sets up the agent session ids for auth
+
+						
+
+						
+						
+						
+NEW General connection establishment
+----------------------------------------
+Notes
+--------------
+CapabilitiesModule.cs - Remove all child seed storage from this and relocate to AvatarRemotePresences 
+AgentCircuitManager.cs - Removed. Superseded by AvatarConnectionManger
+ClientManager.cs - Removed. Superseded by AvatarConnectionManger
+
+New Login
+----------------------
+LLProxyLoginModule.cs
+	ExpectUser() ->
+	Scene.cs
+		NewUserLogin() ->
+			NewSceneUser():
+				//AuthenticateUser(agent, out reason) 
+					//No longer needed. We've made it so that all callers to NewSceneUser
+					//are authenticated (both expect_user and createchildagent) and should be
+					//considered trusted. May save a DB roundtrip
+					
+				AuthorizeUser(agent, out reason)
+					//this call is required. If the user is not allowed on this region, this
+					//will dump them off
+				
+				try
+					AvatarConnectionManager.NewConnection(agent) ->
+						NewConnection():
+							ICapsControl _capsControl = CapsModule.CreateCaps(agent.ID)
+							if (agent.RemotePresences) RemotePresences = agent.RemotePresences
+							EstablishedReason = EstablishedBy.Login //for initial attachment rez
+							CircuitData = agent
+					
+				catch ConnectionAlreadyEstablishedException
+					// This user is already in the scene
+					// why?  
+					//		- Crash/relog before the timeout?
+					//		- Deadlock or other issue preventing proper connection clearing?
+					// Best course of action?
+					//		Forcibly terminate current user connection/SP and re-establish?
+					//			Pros:
+					//				- No waiting for a timeout before another connection can be made
+					//			Cons:
+					//				- More code involved since termination must skip normal disconnect waits
+					
+				
+				// OLD CODE
+				// if (isInitialLogin && !agent.child)
+				//	userinfo.SetNeedsInitialRez();
+				// this is now handled later in the sequence when UDP connects 
+				// and we read the EstablishedBy.Login enum
+
+				
+Connection establishment on UDP
+-------------------------------	
+LLUDPServer.cs
+	AddNewClient():	
+		Scene.IsAuthorized(agentId, sessionId, circuitCode) ->
+			Scene.cs
+				AvatarConectionManager.IsAuthorized()
+				
+		AddClient()->
+			Scene.cs
+				TryAddClient(IClientAPI):
+					AvatarConnectionManager.TryAttachUdpCircuit()
+			LLClientView.Start() ->
+				m_scene.AddNewClient() ->
+					CreateAndAddScenePresence()
+						GetAvatarAppearance(client, out appearance)
+							conn = AvatarConectionManager.GetConnection()
+							appearance = conn.CircuitData.Appearance 
+						//...
+
+Connection teardown (ACK Timeout or LLClientView.OnLogout)
+---------------------------------
+LLUdpServer:
+	RemoveClient() ->
+		LLClientView.cs:
+			Close()
+				Scene.cs:
+					RemoveClient()
+						//...
+						conn = AvatarConnectionManager.GetConnection()
+						conn.Terminate()	->
+							LLClientView.Close() 
+								//NOP from here since we are executing close already and it has reentry protection
+								
+							ICapsControl.Teardown()
+								//tears down caps and with it the EQ
+
+Connection teardown (Kick)
+---------------------------------
+Scene.cs:
+	RemoveClient()
+		//...
+		conn = AvatarConnectionManager.GetConnection()
+		conn.Terminate()	->
+			[same as above]
+
+
+New Connection manager deps
+------------------------------
+Deps:
+	OpenSim.Framework
+	OpenSim.Region.Framework

@@ -1,0 +1,12 @@
+Function: botSetOutfit(string outfitName);
+
+Causes the current appearance of the script owner to be saved to the database with the given outfit name so that it can later be used by botCreateBot to set the initial appearance of the bot or botChangeOutfit to change the outfit of a bot at a later time.
+
+outfitName - the name of the outfit that will be used later to refer to the current appearance of the script owner.
+
+Example: bot Outfit Manager.lsl
+
+See Also:
+	botRemoveOutfit,
+	botChangeOutfit,
+	botGetBotOutfits

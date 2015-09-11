@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GoogleClient</name>
+    </assembly>
+    <members>
+        <member name="T:Sample.GoogleClient">
+            <summary>An XML-RPC client using the Google APIs.</summary>
+            <remarks>Google provides basic XML-RPC APIs.  See http://www.xmlrpc.com/googleGateway and
+            http://www.google.com/apis/ for more info on them. This client simply asks 
+            for the alternate spelling of a phrase and performs a basic search.
+            <p/>Please note you need a key and keys are limited to 1000 queries a day so if you really
+            plan to play with this example get you own key and replace mine.
+            </remarks>
+        </member>
+        <member name="M:Sample.GoogleClient.WriteEntry(System.String,Nwc.XmlRpc.LogLevel)">
+            <summary><c>LoggerDelegate</c> compliant method that does logging to Console.
+            This method filters out the <c>LogLevel.Information</c> chatter.</summary>
+        </member>
+        <member name="M:Sample.GoogleClient.Main">
+            <summary>Submit two XML-RPC calls to Google. One to suggest spelling on a phrase and
+            the next to do a basic search.</summary>
+        </member>
+    </members>
+</doc>

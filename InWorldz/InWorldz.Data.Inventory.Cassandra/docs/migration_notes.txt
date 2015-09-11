@@ -1,0 +1,3 @@
+* 	Default inventory seems to create the root folder as 
+	type 8 (Folder) instead of 9 (RootFolder) this will
+	probably have to be fixed during migration process

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SampleServer</name>
+    </assembly>
+    <members>
+        <member name="T:Sample.SampleServer">
+            <remarks>
+            This is a very trivial server that does nothing more then fire up the embeded
+            server on a hardcoded port serving only itself and the system object.
+            </remarks>
+        </member>
+        <member name="M:Sample.SampleServer.WriteEntry(System.String,Nwc.XmlRpc.LogLevel)">
+            <summary><c>LoggerDelegate</c> compliant method that does logging to Console.
+            This method filters out the <c>LogLevel.Information</c> chatter.</summary>
+        </member>
+        <member name="M:Sample.SampleServer.Main">
+            <summary>The application starts here.</summary>
+            <remarks>This method instantiates an <c>XmlRpcServer</c> as an embedded XML-RPC server,
+            then add this object to the server as an XML-RPC handler, and finally starts the server.</remarks>
+        </member>
+        <member name="M:Sample.SampleServer.Ping">
+            <summary>A method that returns the current time.</summary>
+            <return>The current <c>DateTime</c> of the server is returned.</return>
+        </member>
+        <member name="M:Sample.SampleServer.Echo(System.String)">
+            <summary>A method that echos back it's arguement.</summary>
+            <param name="arg">A <c>String</c> to echo back to the caller.</param>
+            <return>Return, as a <c>String</c>, the <paramref>arg</paramref> that was passed in.</return>
+        </member>
+    </members>
+</doc>

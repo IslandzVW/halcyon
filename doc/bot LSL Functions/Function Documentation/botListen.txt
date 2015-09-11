@@ -1,0 +1,14 @@
+Function: integer botListen(key botID, integer channel, string name, key id, string message);
+
+Returns the listen handle for msg on channel from name and id at the position of the bot whose ID is botID.
+
+botID - ID of the bot who will begin listening
+channel - input chat channel
+name - filter for specific prim or avatar name
+id - filter for specific avatar or prim key
+message - filter for a specific message
+
+Example: bot Listening.lsl
+
+See Also:
+	llListenRemove

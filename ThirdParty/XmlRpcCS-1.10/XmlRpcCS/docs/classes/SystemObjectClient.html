@@ -1,0 +1,105 @@
+<html><header><title>Assembly: SystemObjectClient</title></header><body><A name="index"></A><TABLE cellspacing="0" cellpadding="10" width="100%" BGCOLOR="#9999FF" border="1">
+      <TR>
+        <TD WIDTH="100%" ALIGN="LEFT">
+          <H1>Assmebly: SystemObjectClient</H1>
+        </TD>
+      </TR>
+    </TABLE>
+    <table border="0" width="100%">
+      <tr>
+        <td bgcolor="#000000" width="100%">
+          <h2>
+            <font color="#FFFFFF">Class Index</font>
+          </h2>
+        </td>
+      </tr>
+    </table>
+    <table cellspacing="5">
+      <tr>
+        <td valign="top"><a href="#T:Sample.SystemObjectClient">Sample.SystemObjectClient</a></td>
+        <td>Example of boxcarring and using the system object.</td>
+      </tr>
+    </table>
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Sample.SystemObjectClient"></a><h2>Class Sample.SystemObjectClient
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	Example of boxcarring and using the system object. 
+            This example class calls the system object to get a list of methods available, and
+            then boxcars a collection of calls to get the signature of each of the methods
+            returned in the original list.
+            
+	
+
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Fields</h3>
+        </td>
+      </tr>
+    </table>
+	    <table>
+	    
+		    
+		    <tr>
+		    <td ALIGN="LEFT" VALIGN="TOP"><a name="F:Sample.SystemObjectClient.SERVER_URL"></a><i><b>SERVER_URL</b></i></td>
+		    <td ALIGN="LEFT">
+	The URL of the XML-RPC server. 
+	
+</td>
+		    </tr>
+	    
+	    </table>
+	
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Sample.SystemObjectClient.Main"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Main ( )</b></td>
+      </tr>
+    </table>
+	
+            The Main method, the entire class is embodied in this single method. This method simply
+            creates an XmlRpcRequest to system.listMethods which is sent. If all goes well a list
+            of methods is returned. That list is then used to make a collection of XmlRpcRequests
+            each a call to system.methodSignature. This collection of requests is not sent
+            individually but instead is "boxcarred" together and sent all at once.
+            <P>
+            The results of the second call is a collection of results to each individual request
+            bundled into an array. The array of results is then formatted for output.</P> 
+	
+<br>
+		
+	
+</body>
+</html>

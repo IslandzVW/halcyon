@@ -1,0 +1,8 @@
+Function: botSetMovementSpeed(key botID, float speedMultiplier);
+
+Changes the speed multiplier to "speedMultiplier" of the bot with the ID "botID".
+
+speedMultiplier - a float between 0.0 and the 100.0 that will change the speed multiplier of the bot. 0.0 is no movement, 1.0 is normal speed, 2.0 is twice the speed, etc.
+botID - ID of the bot whose speed multiplier will be changed.
+
+Example: bot Movement Speed.lsl

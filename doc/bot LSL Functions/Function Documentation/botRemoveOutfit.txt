@@ -1,0 +1,12 @@
+Function: botRemoveOutfit(string outfitName);
+
+Removes the given outfit name from the database (this will be done automatically after 6 months of inactivity on the outfit if it is not used).
+
+outfitName - the outfit name that will be removed from the database.
+
+Example: bot Outfit Manager.lsl
+
+See Also:
+	botSetOutfit,
+	botChangeOutfit,
+	botGetBotOutfits

@@ -1,0 +1,17 @@
+Function: botWhisper(key botID, integer channel, string message);
+
+The bot that has the ID "botID" will whisper the message "message" on channel "channel".
+
+botID - ID of the bot that will be whispering.
+channel - output chat channel, any integer value
+message - message to be transmitted
+
+Example: bot Chat.lsl
+
+See Also:
+	botSay,
+	botShout,
+	botStartTyping,
+	botStopTyping,
+	botSendInstantMessage,
+	botListen

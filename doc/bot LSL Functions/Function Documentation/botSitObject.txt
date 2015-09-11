@@ -1,0 +1,11 @@
+Function: botSitObject(key botID, key objectID);
+
+Causes a bot with the given ID "botID" to sit on the object with the ID "objectID".
+
+botID - ID of the bot that will sit on the object.
+objectID - ID of the object that the bot will sit on.
+
+Example: bot Sitting on Objects.lsl
+
+See Also:
+	botStandUp

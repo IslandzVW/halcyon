@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!-- 
+This is a Nant build file. See http://nant.sourceforge.net for more
+info. 
+-->
+<project name="XmlRpcCS" default="all">
+    <property name="debug" value="true"/>
+    <property name="nunit.bin" value="c:\csharp\nunit\bin"/>
+    <property name="classdoc.dir" value="docs\classes"/>
+
+    <target name="methods" depends="library">
+	<style style="docs/methods.xsl" in="${classdoc.dir}\${nant.project.name}.xml" out="${classdoc.dir}\methods.xml"/>
+    </target>
+
+    <target name="all" description="Builds the DLL, and all examples.">
+       <foreach item="String"
+	    in="GoogleClient,ProxyClient,SystemObjectClient,SampleServerWithExpose,SampleClient,SampleServer,RequestXmlTest"
+	    delim="," property="exe">
+	    <call target="exe" force="true"/>
+       </foreach>
+    </target>
+
+    <target name="exe" depends="library" description="Builds an executable">
+	<csc target="exe" output="${exe}.exe" debug="${debug}" doc="${classdoc.dir}\${exe}.xml">
+	    <references>
+		       <includes name="${nant.project.name}.dll"/>
+	    </references>
+            <sources basedir=".">
+                <includes name="**/${exe}.cs"/>               
+            </sources>
+	</csc>    
+	<style style="docs/docs.xsl" in="${classdoc.dir}\${exe}.xml" out="${classdoc.dir}\${exe}.html"/>
+    </target>
+
+    <target name="library" description="Build a DLL.">
+        <property name="target" value="${nant.project.name}"/>
+	<csc target="library" output="${target}.dll" doc="${classdoc.dir}\${target}.xml" debug="${debug}">
+            <sources>
+                <includes name="src/nwc/**/*.cs"/>               
+            </sources>
+	</csc>
+	<style style="docs/docs.xsl" in="${classdoc.dir}\${target}.xml" out="${classdoc.dir}\${target}.html"/>
+    </target>
+
+    <target name="unit-tests" depends="library">
+        <property name="target" value="unit-tests"/>
+	<csc target="library" output="${target}.dll" debug="${debug}">
+	     <references>
+	           <includes name="${nant.project.name}.dll"/>
+	           <includes name="${nunit.bin}/nunit.framework.dll"/>
+             </references>
+            <sources>
+                <includes name="test/*.cs"/>               
+            </sources>
+	</csc>
+	<!-- There is an NUnit2 task but it is broken - ironic huh? -->
+	<exec basedir="${nunit.bin}" program="nunit-console" workingdir="." failonerror="false"
+		commandline="/assembly:${target}.dll /xml:docs\${target}.xml"/>
+    </target>
+
+    <target name="clean" description="cleans up everything">
+        <delete failonerror="false">
+		<fileset basedir=".">
+		   <includes name="*.exe"/>
+		   <includes name="*.dll"/>
+		   <includes name="*.pdb"/>
+		   <includes name="${classdoc.dir}\*.xml"/>
+	        </fileset>
+	</delete>
+    </target>
+
+</project>

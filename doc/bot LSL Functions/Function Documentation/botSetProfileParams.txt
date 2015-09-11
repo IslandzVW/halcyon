@@ -1,0 +1,13 @@
+Function: botSetProfileParams(key botID, list profileInformation);
+
+Sets information about the bot's profile. 
+
+botID - ID of the bot whose profile will be updated.
+profileInformation - list of params that contains a key and then a value that will update the bot's profile information.
+	Valid keys are
+		BOT_ABOUT_TEXT  - sets the about text
+		BOT_EMAIL       - sets the profile email
+		BOT_IMAGE_UUID  - sets the main profile image
+		BOT_PROFILE_URL - sets the profile URL
+
+Example: bot Profile Information.lsl

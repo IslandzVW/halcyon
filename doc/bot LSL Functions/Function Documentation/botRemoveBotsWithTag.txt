@@ -1,0 +1,15 @@
+Function: botRemoveBotsWithTag(string tag);
+
+Removes all bots from the sim that have the given tag "tag".
+
+tag - Tag that all bots that will be removed have
+
+Example:
+	bot Tag Removal.lsl
+	bot Tagged Removal.lsl
+	bot Tagging.lsl
+
+See Also: 
+	botAddTag,
+	botRemoveTag,
+	botGetBotsWithTag

@@ -1,0 +1,13 @@
+Function: botChangeOutfit(key botID, string outfitName);
+
+Changes the bot's appearance to be wearing the outfit retrieved from the database with the given outfit name.
+
+botID - ID of the bot that will be changing appearance.
+outfitName - name of the outfit that the bot will begin wearing.
+
+Example: bot Change Outfit.lsl
+
+See Also:
+	botSetOutfit
+	botRemoveOutfit,
+	botGetBotOutfits

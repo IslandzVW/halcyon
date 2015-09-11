@@ -1,0 +1,61 @@
+/*
+ * Copyright (c) 2015, InWorldz Halcyon Developers
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ *   * Redistributions of source code must retain the above copyright notice, this
+ *     list of conditions and the following disclaimer.
+ * 
+ *   * Redistributions in binary form must reproduce the above copyright notice,
+ *     this list of conditions and the following disclaimer in the documentation
+ *     and/or other materials provided with the distribution.
+ * 
+ *   * Neither the name of halcyon nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace OpenSim.Region.Physics.Manager.Vehicle
+{
+    [Flags]
+    public enum VehicleFlags
+    {
+        None                = 0,
+        NoDeflectionUp      = 0x001,
+        LimitRollOnly       = 0x002,
+        HoverWaterOnly      = 0x004,
+        HoverTerrainOnly    = 0x008,
+        HoverGlobalHeight   = 0x010,
+        HoverUpOnly         = 0x020,
+        LimitMotorUp        = 0x040,
+        MouselookSteer      = 0x080,
+        MouselookBank       = 0x100,
+        CameraDecoupled     = 0x200,
+
+        // Inworldz extensions
+        ReactToCurrents     = 0x10000,
+        ReactToWind         = 0x20000,
+        LimitMotorDown      = 0x40000,
+        TorqueWorldZ        = 0x80000,
+        MousePointSteer     = 0x100000,
+        MousePointBank      = 0x200000,
+    }
+}

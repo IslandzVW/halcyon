@@ -1,0 +1,20 @@
+Function: botWanderWithin(key botID, vector origin, float xDistance, float yDistance, list options);
+
+Causes the bot to wander randomly within the area contained around the origin "origin" by "xDistance" away from the origin along the x-axis and by "yDistance" away from the origin along the y-axis.
+
+botID - ID of the bot that will begin wandering.
+origin - position that the wandering will revolve around.
+xDistance - distance that the bot is able to wander away from the origin in the x direction.
+yDistance - distance that the bot is able to wander away from the origin in the y direction.
+options - options that will affect how the bot will wander around.
+	This can contain the following keys
+	BOT_WANDER_MOVEMENT_TYPE - Sets the form of movement that the bot will utilize to wander around
+		The valid parameters for this are 
+			BOT_TRAVELMODE_WALK
+			BOT_TRAVELMODE_RUN
+			BOT_TRAVELMODE_FLY
+			BOT_TRAVELMODE_TELEPORT
+	BOT_WANDER_TIME_BETWEEN_NODES - Sets the amoutn of time that the bot will wait (in seconds) before moving onto the next position.
+		Takes a float as the secondary parameter.
+	
+Example: bot Wander Within.lsl

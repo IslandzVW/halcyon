@@ -1,0 +1,11 @@
+Function botSensorRemove();
+
+Removes the bot sensor set up by botSensorRepeat.
+
+Example: bot Sensor Commands.lsl
+
+See Also:
+	botSensor,
+	botSensorRepeat,
+	sensor event,
+	no_sensor event

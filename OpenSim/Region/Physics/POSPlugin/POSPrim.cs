@@ -1,0 +1,319 @@
+/*
+ * Copyright (c) Contributors, http://opensimulator.org/
+ * See CONTRIBUTORS.TXT for a full list of copyright holders.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the OpenSim Project nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE DEVELOPERS ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+using System;
+using System.Collections.Generic;
+using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Region.Physics.Manager;
+
+namespace OpenSim.Region.Physics.POSPlugin
+{
+    public class POSPrim : PhysicsActor
+    {
+        private OpenMetaverse.Vector3 _position;
+        private OpenMetaverse.Vector3 _velocity;
+        private OpenMetaverse.Vector3 _acceleration;
+        private OpenMetaverse.Vector3 _size;
+        private OpenMetaverse.Vector3 m_rotationalVelocity = OpenMetaverse.Vector3.Zero;
+        private Quaternion _orientation;
+        private bool iscolliding;
+
+        public POSPrim()
+        {
+            _velocity = new OpenMetaverse.Vector3();
+            _position = new OpenMetaverse.Vector3();
+            _acceleration = new OpenMetaverse.Vector3();
+        }
+
+        public override int PhysicsActorType
+        {
+            get { return (int) ActorTypes.Prim; }
+            set { return; }
+        }
+
+        public override OpenMetaverse.Vector3 RotationalVelocity
+        {
+            get { return m_rotationalVelocity; }
+            set { m_rotationalVelocity = value; }
+        }
+
+        public override bool IsPhysical
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override bool ThrottleUpdates
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override bool IsColliding
+        {
+            get { return iscolliding; }
+            set { iscolliding = value; }
+        }
+
+        public override bool CollidingGround
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override bool CollidingObj
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override bool Stopped
+        {
+            get { return false; }
+        }
+
+        public override OpenMetaverse.Vector3 Position
+        {
+            get { return _position; }
+            set { _position = value; }
+        }
+
+        public override OpenMetaverse.Vector3 Size
+        {
+            get { return _size; }
+            set { _size = value; }
+        }
+
+        public override float Mass
+        {
+            get { return 0f; }
+        }
+
+        public override OpenMetaverse.Vector3 Force
+        {
+            get { return OpenMetaverse.Vector3.Zero; }
+            set { return; }
+        }
+
+        public override int VehicleType
+        {
+            get { return 0; }
+            set { return; }
+        }
+
+        public override void VehicleFloatParam(int param, float value)
+        {
+
+        }
+
+        public override void VehicleVectorParam(int param, OpenMetaverse.Vector3 value)
+        {
+
+        }
+
+        public override void VehicleRotationParam(int param, Quaternion rotation)
+        {
+
+        }
+
+        public override void SetVolumeDetect(int param)
+        {
+
+        }
+
+        public override OpenMetaverse.Vector3 CenterOfMass
+        {
+            get { return OpenMetaverse.Vector3.Zero; }
+        }
+
+        public override OpenMetaverse.Vector3 GeometricCenter
+        {
+            get { return OpenMetaverse.Vector3.Zero; }
+        }
+
+        public override PrimitiveBaseShape Shape
+        {
+            set { return; }
+        }
+
+        public override float Buoyancy
+        {
+            get { return 0f; }
+            set { return; }
+        }
+
+        public override bool FloatOnWater
+        {
+            set { return; }
+        }
+
+        public override OpenMetaverse.Vector3 Velocity
+        {
+            get { return _velocity; }
+            set { _velocity = value; }
+        }
+
+        public override float CollisionScore
+        {
+            get { return 0f; }
+            set { }
+        }
+
+        public override Quaternion Orientation
+        {
+            get { return _orientation; }
+            set { _orientation = value; }
+        }
+
+        public override OpenMetaverse.Vector3 Acceleration
+        {
+            get { return _acceleration; }
+        }
+
+        public override bool Kinematic
+        {
+            get { return true; }
+            set { }
+        }
+
+        public void SetAcceleration(OpenMetaverse.Vector3 accel)
+        {
+            _acceleration = accel;
+        }
+
+        public override void AddForce(OpenMetaverse.Vector3 force, bool pushforce)
+        {
+        }
+
+        public override void AddAngularForce(OpenMetaverse.Vector3 force, bool pushforce)
+        {
+        }
+
+        public override OpenMetaverse.Vector3 Torque
+        {
+            get { return OpenMetaverse.Vector3.Zero; }
+            set { return; }
+        }
+
+        public override void SetMomentum(OpenMetaverse.Vector3 momentum)
+        {
+        }
+
+        public override bool Flying
+        {
+            get { return false; }
+            set { }
+        }
+
+        public override bool SetAlwaysRun
+        {
+            get { return false; }
+            set { return; }
+        }
+
+        public override uint LocalID
+        {
+            set { return; }
+        }
+
+        public override bool Grabbed
+        {
+            set { return; }
+        }
+
+        public override void link(PhysicsActor obj)
+        {
+        }
+
+        public override void delink()
+        {
+        }
+
+        public override void LockAngularMotion(OpenMetaverse.Vector3 axis)
+        {
+        }
+
+        public override bool Selected
+        {
+            set { return; }
+        }
+
+        public override void CrossingFailure()
+        {
+        }
+
+        public override OpenMetaverse.Vector3 PIDTarget
+        {
+            set { return; }
+        }
+
+        public override bool PIDActive
+        {
+            set { return; }
+        }
+
+        public override float PIDTau
+        {
+            set { return; }
+        }
+
+        public override float PIDHoverHeight
+        {
+            set { return; }
+        }
+
+        public override bool PIDHoverActive
+        {
+            set { return; }
+        }
+
+        public override PIDHoverType PIDHoverType
+        {
+            set { return; }
+        }
+
+        public override float PIDHoverTau
+        {
+            set { return; }
+        }
+
+        public override void SubscribeEvents(int ms)
+        {
+        }
+
+        public override void UnSubscribeEvents()
+        {
+        }
+
+        public override bool SubscribedEvents()
+        {
+            return false;
+        }
+    }
+}

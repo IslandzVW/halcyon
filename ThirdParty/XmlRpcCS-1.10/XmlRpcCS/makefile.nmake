@@ -1,0 +1,16 @@
+# .NET Compact Framework makefile for nmake
+
+# change this if you have it elsewhere
+LDIR="C:\Program Files\Microsoft Visual Studio .NET 2003\CompactFrameworkSDK\v1.0.5000\Windows CE"
+LIBS=/r:$(LDIR)\mscorlib.dll /r:$(LDIR)\System.dll /r:$(LDIR)\System.XML.dll
+
+CSFLAGS=/nostdlib /noconfig 
+#CSC=cscc $(CSFLAGS)
+CSC=csc $(CSFLAGS)
+
+library:
+	$(CSC) /target:library /out:XmlRpcCS.dll $(LIBS) /recurse:src\nwc\xmlrpc\*.cs
+
+clean:
+	@-rm *.exe *.pdb *.dll 2> nul:
+

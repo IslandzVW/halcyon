@@ -1,0 +1,14 @@
+<Addin id="OpenSim.Framework.Communications" version="1.0">
+    <Runtime>
+        <Import assembly="OpenSim.Framework.Communications.dll"/>
+    </Runtime>
+    <Dependencies>
+        <Addin id="OpenSim" version="0.5" />
+    </Dependencies>
+    <Extension path="/OpenSim/AssetCache">
+    	<Cache id="Default" provider="Default" type="OpenSim.Framework.Communications.Cache.AssetCache" />
+    </Extension>
+    <Extension path="/OpenSim/AssetClient">
+	    <AssetClient id="WHIP"	 provider="WHIP"   type="InWorldz.Whip.Client.AssetClient" />
+    </Extension>
+</Addin>

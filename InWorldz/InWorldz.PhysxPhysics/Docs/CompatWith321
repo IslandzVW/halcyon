@@ -1,0 +1,29 @@
+Index: Controller.cpp
+===================================================================
+--- Controller.cpp	(revision 98498)
++++ Controller.cpp	(working copy)
+@@ -62,9 +62,9 @@
+ 	}
+ }
+ 
+-void Controller::ReportSceneChanged()
++void Controller::InvalidateCache()
+ {
+-	_controller->reportSceneChanged();
++	_controller->invalidateCache();
+ }
+ 
+ PhysX::ControllerManager^ Controller::ControllerManager::get()
+Index: Controller.h
+===================================================================
+--- Controller.h	(revision 98498)
++++ Controller.h	(working copy)
+@@ -45,7 +45,7 @@
+ 			/// can not detect when static objects have changed in the scene. You need to call this method
+ 			/// when such changes have been made. 
+ 			/// </summary>
+-			void ReportSceneChanged();
++			void InvalidateCache();
+ 
+ 			//
+ 

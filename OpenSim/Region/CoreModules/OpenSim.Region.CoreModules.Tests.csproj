@@ -1,0 +1,217 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="2.0">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{5D2F2A85-0000-0000-0000-000000000000}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon></ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>OpenSim.Region.CoreModules.Tests</AssemblyName>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder></AppDesignerFolder>
+    <RootNamespace>OpenSim.Region.CoreModules.Tests</RootNamespace>
+    <StartupObject></StartupObject>
+    <StartArguments></StartArguments>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DocumentationFile></DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>False</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn></NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile></DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>True</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn></NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DotNetOpenMail.dll" >
+        <Name>DotNetOpenMail.dll</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="log4net.dll" >
+        <Name>log4net.dll</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.JScript" >
+        <Name>Microsoft.JScript</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Nini.dll" >
+        <Name>Nini.dll</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Nini.dll" >
+        <Name>Nini.dll</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="nunit.framework.dll" >
+        <Name>nunit.framework.dll</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenMetaverse.dll" >
+        <Name>OpenMetaverse.dll</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenMetaverseTypes.dll" >
+        <Name>OpenMetaverseTypes.dll</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenSim.Tests.Common" >
+        <Name>OpenSim.Tests.Common</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" >
+        <Name>System</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Drawing" >
+        <Name>System.Drawing</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Remoting" >
+        <Name>System.Runtime.Remoting</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml" >
+        <Name>System.Xml</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="XMLRPC.dll" >
+        <Name>XMLRPC.dll</Name>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Data\OpenSim.Data.csproj">
+      <Name>OpenSim.Data</Name>
+      <Project>{E8FFCBCD-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Framework\OpenSim.Framework.csproj">
+      <Name>OpenSim.Framework</Name>
+      <Project>{8ACA2445-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Framework\Communications\OpenSim.Framework.Communications.csproj">
+      <Name>OpenSim.Framework.Communications</Name>
+      <Project>{CB52B7E7-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Framework\Communications\OpenSim.Framework.Communications.csproj">
+      <Name>OpenSim.Framework.Communications</Name>
+      <Project>{CB52B7E7-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Framework\Console\OpenSim.Framework.Console.csproj">
+      <Name>OpenSim.Framework.Console</Name>
+      <Project>{A7CD0630-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Framework\Serialization\OpenSim.Framework.Serialization.csproj">
+      <Name>OpenSim.Framework.Serialization</Name>
+      <Project>{C7A2C039-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Framework\Servers\OpenSim.Framework.Servers.csproj">
+      <Name>OpenSim.Framework.Servers</Name>
+      <Project>{2CC71860-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Framework\Statistics\OpenSim.Framework.Statistics.csproj">
+      <Name>OpenSim.Framework.Statistics</Name>
+      <Project>{0940DAE4-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Communications\Local\OpenSim.Region.Communications.Local.csproj">
+      <Name>OpenSim.Region.Communications.Local</Name>
+      <Project>{BFB5D807-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\CoreModules\OpenSim.Region.CoreModules.csproj">
+      <Name>OpenSim.Region.CoreModules</Name>
+      <Project>{234D256A-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Framework\OpenSim.Region.Framework.csproj">
+      <Name>OpenSim.Region.Framework</Name>
+      <Project>{C8DACD29-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Physics\Manager\OpenSim.Region.Physics.Manager.csproj">
+      <Name>OpenSim.Region.Physics.Manager</Name>
+      <Project>{F4FF31EB-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Agent\TextureSender\Tests\TextureSenderTests.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Avatar\Inventory\Archiver\Tests\InventoryArchiverTests.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="World\Terrain\Tests\TerrainTest.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="World\Archiver\Tests\ArchiverTests.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

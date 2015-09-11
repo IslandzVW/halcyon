@@ -1,0 +1,118 @@
+<html><header><title>Assembly: SampleServerWithExpose</title></header><body><A name="index"></A><TABLE cellspacing="0" cellpadding="10" width="100%" BGCOLOR="#9999FF" border="1">
+      <TR>
+        <TD WIDTH="100%" ALIGN="LEFT">
+          <H1>Assmebly: SampleServerWithExpose</H1>
+        </TD>
+      </TR>
+    </TABLE>
+    <table border="0" width="100%">
+      <tr>
+        <td bgcolor="#000000" width="100%">
+          <h2>
+            <font color="#FFFFFF">Class Index</font>
+          </h2>
+        </td>
+      </tr>
+    </table>
+    <table cellspacing="5">
+      <tr>
+        <td valign="top"><a href="#T:Sample.SampleServerWithExpose">Sample.SampleServerWithExpose</a></td>
+        <td>
+             An XML-RPC server that utilizes XmlRpcExposed attribute to restrict access.
+            </td>
+      </tr>
+    </table>
+
+               
+	<table border="1" bgcolor="#AAAAFF" cellspacing="0" cellpadding="10" width="100%">
+	<tr>
+	<td bgcolor="#AAAAFF" width="90%"><a name="T:Sample.SampleServerWithExpose"></a><h2>Class Sample.SampleServerWithExpose
+	</h2>
+        </td>
+        <td bgcolor="#000000" width="10%" align="center"><a href="#index"><font color="#FFFFFF">Class Index</font></a></td>
+	</tr>
+	</table>
+	
+	
+             An XML-RPC server that utilizes XmlRpcExposed attribute to restrict access.
+             
+            This server registers itself as the "sample" object. This example differs from
+             SampleServer in that it uses the XmlRpcExposed attribute to indicate which
+             public methods are exposed via XML-RPC. Normally ALL public methods are
+             considered to be exposed, but if the XmlRpcExposed attribute is present at the
+            class level then ONLY public methods having the XmlRpcExposed attribute will be
+            exposed.
+            <P>
+            Run the soc client against the two servers to see the difference. Running
+            client.exe against this server should generate an error as well since it
+            attempts to run a method that is not exposed.</P>
+	
+
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+
+	
+	
+	
+		<table border="1" bgcolor="#CCCCFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#CCCCFF" width="100%">
+          <h3>Public Methods</h3>
+        </td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Sample.SampleServerWithExpose.Echo(System.String)"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Echo(System.String)</b></td>
+      </tr>
+    </table>
+	A method that echos back it's arguement.
+            Note this is public BUT NOT XML-RPC exposed! 
+             
+	
+<br><table cellspacing="5" border="0">
+      <tr>
+        <td><i><b>Parameters</b></i></td>
+      </tr>
+      <tr>
+        <td><i>arg</i></td>
+        <td>A  <CODE>String</CODE>  to echo back to the caller.</td>
+      </tr>
+    </table>
+		
+	    		
+			<a name="M:Sample.SampleServerWithExpose.Main"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Main ( )</b></td>
+      </tr>
+    </table>
+	The application starts here. This method instantiates an  <CODE>XmlRpcServer</CODE>  as an embedded XML-RPC server,
+            then add this object to the server as an XML-RPC handler, and finally starts the server.
+	
+<br>
+		
+	    		
+			<a name="M:Sample.SampleServerWithExpose.Ping"></a><table border="1" bgcolor="#EEEEFF" width="100%" cellspacing="0">
+      <tr>
+        <td bgcolor="#EEEEFF" width="100%"><b>Ping ( )</b></td>
+      </tr>
+    </table>
+	A method that returns the current time. 
+	
+<br>
+		
+	
+</body>
+</html>

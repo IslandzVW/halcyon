@@ -1,0 +1,17 @@
+SRV*c:\symbols*http://msdl.microsoft.com/download/symbols
+.loadby sos clr
+.load psscor4.dll
+!dumpheap -stat
+!clrusage -v
+!eeheap -gc
+!dumpheap -min X (min size)
+!clrstack
+!dso
+!do (dump object)
+!pe [object addr] (print exception)
+!EEStack
+Switch to thread 25: ~25s
+k (stack trace)
+!Name2EE OpenMetaverseTypes.dll OpenMetaverse.Vector3 (get the method table to print structs)
+!DumpVC <Method Table> <Object Address> (primt struct)
+!finalizequeue

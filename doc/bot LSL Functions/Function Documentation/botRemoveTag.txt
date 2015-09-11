@@ -1,0 +1,17 @@
+Function: botRemoveTag(key botID, string tag);
+
+Removes a tag "tag" from the bot with the ID "botID".
+This allows you to keep track of multiple bots with the bot tag commands and apply actions to all of them at the same time.
+
+botID - ID of the bot that the tag will be removed from
+tag - a string identifier that will be removed from the bot if it is applied
+
+Example:
+	bot Tag Removal.lsl
+	bot Tagged Removal.lsl
+	bot Tagging.lsl
+
+See Also: 
+	botAddTag,
+	botGetBotsWithTag,
+	botRemoveBotsWithTag

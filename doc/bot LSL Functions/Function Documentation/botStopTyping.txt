@@ -1,0 +1,15 @@
+Function: botStopTyping(key botID);
+
+The bot that has the ID "botID" will stop playing the typing animation and stop playing the typing sound.
+
+botID - ID of the bot that will stop typing.
+
+Example: bot Typing.lsl
+
+See Also:
+	botWhisper,
+	botSay,
+	botShout,
+	botStartTyping,
+	botSendInstantMessage,
+	botListen

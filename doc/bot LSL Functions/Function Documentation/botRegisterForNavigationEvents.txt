@@ -1,0 +1,11 @@
+Function: botRegisterForNavigationEvents(key botID);
+
+Causes the script to receive bot_update events for the given bot with the ID "botID" 
+if the script is not already receiving this event (the script the bot is created in automatically receives bot_update).
+
+botID - ID of the bot who will forward on future bot_update events.
+
+Example: bot Navigation Event Registration.lsl
+
+See Also: 
+	botDeregisterFromNavigationEvents

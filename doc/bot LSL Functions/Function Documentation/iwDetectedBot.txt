@@ -1,0 +1,5 @@
+Function: key iwDetectedBot();
+
+Returns a key that is the UUID of the bot that triggered this event.
+
+Example: bot Sensor Commands.lsl

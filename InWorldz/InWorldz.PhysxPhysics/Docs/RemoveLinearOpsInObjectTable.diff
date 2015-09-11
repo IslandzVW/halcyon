@@ -1,0 +1,265 @@
+Index: ObjectTable.cpp
+===================================================================
+--- ObjectTable.cpp	(revision 98498)
++++ ObjectTable.cpp	(working copy)
+@@ -32,6 +32,7 @@
+ 	try
+ 	{
+ 		_objectTable->Add(pointer, object);
++		_objectTableRev->Add(object, pointer);
+ 	}
+ 	catch (Exception^)
+ 	{
+@@ -48,7 +49,16 @@
+ 
+ 	object->OnDisposing += gcnew EventHandler(&ObjectTable::disposableObject_OnDisposing);
+ 
+-	_ownership->Add(object, owner);
++	OwnershipInfo^ ownerInfo = nullptr;
++	if (owner != nullptr)
++	{
++		if (_ownership->TryGetValue(owner, ownerInfo))
++		{
++			ownerInfo->Owns->Add(object);
++		}
++	}
++
++	_ownership->Add(object, gcnew OwnershipInfo(owner, ownerInfo));
+ }
+ generic<typename T>
+ 
+@@ -88,20 +98,21 @@
+ 	// Unbind the OnDisposing event
+ 	if (IsInstanceOf<PhysX::IDisposable^>(object))
+ 	{
+-		IDisposable^ disposableObject = dynamic_cast<PhysX::IDisposable^>(object);
++		PhysX::IDisposable^ disposableObject = dynamic_cast<PhysX::IDisposable^>(object);
+ 			
+ 		disposableObject->OnDisposing -= gcnew EventHandler(&ObjectTable::disposableObject_OnDisposing);
+ 	}
+ 		
+ 	// Remove from the pointer-object dictionary
+ 	bool result = _objectTable->Remove(pointer);
++	_objectTableRev->Remove(object);
+ 		
+ 	// Remove the from owner-type dictionary
+ 	if (IsInstanceOf<PhysX::IDisposable^>(object))
+ 	{
+ 		IDisposable^ disposableObject = dynamic_cast<PhysX::IDisposable^>(object);
+ 
+-		IDisposable^ owner = _ownership[disposableObject];
++		IDisposable^ owner = _ownership[disposableObject]->Owner;
+ 
+ 		auto ownerTypeKey = ObjectTableOwnershipType(owner, object->GetType());
+ 
+@@ -117,9 +128,18 @@
+ 	// Remove from the ownership dictionary
+ 	if (IsInstanceOf<PhysX::IDisposable^>(object))
+ 	{
+-		IDisposable^ disposableObject = dynamic_cast<PhysX::IDisposable^>(object);
++		PhysX::IDisposable^ disposableObject = dynamic_cast<PhysX::IDisposable^>(object);
+ 
+-		_ownership->Remove(disposableObject);
++		OwnershipInfo^ ownInfo;
++		if (_ownership->TryGetValue(disposableObject, ownInfo))
++		{
++			if (ownInfo->Parent != nullptr)
++			{
++				ownInfo->Parent->ChildRemoved(disposableObject);
++			}
++
++			_ownership->Remove(disposableObject);
++		}
+ 	}
+ 
+ 	// Raise event
+@@ -129,18 +149,21 @@
+ }
+ bool ObjectTable::Remove(Object^ object)
+ {
+-	for each(KeyValuePair<intptr_t, Object^>^ pair in _objectTable)
++	intptr_t objPtr;
++	if (_objectTableRev->TryGetValue(object, objPtr))
+ 	{
+-		if (pair->Value == object)
+-			return Remove(pair->Key);
++		return Remove(objPtr);
+ 	}
+-		
+-	return false;
++	else
++	{
++		return false;
++	}
+ }
+ 
+ void ObjectTable::Clear()
+ {
+ 	_objectTable->Clear();
++	_objectTableRev->Clear();
+ 	_ownership->Clear();
+ 	_ownerTypeLookup->Clear();
+ }
+@@ -156,7 +179,7 @@
+ {
+ 	return _objectTable;
+ }
+-Dictionary<PhysX::IDisposable^, PhysX::IDisposable^>^ ObjectTable::Ownership::get()
++Dictionary<PhysX::IDisposable^, OwnershipInfo^>^ ObjectTable::Ownership::get()
+ {
+ 	return _ownership;
+ }
+Index: ObjectTable.Disposal.cpp
+===================================================================
+--- ObjectTable.Disposal.cpp	(revision 98498)
++++ ObjectTable.Disposal.cpp	(working copy)
+@@ -17,7 +17,7 @@
+ 	_performingDisposal = true;
+ 
+ 		// Call Dispose on the object and its dependents
+-		DisposeOfObjectAndDependents(dynamic_cast<IDisposable^>(sender));
++		DisposeOfObjectAndDependents(dynamic_cast<PhysX::IDisposable^>(sender));
+ 
+ 		// Remove the object from all the dictionaries
+ 		Remove(sender);
+@@ -50,33 +50,30 @@
+ 	}
+ }
+ 
+-array<PhysX::IDisposable^>^ ObjectTable::GetDependents(PhysX::IDisposable^ disposable)
++List<PhysX::IDisposable^>^ ObjectTable::GetDependents(PhysX::IDisposable^ disposable)
+ {
+ 	auto allDependents = gcnew List<PhysX::IDisposable^>();
+ 
+ 	GetDependents(disposable, allDependents);
+ 
+-	return allDependents->ToArray();
++	return allDependents;
+ }
++
+ void ObjectTable::GetDependents(PhysX::IDisposable^ disposable, List<PhysX::IDisposable^>^ allDependents)
+ {
+-	// TODO: Make a reverse dictionary of _ownership to avoid this O(N)
+-	for each(KeyValuePair<PhysX::IDisposable^, PhysX::IDisposable^> d in _ownership)
++	OwnershipInfo^ ownInfo;
++	if (_ownership->TryGetValue(disposable, ownInfo))
+ 	{
+-		// Get the object (child) of the disposable arg
+-		PhysX::IDisposable^ dependent = d.Key;
+-
+-		if (dependent == nullptr)
+-			continue;
+-
+-		// Check the owner
+-		if (d.Value == disposable)
++		IEnumerable<PhysX::IDisposable^>^ deps = ownInfo->Owns;
++		for each(PhysX::IDisposable^ d in deps)
+ 		{
+ 			// Recurse first before adding the object to make a reverse tree
+ 			// e.g. Actor - Scene - Physics
+-			GetDependents(dependent, allDependents);
++			GetDependents(d, allDependents);
+ 
+-			allDependents->Add(dependent);
++			allDependents->Add(d);
+ 		}
+ 	}
++
++	
+ }
+\ No newline at end of file
+Index: ObjectTable.h
+===================================================================
+--- ObjectTable.h	(revision 98498)
++++ ObjectTable.h	(working copy)
+@@ -7,6 +7,26 @@
+ namespace PhysX
+ {
+ 	ref class ObjectTableEventArgs;
++
++	public ref class OwnershipInfo sealed
++	{
++	public:
++		PhysX::IDisposable^ Owner;
++		HashSet<PhysX::IDisposable^>^ Owns;
++		OwnershipInfo^ Parent;
++
++		OwnershipInfo(PhysX::IDisposable^ owner, OwnershipInfo^ parent)
++		{
++			this->Owner = owner;
++			this->Parent = parent;
++			this->Owns = gcnew HashSet<IDisposable^>();
++		}
++
++		void ChildRemoved(PhysX::IDisposable^ child)
++		{
++			this->Owns->Remove(child);
++		}
++	};
+ 	
+ 	// TODO: Make ObjectTable an instance class instead of containing all static data and methods, but then wrap in singleton pattern.
+ 	/// <summary>
+@@ -22,8 +42,10 @@
+ 		private:
+ 			// A collection of native objects to their managed version
+ 			static Dictionary<intptr_t, Object^>^ _objectTable;
++			static Dictionary<Object^, intptr_t>^ _objectTableRev;
++
+ 			// A collection of managed objects to their managed owner
+-			static Dictionary<IDisposable^, IDisposable^>^ _ownership;
++			static Dictionary<PhysX::IDisposable^, OwnershipInfo^>^ _ownership;
+ 			// A collection of ownership-type pairs to a collection of objects
+ 			// This dictionary is used to lookup objects which are owned by X and of type Y. (e.g. property Physics.Cloths > Key: Owner: physics, Type: Cloth yields a collection of Cloth).
+ 			static Dictionary<ObjectTableOwnershipType, List<Object^>^>^ _ownerTypeLookup;
+@@ -35,19 +57,20 @@
+ 			static ObjectTable()
+ 			{
+ 				_objectTable = gcnew Dictionary<intptr_t, Object^>();
+-				_ownership = gcnew Dictionary<IDisposable^, IDisposable^>();
++				_objectTableRev = gcnew Dictionary<Object^, intptr_t>();
++				_ownership = gcnew Dictionary<PhysX::IDisposable^, OwnershipInfo^>();
+ 				_ownerTypeLookup = gcnew Dictionary<ObjectTableOwnershipType, List<Object^>^>();
+ 				
+ 				_performingDisposal = false;
+ 			}
+ 			
+ 		public:
+-			generic<typename T> where T : IDisposable
+-			static void Add(intptr_t pointer, T object, IDisposable^ owner);
++			generic<typename T> where T : PhysX::IDisposable
++			static void Add(intptr_t pointer, T object, PhysX::IDisposable^ owner);
+ 			static void EnsureUnmanagedObjectIsOnlyWrappedOnce(intptr_t unmanaged, Type^ managedType);
+ 			
+-			static void AddObjectOwner(IDisposable^ object, IDisposable^ owner);
+-			generic<typename T> where T : IDisposable
++			static void AddObjectOwner(PhysX::IDisposable^ object, PhysX::IDisposable^ owner);
++			generic<typename T> where T : PhysX::IDisposable
+ 			static void AddOwnerTypeLookup(Object^ owner, T object);
+ 
+ 			static bool Remove(intptr_t pointer);
+@@ -75,10 +98,10 @@
+ 		private:
+ 			static void disposableObject_OnDisposing(Object^ sender, EventArgs^ e);
+ 
+-			static void DisposeOfObjectAndDependents(IDisposable^ disposable);
++			static void DisposeOfObjectAndDependents(PhysX::IDisposable^ disposable);
+ 
+-			static array<IDisposable^>^ GetDependents(IDisposable^ disposable);
+-			static void GetDependents(IDisposable^ disposable, List<IDisposable^>^ disposables);
++			static List<PhysX::IDisposable^>^ GetDependents(PhysX::IDisposable^ disposable);
++			static void GetDependents(PhysX::IDisposable^ disposable, List<PhysX::IDisposable^>^ disposables);
+ 			
+ 		public:
+ 			property int Count
+@@ -90,9 +113,9 @@
+ 			{
+ 				static Dictionary<intptr_t, Object^>^ get();
+ 			}
+-			property Dictionary<IDisposable^, IDisposable^>^ Ownership
++			property Dictionary<PhysX::IDisposable^, OwnershipInfo^>^ Ownership
+ 			{
+-				static Dictionary<IDisposable^, IDisposable^>^ get();
++				static Dictionary<PhysX::IDisposable^, OwnershipInfo^>^ get();
+ 			}
+ 			property Dictionary<ObjectTableOwnershipType, List<Object^>^>^ OwnerTypeLookup
+ 			{

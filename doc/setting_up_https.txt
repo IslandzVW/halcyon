@@ -1,0 +1,71 @@
+Two steps required to configure https to work for outbound support.  There is some work already done to use https
+for login and CAPS but thats not completed yet.  More here when that is available.
+
+1) Certificate Generation
+
+http://msdn.microsoft.com/en-us/library/ms733813.aspx
+
+This is summarized below.  Two steps. You need to make a self signed CA signing certificate and then create 
+a certificate signed by the CA cert you created.  The second step below also installs teh new cert into the 
+"My" certificate repository which the simulator will search by CN if you use that option in configs.
+
+
+  To create a self-signed root authority certificate and export the private key
+
+    Use the MakeCert.exe tool with the following switches:
+        -n subjectName. Specifies the subject name. The convention is to prefix the subject name with "CN = " for "Common Name".
+
+        -r. Specifies that the certificate will be self-signed.
+
+        -sv privateKeyFile. Specifies the file that contains the private key container.
+
+    For example, the following command creates a self-signed certificate with a subject name of "CN=TempCA."
+
+    makecert -n "CN=TempCA" -r -sv TempCA.pvk TempCA.cer
+
+    You will be prompted to provide a password to protect the private key. This password is required when creating a certificate signed by this root certificate.
+
+
+  To create a new certificate signed by a root authority certificate
+
+
+    Use the MakeCert.exe tool with the following switches:
+        -sk subjectKey. The location of the subject's key container that holds the private key. If a key container does not exist, one is created. If neither of the -sk or -sv options is used, a key container called JoeSoft is created by default.
+
+        -n subjectName. Specifies the subject name. The convention is to prefix the subject name with "CN = " for "Common Name".
+
+        -iv issuerKeyFile. Specifies the issuer's private key file.
+
+        -ic issuerCertFile. Specifies the location of the issuer's certificate.
+
+    For example, the following command creates a certificate signed by the TempCA root authority certificate with a subject name of "CN=SignedByCA" using the private key of the issuer.
+
+    makecert -sk SignedByCA -iv TempCA.pvk -n "CN=SignedByCA" -ic TempCA.cer SignedByCA.cer -sr currentuser -ss My
+
+
+
+
+2) OpenSim.ini configuration
+
+You need add a few addition entries in the [Network] configuration section.  Only the relevant changes are show.
+
+[Network]
+	; hostname - Specifies the hostname to use when constructing uri's/url's.  If not specified this
+	; will default to the machinename via System.Environment.
+	; hostname=192.168.0.104
+
+
+    	; ssl config:  Requires a port, certificate and protocol.  Default protocol is "Default"
+	; which supports Ssl3 or TLS.  The default port is http_listener_port + 1 which works for 
+	; a single region.  Better to specify it below however.  For the certificate you must either
+	; use a path to a certificate file + a password to unlock ir or (preferably) a Cert Request/Signed 
+	; pair installed in the MY store with the CN specified below
+    	http_listener_ssl = true 					; Also create a SSL server
+	https_ssl_protocol=Default					; One of "Default", "None", "Ssl2", "Ssl3" or "Tls"
+									; "Default" is "Ssl3 or Tls"
+    	http_listener_sslport = 9016 					; Use this port for SSL connections
+    	http_listener_cn = "CN=MikesGrid" 				; Use the cert with the common name
+    	;http_listener_ssl_cert = "path.to.cert" 			; The path to a certificate to use
+	;http_listener_ssl_passwd = ""					; The password to use with the certificate above
+	;use_https=false						; Use https for login and caps (not yet implemented)
+

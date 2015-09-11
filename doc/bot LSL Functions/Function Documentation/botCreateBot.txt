@@ -1,0 +1,16 @@
+Function: key botCreateBot(string firstName, string lastName, string outfitName, vector startPosition, integer options);
+
+Creates a bot in the world with name "firstName" "lastName" at position "startPosition" wearing the outfit with the name "outfitName".
+
+Returns the key of the newly-created bot.
+
+firstName - first name to be given to the bot
+lastName - last name to be given to the bot
+outfitName - outfit that the bot will be wearing
+startPosition - location that the bot will be created at
+options - options that will be set to the bot
+          This can be set to the following constants:
+		  BOT_CREATE_DEFAULT - Creates the bot with the script owner as the owner of the bot
+
+
+Examples: bot Creation.lsl

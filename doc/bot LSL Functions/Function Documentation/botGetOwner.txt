@@ -1,0 +1,7 @@
+Function: key botGetOwner(key botID);
+
+Returns the ID (key) of the user that owns the bot, or NULL_KEY if the bot is not currently owned by any user or the bot cannot be found.
+
+botID - ID of the bot whose owner will be returned.
+
+Example: bot Information.lsl

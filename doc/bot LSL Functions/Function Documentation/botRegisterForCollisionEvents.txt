@@ -1,0 +1,11 @@
+Function: botRegisterForCollisionEvents(key botID);
+
+Registers the object group the script is in for collision events from the bot with the ID "botID". 
+All collision, collision_start, collision_end, land_collision, land_collision_start, and land_collision_end are forwarded to all scripts in the given object.
+
+botID - ID of the bot that will begin forwarding collision events to the object.
+
+Example: bot Collision Events.lsl
+
+See Also:
+	botDeregisterFromCollisionEvents

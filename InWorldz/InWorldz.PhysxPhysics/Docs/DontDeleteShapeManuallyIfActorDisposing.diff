@@ -1,0 +1,77 @@
+Index: Actor.cpp
+===================================================================
+--- Actor.cpp	(revision 98498)
++++ Actor.cpp	(working copy)
+@@ -14,6 +14,7 @@
+ 
+ 	_actor = actor;
+ 	_physics = owner;
++	_disposing = false;
+ 
+ 	ObjectTable::Add((intptr_t)actor, this, owner);
+ }
+@@ -23,6 +24,8 @@
+ }
+ Actor::!Actor()
+ {
++	_disposing = true;
++
+ 	OnDisposing(this, nullptr);
+ 
+ 	if (Disposed)
+@@ -39,6 +42,11 @@
+ 	return (_actor == NULL);
+ }
+ 
++bool Actor::Disposing::get()
++{
++	return _disposing;
++}
++
+ ObservableInstance^ Actor::GetObservableInstance()
+ {
+ 	return gcnew ObservableInstance(_actor);
+Index: Actor.h
+===================================================================
+--- Actor.h	(revision 98498)
++++ Actor.h	(working copy)
+@@ -28,6 +28,7 @@
+ 		private:
+ 			PxActor* _actor;
+ 			PhysX::Physics^ _physics;
++			bool _disposing;
+ 
+ 		protected:
+ 			Actor(PxActor* actor, PhysX::Physics^ owner);
+@@ -42,6 +43,11 @@
+ 				virtual bool get();
+ 			}
+ 
++			property bool Disposing
++			{
++				virtual bool get();
++			}
++
+ 			virtual ObservableInstance^ GetObservableInstance();
+ 
+ 			virtual String^ ToString() override;
+Index: Shape.cpp
+===================================================================
+--- Shape.cpp	(revision 98498)
++++ Shape.cpp	(working copy)
+@@ -39,8 +39,13 @@
+ 	if (Disposed)
+ 		return;
+ 
+-	_shape->release();
+-	_shape = NULL;
++	//The actor owns the native shape, and if it has been disposed
++	//that means this shape has also already been disposed
++	if (! _actor->Disposed && ! _actor->Disposing)
++	{
++		_shape->release();
++		_shape = NULL;
++	}
+ 
+ 	OnDisposed(this, nullptr);
+ }

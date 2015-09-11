@@ -1,0 +1,33 @@
+Function: int botFollowAvatar(key botID, key avatar, list options);
+
+Causes a bot with the ID "botID" to begin following the user "avatar" in the sim. Returns whether the operation was successful and error conditions.
+
+botID - ID of the bot who will begin following the avatar.
+avatar - ID (key) of the user that the bot will begin following.
+options - options that will affect how the bot follows the avatar.
+	This can contain the following keys:
+		BOT_ALLOW_RUNNING - whether the bot is allowed to run while attempting to follow the user.
+			Takes TRUE or FALSE as valid values.
+		BOT_ALLOW_FLYING - whether the bot is allowed to fly while attempting to follow the user.
+			Takes TRUE or FALSE as valid values.
+		BOT_ALLOW_JUMPING - whether the bot is allowed to jump while attempting to follow the user.
+			Takes TRUE or FALSE as valid values.
+		BOT_FOLLOW_OFFSET - an offset away from the user's position that the bot will attempt to move to instead of directly on top of the user.
+			Takes a vector parameter that is the offset away from the user.
+		BOT_REQUIRES_LINE_OF_SIGHT - will only follow the avatar if there are no objects in-between the bot and the avatar.
+			Takes TRUE or FALSE as valid values.
+		BOT_START_FOLLOWING_DISTANCE - the distance before the bot will begin moving after the avatar once the bot has gotten to the avatar and stopped.
+			Takes a float that is the distance that the avatar will need to move away from the bot before the bot will start following the avatar again.
+		BOT_STOP_FOLLOWING_DISTANCE - the distance before the bot will stop moving closer to the avatar.
+			Takes a float that is the distance that the bot will stop moving closer to the avatar when the bot is attempting to move closer to the user.
+		BOT_LOST_AVATAR_DISTANCE - the distance before the bot gives up attempting to follow the avatar and triggers the bot_update event with the lost avatar parameter. 
+			Takes a float that is the distance that the bot has to be away from the user before the bot will give up attempting to follow the user.
+
+Return values:
+	This function will return one of the following return codes:
+		BOT_SUCCESS - The bot is now successfully following the avatar.
+		BOT_NOT_FOUND - The bot with the given ID was not found in the sim.
+		BOT_USER_NOT_FOUND - The user with the givne ID was not found in the sim.
+		BOT_ERROR - A generic error occured, an input into the function was not correct.
+
+Example: bot Follow Avatar.lsl

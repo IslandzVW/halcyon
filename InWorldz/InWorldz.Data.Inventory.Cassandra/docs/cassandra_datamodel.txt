@@ -1,0 +1,118 @@
+create keyspace IWInventory
+with placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy' and
+strategy_options = [{replication_factor:3}];
+
+use IWInventory;
+
+create column family Folders      
+with column_type = 'Super' and keys_cached=1000000;
+
+create column family UserFolders
+with column_type = 'Super' and keys_cached=1000000;
+
+create column family FolderVersions
+with default_validation_class=CounterColumnType and replicate_on_write=true
+and keys_cached=1000000;
+
+create column family ItemParents with keys_cached=1000000;
+
+create column family UserActiveGestures with keys_cached=1000000;
+
+
+CF = Folders
+
+ROW (KEY = FOLDER_ID)
+{
+	SUPERCOLUMN "properties"
+	{
+		{"parent_folder", PARENT_FOLDER_ID}
+		{"level", LEVEL} 
+		{"type", TYPE} (TYPE: an asset type)
+		
+		{FOLDER_PROPERTY, FOLDER_PROPERTY}
+		{FOLDER_PROPERTY, FOLDER_PROPERTY}
+		{FOLDER_PROPERTY, FOLDER_PROPERTY}
+		{FOLDER_PROPERTY, FOLDER_PROPERTY}
+		...
+	}
+	
+	SUPERCOLUMN "sub_folders"
+	{	
+		{FOLDER_ID, [ver:1][folder_name_len_prefix:1][folderName:var][type:2]}
+		{FOLDER_ID, [ver:1][folder_name_len_prefix:1][folderName:var][type:2]}
+		{FOLDER_ID, [ver:1][folder_name_len_prefix:1][folderName:var][type:2]}
+		{FOLDER_ID, [ver:1][folder_name_len_prefix:1][folderName:var][type:2]}
+		...
+	}
+	
+	[
+	SUPERCOLUMN ITEM_ID
+	{
+		{ITEM_PROPERTY, ITEM_PROPERTY}
+		{ITEM_PROPERTY, ITEM_PROPERTY}
+		{ITEM_PROPERTY, ITEM_PROPERTY}
+		{ITEM_PROPERTY, ITEM_PROPERTY}
+		...
+	}
+	...
+	]
+}
+
+level = public enum FolderLevel
+        {
+            Root = 0,
+            TopLevel,
+            Leaf
+        }
+
+------------------------------------------
+
+CF = ItemParents
+
+ROW (KEY = ITEM_ID)
+{
+	{"parent", PARENT_FOLDER_ID}
+}
+
+
+------------------------------------------
+
+CF = UserFolders
+
+ROW (KEY = USER_ID)
+{
+	SUPERCOLUMN FOLDER_ID
+	{
+		{"name", FODLER_NAME}
+		{"parent_folder", PARENT_FOLDER_ID}
+		{"type", TYPE}
+		{"level", LEVEL}
+		
+	}
+	...
+}
+
+		
+default_for_type = asset type number which will by default go into this folder
+		
+------------------------------------------
+
+CF = UserActiveGestures
+
+ROW (KEY = USER_ID)
+{
+	{GESTURE_ITEM_ID, -}
+	{GESTURE_ITEM_ID, -}
+	{GESTURE_ITEM_ID, -}
+	{GESTURE_ITEM_ID, -}
+	...
+}
+
+------------------------------------------
+
+CF = FolderVersions
+
+ROW (KEY = FOLDER_ID)
+{
+	{"count", COUNTER_COLUMN}
+}

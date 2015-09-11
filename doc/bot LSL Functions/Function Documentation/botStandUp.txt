@@ -1,0 +1,10 @@
+Function: botStandUp(key botID);
+
+Causes the bot with the given ID "botID" to stand up if the bot is sitting.
+
+botID - ID of the bot that will stand up.
+
+Example: bot Sitting on Objects.lsl
+
+See Also:
+	botSitObject

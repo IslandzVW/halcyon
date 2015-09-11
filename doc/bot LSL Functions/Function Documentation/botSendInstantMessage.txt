@@ -1,0 +1,20 @@
+Function: botSendInstantMessage(key botID, key userID, string message);
+
+The bot with the given ID "botID" will send an instant message to the user "userID" with the given message "message".
+
+botID - ID of the bot that will send the instant message
+userID - ID of the user that will receive the instant message.
+message - message to be transmitted to the user
+
+Caveats:
+	The user that the instant message is being sent to must be in the same sim as the bot.
+	
+Example: bot Instant Messaging.lsl
+
+See Also:
+	botWhisper,
+	botSay,
+	botShout,
+	botStartTyping,
+	botStopTyping,
+	botListen

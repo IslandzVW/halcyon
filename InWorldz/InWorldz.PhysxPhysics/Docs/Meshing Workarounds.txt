@@ -1,0 +1,5 @@
+Twists on torus dont really work and 90 begin twist crashes HACD. Avoid HACding twiste torii?
+
+Hollow on torus doesnt really work. Avoid HACD on hollow torus?
+
+Twists seem to be failing on almost every circular shape right now. May be best to not HACD twisted circular objects

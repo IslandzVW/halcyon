@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SystemObjectClient</name>
+    </assembly>
+    <members>
+        <member name="T:Sample.SystemObjectClient">
+            <summary>Example of boxcarring and using the system object.</summary>
+            <remarks>
+            This example class calls the system object to get a list of methods available, and
+            then boxcars a collection of calls to get the signature of each of the methods
+            returned in the original list.
+            </remarks>
+        </member>
+        <member name="F:Sample.SystemObjectClient.SERVER_URL">
+            <summary>The URL of the XML-RPC server.</summary>
+        </member>
+        <member name="M:Sample.SystemObjectClient.Main">
+            <summary>
+            The Main method, the entire class is embodied in this single method. This method simply
+            creates an XmlRpcRequest to system.listMethods which is sent. If all goes well a list
+            of methods is returned. That list is then used to make a collection of XmlRpcRequests
+            each a call to system.methodSignature. This collection of requests is not sent
+            individually but instead is "boxcarred" together and sent all at once.
+            <para>
+            The results of the second call is a collection of results to each individual request
+            bundled into an array. The array of results is then formatted for output.</para>
+            </summary>
+        </member>
+    </members>
+</doc>

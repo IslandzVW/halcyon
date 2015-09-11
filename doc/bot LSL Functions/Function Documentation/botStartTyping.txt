@@ -1,0 +1,15 @@
+Function: botStartTyping(key botID);
+
+The bot that has the ID "botID" will begin the typing animation and play the typing sound.
+
+botID - ID of the bot that will start typing.
+
+Example: bot Typing.lsl
+
+See Also:
+	botWhisper,
+	botSay,
+	botShout,
+	botStopTyping,
+	botSendInstantMessage,
+	botListen

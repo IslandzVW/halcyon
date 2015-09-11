@@ -1,0 +1,7 @@
+Function: vector botGetPos(key botID);
+
+Returns the current position of the bot with the ID "botID".
+
+botID - ID of the bot whose position will be returned.
+
+Example: bot Information.lsl

@@ -1,0 +1,8 @@
+Function: botSetRotation(key botID, rotation rot);
+
+Sets the rotation of the bot with the ID "botID" to the rotation "rot".
+
+botID - ID of the bot whose rotation will be modified.
+rot - new final rotation of the bot if it is possible to rotate the bot in that manner.
+
+Example: bot Set Rotation.lsl

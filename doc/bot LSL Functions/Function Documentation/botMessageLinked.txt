@@ -1,0 +1,15 @@
+Function: botMessageLinked(key botID, integer num, string message, key id);
+
+Causes a link_message event to be triggered in all attachments of the bot with the given information.
+
+botID - ID of the bot whose attachments will get the link_message event.
+num - numeric parameter to send to the specified bot attachments.
+msg - string parameter to send to the specified bot attachments.
+id - key parameter to send to the specified bot attachments.
+
+Example:
+	bot Message Linked.lsl
+	
+See Also:
+	llMessageLinked,
+	linked_message

@@ -1,0 +1,15 @@
+Function: list botGetBotsWithTag(string tag);
+
+Returns a list of all bot IDs (keys) that have a given tag "tag" applied to them.
+
+tag - Tag that all bots in the returned list will have
+
+Example:
+	bot Tag Removal.lsl
+	bot Tagged Removal.lsl
+	bot Tagging.lsl
+
+See Also: 
+	botAddTag,
+	botRemoveTag,
+	botRemoveBotsWithTag

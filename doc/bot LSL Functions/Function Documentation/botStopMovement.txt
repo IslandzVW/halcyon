@@ -1,0 +1,7 @@
+Function: botStopMovement(key botID);
+
+Causes the bot to cease all movement that could have resulted from following an avatar, navigating a path, or wandering.
+
+botID - ID of the bot who will stop moving.
+
+Example: bot Stop Movement.lsl

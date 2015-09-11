@@ -1,0 +1,10 @@
+Function: list botGetBotOutfits();
+
+Returns a list of strings representing all outfit names that have been stored into the database by the script owner.
+
+Example: bot Outfit Manager.lsl
+
+See Also:
+	botSetOutfit,
+	botRemoveOutfit,
+	botChangeOutfit

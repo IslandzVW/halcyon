@@ -1,0 +1,16 @@
+Function: list botGetProfileParams(string botID, list profileInformation);
+
+Returns a list of string values corresponding to the specified bot profile fields.
+
+botID - ID of the bot whose profile will be updated.
+profileInformation - list of constants representing which profile values will be returned in the same order
+	Values can be any of the following:
+		BOT_ABOUT_TEXT  - the about text
+		BOT_EMAIL       - the profile email
+		BOT_IMAGE_UUID  - the main profile image
+		BOT_PROFILE_URL - the profile URL.
+
+Returns a list of strings corresponding to the requested bot profile fields.
+	Returned values are in the same order as the keys in profileInformation.
+
+Example: bot Profile Information.lsl

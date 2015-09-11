@@ -1,0 +1,67 @@
+Physics - General overview and design considerations
+This is a living document and should be kept up to date through all changes
+
+
+Messaging/Synchronization
+
+It is desirable to support both async and synchronous physics modes. The initial design of the PhysX engine will remain sync with the scene loop, but if after testing we decide that proper physics FPS can not be maintained in this configuration due to external calls or other problems in the scene loop, it will be advantageous to change to an async model to prevent interpenetration and physics explosions.
+
+With that in mind, we will create a messaging system for physical handling of external stimuli such as the resident changing their walking direction, a resident running instead of walking, a boat or other vehicle applying forces, etc. This producer consumer model will remove unnecessary locking and prevent some of the strange physics behaviors we currently experience.
+
+We will minimize runtime penalties of the messaging system by using stack objects (structs) that will not incur a GC if many control messages are sent and queued.
+
+Management of the messages will be handled by an atomic swap of two queues. When the physics process begins it will swap the current queue A for queue B. Further physics updates will go to queue B while the physics commands in queue A are processed. When the processing of queue A is finished, it is cleared. On the next execution of the physics loop, the swap is again performed and queue B is processed, while queue A becomes the active queue.
+
+
+
+Static movement
+
+In PhysX you can not move a static actor, therefore each prim when freshly rezzed by a user will begin it's life as kinematic. We will track each of these prims, and if the prim is not moved/rotated for 5 minutes (configurable?), we will then recreate the body as a static
+
+
+* Message types *
+
+PositionUpdate – Updates the position of the physics actor to the coordinates given
+AddImpulse – Adds a force impulse to the given physics actor
+
+
+
+Groups/Linking/Unlinking
+--------------------------
+
+Dynamic/Static groups are determined by the root part. If the root part is dynamic, so are all other prims
+
+Static groups will not have joints, if the group is not physical, it will be up to the PhysxPrim implementation to move
+all of its physical subobjects in the scene.
+
+Dynamic groups will be bound together by joints.
+
+If a group is changed from non-phys to physical, the appropriate fixed joints will need to be created between each child part and the root.
+
+If a group is changed from physical to non-physical, connecting joints will need to be destroyed
+
+Unlinking of a single prim from a group means the connecting joints (if any) will need to be destroyed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

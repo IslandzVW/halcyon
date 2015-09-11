@@ -1,0 +1,8 @@
+Function: list botGetAllBotsInRegion();
+
+Returns a list containing the keys of all bots in the sim regardless of who owns them.
+
+Example: bot Remove all bots.lsl
+
+See Also:
+	botGetAllMyBotsInRegion

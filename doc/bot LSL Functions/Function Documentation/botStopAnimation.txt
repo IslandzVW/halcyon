@@ -1,0 +1,11 @@
+Function: botStopAnimation(key botID, string animation);
+
+Causes the bot with the ID "botID" to stop playing an animation with the name or UUID "animation".
+
+botID - ID of the bot who will stop playing an animation.
+animation - an item in the inventory of the prim with the script is in or a built-in animation.
+
+Example: bot Animation.lsl
+
+See Also:
+	botStartAnimation

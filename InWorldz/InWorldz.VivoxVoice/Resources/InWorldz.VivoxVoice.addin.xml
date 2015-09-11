@@ -1,0 +1,13 @@
+﻿<Addin id="InWorldz.VivoxVoice" version="0.1">
+  <Runtime>
+    <Import assembly="InWorldz.VivoxVoice.dll"/>
+  </Runtime>
+
+  <Dependencies>
+    <Addin id="OpenSim" version="0.5" />
+  </Dependencies>
+
+  <Extension path = "/OpenSim/RegionModules">
+    <RegionModule id="InWorldzVivoxVoice" type="InWorldz.VivoxVoice.VivoxVoiceModule" />
+  </Extension>
+</Addin>

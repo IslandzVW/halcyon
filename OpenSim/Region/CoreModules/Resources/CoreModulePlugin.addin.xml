@@ -1,0 +1,26 @@
+<Addin id="OpenSim.Region.CoreModules" version="0.2">
+    <Runtime>
+        <Import assembly="OpenSim.Region.CoreModules.dll"/>
+    </Runtime>
+
+    <Dependencies>
+        <Addin id="OpenSim" version="0.5" />
+    </Dependencies>
+
+    <Extension path = "/OpenSim/RegionModules">
+        <RegionModule id="TerrainModule" type="OpenSim.Region.CoreModules.World.Terrain.TerrainModule" />
+        <RegionModule id="WorldMapModule" type="OpenSim.Region.CoreModules.World.WorldMap.WorldMapModule" />
+        <RegionModule id="LocalUserServicesConnector" type="OpenSim.Region.CoreModules.ServiceConnectors.User.LocalUserServicesConnector" />
+        <RegionModule id="RemoteUserServicesConnector" type="OpenSim.Region.CoreModules.ServiceConnectors.User.RemoteUserServicesConnector" />
+        <RegionModule id="CoreAssetCache" type="OpenSim.Region.CoreModules.Asset.CoreAssetCache" />
+        <RegionModule id="UrlModule" type="OpenSim.Region.CoreModules.Scripting.LSLHttp.UrlModule" />
+        <RegionModule id="PlusParcelModule" type="OpenSim.Region.CoreModules.Plus.PlusParcelModule" />
+    </Extension>
+
+    <Extension path = "/OpenSim/WindModule">
+        <WindModel id="ConfigurableWind" type="OpenSim.Region.CoreModules.World.Wind.Plugins.ConfigurableWind" />
+        <WindModel id="SimpleRandomWind" type="OpenSim.Region.CoreModules.World.Wind.Plugins.SimpleRandomWind" />
+        <WindModel id="ZephyrWind"       type="OpenSim.Region.CoreModules.World.Wind.Plugins.ZephyrWind" />
+    </Extension>
+
+</Addin>

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ProxyClient</name>
+    </assembly>
+    <members>
+        <member name="T:Sample.Server">
+            <summary>The interface describing the remote object.</summary>
+        </member>
+        <member name="M:Sample.Server.Ping">
+            <summary>Server's Ping method</summary>
+        </member>
+        <member name="M:Sample.Server.Echo(System.String)">
+            <summary>Server's Echo method</summary>
+        </member>
+        <member name="M:Sample.Server.BadMethod">
+            <summary>This method <b>does not</b> exist on the server, to demonstrate an error.</summary>
+        </member>
+        <member name="T:Sample.ProxyClient">
+            <summary>An XML-RPC client that employs a local proxy.</summary>
+            <remarks></remarks>
+        </member>
+        <member name="M:Sample.ProxyClient.Main(System.String[])">
+            <summary>Main application method.</summary>
+            <remarks>Simply sets up logging and then a proxy server instance. Then
+            uses that proxy.
+            </remarks>
+        </member>
+    </members>
+</doc>

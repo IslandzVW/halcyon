@@ -1,0 +1,176 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="2.0">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{01B1153E-0000-0000-0000-000000000000}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon></ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>OpenSim.Region.ScriptEngine.Tests</AssemblyName>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder></AppDesignerFolder>
+    <RootNamespace>OpenSim.Region.ScriptEngine.Tests</RootNamespace>
+    <StartupObject></StartupObject>
+    <StartArguments></StartArguments>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DocumentationFile></DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>False</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn></NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile></DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>True</Optimize>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn></NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Nini.dll" >
+        <Name>Nini.dll</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="nunit.framework.dll" >
+        <Name>nunit.framework.dll</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenMetaverseTypes.dll" >
+        <Name>OpenMetaverseTypes.dll</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="OpenSim.Tests.Common" >
+        <Name>OpenSim.Tests.Common</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" >
+        <Name>System</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Tools.dll" >
+        <Name>Tools.dll</Name>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Framework\OpenSim.Framework.csproj">
+      <Name>OpenSim.Framework</Name>
+      <Project>{8ACA2445-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Framework\Communications\OpenSim.Framework.Communications.csproj">
+      <Name>OpenSim.Framework.Communications</Name>
+      <Project>{CB52B7E7-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Framework\OpenSim.Region.Framework.csproj">
+      <Name>OpenSim.Region.Framework</Name>
+      <Project>{C8DACD29-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\ScriptEngine\Shared\OpenSim.Region.ScriptEngine.Shared.csproj">
+      <Name>OpenSim.Region.ScriptEngine.Shared</Name>
+      <Project>{D9F1B557-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\ScriptEngine\Shared\OpenSim.Region.ScriptEngine.Shared.csproj">
+      <Name>OpenSim.Region.ScriptEngine.Shared</Name>
+      <Project>{D9F1B557-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\ScriptEngine\Shared\Api\Implementation\OpenSim.Region.ScriptEngine.Shared.Api.csproj">
+      <Name>OpenSim.Region.ScriptEngine.Shared.Api</Name>
+      <Project>{DF58E6BF-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\ScriptEngine\Shared\CodeTools\OpenSim.Region.ScriptEngine.Shared.CodeTools.csproj">
+      <Name>OpenSim.Region.ScriptEngine.Shared.CodeTools</Name>
+      <Project>{840BCD58-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\ScriptEngine\XEngine\OpenSim.Region.ScriptEngine.XEngine.csproj">
+      <Name>OpenSim.Region.ScriptEngine.XEngine</Name>
+      <Project>{6B1E4D47-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Shared\Tests\LSL_ApiTest.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Shared\Tests\LSL_TypesTestList.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Shared\Tests\LSL_TypesTestLSLFloat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Shared\Tests\LSL_TypesTestLSLInteger.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Shared\Tests\LSL_TypesTestLSLString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Shared\Tests\LSL_TypesTestVector3.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Shared\CodeTools\Tests\CompilerTest.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Shared\CodeTools\Tests\CSCodeGeneratorTest.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XEngine\Tests\XEngineTest.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

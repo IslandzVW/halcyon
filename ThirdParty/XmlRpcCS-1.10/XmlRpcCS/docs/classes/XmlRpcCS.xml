@@ -1,0 +1,654 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>XmlRpcCS</name>
+    </assembly>
+    <members>
+        <member name="T:Nwc.XmlRpc.LogLevel">
+            <summary>Define levels of logging.</summary><remarks> This duplicates
+            similar enumerations in System.Diagnostics.EventLogEntryType. The 
+            duplication was merited because .NET Compact Framework lacked the EventLogEntryType enum.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.LogLevel.Information">
+            <summary>Information level, log entry for informational reasons only.</summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.LogLevel.Warning">
+            <summary>Warning level, indicates a possible problem.</summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.LogLevel.Error">
+            <summary>Error level, implies a significant problem.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.Logger">
+            <summary>
+            Logging singleton with swappable output delegate.
+            </summary>
+            <remarks>
+            This singleton provides a centralized log. The actual WriteEntry calls are passed
+            off to a delegate however. Having a delegate do the actual logginh allows you to
+            implement different logging mechanism and have them take effect throughout the system.
+            </remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.Logger.Delegate">
+            <summary>The LoggerDelegate that will recieve WriteEntry requests.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.Logger.WriteEntry(System.String,Nwc.XmlRpc.LogLevel)">
+            <summary>
+            Method logging events are sent to.
+            </summary>
+            <param name="message">The message <c>String</c> to log.</param>
+            <param name="level">The <c>LogLevel</c> of your message.</param>
+        </member>
+        <member name="T:Nwc.XmlRpc.Logger.LoggerDelegate">
+            <summary>Delegate definition for logging.</summary>
+            <param name="message">The message <c>String</c> to log.</param>
+            <param name="level">The <c>LogLevel</c> of your message.</param>
+        </member>
+        <member name="T:Nwc.XmlRpc.SimpleHttpRequest">
+            <summary>Very basic HTTP request handler.</summary>
+            <remarks>This class is designed to accept a TcpClient and treat it as an HTTP request.
+             It will do some basic header parsing and manage the input and output streams associated
+             with the request.</remarks>
+        </member>
+        <member name="M:Nwc.XmlRpc.SimpleHttpRequest.#ctor(System.Net.Sockets.TcpClient)">
+            <summary>A constructor which accepts the TcpClient.</summary>
+            <remarks>It creates the associated input and output streams, determines the request type,
+            and parses the remaining HTTP header.</remarks>
+            <param name="client">The <c>TcpClient</c> associated with the HTTP connection.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.SimpleHttpRequest.ToString">
+             <summary>
+             Format the object contents into a useful string representation.
+             </summary>
+            <returns><c>String</c> representation of the <c>SimpleHttpRequest</c> as the <i>HttpMethod FilePath Protocol</i>.</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.SimpleHttpRequest.Close">
+            <summary>
+            Close the <c>SimpleHttpRequest</c>. This flushes and closes all associated io streams.
+            </summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.SimpleHttpRequest.Output">
+            <summary>The output <c>StreamWriter</c> associated with the request.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.SimpleHttpRequest.Input">
+            <summary>The input <c>StreamReader</c> associated with the request.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.SimpleHttpRequest.Client">
+            <summary>The <c>TcpClient</c> with the request.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.SimpleHttpRequest.HttpMethod">
+            <summary>The type of HTTP request (i.e. PUT, GET, etc.).</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.SimpleHttpRequest.Protocol">
+            <summary>The level of the HTTP protocol.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.SimpleHttpRequest.FilePath">
+            <summary>The "path" which is part of any HTTP request.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.SimpleHttpRequest.FilePathFile">
+            <summary>The file portion of the "path" which is part of any HTTP request.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.SimpleHttpRequest.FilePathDir">
+            <summary>The directory portion of the "path" which is part of any HTTP request.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcBoxcarRequest">
+             <summary>Class that collects individual <c>XmlRpcRequest</c> objects and submits them as a <i>boxcarred</i> request.</summary>
+             <remarks>A boxcared request is when a number of request are collected before being sent via XML-RPC, and then are sent via
+             a single HTTP connection. This results in a speed up from reduced connection time.  The results are then retuned collectively
+             as well.
+            </remarks>
+             <seealso cref="T:Nwc.XmlRpc.XmlRpcRequest"/>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcRequest">
+            <summary>Class supporting the request side of an XML-RPC transaction.</summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcRequest._params">
+            <summary><c>ArrayList</c> containing the parameters.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcRequest.#ctor">
+            <summary>Instantiate an <c>XmlRpcRequest</c></summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcRequest.#ctor(System.String,System.Collections.IList)">
+            <summary>Instantiate an <c>XmlRpcRequest</c> for a specified method and parameters.</summary>
+            <param name="methodName"><c>String</c> designating the <i>object.method</i> on the server the request
+            should be directed to.</param>
+            <param name="parameters"><c>ArrayList</c> of XML-RPC type parameters to invoke the request with.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcRequest.Invoke(System.String)">
+            <summary>Invoke this request on the server.</summary>
+            <param name="url"><c>String</c> The url of the XML-RPC server.</param>
+            <returns><c>Object</c> The value returned from the method invocation on the server.</returns>
+            <exception cref="T:Nwc.XmlRpc.XmlRpcException">If an exception generated on the server side.</exception>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcRequest.Send(System.String,System.Int32)">
+            <summary>Send the request to the server.</summary>
+            <param name="url"><c>String</c> The url of the XML-RPC server.</param>
+            <returns><c>XmlRpcResponse</c> The response generated.</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcRequest.ToString">
+            <summary>Produce <c>String</c> representation of the object.</summary>
+            <returns><c>String</c> representation of the object.</returns>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcRequest.Params">
+            <summary><c>ArrayList</c> conntaining the parameters for the request.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcRequest.MethodName">
+            <summary><c>String</c> conntaining the method name, both object and method, that the request will be sent to.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcRequest.MethodNameObject">
+            <summary><c>String</c> object name portion of the method name.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcRequest.MethodNameMethod">
+            <summary><c>String</c> method name portion of the object.method name.</summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcBoxcarRequest.Requests">
+            <summary>ArrayList to collect the requests to boxcar.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcBoxcarRequest.#ctor">
+            <summary>Basic constructor.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcBoxcarRequest.MethodName">
+            <summary>Returns the <c>String</c> "system.multiCall" which is the server method that handles boxcars.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcBoxcarRequest.Params">
+            <summary>The <c>ArrayList</c> of boxcarred <paramref>Requests</paramref> as properly formed parameters.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcClientProxy">
+            <summary>This class provides support for creating local proxies of XML-RPC remote objects</summary>
+            <remarks>
+            To create a local proxy you need to create a local C# interface and then, via <i>createProxy</i>
+            associate that interface with a remote object at a given URL.
+            </remarks>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcClientProxy.createProxy(System.String,System.String,System.Type)">
+            <summary>Factory method to create proxies.</summary>
+            <remarks>
+            To create a local proxy you need to create a local C# interface with methods that mirror those of the server object.
+            Next, pass that interface into <c>createProxy</c> along with the object name and URL of the remote object and 
+            cast the resulting object to the specifice interface.
+            </remarks>
+            <param name="remoteObjectName"><c>String</c> The name of the remote object.</param>
+            <param name="url"><c>String</c> The URL of the remote object.</param>
+            <param name="anInterface"><c>Type</c> The typeof() of a C# interface.</param>
+            <returns><c>Object</c> A proxy for your specified interface. Cast to appropriate type.</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcClientProxy.Invoke(System.Runtime.Remoting.Messaging.IMessage)">
+            <summary>The local method dispatcher - do not invoke.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.Context">
+            <summary>Parser context, we maintain contexts in a stack to avoiding recursion. </summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcDeserializer">
+            <summary>Basic XML-RPC data deserializer.</summary>
+            <remarks>Uses <c>XmlTextReader</c> to parse the XML data. This level of the class 
+            only handles the tokens common to both Requests and Responses. This class is not useful in and of itself
+            but is designed to be subclassed.</remarks>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcXmlTokens">
+            <summary>Class collecting <c>String</c> tokens that are part of XML-RPC files.</summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.ISO_DATETIME">
+            <summary>C# formatting string to describe an ISO 8601 date.</summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.BASE64">
+            <summary>Base64 field indicator.</summary>
+            <remarks>Corresponds to the &lt;base64&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.STRING">
+            <summary>String field indicator.</summary>
+            <remarks>Corresponds to the &lt;string&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.INT">
+            <summary>Integer field integer.</summary>
+            <remarks>Corresponds to the &lt;i4&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.ALT_INT">
+            <summary>Alternate integer field indicator.</summary>
+            <remarks>Corresponds to the &lt;int&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.DATETIME">
+            <summary>Date field indicator.</summary>
+            <remarks>Corresponds to the &lt;dateTime.iso8601&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.BOOLEAN">
+            <summary>Boolean field indicator.</summary>
+            <remarks>Corresponds to the &lt;boolean&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.VALUE">
+            <summary>Value token.</summary>
+            <remarks>Corresponds to the &lt;value&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.NAME">
+            <summary>Name token.</summary>
+            <remarks>Corresponds to the &lt;name&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.ARRAY">
+            <summary>Array field indicator..</summary>
+            <remarks>Corresponds to the &lt;array&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.DATA">
+            <summary>Data token.</summary>
+            <remarks>Corresponds to the &lt;data&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.MEMBER">
+            <summary>Member token.</summary>
+            <remarks>Corresponds to the &lt;member&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.STRUCT">
+            <summary>Stuct field indicator.</summary>
+            <remarks>Corresponds to the &lt;struct&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.DOUBLE">
+            <summary>Double field indicator.</summary>
+            <remarks>Corresponds to the &lt;double&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.PARAM">
+            <summary>Param token.</summary>
+            <remarks>Corresponds to the &lt;param&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.PARAMS">
+            <summary>Params token.</summary>
+            <remarks>Corresponds to the &lt;params&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.METHOD_CALL">
+            <summary>MethodCall token.</summary>
+            <remarks>Corresponds to the &lt;methodCall&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.METHOD_NAME">
+            <summary>MethodName token.</summary>
+            <remarks>Corresponds to the &lt;methodName&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.METHOD_RESPONSE">
+            <summary>MethodResponse token</summary>
+            <remarks>Corresponds to the &lt;methodResponse&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.FAULT">
+            <summary>Fault response token.</summary>
+            <remarks>Corresponds to the &lt;fault&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.FAULT_CODE">
+            <summary>FaultCode token.</summary>
+            <remarks>Corresponds to the &lt;faultCode&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcXmlTokens.FAULT_STRING">
+            <summary>FaultString token.</summary>
+            <remarks>Corresponds to the &lt;faultString&gt; tag.</remarks>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcDeserializer._text">
+            <summary>Protected reference to last text.</summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcDeserializer._value">
+            <summary>Protected reference to last deserialized value.</summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcDeserializer._name">
+            <summary>Protected reference to last name field.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcDeserializer.#ctor">
+            <summary>Basic constructor.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcDeserializer.Deserialize(System.IO.TextReader)">
+            <summary>Static method that parses XML data into a response using the Singleton.</summary>
+            <param name="xmlData"><c>StreamReader</c> containing an XML-RPC response.</param>
+            <returns><c>Object</c> object resulting from the deserialization.</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcDeserializer.DeserializeNode(System.Xml.XmlTextReader)">
+            <summary>Protected method to parse a node in an XML-RPC XML stream.</summary>
+            <remarks>Method deals with elements common to all XML-RPC data, subclasses of 
+            this object deal with request/response spefic elements.</remarks>
+            <param name="reader"><c>XmlTextReader</c> of the in progress parsing data stream.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcDeserializer.Deserialize(System.String)">
+            <summary>Static method that parses XML in a <c>String</c> into a 
+            request using the Singleton.</summary>
+            <param name="xmlData"><c>String</c> containing an XML-RPC request.</param>
+            <returns><c>XmlRpcRequest</c> object resulting from the parse.</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcDeserializer.PopContext">
+            <summary>Pop a Context of the stack, an Array or Struct has closed.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcDeserializer.PushContext">
+            <summary>Push a Context on the stack, an Array or Struct has opened.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcDeserializer.Reset">
+            <summary>Reset the internal state of the deserializer.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcErrorCodes">
+            <summary>Standard XML-RPC error codes.</summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.PARSE_ERROR_MALFORMED">
+            <summary></summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.PARSE_ERROR_MALFORMED_MSG">
+            <summary></summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.PARSE_ERROR_ENCODING">
+            <summary></summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.PARSE_ERROR_ENCODING_MSG">
+            <summary></summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.SERVER_ERROR_METHOD">
+            <summary></summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.SERVER_ERROR_METHOD_MSG">
+            <summary></summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.SERVER_ERROR_PARAMS">
+            <summary></summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.SERVER_ERROR_PARAMS_MSG">
+            <summary></summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.APPLICATION_ERROR">
+            <summary></summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.APPLICATION_ERROR_MSG">
+            <summary></summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.TRANSPORT_ERROR">
+            <summary></summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcErrorCodes.TRANSPORT_ERROR_MSG">
+            <summary></summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcException">
+            <summary>An XML-RPC Exception.</summary>
+            <remarks>Maps a C# exception to an XML-RPC fault. Normal exceptions
+            include a message so this adds the code needed by XML-RPC.</remarks>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcException.#ctor(System.Int32,System.String)">
+            <summary>Instantiate an <c>XmlRpcException</c> with a code and message.</summary>
+            <param name="code"><c>Int</c> faultCode associated with this exception.</param>
+            <param name="message"><c>String</c> faultMessage associated with this exception.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcException.ToString">
+            <summary>Format the message to include the code.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcException.FaultString">
+            <summary>The value of the faults message, i.e. the faultString.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcException.FaultCode">
+            <summary>The value of the faults code, i.e. the faultCode.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcExposedAttribute">
+            <summary>
+            Simple tagging attribute to indicate participation is XML-RPC exposure.
+            </summary>
+            <remarks>
+            If present at the class level it indicates that this class does explicitly 
+            expose methods. If present at the method level it denotes that the method
+            is exposed.
+            </remarks>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcExposedAttribute.ExposedObject(System.Object)">
+            <summary>Check if <paramref>obj</paramref> is an object utilizing the XML-RPC exposed Attribute.</summary>
+            <param name="obj"><c>Object</c> of a class or method to check for attribute.</param>
+            <returns><c>Boolean</c> true if attribute present.</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcExposedAttribute.ExposedMethod(System.Object,System.String)">
+            <summary>Check if <paramref>obj</paramref>.<paramref>methodName</paramref> is an XML-RPC exposed method.</summary>
+            <remarks>A method is considered to be exposed if it exists and, either, the object does not use the XmlRpcExposed attribute,
+            or the object does use the XmlRpcExposed attribute and the method has the XmlRpcExposed attribute as well.</remarks>
+            <returns><c>Boolean</c> true if the  method is exposed.</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcExposedAttribute.IsExposed(System.Reflection.MemberInfo)">
+            <summary>Check if <paramref>mi</paramref> is XML-RPC exposed.</summary>
+            <param name="mi"><c>MemberInfo</c> of a class or method to check for attribute.</param>
+            <returns><c>Boolean</c> true if attribute present.</returns>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcRequestDeserializer">
+            <summary>Class to deserialize XML data representing a request.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcRequestDeserializer.Deserialize(System.IO.TextReader)">
+            <summary>Static method that parses XML data into a request using the Singleton.</summary>
+            <param name="xmlData"><c>StreamReader</c> containing an XML-RPC request.</param>
+            <returns><c>XmlRpcRequest</c> object resulting from the parse.</returns>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcRequestDeserializer.Singleton">
+            <summary>A static singleton instance of this deserializer.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcRequestSerializer">
+            <summary>Class responsible for serializing an XML-RPC request.</summary>
+            <remarks>This class handles the request envelope, depending on <c>XmlRpcSerializer</c>
+            to serialize the payload.</remarks>
+            <seealso cref="T:Nwc.XmlRpc.XmlRpcSerializer"/>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcSerializer">
+            <summary>Base class of classes serializing data to XML-RPC's XML format.</summary>
+            <remarks>This class handles the basic type conversions like Integer to &lt;i4&gt;. </remarks>
+            <seealso cref="T:Nwc.XmlRpc.XmlRpcXmlTokens"/>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcSerializer.Serialize(System.Xml.XmlWriter,System.Object)">
+            <summary>Serialize the <c>XmlRpcRequest</c> to the output stream.</summary>
+            <param name="output">An <c>XmlTextWriter</c> stream to write data to.</param>
+            <param name="obj">An <c>Object</c> to serialize.</param>
+            <seealso cref="T:Nwc.XmlRpc.XmlRpcRequest"/>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcSerializer.Serialize(System.Object)">
+            <summary>Serialize the <c>XmlRpcRequest</c> to a String.</summary>
+            <remarks>Note this may represent a real memory hog for a large request.</remarks>
+            <param name="obj">An <c>Object</c> to serialize.</param>
+            <returns><c>String</c> containing XML-RPC representation of the request.</returns>
+            <seealso cref="T:Nwc.XmlRpc.XmlRpcRequest"/>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcSerializer.SerializeObject(System.Xml.XmlWriter,System.Object)">
+            <remarks>Serialize the object to the output stream.</remarks>
+            <param name="output">An <c>XmlTextWriter</c> stream to write data to.</param>
+            <param name="obj">An <c>Object</c> to serialize.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcRequestSerializer.Serialize(System.Xml.XmlWriter,System.Object)">
+            <summary>Serialize the <c>XmlRpcRequest</c> to the output stream.</summary>
+            <param name="output">An <c>XmlTextWriter</c> stream to write data to.</param>
+            <param name="obj">An <c>XmlRpcRequest</c> to serialize.</param>
+            <seealso cref="T:Nwc.XmlRpc.XmlRpcRequest"/>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcRequestSerializer.Singleton">
+            <summary>A static singleton instance of this deserializer.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcResponder">
+            <summary>The class is a container of the context of an XML-RPC dialog on the server side.</summary>
+            <remarks>Instances of this class maintain the context for an individual XML-RPC server
+            side dialog. Namely they manage an inbound deserializer and an outbound serializer. </remarks>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcResponder.#ctor(Nwc.XmlRpc.XmlRpcServer,System.Net.Sockets.TcpClient)">
+            <summary>Basic constructor.</summary>
+            <param name="server">XmlRpcServer that this XmlRpcResponder services.</param>
+            <param name="client">TcpClient with the connection.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcResponder.Finalize">
+            <summary>Call close to insure proper shutdown.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcResponder.Respond">
+            <summary>Respond using this responders HttpReq.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcResponder.Respond(Nwc.XmlRpc.SimpleHttpRequest)">
+            <summary>Handle an HTTP request containing an XML-RPC request.</summary>
+            <remarks>This method deserializes the XML-RPC request, invokes the 
+            described method, serializes the response (or fault) and sends the XML-RPC response
+            back as a valid HTTP page.
+            </remarks>
+            <param name="httpReq"><c>SimpleHttpRequest</c> containing the request.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcResponder.Close">
+            <summary>Close all contained resources, both the HttpReq and client.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcResponder.HttpReq">
+            <summary>The SimpleHttpRequest based on the TcpClient.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcResponse">
+            <summary>Class designed to represent an XML-RPC response.</summary>
+        </member>
+        <member name="F:Nwc.XmlRpc.XmlRpcResponse.IsFault">
+            <summary><c>bool</c> indicating if this response represents a fault.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcResponse.#ctor">
+            <summary>Basic constructor</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcResponse.#ctor(System.Int32,System.String)">
+            <summary>Constructor for a fault.</summary>
+            <param name="code"><c>int</c> the numeric faultCode value.</param>
+            <param name="message"><c>String</c> the faultString value.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcResponse.SetFault(System.Int32,System.String)">
+            <summary>Set this response to be a fault.</summary>
+            <param name="code"><c>int</c> the numeric faultCode value.</param>
+            <param name="message"><c>String</c> the faultString value.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcResponse.ToString">
+            <summary>Form a useful string representation of the object, in this case the XML response.</summary>
+            <returns><c>String</c> The XML serialized XML-RPC response.</returns>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcResponse.Value">
+            <summary>The data value of the response, may be fault data.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcResponse.FaultCode">
+            <summary>The faultCode if this is a fault.</summary>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcResponse.FaultString">
+            <summary>The faultString if this is a fault.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcResponseDeserializer">
+            <summary>Class to deserialize XML data representing a response.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcResponseDeserializer.Deserialize(System.IO.TextReader)">
+            <summary>Static method that parses XML data into a response using the Singleton.</summary>
+            <param name="xmlData"><c>StreamReader</c> containing an XML-RPC response.</param>
+            <returns><c>XmlRpcResponse</c> object resulting from the parse.</returns>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcResponseDeserializer.Singleton">
+            <summary>A static singleton instance of this deserializer.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcResponseSerializer">
+            <summary>Class responsible for serializing an XML-RPC response.</summary>
+            <remarks>This class handles the response envelope, depending on XmlRpcSerializer
+            to serialize the payload.</remarks>
+            <seealso cref="T:Nwc.XmlRpc.XmlRpcSerializer"/>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcResponseSerializer.Serialize(System.Xml.XmlWriter,System.Object)">
+            <summary>Serialize the <c>XmlRpcResponse</c> to the output stream.</summary>
+            <param name="output">An <c>XmlTextWriter</c> stream to write data to.</param>
+            <param name="obj">An <c>Object</c> to serialize.</param>
+            <seealso cref="T:Nwc.XmlRpc.XmlRpcResponse"/>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcResponseSerializer.Singleton">
+            <summary>A static singleton instance of this deserializer.</summary>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcServer">
+            <summary>A restricted HTTP server for use with XML-RPC.</summary>
+            <remarks>It only handles POST requests, and only POSTs representing XML-RPC calls.
+            In addition to dispatching requests it also provides a registry for request handlers. 
+            </remarks>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.#ctor(System.Net.IPAddress,System.Int32)">
+            <summary>Constructor with port and address.</summary>
+            <remarks>This constructor sets up a TcpListener listening on the
+            given port and address. It also calls a Thread on the method StartListen().</remarks>
+            <param name="address"><c>IPAddress</c> value of the address to listen on.</param>
+            <param name="port"><c>Int</c> value of the port to listen on.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.#ctor(System.Int32)">
+            <summary>Basic constructor.</summary>
+            <remarks>This constructor sets up a TcpListener listening on the
+            given port. It also calls a Thread on the method StartListen(). IPAddress.Any
+            is assumed as the address here.</remarks>
+            <param name="port"><c>Int</c> value of the port to listen on.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.Start">
+            <summary>Start the server.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.Stop">
+            <summary>Stop the server.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.GetEnumerator">
+            <summary>Get an enumeration of my XML-RPC handlers.</summary>
+            <returns><c>IEnumerable</c> the handler enumeration.</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.StartListen">
+            <summary>
+            This method Accepts new connections and dispatches them when appropriate.
+            </summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.Add(System.String,System.Object)">
+            <summary>
+            Add an XML-RPC handler object by name.
+            </summary>
+            <param name="name"><c>String</c> XML-RPC dispatch name of this object.</param>
+            <param name="obj"><c>Object</c> The object that is the XML-RPC handler.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.MethodName(System.String)">
+            <summary>Return a C# object.method name for and XML-RPC object.method name pair.</summary>
+            <param name="methodName">The XML-RPC object.method.</param>
+            <returns><c>String</c> of form object.method for the underlying C# method.</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.Invoke(Nwc.XmlRpc.XmlRpcRequest)">
+            <summary>Invoke a method described in a request.</summary>
+            <param name="req"><c>XmlRpcRequest</c> containing a method descriptions.</param>
+             <seealso cref="M:Nwc.XmlRpc.XmlRpcSystemObject.Invoke(System.Object,System.String,System.Collections.IList)"/>
+             <seealso cref="M:Nwc.XmlRpc.XmlRpcServer.Invoke(System.String,System.String,System.Collections.IList)"/>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.Invoke(System.String,System.String,System.Collections.IList)">
+            <summary>Invoke a method on a named handler.</summary>
+            <param name="objectName"><c>String</c> The name of the handler.</param>
+            <param name="methodName"><c>String</c> The name of the method to invoke on the handler.</param>
+            <param name="parameters"><c>IList</c> The parameters to invoke the method with.</param>
+             <seealso cref="M:Nwc.XmlRpc.XmlRpcSystemObject.Invoke(System.Object,System.String,System.Collections.IList)"/>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.WaitCallback(System.Object)">
+            <summary>The method the thread pool invokes when a thread is available to handle an HTTP request.</summary>
+            <param name="responder">TcpClient from the socket accept.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcServer.HttpHeader(System.String,System.String,System.Int64,System.String,System.IO.TextWriter)">
+            <summary>
+            This function send the Header Information to the client (Browser)
+            </summary>
+            <param name="sHttpVersion">HTTP Version</param>
+            <param name="sMIMEHeader">Mime Type</param>
+            <param name="iTotBytes">Total Bytes to be sent in the body</param>
+            <param name="sStatusCode"></param>
+            <param name="output">Socket reference</param>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcServer.Item(System.String)">
+            <summary>Retrieve a handler by name.</summary>
+            <param name="name"><c>String</c> naming a handler</param>
+            <returns><c>Object</c> that is the handler.</returns>
+        </member>
+        <member name="T:Nwc.XmlRpc.XmlRpcSystemObject">
+            <summary> XML-RPC System object implementation of extended specifications.</summary>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcSystemObject.#ctor(Nwc.XmlRpc.XmlRpcServer)">
+            <summary>Constructor.</summary>
+            <param name="server"><c>XmlRpcServer</c> server to be the system object for.</param>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcSystemObject.Invoke(System.Object,System.String,System.Collections.IList)">
+            <summary>Invoke a method on a given object.</summary>
+            <remarks>Using reflection, and respecting the <c>XmlRpcExposed</c> attribute,
+            invoke the <paramref>methodName</paramref> method on the <paramref>target</paramref>
+            instance with the <paramref>parameters</paramref> provided. All this packages other <c>Invoke</c> methods 
+            end up calling this.</remarks>
+            <returns><c>Object</c> the value the invoked method returns.</returns>
+            <exception cref="T:Nwc.XmlRpc.XmlRpcException">If method does not exist, is not exposed, parameters invalid, or invocation
+            results in an exception. Note, the <c>XmlRpcException.Code</c> will indicate cause.</exception>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcSystemObject.listMethods">
+            <summary>List methods available on all handlers of this server.</summary>
+            <returns><c>IList</c> An array of <c>Strings</c>, each <c>String</c> will have form "object.method".</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcSystemObject.methodSignature(System.String)">
+            <summary>Given a method name return the possible signatures for it.</summary>
+            <param name="name"><c>String</c> The object.method name to look up.</param>
+            <returns><c>IList</c> Of arrays of signatures.</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcSystemObject.methodHelp(System.String)">
+            <summary>Help for given method signature. Not implemented yet.</summary>
+            <param name="name"><c>String</c> The object.method name to look up.</param>
+            <returns><c>String</c> help text. Rich HTML text.</returns>
+        </member>
+        <member name="M:Nwc.XmlRpc.XmlRpcSystemObject.multiCall(System.Collections.IList)">
+            <summary>Boxcarring support method.</summary>
+            <param name="calls"><c>IList</c> of calls</param>
+            <returns><c>ArrayList</c> of results/faults.</returns>
+        </member>
+        <member name="P:Nwc.XmlRpc.XmlRpcSystemObject.MethodHelp">
+            <summary>Static <c>IDictionary</c> to hold mappings of method name to associated documentation String</summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,10 @@
+Function: botDeregisterFromCollisionEvents(key botID);
+
+Deregisters the object group the script is in from forwarded collision events.
+
+botID - ID of the bot that will stop forwarding collision events.
+
+Example: bot Collision Events.lsl
+
+See Also:
+	botRegisterForCollisionEvents

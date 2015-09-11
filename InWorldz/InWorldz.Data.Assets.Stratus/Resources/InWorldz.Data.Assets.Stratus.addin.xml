@@ -1,0 +1,17 @@
+<Addin id="InWorldz.Data.Assets.Stratus" version="1.0">
+  <Runtime>
+      <Import assembly="InWorldz.Data.Assets.Stratus.dll" />
+  </Runtime>
+  
+  <Dependencies>
+    <Addin id="OpenSim" version="0.5" />  
+  </Dependencies>
+
+  <Extension path = "/OpenSim/Startup">
+    <Plugin id="StratusDataPlugin" provider="InWorldz.Data.Assets.Stratus.dll" type="InWorldz.Data.Assets.Stratus.StratusPlugin" />
+  </Extension>
+  
+  <Extension path = "/OpenSim/AssetClient">
+    <AssetClient id="StratusAssetClient" provider="InWorldz.Data.Assets.Stratus.StratusAssetClient" type="InWorldz.Data.Assets.Stratus.StratusAssetClient" />
+  </Extension>
+</Addin>

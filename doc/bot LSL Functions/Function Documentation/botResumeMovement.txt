@@ -1,0 +1,7 @@
+Function: botResumeMovement(key botID);
+
+Resumes any movement that the bot had before botPauseMovement was called.
+
+botID - ID of the bot whose movement will be resumed.
+
+Example: bot Navigation Path.lsl

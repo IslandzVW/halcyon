@@ -1,0 +1,7 @@
+Function: string botGetName(key botID);
+
+Returns the name of the bot with the ID "botID".
+
+botID - ID of the bot whose name will be returned.
+
+Example: bot Information.lsl

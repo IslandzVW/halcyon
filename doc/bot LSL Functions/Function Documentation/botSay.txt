@@ -1,0 +1,17 @@
+Function: botSay(key botID, integer channel, string message);
+
+The bot that has the ID "botID" will say the message "message" on channel "channel".
+
+botID - ID of the bot that will be talking.
+channel - output chat channel, any integer value
+message - message to be transmitted
+
+Example: bot Chat.lsl
+
+See Also:
+	botWhisper,
+	botShout,
+	botStartTyping,
+	botStopTyping,
+	botSendInstantMessage,
+	botListen

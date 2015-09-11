@@ -1,0 +1,120 @@
+Index: Physics.cpp
+===================================================================
+--- Physics.cpp	(revision 98498)
++++ Physics.cpp	(working copy)
+@@ -194,25 +194,24 @@
+ {
+ 	ThrowIfNull(stream, "stream");
+ 
++	std::pair<PxU8*, PxDefaultMemoryInputData*> ms = std::make_pair((PxU8*)0, (PxDefaultMemoryInputData*)0);
+ 	try
+ 	{
+-		// TODO: Memory leak
+-		PxDefaultMemoryInputData* ms = Util::StreamToUnmanagedInputStream(stream);
++		ms = Util::StreamToUnmanagedInputStream(stream);
+ 
+-		PxTriangleMesh* triangleMesh = _physics->createTriangleMesh(*ms);
++		PxTriangleMesh* triangleMesh = _physics->createTriangleMesh(*(ms.second));
+ 
+ 		if (triangleMesh == NULL)
+ 			throw gcnew FailedToCreateObjectException("Failed to create triangle mesh");
+ 	
+ 		auto t = gcnew TriangleMesh(triangleMesh, this);
+ 
+-		//delete ms;
+-
+ 		return t;
+ 	}
+ 	finally
+ 	{
+-		//delete[] ms.GetMemory();
++		delete ms.second;
++		free(ms.first);
+ 	}
+ }
+ #pragma endregion
+@@ -220,25 +219,24 @@
+ #pragma region Convex Mesh
+ ConvexMesh^ Physics::CreateConvexMesh(System::IO::Stream^ stream)
+ {
++	std::pair<PxU8*, PxDefaultMemoryInputData*> ms = std::make_pair((PxU8*)0, (PxDefaultMemoryInputData*)0);
+ 	try
+ 	{
+-		// TODO: Memory leak
+-		PxDefaultMemoryInputData* ms = Util::StreamToUnmanagedInputStream(stream);
++		ms = Util::StreamToUnmanagedInputStream(stream);
+ 
+-		PxConvexMesh* convexMesh = _physics->createConvexMesh(*ms);
++		PxConvexMesh* convexMesh = _physics->createConvexMesh(*(ms.second));
+ 
+ 		if (convexMesh == NULL)
+ 			throw gcnew FailedToCreateObjectException("Failed to create convex mesh");
+ 	
+ 		auto cm = gcnew ConvexMesh(convexMesh, this);
+ 
+-		//delete ms;
+-
+ 		return cm;
+ 	}
+ 	finally
+ 	{
+-		//delete[] ms.GetMemory();
++		delete ms.second;
++		free(ms.first);
+ 	}
+ }
+ #pragma endregion
+Index: Util.cpp
+===================================================================
+--- Util.cpp	(revision 98498)
++++ Util.cpp	(working copy)
+@@ -114,7 +114,7 @@
+ 	return Nullable<bool>();
+ }
+ 
+-PxDefaultMemoryInputData* Util::StreamToUnmanagedInputStream(System::IO::Stream^ stream)
++std::pair<PxU8*, PxDefaultMemoryInputData*>  Util::StreamToUnmanagedInputStream(System::IO::Stream^ stream)
+ {
+ 	ThrowIfNull(stream, "stream");
+ 	if (!stream->CanRead)
+@@ -125,16 +125,14 @@
+ 	int streamSize = (int)stream->Length;
+ 
+ 	if (streamSize == 0)
+-		return new PxDefaultMemoryInputData(NULL, 0);
++		return std::make_pair((PxU8*)0, new PxDefaultMemoryInputData(NULL, 0));
+ 
+ 	PxU8* memoryStreamPtr = (PxU8*)malloc(streamSize * sizeof(PxU8));
+ 
+-	auto data = new PxDefaultMemoryInputData(memoryStreamPtr, streamSize);
+-
+ 	if (memoryStreamPtr == NULL)
+ 		throw gcnew InvalidOperationException("Failed to allocate memory used for cloning managed stream");
+ 
+-	ZeroMemory((void*)memoryStreamPtr, streamSize);
++	auto data = new PxDefaultMemoryInputData(memoryStreamPtr, streamSize);
+ 
+ 	array<Byte>^ buffer = gcnew array<Byte>(streamSize);
+ 	stream->Read(buffer, 0, streamSize);
+@@ -142,7 +140,7 @@
+ 
+ 	memcpy_s((void*)memoryStreamPtr, streamSize, b, streamSize);
+ 	
+-	return data;
++	return std::make_pair(memoryStreamPtr, data);
+ }
+ //System::IO::MemoryStream^ Util::UnmanagedMemoryStreamToStream(MemoryStream& memoryStream)
+ //{
+Index: Util.h
+===================================================================
+--- Util.h	(revision 98498)
++++ Util.h	(working copy)
+@@ -43,7 +43,7 @@
+ 			static Nullable<bool> Is16Or32Bit(Array^ values);
+ 
+ 			// Returns an unmanaged stream clone of the data. The caller is responsible for freeing the allocated memory.
+-			static PxDefaultMemoryInputData* StreamToUnmanagedInputStream(System::IO::Stream^ stream);
++			static std::pair<PxU8*, PxDefaultMemoryInputData*> StreamToUnmanagedInputStream(System::IO::Stream^ stream);
+ 			//static System::IO::MemoryStream^ UnmanagedMemoryStreamToStream(MemoryStream& memoryStream);
+ 			static void CopyIntoStream(PxDefaultMemoryOutputStream* from, System::IO::Stream^ to);
+ 	};

@@ -1,0 +1,13 @@
+﻿<Addin id="InWorldz.Phlox.Engine" version="0.1">
+  <Runtime>
+    <Import assembly="InWorldz.Phlox.Engine.dll"/>
+  </Runtime>
+
+  <Dependencies>
+    <Addin id="OpenSim" version="0.5" />
+  </Dependencies>
+
+  <Extension path = "/OpenSim/RegionModules">
+    <RegionModule id="InWorldzPhloxEngine" type="InWorldz.Phlox.Engine.EngineInterface" />
+  </Extension>
+</Addin>
