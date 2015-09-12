@@ -61,13 +61,6 @@ namespace OpenSim
             string iniFileName = startupConfig.GetString("inifile", "Halcyon.ini");
             ApplicationBase.iniFilePath = Path.Combine(Util.configDir(), iniFileName);
 
-            if (! File.Exists(ApplicationBase.iniFilePath))
-            {
-                //old config
-                iniFileName = startupConfig.GetString("inifile", "OpenSim.ini");
-                ApplicationBase.iniFilePath = Path.Combine(Util.configDir(), iniFileName);
-            }
-
             string masterFileName = startupConfig.GetString("inimaster", "");
             string masterfilePath = Path.Combine(Util.configDir(), masterFileName);
 
@@ -82,7 +75,7 @@ namespace OpenSim
 
             Uri configUri;
             
-            String xmlPath = Path.Combine(Util.configDir(), "OpenSim.xml");
+            String xmlPath = Path.Combine(Util.configDir(), "Halcyon.xml");
 
             //check for master .INI file (name passed in command line, no default), or XML over http
             if (masterFileName.Length > 0) // If a master file name is given ...
@@ -144,7 +137,7 @@ namespace OpenSim
                     m_log.FatalFormat("[CONFIG] Tried to load from URI {0}, ", iniFileName);
                 m_log.FatalFormat("[CONFIG] and XML source {0}", Path.GetFullPath(xmlPath));
 
-                m_log.FatalFormat("[CONFIG] Did you copy the OpenSim.ini.example file to OpenSim.ini?");
+                m_log.FatalFormat("[CONFIG] Did you copy the {0}.example file to {0}?", ApplicationBase.iniFilePath);
                 Environment.Exit(1);
             }
 
