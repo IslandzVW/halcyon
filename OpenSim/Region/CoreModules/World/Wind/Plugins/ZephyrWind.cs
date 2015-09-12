@@ -170,13 +170,13 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
             // Modified by Balpien Hammerer to account for terrain turbulence, winds aloft and wind setters
 
             // Wind Direction
-            double �WD = (sunpos / 24.0 * (2.0 * Math.PI) * m_rateChangeFlutter) % (Math.PI * 2.0);
-            double offset = Math.Sin(�WD) * Math.Sin(�WD*2) * Math.Sin(�WD*9) * Math.Cos(�WD*4);
+            double ThetaWD = (sunpos / 24.0 * (2.0 * Math.PI) * m_rateChangeFlutter) % (Math.PI * 2.0);
+            double offset = Math.Sin(ThetaWD) * Math.Sin(ThetaWD*2) * Math.Sin(ThetaWD*9) * Math.Cos(ThetaWD*4);
             double windDir = m_avgWindDirection * (Math.PI/180.0f) + (m_varWindDirection * (Math.PI/180.0f) * offset);
 
             // Wind Speed
-            double �WS = (sunpos / 24.0 * (2.0 * Math.PI) * m_rateChangeAloft) % (Math.PI * 2.0);
-            offset = Math.Sin(�WS) * Math.Sin(�WS*4) + (Math.Sin(�WS*13) / 3.0);
+            double ThetaWS = (sunpos / 24.0 * (2.0 * Math.PI) * m_rateChangeAloft) % (Math.PI * 2.0);
+            offset = Math.Sin(ThetaWS) * Math.Sin(ThetaWS*4) + (Math.Sin(ThetaWS*13) / 3.0);
             double windSpeed = (m_avgWindStrength + (m_varWindStrength * offset));
 
             if (windSpeed < 0)
@@ -186,13 +186,13 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
             }
 
             // Water Direction
-            double �HD = (sunpos / 24.0 * (2.0 * Math.PI) * m_rateChangeFlutter) % (Math.PI * 2.0);
-            double woffset = Math.Sin(�HD) * Math.Sin(�HD*2) * Math.Sin(�HD*9) * Math.Cos(�HD*4);
+            double ThetaHD = (sunpos / 24.0 * (2.0 * Math.PI) * m_rateChangeFlutter) % (Math.PI * 2.0);
+            double woffset = Math.Sin(ThetaHD) * Math.Sin(ThetaHD*2) * Math.Sin(ThetaHD*9) * Math.Cos(ThetaHD*4);
             double waterDir = m_avgWaterDirection * (Math.PI/180.0f) + (m_varWaterDirection * (Math.PI/180.0f) * woffset);
 
             // Water Speed
-            double �HS = (sunpos / 24.0 * (2.0 * Math.PI) * m_rateChangeSurge) % (Math.PI * 2.0);
-            woffset = Math.Sin(�HS) * Math.Sin(�HS*3) * Math.Sin(�HS*9) * Math.Cos(�HS*4) * Math.Cos(�HS*13);
+            double ThetaHS = (sunpos / 24.0 * (2.0 * Math.PI) * m_rateChangeSurge) % (Math.PI * 2.0);
+            woffset = Math.Sin(ThetaHS) * Math.Sin(ThetaHS*3) * Math.Sin(ThetaHS*9) * Math.Cos(ThetaHS*4) * Math.Cos(ThetaHS*13);
             double waterSpeed = (m_avgWaterStrength + (m_varWaterStrength * woffset));
 
             if (waterSpeed < 0)
@@ -200,7 +200,7 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
                 waterSpeed = -waterSpeed;
                 waterDir += Math.PI;
             }
-            //m_log.DebugFormat("[{0}] sunpos={1} water={2} dir={3} �HD={4} �HS={5} wo={6}", Name, sunpos, waterSpeed, waterDir, �HD, �HS, woffset);
+            //m_log.DebugFormat("[{0}] sunpos={1} water={2} dir={3} ThetaHD={4} ThetaHS={5} wo={6}", Name, sunpos, waterSpeed, waterDir, ThetaHD, ThetaHS, woffset);
 
             //m_log.DebugFormat("[{0}] sunpos={1} wind={2} dir={3} theta1={4} theta2={5}", Name, sunpos, windSpeed, windDir, theta1, theta2);
 
