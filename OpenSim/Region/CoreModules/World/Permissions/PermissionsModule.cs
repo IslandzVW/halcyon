@@ -1811,8 +1811,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if ((parcel.landData.Flags & (uint)ParcelFlags.AllowTerraform) != 0)
                 return true;
 
-            // Land owner can terraform too
-            if (parcel != null && GenericParcelPermission(user, parcel, (ulong)GroupPowers.LandEdit))
+            // Group role ability to edit terrain?
+            if (parcel != null && GenericParcelPermission(user, parcel, (ulong)GroupPowers.AllowEditLand))
                 return true;
 
             return false;
