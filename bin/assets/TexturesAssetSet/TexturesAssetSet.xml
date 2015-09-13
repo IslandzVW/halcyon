@@ -343,6 +343,12 @@
     <Key Name="assetType" Value="0" />
     <Key Name="fileName" Value="femaleface.jp2"/>
   </Section>
+  <Section Name="Female Hair Texture">
+    <Key Name="assetID" Value="7ca39b4c-bd19-4699-aff7-f93fd03d3e7b"/>
+    <Key Name="name" Value="Female Hair Texture"/>
+    <Key Name="assetType" Value="0" />
+    <Key Name="fileName" Value="femalehair.jp2"/>
+  </Section>
   <Section Name="Hyperlink Map Texture">
     <Key Name="assetID" Value="00000000-0000-1111-9999-000000000013"/>
     <Key Name="name" Value="Hyperlink Map Texture"/>
@@ -746,4 +752,16 @@
      <Key Name="assetType" Value="0" />
      <Key Name="fileName" Value="735198cf-6ea0-2550-e222-21d3c6a341ae.j2c" />
   </Section>
+
+  <!-- 
+    Texture expected by viewers for properly displaying stars in the night sky
+    Name derives from label in viewer code
+  -->
+  <Section Name="IMG_BLOOM1 Texture">
+    <Key Name="assetID" Value="3c59f7fe-9dc8-47f9-8aaf-a9dd1fbc3bef"/>
+    <Key Name="name" Value="IMG_BLOOM1 Texture"/>
+    <Key Name="assetType" Value="0" />
+    <Key Name="fileName" Value="IMG_BLOOM1.jp2" />
+  </Section>
+
 </Nini>
