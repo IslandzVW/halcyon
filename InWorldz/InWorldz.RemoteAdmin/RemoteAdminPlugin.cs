@@ -104,6 +104,7 @@ namespace InWorldz.RemoteAdmin
             m_admin.AddCommand("Region", "Restore", RegionRestoreHandler);
             m_admin.AddCommand("Region", "LoadOAR", LoadOARHandler);
             m_admin.AddCommand("Region", "SaveOAR", SaveOARHandler);
+            m_admin.AddCommand("Region", "ChangeParcelFlags", RegionChangeParcelFlagsHandler);
 
             m_admin.AddHandler(MainServer.Instance);	
         }
@@ -458,6 +459,57 @@ namespace InWorldz.RemoteAdmin
                 {
                     m_log.InfoFormat("[RADMIN] LoadOAR: {0}", e.Message);
                     m_log.DebugFormat("[RADMIN] LoadOAR: {0}", e.ToString());
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Changes the flags for all parcels on a region
+        /// <summary>
+        public object RegionChangeParcelFlagsHandler(IList args, IPEndPoint remoteClient)
+        {
+            m_admin.CheckSessionValid(new UUID((string)args[0]));
+
+            Scene scene;
+            if (!m_app.SceneManager.TryGetScene((string)args[1], out scene))
+                throw new Exception("region not found");
+
+            bool enable = args[2].ToString().ToLower() == "enable";
+            uint mask = Convert.ToUInt32(args[3]);
+
+            m_log.Info("[RADMIN]: Received Region Change Parcel Flags Request");
+
+            lock (rslock)
+            {
+                try
+                {
+                    ILandChannel channel = scene.LandChannel;
+                    List<ILandObject> parcels = channel.AllParcels();
+
+                    foreach (var parcel in parcels)
+                    {
+                        LandData data = parcel.landData.Copy();
+                        if (enable)
+                        {
+                            data.Flags = data.Flags | mask;
+                        }
+                        else
+                        {
+                            data.Flags = data.Flags & ~mask;
+                        }
+
+                        scene.LandChannel.UpdateLandObject(parcel.landData.LocalID, data);
+                    }
+                    
+                    m_log.Info("[RADMIN]: Change Parcel Flags Request complete");
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    m_log.InfoFormat("[RADMIN] ChangeParcelFlags: {0}", e.Message);
+                    m_log.DebugFormat("[RADMIN] ChangeParcelFlags: {0}", e.ToString());
                 }
 
                 return false;
