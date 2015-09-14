@@ -136,9 +136,19 @@ namespace InWorldz.RemoteAdmin
                 responseData["Value"] = "";
 
                 XmlMethodHandler handler = LookupCommand(request.MethodNameObject, request.MethodNameMethod);
-                responseData["Value"] = handler(request.Params, remoteClient);
 
-                response.Value = responseData;
+                if (handler != null)
+                {
+                    responseData["Value"] = handler(request.Params, remoteClient);
+                    response.Value = responseData;
+                }
+                else
+                {
+                    // Code set in accordance with http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
+                    response.SetFault(
+                        XmlRpcErrorCodes.SERVER_ERROR_METHOD,
+                        String.Format("Requested method [{0}] not found", request.MethodNameObject + "." + request.MethodNameMethod));
+                }
             }
             catch (Exception e)
             {
