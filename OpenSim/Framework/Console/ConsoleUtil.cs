@@ -30,7 +30,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+
+// XXX This needs to be reworked to use a different authentication mechanism
+
+#if !__MonoCS__
 using System.DirectoryServices.AccountManagement;
+#endif
 
 using log4net;
 using OpenMetaverse;
@@ -78,6 +83,9 @@ namespace OpenSim.Framework.Console
         /// 
         public static bool AuthenicateAsSystemUser(string username, string password)
         {
+#if __MonoCS__
+			return true;
+#else
            // Is the username the same as the logged in user and do they have the password correct?
             PrincipalContext pc = new PrincipalContext(ContextType.Machine);
             bool isValid = 
@@ -85,6 +93,7 @@ namespace OpenSim.Framework.Console
                  pc.ValidateCredentials(username, password));
 
             return (isValid);
+#endif
         }
 
         /// <summary>

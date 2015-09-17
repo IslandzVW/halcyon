@@ -51,4 +51,3 @@ namespace OpenSim
         public readonly static int MajorInterfaceVersion = 4;
     }
 }
-
