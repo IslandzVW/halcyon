@@ -14220,6 +14220,8 @@ namespace InWorldz.Phlox.Engine
             }
 
             //Convert byte data to base4096 encoding.
+            // Adapted from public domain code by Adam Wozniak and Doran Zemlja
+            // http://wiki.secondlife.com/w/index.php?title=Key_Compression#Base_4096_Script_.28Reduced_Code_Size.29
             private static string EncodeBase4k(byte[] inBytes)
             {
                 StringBuilder ret = new StringBuilder();
@@ -14283,6 +14285,8 @@ namespace InWorldz.Phlox.Engine
             }
 
             //Convert a base4096 string to byte data
+            // Adapted from public domain code by Adam Wozniak and Doran Zemlja
+            // http://wiki.secondlife.com/w/index.php?title=Key_Compression#Base_4096_Script_.28Reduced_Code_Size.29
             private static byte[] DecodeBase4k(string str)
             {
                 int extra = 0;
@@ -14463,6 +14467,9 @@ namespace InWorldz.Phlox.Engine
                     });
             }
 
+			//Helper function for Ascii Compression
+			// Adapted from public domain code by Becky Pippen
+			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             private static string encode15BitsToChar(int num) {
                 if (num < 0 || num >= 0x8000) return "�";
                 num += 0x1000;
@@ -14474,13 +14481,19 @@ namespace InWorldz.Phlox.Engine
                 ));
             }
 
+			//Helper function for Ascii Compression
+			// Adapted from public domain code by Becky Pippen
+			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             private static int charToInt(string src, int index) {
                 if (index < 0) index = src.Length + index;
                 if (Math.Abs(index) >= src.Length) return 0;
                 char c = src[index];
                 return (int)c;
             }
-
+			
+			//Helper function for Ascii Compression
+			// Adapted from public domain code by Becky Pippen
+			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             private static int decodeCharTo15Bits(string ch)
             {
                 int t = Convert.ToChar(ch);
@@ -14490,6 +14503,8 @@ namespace InWorldz.Phlox.Engine
             }
 
             //Compress an ascii string by encoding two characters into a single 15bit character.
+			// Adapted from public domain code by Becky Pippen
+			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             public static string AsciiCompress(string str)
             {
                 if (str == "") return str;
@@ -14517,6 +14532,8 @@ namespace InWorldz.Phlox.Engine
             }
 
             //Decompress an ascii string from 15bit encoding.
+			// Adapted from public domain code by Becky Pippen
+			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             public static string AsciiDecompress(string str)
             {
                 if (str == "") return str;
