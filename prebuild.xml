@@ -50,7 +50,8 @@
       <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Data"/>
-	  <Reference name="System.Web"/>
+      <Reference name="System.Web"/>
+      <Reference name="System.DirectoryServices.AccountManagement"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
@@ -61,7 +62,7 @@
       <Reference name="Mono.Addins" path="../../bin/"/>
       <Reference name="C5" path="../../bin/"/>
       <Reference name="BclExtras35" path="../../bin/"/>
-	  <Reference name="protobuf-net" path="../../bin/"/>
+      <Reference name="protobuf-net" path="../../bin/"/>
       <Reference name="SmartThreadPool"/>
       <Reference name="System.Drawing"/>
       <Files>
@@ -87,7 +88,7 @@
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Web"/>
-	  <Reference name="System.Text"/>
+      <Reference name="System.Text"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="SmartThreadPool"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../../bin/"/>
@@ -124,12 +125,11 @@
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
-	  <Reference name="System.Xml"/>
-	  <Reference name="System.Web"/>
-	  <Reference name="System.DirectoryServices.AccountManagement"/>
+      <Reference name="System.Xml"/>
+      <Reference name="System.Web"/>
       <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
-	  <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Files>
@@ -211,7 +211,7 @@
       <Reference name="OpenSim.Framework"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
-	<Match pattern="SimpleDB/*.cs" recurse="false"/>
+    <Match pattern="SimpleDB/*.cs" recurse="false"/>
         <Match pattern="Properties/*.cs" recurse="false"/>
         <Match buildAction="EmbeddedResource" path="Resources" pattern="*.addin.xml" recurse="true"/>
       </Files>
@@ -364,7 +364,7 @@
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="XmlRpcCS" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
-	  <Reference name="Nini" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
@@ -399,10 +399,10 @@
       <Reference name="OpenSim.Framework.Console"/>
       <Reference name="OpenSim.Region.Interfaces"/>
       <Reference name="OpenSim.Region.Physics.ConvexDecompositionDotNet" />
-	  <Reference name="C5" path="../../../../bin/"/>
+      <Reference name="C5" path="../../../../bin/"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
-		<Match path="Vehicle" pattern="*.cs" recurse="false"/>
+        <Match path="Vehicle" pattern="*.cs" recurse="false"/>
       </Files>
     </Project>
 
@@ -432,7 +432,7 @@
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="OpenSim.Region.Physics.ConvexDecompositionDotNet" />
       <Reference name="CSJ2K" path="../../../../bin/"/>
-	  <Reference name="C5" path="../../../../bin/"/>
+      <Reference name="C5" path="../../../../bin/"/>
       <Reference name="zlib.net" path="../../../../bin/"/>
 
       <Files>
@@ -462,7 +462,7 @@
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Console"/>
       <Reference name="OpenSim.Region.Interfaces"/>
-	  <Reference name="C5" path="../../../../bin/"/>
+      <Reference name="C5" path="../../../../bin/"/>
       <Files>
         <Match pattern="*.cs" recurse="false"/>
       </Files>
@@ -516,7 +516,7 @@
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <!-- FIXME: The OpenMetaverse.dll reference can be dropped when the TransferRequestPacket reference is removed from the code -->
       <Reference name="OpenMetaverse" path="../../../bin/"/>
-	  <Reference name="CSJ2K" path="../../../bin/"/>
+      <Reference name="CSJ2K" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="XmlRpcCS" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
@@ -778,7 +778,7 @@
       <Reference name="OpenSim.Data"/>
       <Reference name="OpenSim.Data.MySQL"/>
       <Reference name="OpenSim.Grid.Framework"/>
-	  <Reference name="InWorldz.RemoteAdmin"/>
+      <Reference name="InWorldz.RemoteAdmin"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
@@ -888,14 +888,14 @@
       <Reference name="OpenSim.Grid.Communications.OGS1"/>
       <Reference name="OpenSim.Grid.Framework"/>
       <Reference name="OpenSim.Grid.UserServer.Modules"/>
-	  <Reference name="InWorldz.RemoteAdmin"/>
+      <Reference name="InWorldz.RemoteAdmin"/>
 
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="XmlRpcCS" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
       <Reference name="DotNetOpenId" path="../../../bin/"/>
-	  <Reference name="Nini" path="../../../bin/"/>
+      <Reference name="Nini" path="../../../bin/"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
@@ -961,7 +961,7 @@
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Grid.Framework"/>
       <Reference name="OpenSim.Grid.MessagingServer.Modules"/>
-	  <Reference name="InWorldz.RemoteAdmin"/>
+      <Reference name="InWorldz.RemoteAdmin"/>
 
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
@@ -1075,7 +1075,7 @@
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Xml"/>
-	  <Reference name="System.Web"/>
+      <Reference name="System.Web"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
@@ -1104,17 +1104,17 @@
 
       <ReferencePath>../../../bin/</ReferencePath>
       <Reference name="System"/>
-	  <Reference name="System.Core"/>
+      <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Drawing"/>
       <Reference name="System.Runtime.Remoting"/>
       <Reference name="System.Web"/>
-	  <Reference name="System.Data"/>
+      <Reference name="System.Data"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
-	  <Reference name="CSJ2K" path="../../../bin/"/>
-	  <Reference name="zlib.net" path="../../../bin/"/>
+      <Reference name="CSJ2K" path="../../../bin/"/>
+      <Reference name="zlib.net" path="../../../bin/"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="OpenSim.Framework.Communications"/>
       <Reference name="OpenSim.Data"/>
@@ -1142,10 +1142,10 @@
       <Reference name="log4net" path="../../../bin/"/>
       <Reference name="DotNetOpenMail" path="../../../bin/"/>
 
-	  <!-- To allow regions to have mono addins -->
+      <!-- To allow regions to have mono addins -->
       <Reference name="Mono.Addins" path="../../../bin/"/>
 
-	  <Reference name="C5" path="../../../bin/"/>
+      <Reference name="C5" path="../../../bin/"/>
 
       <Files>
         <Match buildAction="EmbeddedResource" path="Resources" pattern="*.addin.xml" recurse="true"/>
@@ -1288,7 +1288,7 @@
 
       <ReferencePath>../../../../bin/</ReferencePath>
       <Reference name="System"/>
-	  <Reference name="System.Core"/>
+      <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
       <Reference name="OpenMetaverseTypes" path="../../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../../bin/"/>
@@ -1303,14 +1303,14 @@
       <Reference name="OpenSim.Region.ClientStack"/>
       <Reference name="OpenSim.Region.Communications.Local"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
-	  <Reference name="OpenSim.Region.CoreModules"/>
+      <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="XmlRpcCS" path="../../../../bin/"/>
       <Reference name="Nini" path="../../../../bin/"/>
       <Reference name="log4net" path="../../../../bin/"/>
       <Reference name="C5" path="../../../../bin/"/>
       <Reference name="Nini" path="../../../../bin/"/>
-	  <Reference name="SmartThreadPool"/>
-	  <Reference name="System.Drawing"/>
+      <Reference name="SmartThreadPool"/>
+      <Reference name="System.Drawing"/>
 
       <Files>
         <Match pattern="*.cs" recurse="false"/>
@@ -1538,7 +1538,7 @@
     </Project>
 
 
-	<!-- Client Stack Modules -->
+    <!-- Client Stack Modules -->
 
 
     <Project frameworkVersion="v4_5" name="OpenSim.Client.Linden" path="OpenSim/Client/Linden" type="Library">
@@ -1629,7 +1629,7 @@
 
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
-	  <Reference name="System.Core"/>
+      <Reference name="System.Core"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Data"/>
       <Reference name="System.Web"/>
@@ -1661,7 +1661,7 @@
         <Match pattern="*.cs" recurse="true">
           <Exclude pattern="HttpResponseImp\.cs"/>
           <Exclude pattern="LogWriter\.cs"/>
-	</Match>
+    </Match>
       </Files>
     </Project>
 -->
@@ -1773,7 +1773,7 @@
       </Files>
     </Project>
 
-	<Project frameworkVersion="v4_5" name="InWorldz.Phlox.Engine" path="InWorldz/InWorldz.Phlox.Engine" type="Library">
+    <Project frameworkVersion="v4_5" name="InWorldz.Phlox.Engine" path="InWorldz/InWorldz.Phlox.Engine" type="Library">
       <Configuration name="Debug" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
@@ -1791,7 +1791,7 @@
       <Reference name="System.Drawing"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Runtime.Remoting"/>
-	  <Reference name="System.Web"/>
+      <Reference name="System.Web"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
@@ -2000,7 +2000,7 @@
       </Files>
     </Project>
 
-	<Project frameworkVersion="v4_5" name="InWorldz.Region.Data.Thoosa" path="InWorldz/InWorldz.Region.Data.Thoosa" type="Library">
+    <Project frameworkVersion="v4_5" name="InWorldz.Region.Data.Thoosa" path="InWorldz/InWorldz.Region.Data.Thoosa" type="Library">
       <Configuration name="Debug" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
@@ -2015,7 +2015,7 @@
       <ReferencePath>../../bin/</ReferencePath>
       <Reference name="System"/>
       <Reference name="System.Data"/>
-	    <Reference name="System.Drawing"/>
+        <Reference name="System.Drawing"/>
       <Reference name="System.Xml"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
@@ -2032,16 +2032,16 @@
       <Reference name="C5" path="../../bin/"/>
       <Reference name="nunit.framework" path="../../bin/"/>
       <Reference name="SmartThreadPool"/>
-	  <Reference name="protobuf-net" path="../../bin/"/>
-	  <Reference name="nunit.framework" path="../../bin/"/>
-	  <Reference name="KellermanSoftware.Compare-NET-Objects" path="../../bin/"/>
+      <Reference name="protobuf-net" path="../../bin/"/>
+      <Reference name="nunit.framework" path="../../bin/"/>
+      <Reference name="KellermanSoftware.Compare-NET-Objects" path="../../bin/"/>
 
       <Files>
         <Match buildAction="EmbeddedResource" path="Resources" pattern="*.addin.xml" recurse="true"/>
         <Match pattern="*.cs" recurse="false"/>
-		<Match path="Serialization" pattern="*.cs" recurse="true"/>
-		<Match path="Engines" pattern="*.cs" recurse="true"/>
-		<Match path="Tests" pattern="*.cs" recurse="true"/>
+        <Match path="Serialization" pattern="*.cs" recurse="true"/>
+        <Match path="Engines" pattern="*.cs" recurse="true"/>
+        <Match path="Tests" pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
 
@@ -2072,9 +2072,9 @@
       <Reference name="OpenSim.Region.CoreModules"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.Interfaces"/>
-	  <Reference name="OpenSim.Region.ClientStack"/>
-	  <Reference name="OpenSim.Framework.Servers"/>
-	  <Reference name="OpenSim.Base"/>
+      <Reference name="OpenSim.Region.ClientStack"/>
+      <Reference name="OpenSim.Framework.Servers"/>
+      <Reference name="OpenSim.Base"/>
 
       <Reference name="Nini" path="../../bin/"/>
       <Reference name="log4net" path="../../bin/"/>
@@ -2082,10 +2082,10 @@
       <Reference name="C5" path="../../bin/"/>
       <Reference name="protobuf-net" path="../../bin/"/>
       <Reference name="openstacknet" path="../../bin/"/>
-	  <Reference name="SimpleRESTServices" path="../../bin/"/>
+      <Reference name="SimpleRESTServices" path="../../bin/"/>
       <Reference name="SmartThreadPool"/>
-	  <Reference name="nunit.framework" path="../../bin/"/>
-	  <Reference name="KellermanSoftware.Compare-NET-Objects" path="../../bin/"/>
+      <Reference name="nunit.framework" path="../../bin/"/>
+      <Reference name="KellermanSoftware.Compare-NET-Objects" path="../../bin/"/>
 
       <Files>
         <Match buildAction="EmbeddedResource" path="Resources" pattern="*.addin.xml" recurse="true"/>
@@ -2186,7 +2186,7 @@
       </Files>
     </Project>
 
-	<Project frameworkVersion="v4_5" name="InWorldz.ApplicationPlugins" path="InWorldz/InWorldz.ApplicationPlugins" type="Library">
+    <Project frameworkVersion="v4_5" name="InWorldz.ApplicationPlugins" path="InWorldz/InWorldz.ApplicationPlugins" type="Library">
       <Configuration name="Debug" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
@@ -2202,7 +2202,7 @@
       <Reference name="Mono.Addins" path="../../bin/"/>
       <Reference name="System"/>
       <Reference name="System.Xml"/>
-	  <Reference name="System.DirectoryServices.AccountManagement"/>
+      <Reference name="System.DirectoryServices.AccountManagement"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
@@ -2268,20 +2268,20 @@
       <Reference name="nunit.framework" path="../../bin/"/>
       <Reference name="XmlRpcCS" path="../../bin/"/>
       <Reference name="PhysX.Net.dll" path="../../bin/"/>
-	  <Reference name="protobuf-net" path="../../bin/"/>
-	  <Reference name="System.Data.SQLite" path="../../bin/"/>
+      <Reference name="protobuf-net" path="../../bin/"/>
+      <Reference name="System.Data.SQLite" path="../../bin/"/>
 
       <Files>
         <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
         <Match pattern="*.cs" recurse="false"/>
         <Match path="Commands" pattern="*.cs" recurse="false"/>
         <Match path="Meshing" pattern="*.cs" recurse="false"/>
-		<Match path="Debugging" pattern="*.cs" recurse="false"/>
-		<Match path="Vehicle" pattern="*.cs" recurse="false"/>
+        <Match path="Debugging" pattern="*.cs" recurse="false"/>
+        <Match path="Vehicle" pattern="*.cs" recurse="false"/>
       </Files>
     </Project>
 
-	<Project frameworkVersion="v4_5" name="InWorldz.RemoteAdmin" path="InWorldz/InWorldz.RemoteAdmin" type="Library">
+    <Project frameworkVersion="v4_5" name="InWorldz.RemoteAdmin" path="InWorldz/InWorldz.RemoteAdmin" type="Library">
       <Configuration name="Debug" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
@@ -2319,7 +2319,7 @@
       </Files>
     </Project>
 
-	<Project frameworkVersion="v4_5" name="InWorldz.Testing" path="InWorldz/InWorldz.Testing" type="Library">
+    <Project frameworkVersion="v4_5" name="InWorldz.Testing" path="InWorldz/InWorldz.Testing" type="Library">
       <Configuration name="Debug" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
@@ -2337,7 +2337,7 @@
       <Reference name="System.Drawing"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Runtime.Remoting"/>
-	  <Reference name="System.Web"/>
+      <Reference name="System.Web"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
@@ -2348,7 +2348,7 @@
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.Interfaces"/>
-	  <Reference name="OpenSim.Framework.Servers.HttpServer"/>
+      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <!--
       <Reference name="Microsoft.JScript"/>
       -->
@@ -2366,7 +2366,7 @@
       </Files>
     </Project>
 
-	<Project frameworkVersion="v4_5" name="OpenSim.Region.FrameworkTests" path="OpenSim/Region/FrameworkTests" type="Library">
+    <Project frameworkVersion="v4_5" name="OpenSim.Region.FrameworkTests" path="OpenSim/Region/FrameworkTests" type="Library">
       <Configuration name="Debug" platform="x64">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
@@ -2384,7 +2384,7 @@
       <Reference name="System.Drawing"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Runtime.Remoting"/>
-	  <Reference name="System.Web"/>
+      <Reference name="System.Web"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
@@ -2395,10 +2395,10 @@
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="OpenSim.Region.Framework"/>
       <Reference name="OpenSim.Region.Interfaces"/>
-	  <Reference name="OpenSim.Framework.Servers.HttpServer"/>
-	  <Reference name="InWorldz.Testing"/>
+      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
+      <Reference name="InWorldz.Testing"/>
 
-	  <Reference name="nunit.framework" path="../../../bin/"/>
+      <Reference name="nunit.framework" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Tools" path="../../../bin/"/>
@@ -2407,7 +2407,7 @@
       <Reference name="protobuf-net" path="../../../bin/"/>
       <Reference name="Antlr3.Runtime" path="../../../bin/"/>
       <Reference name="System.Data.SQLite" path="../../../bin/"/>
-	  <Reference name="KellermanSoftware.Compare-NET-Objects" path="../../../bin/"/>
+      <Reference name="KellermanSoftware.Compare-NET-Objects" path="../../../bin/"/>
       <Reference name="SmartThreadPool"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>

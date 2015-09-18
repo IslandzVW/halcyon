@@ -31,12 +31,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// XXX This needs to be reworked to use a different authentication mechanism
-
-#if !__MonoCS__
-using System.DirectoryServices.AccountManagement;
-#endif
-
 using log4net;
 using OpenMetaverse;
 
@@ -71,30 +65,6 @@ namespace OpenSim.Framework.Console
         public const string VectorSeparator = ",";
         public static char[] VectorSeparatorChars = VectorSeparator.ToCharArray();
 
-
-        /// <summary
-        /// Authenticate a username/password pair against the user we are running under.
-        /// </summary>
-        /// <remarks>checks that the username is the same as the current System.Environment.UserName,
-        /// And Validates the password against the password for that account</remarks>
-        /// <returns>true if the authentication succeeded, false otherwise.</returns>
-        /// <param name='username'>string</param>
-        /// <param name='password'>string</param>
-        /// 
-        public static bool AuthenicateAsSystemUser(string username, string password)
-        {
-#if __MonoCS__
-			return true;
-#else
-           // Is the username the same as the logged in user and do they have the password correct?
-            PrincipalContext pc = new PrincipalContext(ContextType.Machine);
-            bool isValid = 
-                (username.Equals(System.Environment.UserName) && 
-                 pc.ValidateCredentials(username, password));
-
-            return (isValid);
-#endif
-        }
 
         /// <summary>
         /// Check if the given file path exists.
