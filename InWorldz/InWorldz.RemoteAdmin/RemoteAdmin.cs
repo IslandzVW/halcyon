@@ -46,7 +46,6 @@ using OpenSim;
 using OpenSim.Framework;
 using OpenSim.Framework.Communications;
 using OpenSim.Framework.Communications.Cache;
-using OpenSim.Framework.Console;
 using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.CoreModules.World.Terrain;
@@ -197,7 +196,7 @@ namespace InWorldz.RemoteAdmin
             string password = (string)args[1];
 
             // Is the username the same as the logged in user and do they have the password correct?
-            if ( ConsoleUtil.AuthenicateAsSystemUser(username, password))
+            if ( Util.AuthenicateAsSystemUser(username, password))
             {
                 lock (m_activeSessions)
                 {
