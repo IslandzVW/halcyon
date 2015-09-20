@@ -77,6 +77,11 @@ namespace InWorldz.Phlox.Engine
         private int m_notecardLineReadCharsMax = 255;
         private IUrlModule m_UrlModule = null;
 
+        private const int MAX_RESETS_PER_SECOND = 5;
+        private int m_resetSecond = 0;
+        private int m_resetCount = 0;
+        private DateTime m_resetWarned = DateTime.Now;
+
         /// <summary>
         /// When a script is restored with state the listen handle it previously had
         /// may not be available. This collection remaps the previous handle with a new
@@ -162,6 +167,36 @@ namespace InWorldz.Phlox.Engine
             AsyncCommands.XmlRequestPlugin.RemoveEvents(m_host.LocalId, m_itemID);
         }
 
+        private void ThrottleScriptResets()
+        {
+            // Throttle resets to no more than 5 per second (MAX_RESETS_PER_SECOND)
+            int now = Util.UnixTimeSinceEpoch();
+            if (m_resetSecond == now)
+            {
+                if (++m_resetCount > MAX_RESETS_PER_SECOND)
+                {
+                    if (DateTime.Now > m_resetWarned.AddMinutes(60))    // warn once per hour
+                    {
+                        Vector3 pos = m_host.AbsolutePosition;
+                        string thePos = string.Format("at {0}/{1}/{2}", (int)pos.X, (int)pos.Y, (int)pos.Z);
+                        string theObject = " in '" + m_host.ParentGroup.Name + "'";
+                        string theLink = (m_host.LinkNum < 2) ? "" : " link #" + m_host.LinkNum.ToString();
+                        string context = string.Format("{0}{1} {2}", theObject, theLink, thePos);
+                        m_log.WarnFormat("[Phlox]: Script '{0}' calling llResetScript too frequently: {1}",
+                            llGetScriptName(), context);
+                        if (m_host.LinkNum < 2)
+                            context = thePos;
+                        ScriptShoutError("Script '" + llGetScriptName() + "' calling llResetScript too frequently: " + context);
+                        m_resetWarned = DateTime.Now;
+                    }
+                    ScriptSleep(5000);  // punish script for 5 seconds after 5 resets in the same minute
+                }
+            }
+            else
+                m_resetCount = 1;
+            m_resetSecond = now;
+        }
+
         public void OnScriptReset()
         {
             int oldControls, oldPassOn;
@@ -181,6 +216,8 @@ namespace InWorldz.Phlox.Engine
             }
 
             PermsChange(item, UUID.Zero, 0);
+
+            ThrottleScriptResets();
         }
 
         public void OnStateChange()
