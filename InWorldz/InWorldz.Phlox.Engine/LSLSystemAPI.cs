@@ -189,7 +189,7 @@ namespace InWorldz.Phlox.Engine
                         ScriptShoutError("Script '" + llGetScriptName() + "' calling llResetScript too frequently: " + context);
                         m_resetWarned = DateTime.Now;
                     }
-                    ScriptSleep(5000);  // punish script for 5 seconds after 5 resets in the same minute
+                    ScriptSleep(5000);  // punish the script for 5 seconds after too many resets in the same period
                 }
             }
             else
