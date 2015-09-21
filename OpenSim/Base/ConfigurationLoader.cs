@@ -137,7 +137,9 @@ namespace OpenSim
                     m_log.FatalFormat("[CONFIG] Tried to load from URI {0}, ", iniFileName);
                 m_log.FatalFormat("[CONFIG] and XML source {0}", Path.GetFullPath(xmlPath));
 
-                m_log.FatalFormat("[CONFIG] Did you copy the {0}.example file to {0}?", ApplicationBase.iniFilePath);
+                string sampleName = Path.GetFileNameWithoutExtension(ApplicationBase.iniFilePath) + ".sample.ini";
+
+                m_log.FatalFormat("[CONFIG] Did you copy the {0} file to {1}?", sampleName, ApplicationBase.iniFilePath);
                 Environment.Exit(1);
             }
 
