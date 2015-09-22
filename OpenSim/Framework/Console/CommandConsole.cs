@@ -705,42 +705,6 @@ namespace OpenSim.Framework.Console
     public class CommandConsole : ConsoleBase, ICommandConsole
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        [DllImport("kernel32.dll")]
-        static extern bool SetConsoleMode(IntPtr hConsoleHandle, int mode);
-
-        [DllImport("kernel32.dll")]
-        static extern bool GetConsoleMode(IntPtr hConsoleHandle, out int mode);
-
-        [DllImport("kernel32.dll")]
-        static extern IntPtr GetStdHandle(int handle);
-
-        const int STD_INPUT_HANDLE          = -10;
-
-        const int ENABLE_AUTO_POSITION      = 0x100;
-        const int ENABLE_EXTENDED_FLAGS     = 0x80;
-        const int ENABLE_QUICK_EDIT_MODE    = 0x40;
-        const int ENABLE_INSERT_MODE        = 0x20;
-        const int ENABLE_MOUSE_INPUT        = 0x10;
-        const int ENABLE_WINDOW_INPUT       = 0x08;
-
-        public static void InitConsoleMode()
-        {
-            int oldmode = 0;
-            IntPtr handle = GetStdHandle(STD_INPUT_HANDLE);
-            GetConsoleMode(handle, out oldmode);
-
-            int newmode = oldmode;
-            newmode |= ENABLE_EXTENDED_FLAGS;   // required to disable the next two
-            newmode &= ~ENABLE_QUICK_EDIT_MODE; // force this OFF
-            newmode &= ~ENABLE_MOUSE_INPUT;     // force this OFF
-            newmode &= ~ENABLE_WINDOW_INPUT;    // force this OFF
-            newmode |= ENABLE_INSERT_MODE;      // force this ON
-            if (newmode != oldmode)
-            {
-                SetConsoleMode(handle, newmode);
-                m_log.DebugFormat("[COMMAND CONSOLE]: Console mode changed from 0x{0} to 0x{1}.", oldmode.ToString("X4"), newmode.ToString("X4"));
-            }
-        }
 
         public event OnOutputDelegate OnOutput;
 
@@ -753,8 +717,6 @@ namespace OpenSim.Framework.Console
             Commands.AddCommand(
                 "Help", false, "help", "help [<item>]",
                 "Display help on a particular command or on a list of commands in a category", Help);
-
-            InitConsoleMode();
         }
 
         private void Help(string module, string[] cmd)
