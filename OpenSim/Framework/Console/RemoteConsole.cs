@@ -36,6 +36,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using OpenMetaverse;
 using Nini.Config;
+using OpenSim.Framework;
 using OpenSim.Framework.Servers.HttpServer;
 using log4net;
 
@@ -254,7 +255,7 @@ namespace OpenSim.Framework.Console
             string password = post["PASS"].ToString();
             
             // Validate the username/password pair
-            if (ConsoleUtil.AuthenicateAsSystemUser(username, password) == false)
+            if (Util.AuthenicateAsSystemUser(username, password) == false)
                 return reply;
 
             ConsoleConnection c = new ConsoleConnection();
