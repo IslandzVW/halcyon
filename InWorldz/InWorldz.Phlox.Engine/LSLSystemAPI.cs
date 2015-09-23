@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) InWorldz Halcyon Developers
  * Copyright (c) Contributors, http://opensimulator.org/
  *

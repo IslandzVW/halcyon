@@ -195,3 +195,20 @@ FakesAssemblies/
 
 # Visual Studio 6 workspace options file
 *.opt
+
+# Bin stuff that we don't want to commit that gets created when you run the server
+bin/Halcyon.vshost.exe.manifest
+bin/Halcyon.vshost.exe.config
+bin/addin-db-002/hosts/Halcyon.addins
+bin/addin-db-002/host-index
+bin/addin-db-002/fdb-update-lock
+bin/addin-db-002/fdb-lock
+*.nxs
+*.maddin
+*.data
+*.plx
+# Other files that need to be created per-installation
+bin/Halcyon.ini
+bin/Regions/region.xml
+
+#Other ignores
