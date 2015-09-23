@@ -13726,6 +13726,11 @@ namespace InWorldz.Phlox.Engine
             return ((double)(int)(((float)val * 100000.0) + 0.5)) / 100000.0;
         }
 
+        private bool IsJsonFramed(string str, char start, char end)
+        {
+            return ((str.Length >= 2) && (str[0] == start) && (str[str.Length - 1] == end));
+        }
+
         private OSD ListToJson(object o)
         {
             if (o is float)
@@ -13750,7 +13755,18 @@ namespace InWorldz.Phlox.Engine
                 if (str == ScriptBaseClass.JSON_TRUE)
                     return OSD.FromBoolean(true);
 
-                return OSD.FromString(str);
+                LitJson.JsonData json;
+                if (IsJsonFramed(str, '[', ']') || IsJsonFramed(str, '{', '}'))
+                {
+                    json = LitJson.JsonMapper.ToObject(str);
+                }
+                else
+                {
+                    if (IsJsonFramed(str, '"', '"'))
+                        str = str.Substring(1, str.Length - 2);
+                    json = new LitJson.JsonData(str);
+                }
+                return OSDParser.DeserializeJson(json);
             }
 
             throw new Exception(ScriptBaseClass.JSON_INVALID);
