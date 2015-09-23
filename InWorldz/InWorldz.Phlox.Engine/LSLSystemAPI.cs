@@ -13755,6 +13755,9 @@ namespace InWorldz.Phlox.Engine
 
         private OSD JsonGetSpecific(OSD o, LSL_List specifiers, int i)
         {
+            if (specifiers.Length == 0)
+                return o;
+
             object spec = specifiers.Data[i];
             OSD nextVal = null;
             if (o is OSDArray)
