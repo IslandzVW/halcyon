@@ -13732,15 +13732,7 @@ namespace InWorldz.Phlox.Engine
                 return OSD.FromReal(FloatAsDouble((float)o));
 
             if (o is int)
-            {
-                int i = (int)o;
-                if (i == 0)
-                    return OSD.FromBoolean(false);
-                else if (i == 1)
-                    return OSD.FromBoolean(true);
-
-                return OSD.FromInteger(i);
-            }
+                return OSD.FromInteger((int)o);
 
             if (o is LSL_Rotation)
                 return OSD.FromString(((LSL_Rotation)o).ToString());
