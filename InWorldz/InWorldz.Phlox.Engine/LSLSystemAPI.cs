@@ -13745,6 +13745,11 @@ namespace InWorldz.Phlox.Engine
                 string str = (string)o;
                 if (str == ScriptBaseClass.JSON_NULL)
                     return new OSD();
+                if (str == ScriptBaseClass.JSON_FALSE)
+                    return OSD.FromBoolean(false);
+                if (str == ScriptBaseClass.JSON_TRUE)
+                    return OSD.FromBoolean(true);
+
                 return OSD.FromString(str);
             }
 
