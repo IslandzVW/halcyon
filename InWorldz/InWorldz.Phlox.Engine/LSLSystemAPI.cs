@@ -13720,10 +13720,16 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
+        double FloatAsDouble(float val)
+        {
+            // force accurate to 6 digits only, but double form
+            return ((double)(int)(((float)val * 100000.0) + 0.5)) / 100000.0;
+        }
+
         private OSD ListToJson(object o)
         {
             if (o is float)
-                return OSD.FromReal((float)o);
+                return OSD.FromReal(FloatAsDouble((float)o));
 
             if (o is int)
             {
