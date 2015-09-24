@@ -711,6 +711,7 @@ namespace OpenSim.Framework.Communications.Clients
             }
             catch (WebException ex)
             {
+                m_log.InfoFormat("[REST COMMS]: exception on reply of DoCreateObject2 {0} Sz {1}", ex, objectCreateRequest.ContentLength);
                 HttpWebResponse response = (HttpWebResponse)ex.Response;
                 if (response != null)
                 {
@@ -734,11 +735,6 @@ namespace OpenSim.Framework.Communications.Clients
                         return CreateObject2Ret.Error;
                     }
                 }
-                else
-                {
-                    return CreateObject2Ret.Error;
-                }
-                m_log.InfoFormat("[REST COMMS]: exception on reply of DoCreateObject2 {0} Sz {1}", ex, objectCreateRequest.ContentLength);
             }
 
             return CreateObject2Ret.Error;

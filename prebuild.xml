@@ -88,7 +88,6 @@
       <Reference name="System"/>
       <Reference name="System.Xml"/>
       <Reference name="System.Web"/>
-      <Reference name="System.Text"/>
       <Reference name="OpenSim.Framework"/>
       <Reference name="SmartThreadPool"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../../../bin/"/>

@@ -85,7 +85,7 @@ namespace OpenSim.Framework
         /// <summary>
         /// The default prompt text.
         /// </summary>
-        string DefaultPrompt { get; set; }
+        new string DefaultPrompt { get; set; }
 
         /// <summary>
         /// Display a command prompt on the console and wait for user input
@@ -94,6 +94,6 @@ namespace OpenSim.Framework
 
         void RunCommand(string cmd);
 
-        string ReadLine(string p, bool isCommand, bool e);
+        new string ReadLine(string p, bool isCommand, bool e);
     }
 }
