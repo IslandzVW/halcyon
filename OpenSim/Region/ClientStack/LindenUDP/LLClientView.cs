@@ -3394,7 +3394,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private float NormalizeFloat16(float value, float magnitude)
         {
             float val = Utils.UInt16ToFloat(Utils.FloatToUInt16(value, -magnitude, magnitude), -magnitude, magnitude);
-            return value;
+            return val;
         }
 
         private ObjectUpdatePacket.ObjectDataBlock GenerateObjectBlock(
