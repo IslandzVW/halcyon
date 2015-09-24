@@ -1395,7 +1395,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!Permissions.CanCreateUserInventory(invType, remoteClient.AgentId))
                 return;
 
-			if (m_sceneGraph.GetScenePresence(remoteClient.AgentId) != null)
+            if (m_sceneGraph.GetScenePresence(remoteClient.AgentId) != null)
             {
                 // Don't link to default items
                 if ((olditemID == AvatarWearable.DEFAULT_EYES_ITEM) ||

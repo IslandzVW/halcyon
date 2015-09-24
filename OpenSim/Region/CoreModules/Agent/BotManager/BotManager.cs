@@ -384,7 +384,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool RemoveBot(UUID botID, UUID attemptingUser)
         {
-			if (GetBotWithPermission(botID, attemptingUser) == null)
+            if (GetBotWithPermission(botID, attemptingUser) == null)
                 return false;
 
             lock (m_bots)
