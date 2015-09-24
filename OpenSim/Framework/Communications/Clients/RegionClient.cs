@@ -735,10 +735,6 @@ namespace OpenSim.Framework.Communications.Clients
                         return CreateObject2Ret.Error;
                     }
                 }
-                else
-                {
-                    return CreateObject2Ret.Error;
-                }
             }
 
             return CreateObject2Ret.Error;
