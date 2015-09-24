@@ -711,7 +711,7 @@ namespace OpenSim.Framework.Communications.Clients
             }
             catch (WebException ex)
             {
-				m_log.InfoFormat("[REST COMMS]: exception on reply of DoCreateObject2 {0} Sz {1}", ex, objectCreateRequest.ContentLength);
+                m_log.InfoFormat("[REST COMMS]: exception on reply of DoCreateObject2 {0} Sz {1}", ex, objectCreateRequest.ContentLength);
                 HttpWebResponse response = (HttpWebResponse)ex.Response;
                 if (response != null)
                 {
