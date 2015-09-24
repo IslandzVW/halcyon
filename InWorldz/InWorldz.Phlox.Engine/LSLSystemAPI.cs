@@ -13605,19 +13605,33 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
-        private string StripBOM(string str)
+        private string StripOneBOM(string str, ref bool stripped)
         {
+            stripped = true;
+
                  if (str.StartsWith("\xFF\xFE\x00\x00")) return str.Substring(4);
             else if (str.StartsWith("\x00\x00\xFF\xFF")) return str.Substring(4);
             else if (str.StartsWith("\xEF\xBB\xBF")) return str.Substring(3);
             else if (str.StartsWith("\xFF\xFE")) return str.Substring(2);
             else if (str.StartsWith("\xFE\xFF")) return str.Substring(2);
+
+            stripped = false;
+            return str;
+        }
+
+        private string StripBOM(string str)
+        {
+            bool stripped = false;
+            do
+            {
+                str = StripOneBOM(str, ref stripped);
+            } while (stripped);
             return str;
         }
 
         public string llJsonGetValue(string json, LSL_List specifiers)
         {
-            if (!json.StartsWith("{")) json = StripBOM(json);
+            json = StripBOM(json);
             try
             {
                 OSD o = OSDParser.DeserializeJson(json);
@@ -13634,7 +13648,7 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List llJson2List(string json)
         {
-            if (!json.StartsWith("{")) json = StripBOM(json);
+            json = StripBOM(json);
             try
             {
                 OSD o = OSDParser.DeserializeJson(json);
@@ -13799,7 +13813,7 @@ namespace InWorldz.Phlox.Engine
 
         public string llJsonSetValue(string json, LSL_List specifiers, string value)
         {
-            if (!json.StartsWith("{")) json = StripBOM(json);
+            json = StripBOM(json);
             try
             {
                 OSD o = OSDParser.DeserializeJson(json);
@@ -13882,7 +13896,7 @@ namespace InWorldz.Phlox.Engine
 
         public string llJsonValueType(string json, LSL_List specifiers)
         {
-            if (!json.StartsWith("{")) json = StripBOM(json);
+            json = StripBOM(json);
             OSD o = OSDParser.DeserializeJson(json);
             OSD specVal = JsonGetSpecific(o, specifiers, 0);
             if (specVal == null)
