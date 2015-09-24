@@ -13605,19 +13605,33 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
-        private string StripBOM(string str)
+        private string StripOneBOM(string str, ref bool stripped)
         {
+            stripped = true;
+
                  if (str.StartsWith("\xFF\xFE\x00\x00")) return str.Substring(4);
             else if (str.StartsWith("\x00\x00\xFF\xFF")) return str.Substring(4);
             else if (str.StartsWith("\xEF\xBB\xBF")) return str.Substring(3);
             else if (str.StartsWith("\xFF\xFE")) return str.Substring(2);
             else if (str.StartsWith("\xFE\xFF")) return str.Substring(2);
+
+            stripped = false;
+            return str;
+        }
+
+        private string StripBOM(string str)
+        {
+            bool stripped = false;
+            do
+            {
+                str = StripOneBOM(str, ref stripped);
+            } while (stripped);
             return str;
         }
 
         public string llJsonGetValue(string json, LSL_List specifiers)
         {
-            if (!json.StartsWith("{")) json = StripBOM(json);
+            json = StripBOM(json);
             try
             {
                 OSD o = OSDParser.DeserializeJson(json);
@@ -13634,7 +13648,7 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List llJson2List(string json)
         {
-            if (!json.StartsWith("{")) json = StripBOM(json);
+            json = StripBOM(json);
             try
             {
                 OSD o = OSDParser.DeserializeJson(json);
@@ -13720,21 +13734,24 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
+        double FloatAsDouble(float val)
+        {
+            // force accurate to 6 digits only, but double form
+            return ((double)(int)(((float)val * 100000.0) + 0.5)) / 100000.0;
+        }
+
+        private bool IsJsonFramed(string str, char start, char end)
+        {
+            return ((str.Length >= 2) && (str[0] == start) && (str[str.Length - 1] == end));
+        }
+
         private OSD ListToJson(object o)
         {
             if (o is float)
-                return OSD.FromReal((float)o);
+                return OSD.FromReal(FloatAsDouble((float)o));
 
             if (o is int)
-            {
-                int i = (int)o;
-                if (i == 0)
-                    return OSD.FromBoolean(false);
-                else if (i == 1)
-                    return OSD.FromBoolean(true);
-
-                return OSD.FromInteger(i);
-            }
+                return OSD.FromInteger((int)o);
 
             if (o is LSL_Rotation)
                 return OSD.FromString(((LSL_Rotation)o).ToString());
@@ -13747,7 +13764,23 @@ namespace InWorldz.Phlox.Engine
                 string str = (string)o;
                 if (str == ScriptBaseClass.JSON_NULL)
                     return new OSD();
-                return OSD.FromString(str);
+                if (str == ScriptBaseClass.JSON_FALSE)
+                    return OSD.FromBoolean(false);
+                if (str == ScriptBaseClass.JSON_TRUE)
+                    return OSD.FromBoolean(true);
+
+                LitJson.JsonData json;
+                if (IsJsonFramed(str, '[', ']') || IsJsonFramed(str, '{', '}'))
+                {
+                    json = LitJson.JsonMapper.ToObject(str);
+                }
+                else
+                {
+                    if (IsJsonFramed(str, '"', '"'))
+                        str = str.Substring(1, str.Length - 2);
+                    json = new LitJson.JsonData(str);
+                }
+                return OSDParser.DeserializeJson(json);
             }
 
             throw new Exception(ScriptBaseClass.JSON_INVALID);
@@ -13755,6 +13788,9 @@ namespace InWorldz.Phlox.Engine
 
         private OSD JsonGetSpecific(OSD o, LSL_List specifiers, int i)
         {
+            if (specifiers.Length == 0)
+                return o;
+
             object spec = specifiers.Data[i];
             OSD nextVal = null;
             if (o is OSDArray)
@@ -13777,7 +13813,7 @@ namespace InWorldz.Phlox.Engine
 
         public string llJsonSetValue(string json, LSL_List specifiers, string value)
         {
-            if (!json.StartsWith("{")) json = StripBOM(json);
+            json = StripBOM(json);
             try
             {
                 OSD o = OSDParser.DeserializeJson(json);
@@ -13860,7 +13896,7 @@ namespace InWorldz.Phlox.Engine
 
         public string llJsonValueType(string json, LSL_List specifiers)
         {
-            if (!json.StartsWith("{")) json = StripBOM(json);
+            json = StripBOM(json);
             OSD o = OSDParser.DeserializeJson(json);
             OSD specVal = JsonGetSpecific(o, specifiers, 0);
             if (specVal == null)
