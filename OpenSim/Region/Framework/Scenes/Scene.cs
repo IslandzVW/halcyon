@@ -867,7 +867,7 @@ namespace OpenSim.Region.Framework.Scenes
                     ret = "0";  // false in InWorldz
                     break;
                 case "dynamic_pathfinding": // (integer) Get the region's dynamic_pathfinding status, "1" or "0".
-                    ret = "0";  // false in InWorldz
+                    ret = "disabled";
                     break;
                 case "InWorldz": // (integer) Is this an InWorldz server? "1" or "0".
                     ret = "1";  // always true in InWorldz
