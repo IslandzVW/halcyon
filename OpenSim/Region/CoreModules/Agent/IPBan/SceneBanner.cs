@@ -41,13 +41,11 @@ namespace OpenSim.Region.CoreModules.Agent.IPBan
                     = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private List<string> bans;
-        private SceneBase m_scene;
         public SceneBanner(SceneBase scene, List<string> banList)
         {
             scene.EventManager.OnClientConnect += EventManager_OnClientConnect;
 
             bans = banList;
-            m_scene = scene;
         }
 
         void EventManager_OnClientConnect(IClientCore client)

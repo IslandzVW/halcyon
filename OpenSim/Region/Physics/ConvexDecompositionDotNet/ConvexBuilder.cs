@@ -224,7 +224,6 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
             getMesh(a.mResult, vc, indices);
             getMesh(b.mResult, vc, indices);
 
-            int vcount = vc.GetSize();
             List<float3> vertices = vc.GetVertices();
             int tcount = indices.Count / 3;
 

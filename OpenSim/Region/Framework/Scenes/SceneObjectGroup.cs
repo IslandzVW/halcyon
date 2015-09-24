@@ -191,7 +191,6 @@ namespace OpenSim.Region.Framework.Scenes
         private Quaternion _bbRot = Quaternion.Identity;
 
         private ILandObject _currentParcel;
-        private Vector3 _lastGoodPosition = Vector3.Zero;
 
         #region Properties
 
@@ -624,7 +623,6 @@ namespace OpenSim.Region.Framework.Scenes
                     ILandObject NewParcel = m_scene.LandChannel.GetLandObject(val.X, val.Y);
                     if (NewParcel != null)
                     {
-                        _lastGoodPosition = val;
                         if ((CurrentParcel != null) && (val != currentPos))
                         {
                             if (NewParcel.landData.LocalID != CurrentParcel.landData.LocalID)
@@ -1297,7 +1295,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SaveScriptedState(XmlTextWriter writer, StopScriptReason stopScriptReason)
         {
-            XmlDocument doc = new XmlDocument();
             Dictionary<UUID, string> states = new Dictionary<UUID, string>();
 
             // Dont capture script state while holding the lock, the phlox engine thread
@@ -4703,8 +4700,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             byte restored = this.GetBestAttachmentPoint();
             Vector3 attachPos = this.RawGroupPosition;
-            Quaternion attachRot = this.RootPart.RotationOffset;   // default to the current value
-            uint specified = AttachmentPt;                          // save the one asked for cuz we're gonna change it
+            Quaternion attachRot = this.RootPart.RotationOffset;   // default to the current value                         // save the one asked for cuz we're gonna change it
 
             // AttachmentPt 0 means the client chose to 'wear' the attachment. 
             // Check object for stored attachment point, and wear there if set

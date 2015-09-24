@@ -40,9 +40,7 @@ namespace OpenSim.Servers.Base
     {
         // Logger
         //
-        private static readonly ILog m_log =
-                LogManager.GetLogger(
-                MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger( MethodBase.GetCurrentMethod().DeclaringType);
 
         // The http server instance
         //
@@ -78,7 +76,6 @@ namespace OpenSim.Servers.Base
             }
 
             bool ssl_main = networkConfig.GetBoolean("https_main",false);
-            bool ssl_listener = networkConfig.GetBoolean("https_listener",false);
             BaseHttpServer httpServer = null;
 
             //

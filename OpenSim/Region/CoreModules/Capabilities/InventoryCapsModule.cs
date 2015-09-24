@@ -74,7 +74,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private IConfigSource m_Config;
         private Scene m_Scene;
 
         #region INonSharedRegionModule
@@ -91,7 +90,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         public void Initialise(IConfigSource source)
         {
-            m_Config = source;
         }
 
         public void Close()
@@ -440,9 +438,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 string assetDes = map["description"].AsString();
                 UUID parentFolder = map["folder_id"].AsUUID();
                 string inventory_type = map["inventory_type"].AsString();
-                uint everyone_mask = map["everyone_mask"].AsUInteger();
-                uint group_mask = map["group_mask"].AsUInteger();
-                uint next_owner_mask = map["next_owner_mask"].AsUInteger();
                 UUID newAsset = UUID.Random();
                 UUID newInvItem = UUID.Random();
 
@@ -504,7 +499,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         uploadResponse["data"] = data;
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     OSDMap errorResponse = new OSDMap();
                     errorResponse["uploader"] = "";
@@ -662,7 +657,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     {
                         m_assetCache.AddAsset(textureAsset, AssetRequestInfo.GenericNetRequest());
                     }
-                    catch (AssetServerException e)
+                    catch (AssetServerException)
                     {
                         if (remoteClient != null) remoteClient.SendAgentAlertMessage("Unable to upload asset. Please try again later.", false);
                         throw;
@@ -1086,7 +1081,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                                     //count++;
                                 }
                             }
-                            catch (InventoryObjectMissingException iome)
+                            catch (InventoryObjectMissingException)
                             {
                                 m_log.ErrorFormat("[CAPS/INVENTORY] Failed to resolve link to folder {0} for {1}",
                                     linkedFolderID, m_agentID);

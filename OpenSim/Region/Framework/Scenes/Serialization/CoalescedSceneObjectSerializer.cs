@@ -108,9 +108,6 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
         /// <returns></returns>
         public static SceneObjectPart RootPartXmlObject(UUID fromUserInventoryItemID, string xmlData, int index)
         {
-            SceneObjectPart part = new SceneObjectPart();
-            Dictionary<UUID, ItemPermissionBlock> permBlock = new Dictionary<UUID, ItemPermissionBlock>();
-
             try
             {
                 XmlDocument doc = new XmlDocument();

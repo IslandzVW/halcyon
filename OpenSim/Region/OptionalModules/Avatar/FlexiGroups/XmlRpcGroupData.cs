@@ -51,15 +51,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
         private string m_serviceURL = string.Empty;
 
-        private bool m_disableKeepAlive = false;
-
         private string m_groupReadKey  = string.Empty;
         private string m_groupWriteKey = string.Empty;
 
         public XmlRpcGroupDataProvider(string serviceURL, bool disableKeepAlive, string groupReadKey, string groupWriteKey)
         {
             m_serviceURL = serviceURL.Trim();
-            m_disableKeepAlive = disableKeepAlive;
 
             if ((serviceURL == null) ||
                 (serviceURL == string.Empty))

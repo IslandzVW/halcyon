@@ -524,7 +524,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                     if (newParcel || ((zpos < LandChannel.BAN_LINE_SAFETY_HEIGHT) && (prevzpos >= LandChannel.BAN_LINE_SAFETY_HEIGHT)))
                     {
                         // Either entering a new parcel from the side, or entering the restricted zone from above.
-                        ParcelPropertiesStatus reason;
                         handleAvatarChangingParcel(avatar, parcel.landData.LocalID, m_scene.RegionInfo.RegionID);
                     }
 #if false

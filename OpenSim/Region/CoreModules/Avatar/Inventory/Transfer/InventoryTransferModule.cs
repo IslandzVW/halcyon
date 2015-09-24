@@ -298,8 +298,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
             // The inventory item/folder, back from it's trip
             UUID inventoryEntityID = new UUID(im.imSessionID);
-            UUID toAgentID = new UUID(im.toAgentID);
-            UUID bucketID = new UUID(im.binaryBucket, 0);
 
             // Here, the recipient is local and we can assume that the inventory is loaded.
             // Courtesy of the above bulk update, it will have been pushed to the client, too.

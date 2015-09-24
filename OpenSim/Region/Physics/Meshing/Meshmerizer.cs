@@ -397,7 +397,6 @@ namespace OpenSim.Region.Physics.Meshing
         {
             Mesh mesh = new Mesh(meshKey, coords.Count, faces.Count);
 
-            List<Vertex> vertices = new List<Vertex>();
             for (int i = 0; i < coords.Count; i++)
             {
                 Coord c = coords[i];

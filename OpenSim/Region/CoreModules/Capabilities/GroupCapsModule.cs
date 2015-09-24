@@ -48,8 +48,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
     [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule", Id = "GroupCapsModule")]
     public class GroupCapsModule : INonSharedRegionModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private Scene m_scene;
         protected IGroupsModule m_groupService;
@@ -106,8 +105,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
     public class GroupMemberDataHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly UUID m_agentID;
         private readonly Scene m_scene;

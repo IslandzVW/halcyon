@@ -205,7 +205,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private const int UNINHIBITED_PRIM_UPDATES_PER_PACKET = 56;
         private int m_primFullUpdatesPerPacket = UNINHIBITED_PRIM_UPDATES_PER_PACKET;
-        private DateTime _presenceCreatedOn;
 
 
 
@@ -611,8 +610,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             RegisterLocalPacketHandlers();
             m_imageManager = new LLImageManager(this, m_assetCache,Scene.RequestModuleInterface<IJ2KDecoder>());
-
-            _presenceCreatedOn = DateTime.Now;
         }
 
         public void AfterAttachedToConnection(AgentCircuitData circuitData)
@@ -870,7 +867,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// </summary>
         /// <param name="packet"></param>
         /// <returns>True if a handler was found which successfully processed the packet.</returns>
-        static private int WORK_QUEUE_SIZE_LIMIT = 1000;    // max number of outstanding request (anti-griefer)
         protected virtual bool ProcessPacketMethod(Packet packet)
         {
             PacketProcessor processor;
@@ -3375,8 +3371,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             SceneObjectPart sop = update.Part;
 
-            uint flags = update.Flags;
-
             byte[] color = new byte[] { sop.TextColor.R, sop.TextColor.G, sop.TextColor.B, sop.TextColor.A };
 
             Vector3 position;
@@ -4586,7 +4580,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                                                                           byte state,
                                                                                           int attachPoint)
         {
-            uint ID = localID;
             byte[] bytes = new byte[44];
 
             int pos = 0;

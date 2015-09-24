@@ -66,7 +66,6 @@ namespace InWorldz.RemoteAdmin
         private string m_name = "RemoteAdmin";
         private string m_version = "0.0";
         private static Object rslock = new Object();
-        private List<Scene> _scenes = new List<Scene>();
         private RemoteAdmin m_admin = null;
         private OpenSimBase m_app = null;
 

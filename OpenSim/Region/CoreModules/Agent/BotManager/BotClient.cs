@@ -57,8 +57,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         private Scene m_scene;
         private Dictionary<string, UUID> m_defaultAnimations = new Dictionary<string, UUID>();
         private bool m_frozenUser = false;
-        private UUID m_frozenBy = UUID.Zero;
-        private string m_frozenByName = "";
         private bool m_closing = false;
 
         #endregion
@@ -155,8 +153,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
             if (m_frozenUser)
                 return false;
-
-            SurfaceTouchEventArgs surfaceArg = new SurfaceTouchEventArgs();
 
             ScenePresence sp = m_scene.GetScenePresence(AgentID);
             if (sp == null)
@@ -1532,15 +1528,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 if (m_frozenUser)
                 {
                     SendAgentAlertMessage(whoName + " has frozen you in place. You will be unable to move or interact until you log off and start a new session, or until " + whoName + " unfreezes you.", true);
-                    m_frozenBy = whoKey;
-                    m_frozenByName = whoName;
                     m_log.WarnFormat("{0} has frozen {1} [{2}].", this.Name, whoName, whoKey);
                 }
                 else
                 {
                     SendAgentAlertMessage(whoName + " has unfrozen you. You are free to move and interact again.", true);
-                    m_frozenBy = UUID.Zero;
-                    m_frozenByName = "";
                     m_log.WarnFormat("{0} has unfrozen {1} [{2}].", this.Name, whoName, whoKey);
                 }
             }

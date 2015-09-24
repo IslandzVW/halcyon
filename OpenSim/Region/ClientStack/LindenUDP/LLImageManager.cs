@@ -48,9 +48,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
         }
 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private bool m_shuttingdown;
-        private AssetBase m_missingImage;
+        private AssetBase m_missingImage = null;
         private LLClientView m_client; //Client we're assigned to
         private IAssetCache m_assetCache; //Asset Cache
         private IJ2KDecoder m_j2kDecodeModule; //Our J2K module

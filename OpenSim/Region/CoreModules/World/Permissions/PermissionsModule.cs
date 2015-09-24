@@ -107,8 +107,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         private bool m_propagatePermissions = false;
         private bool m_debugPermissions = false;
         private bool m_allowGridGods = false;
-        private bool m_RegionOwnerIsGod = false;
-        private bool m_ParcelOwnerIsGod = false;
 
         #endregion
 
@@ -130,8 +128,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_allowGridGods = myConfig.GetBoolean("allow_grid_gods", false);
             m_bypassPermissions = !myConfig.GetBoolean("serverside_object_permissions", false);
             m_propagatePermissions = myConfig.GetBoolean("propagate_permissions", true);
-            m_RegionOwnerIsGod = myConfig.GetBoolean("region_owner_is_god", true);
-            m_ParcelOwnerIsGod = myConfig.GetBoolean("parcel_owner_is_god", true);
 
             if (m_bypassPermissions)
                 m_log.Info("[PERMISSIONS]: serviceside_object_permissions = false in ini file so disabling all region service permission checks");

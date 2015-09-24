@@ -38,7 +38,7 @@ namespace OpenSim.Framework.Communications.Cache
     /// </summary>
     public class UserProfileCacheService
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// The comms manager holds references to services (user, grid, inventory, etc.)

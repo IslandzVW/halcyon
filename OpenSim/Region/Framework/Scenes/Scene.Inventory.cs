@@ -1395,8 +1395,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (!Permissions.CanCreateUserInventory(invType, remoteClient.AgentId))
                 return;
 
-            ScenePresence presence;
-            if ((presence = m_sceneGraph.GetScenePresence(remoteClient.AgentId)) != null)
+			if (m_sceneGraph.GetScenePresence(remoteClient.AgentId) != null)
             {
                 // Don't link to default items
                 if ((olditemID == AvatarWearable.DEFAULT_EYES_ITEM) ||
@@ -2840,7 +2839,7 @@ namespace OpenSim.Region.Framework.Scenes
                         //vanishing from the scene
                         CommsManager.AssetCache.AddAsset(asset, AssetRequestInfo.InternalRequest());
                     }
-                    catch (AssetServerException e)
+                    catch (AssetServerException)
                     {
                         if (remoteClient != null) remoteClient.SendAgentAlertMessage("Unable to create asset. Please try again later.", false);
                         throw;
@@ -4052,8 +4051,6 @@ namespace OpenSim.Region.Framework.Scenes
             AddNewSceneObject(group, !isTemp);
 
             SceneObjectPart rootPart = group.GetChildPart(group.UUID);
-
-            List<SceneObjectPart> partList = new List<SceneObjectPart>(group.Children.Values);
 
             rootPart.TrimPermissions();
 

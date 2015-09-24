@@ -191,7 +191,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     {
                         string externalBaseURL = GetApertureBaseURL(caps);
                         string externalURL = GetApertureHttUrl(caps, capID);
-                        string addCapURL = externalBaseURL + ADD_CAPS_TOKEN_URL + m_apToken + "/" + capID.ToString();
 
                         //register this cap url with the server
                         caps.RegisterHandler("GetMesh", externalURL); //caps control for the texture server will apply to pause mesh as well
@@ -234,7 +233,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
         private void SetApertureBandwidth(Caps caps, UUID capID, int bwMax)
         {
             string externalBaseURL = GetApertureBaseURL(caps);
-            string externalURL = GetApertureHttUrl(caps, capID);
             string addCapURL = externalBaseURL + LIMIT_TOKEN_URL + m_apToken + "/" + capID.ToString() + "/" + bwMax.ToString();
 
             WebRequest req = WebRequest.Create(addCapURL);
@@ -249,7 +247,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
         private void ResumeAperture(Caps caps, UUID capID)
         {
             string externalBaseURL = GetApertureBaseURL(caps);
-            string externalURL = GetApertureHttUrl(caps, capID);
             string addCapURL = externalBaseURL + RESUME_TOKEN_URL + m_apToken + "/" + capID.ToString();
 
             WebRequest req = WebRequest.Create(addCapURL);
@@ -264,7 +261,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
         private void PauseAperture(Caps caps, UUID capID)
         {
             string externalBaseURL = GetApertureBaseURL(caps);
-            string externalURL = GetApertureHttUrl(caps, capID);
             string addCapURL = externalBaseURL + PAUSE_TOKEN_URL + m_apToken + "/" + capID.ToString();
 
             WebRequest req = WebRequest.Create(addCapURL);

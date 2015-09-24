@@ -76,8 +76,6 @@ namespace InWorldz.ApplicationPlugins.ChatFilterModule
         private string[] m_words;
 
 
-        private Scene m_scene;
-
         #endregion
 
         #region INonSharedRegionModule Members
@@ -126,8 +124,6 @@ namespace InWorldz.ApplicationPlugins.ChatFilterModule
         public void AddRegion(Scene scene)
         {
             if (!m_enabled) return;
-
-            m_scene = scene;
 
             scene.EventManager.OnBeforeSendInstantMessage += EventManager_OnBeforeSendInstantMessage;
             scene.EventManager.OnChatFromClient += EventManager_OnChatFromClient;
@@ -213,8 +209,6 @@ namespace InWorldz.ApplicationPlugins.ChatFilterModule
         public void RemoveRegion(Scene scene)
         {
             if (!m_enabled) return;
-
-            m_scene = null;
 
             scene.EventManager.OnBeforeSendInstantMessage -= EventManager_OnBeforeSendInstantMessage;
             scene.EventManager.OnChatFromClient -= EventManager_OnChatFromClient;

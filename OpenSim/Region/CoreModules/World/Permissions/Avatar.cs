@@ -40,13 +40,11 @@ namespace OpenSim.Region.CoreModules.World.Permissions
     /// </summary>
     class Avatar
     {
-        private UUID _myId;
         private Dictionary<UUID, int> _friendPermissions
             = new Dictionary<UUID,int>();
 
         public Avatar(UUID myId)
         {
-            _myId = myId;
         }
 
         public void AddPermission(UUID friendId, int permsMask)

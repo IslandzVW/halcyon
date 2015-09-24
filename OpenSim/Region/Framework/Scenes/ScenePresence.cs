@@ -156,8 +156,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private Vector3 m_LastFinitePos;
 
-        private float m_sitAvatarHeight = 2.0f;
-
         // experimentally determined "fudge factor" to make sit-target positions
         // the same as in SecondLife. Fudge factor was tested for 36 different
         // test cases including prims of type box, sphere, cylinder, and torus,
@@ -220,23 +218,10 @@ namespace OpenSim.Region.Framework.Scenes
         // Agent moves with a PID controller causing a force to be exerted.
         private float m_health = 100f;
 
-        private Vector3 m_lastVelocity = Vector3.Zero;
-
         // Default AV Height
         private float m_avHeight = DEFAULT_AV_HEIGHT;
 
         protected RegionInfo m_regionInfo;
-        protected ulong crossingFromRegion;
-        
-        /// <value>
-        /// The avatar position last sent to clients
-        /// </value>
-        private Vector3 lastPhysPos = Vector3.Zero;
-        
-        /// <value>
-        /// The avatar body rotation last sent to clients 
-        /// </value>
-        private Quaternion lastPhysRot = Quaternion.Identity;
 
         // Position of agent's camera in world (region cordinates)
         protected Vector3 m_CameraCenter = Vector3.Zero;
@@ -1136,11 +1121,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void ContinueSitAsRootAgent(IClientAPI client, SceneObjectPart part, Vector3 offset)
         {
-            Vector3 pos = new Vector3();
             Quaternion sitOrientation = Quaternion.Identity;
-            Vector3 cameraEyeOffset = Vector3.Zero;
-            Vector3 cameraAtOffset = Vector3.Zero;
-            bool forceMouselook = false;
 
             DumpDebug("ContinueSitAsRootAgent", "n/a");
 
@@ -1150,11 +1131,6 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     part.SitTargetAvatar = client.AgentId;
                     sitOrientation = part.SitTargetOrientation;
-                    pos = part.AbsolutePosition + offset;
-
-                    cameraAtOffset = part.GetCameraAtOffset();
-                    cameraEyeOffset = part.GetCameraEyeOffset();
-                    forceMouselook = part.GetForceMouselook();
 
                     m_requestedSitTargetUUID = part.UUID;
                     m_requestedSitTargetID = part.LocalId;
@@ -1620,7 +1596,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_DrawDistance != agentData.Far)
             {
                 m_DrawDistance = agentData.Far;
-                var task = m_remotePresences.HandleDrawDistanceChanged((uint)agentData.Far);
+                m_remotePresences.HandleDrawDistanceChanged((uint)agentData.Far);
             }
 
             if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_STAND_UP) != 0)
@@ -1645,7 +1621,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_AgentControlFlags = flags;
             m_headrotation = agentData.HeadRotation;
-            AgentState oldstate = m_state;
             m_state = (AgentState)agentData.State;
 
             if (physActor == null)
@@ -2343,7 +2318,6 @@ namespace OpenSim.Region.Framework.Scenes
                 // First, remove the physActor since we're going to be sitting, so that physics doesn't interfere while we're doing this update.
                 if (m_physicsActor != null)
                 {
-                    m_sitAvatarHeight = m_physicsActor.Size.Z;
                     RemoveFromPhysicalScene();
                 }
 
@@ -3112,7 +3086,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             SceneObjectPart part = parent;
             SceneObjectPart rootPart = (part == null) ? null : part.ParentGroup.RootPart;
-            uint rootID = rootPart == null ? 0 : rootPart.LocalId;
 
             // Viewer seems to draw the avatar based on the hip position.
             // If you don't include HipOffset (which is raising the avatar 
@@ -3179,13 +3152,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_perfMonMS = Environment.TickCount;
 
             m_scene.Broadcast(SendTerseUpdateToClient);
-
-            lock (m_posInfo)
-            {
-                m_lastVelocity = Velocity;
-                lastPhysPos = AbsolutePosition;
-                lastPhysRot = m_bodyRot;
-            }
 
             m_scene.StatsReporter.AddAgentTime(Environment.TickCount - m_perfMonMS);
         }
@@ -4154,10 +4120,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         void m_physicsActor_OnPositionUpdate()
         {
-            lock (m_posInfo)
-            {
-                lastPhysPos = AbsolutePosition;
-            }
         }
 
         /// <summary>

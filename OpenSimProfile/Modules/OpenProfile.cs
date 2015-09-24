@@ -39,7 +39,6 @@ namespace OpenSimProfile.Modules.OpenProfile
         //
         // Module vars
         //
-        private IConfigSource m_gConfig;
         private bool m_Enabled = true;
 
         private ConnectionFactory _connFactory;
@@ -68,8 +67,6 @@ namespace OpenSimProfile.Modules.OpenProfile
             string storageConnStr = profileConfig.GetString("storage_connection_string", String.Empty);
 
             _regionConnFactory = new ConnectionFactory("MySQL", storageConnStr);
-
-            m_gConfig = config;
 
             // Hook up events
             scene.EventManager.OnNewClient += OnNewClient;
@@ -218,8 +215,6 @@ namespace OpenSimProfile.Modules.OpenProfile
 
             using (ISimpleDB db = _connFactory.GetConnection())
             {
-                UUID classifiedID = new UUID();
-
                 Dictionary<UUID, string> classifieds = new Dictionary<UUID, string>();
 
                 Dictionary<string, object> parms = new Dictionary<string, object>();
@@ -232,8 +227,6 @@ namespace OpenSimProfile.Modules.OpenProfile
                 
                 foreach (Dictionary<string, string> row in results)
                 {
-
-                    classifiedID = UUID.Parse(row["classifieduuid"]);
                     classifieds[new UUID(row["classifieduuid"].ToString())] = row["name"].ToString();
                 }
 
@@ -281,7 +274,6 @@ namespace OpenSimProfile.Modules.OpenProfile
 
             // In case of insert, original values are the new values (by default)
             int origPrice = 0;
-            int updatedPrice = queryclassifiedPrice;
 
             using (ISimpleDB db = _connFactory.GetConnection())
             {
@@ -474,8 +466,6 @@ namespace OpenSimProfile.Modules.OpenProfile
 
             using (ISimpleDB db = _connFactory.GetConnection())
             {
-                UUID picksID = new UUID();
-
                 Dictionary<UUID, string> picksRequest = new Dictionary<UUID, string>();
 
                 Dictionary<string, object> parms = new Dictionary<string, object>();
@@ -488,8 +478,6 @@ namespace OpenSimProfile.Modules.OpenProfile
 
                 foreach (Dictionary<string, string> row in results)
                 {
-
-                    picksID = UUID.Parse(row["pickuuid"]);
                     picksRequest[new UUID(row["pickuuid"].ToString())] = row["name"].ToString();
                 }
 
@@ -578,7 +566,6 @@ namespace OpenSimProfile.Modules.OpenProfile
             string userFName = remoteClient.FirstName;
             string userLName = remoteClient.LastName;
             string avatarName = userFName + " " + userLName;
-            string parcelName = name;
             UUID tempParcelUUID = UUID.Zero;
             UUID avatarID = remoteClient.AgentId;
 

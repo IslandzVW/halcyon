@@ -47,7 +47,6 @@ namespace OpenSim.Region.CoreModules.Avatar.MuteList
 
         private bool enabled = true;
         private List<Scene> m_SceneList = new List<Scene>();
-        private string m_RestURL = String.Empty;
         private ConnectionFactory _connectionFactory = null;
 
         // Legacy mutes are BY_NAME and have null UUID.
@@ -246,7 +245,6 @@ namespace OpenSim.Region.CoreModules.Avatar.MuteList
         /// <returns>Returns true if target has sender muted.</returns>
         public bool IsMuted(UUID sender, UUID target)
         {
-            List<UUID> muters = new List<UUID>();
             using (ISimpleDB db = _connectionFactory.GetConnection())
             {
                 string query = "SELECT COUNT(*) as MuteCount FROM mutelist WHERE AgentID = ?agentID AND MuteID = ?muteID";

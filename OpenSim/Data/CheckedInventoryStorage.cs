@@ -260,7 +260,6 @@ namespace OpenSim.Data
 
         public void ModifyAndMoveItem(UUID userId, InventoryItemBase item, UUID parentFolderId)
         {
-            InventoryItemBase oldItem = _storage.GetItem(item.ID, UUID.Zero);
             InventoryFolderBase folder = _storage.GetFolderAttributes(parentFolderId);
 
             if (item.Owner != userId || item.Owner != folder.Owner)
