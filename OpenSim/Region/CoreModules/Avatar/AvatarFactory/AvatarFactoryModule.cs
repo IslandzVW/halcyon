@@ -98,8 +98,6 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                     return false;
 
                 //verify this user actually owns the item
-                InventoryItemBase item = userInfo.FindItem(_wearableInventoryItemID);
-
                 InventoryFolderBase CurrentOutfitFolder = GetCurrentOutfitFolder(userInfo);
                 if (CurrentOutfitFolder == null) return false; //No COF, just ignore
 

@@ -311,7 +311,6 @@ namespace OpenSim.Grid.UserServer.Modules
         {
             string regionName = regionInfo.regionName;
             bool success = false;
-            DateTime lastFail = DateTime.MinValue;
 
             try
             {

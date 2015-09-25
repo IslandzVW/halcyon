@@ -672,7 +672,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             if (im.dialog == (byte)InstantMessageDialog.GroupNoticeInventoryAccepted)
             {
                 UUID NoticeID = UUID.Zero;
-                UUID FolderID = new UUID(im.binaryBucket, 0);
                 lock (GroupAttachmentCache) {
                     if (GroupAttachmentCache.ContainsKey(im.imSessionID))
                     {
@@ -699,7 +698,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 InitializeNoticeFromBucket(notice);
 
                 UUID groupId = notice.GroupID;
-                UUID ownerId = notice.noticeData.OwnerID;
                 UUID itemId = notice.noticeData.ItemID;
 
                 // we need a userInfo structure to get the sessionID to use in case the inventory service needs a secure service connection
@@ -1160,8 +1158,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                     return;
 
                 InitializeNoticeFromBucket(notice);
-
-                GroupRecord groupInfo = m_groupData.GetGroupRecord(grID, notice.GroupID, null);
 
                 SendGroupNoticeIM(groupNoticeID, remoteClient.AgentId, OpenMetaverse.InstantMessageDialog.GroupNoticeRequested, true);
             }

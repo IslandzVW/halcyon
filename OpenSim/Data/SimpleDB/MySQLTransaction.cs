@@ -36,13 +36,11 @@ namespace OpenSim.Data.SimpleDB
 {
     class MySQLTransaction : ITransaction
     {
-        private MySQLSimpleDB _connection;
         private MySql.Data.MySqlClient.MySqlTransaction _transaction;
         private bool _committed = false;
 
         public MySQLTransaction(MySQLSimpleDB conn)
         {
-            _connection = conn;
             _transaction = conn.ConnectionImpl.BeginTransaction();
         }
 

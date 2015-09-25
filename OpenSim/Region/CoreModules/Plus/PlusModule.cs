@@ -101,12 +101,6 @@ namespace OpenSim.Region.CoreModules.Plus
             UNAUTHORIZED = 3
         }
 
-        private class LeavingRegionInfo
-        {
-            public string RegionServerURI;
-            public UUID SessionID;
-        }
-
         #endregion
 
         #region INonSharedRegionModule members
@@ -195,7 +189,6 @@ namespace OpenSim.Region.CoreModules.Plus
             }
 
             GridInstantMessage msg = new GridInstantMessage();
-            UUID friendTransactionID = UUID.Random();
             msg.fromAgentID = fromID.Guid;
             msg.toAgentID = agentId.Guid;
             msg.imSessionID = fromID.Guid;  // put all of these is the same IM "session" from the fromID

@@ -40,8 +40,7 @@ namespace InWorldz.PhysxPhysics
 {
     class PhysxCharacter : PhysicsActor, IDisposable
     {
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private const float MAX_WALKABLE_SLOPE = 65.0f;
         private const float TERMINAL_VELOCITY_GRAVITY = 55.0f;

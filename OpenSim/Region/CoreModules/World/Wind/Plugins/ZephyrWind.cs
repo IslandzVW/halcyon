@@ -351,7 +351,6 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
             WindConstants wtype = (WindConstants)type;
             int x = (int)loc.X / 16;
             int y = (int)loc.Y / 16;
-            int z = (int)loc.Z / 16;
             if (x < 0 || x >= 16) return;
             if (y < 0 || y >= 16) return;
 
@@ -526,14 +525,13 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
 
         public void Push(double x)
         {
-            double delta, delta_n, delta_n2, term1;
+            double delta, delta_n, term1;
             long n1 = n;
 
             // See Knuth TAOCP vol 2, 3rd edition, page 232
             n++;
             delta = x - M1;
             delta_n = delta / n;
-            delta_n2 = delta_n * delta_n;
             term1 = delta * delta_n * n1;
             M1 += delta_n;
 

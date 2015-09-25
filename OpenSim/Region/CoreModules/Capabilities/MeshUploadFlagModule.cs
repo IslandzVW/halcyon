@@ -47,7 +47,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
     [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule")]
     public class MeshUploadFlagModule : INonSharedRegionModule
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Is this module enabled?

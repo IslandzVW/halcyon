@@ -554,8 +554,6 @@ namespace OpenSim.Framework
 
         public List<AvatarWearable> GetWearables()
         {
-            List<AvatarWearable> alist = new List<AvatarWearable>();
-
             lock (m_wearables)
             {
                 return (new List<AvatarWearable>(m_wearables.Values));

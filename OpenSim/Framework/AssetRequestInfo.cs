@@ -54,7 +54,6 @@ namespace OpenSim.Framework
 
         private RequestOrigin _origin;
         private NetSourceType _netSrc;
-        private NetChannelType _netChannel;
         private AssetRequestCallback _callback;
         private UUID _requestedId;
         private UUID _transferId;
@@ -171,7 +170,6 @@ namespace OpenSim.Framework
         {
             _origin = RequestOrigin.SRC_NET;
             _netSrc = (NetSourceType)fromReq.TransferInfo.SourceType;
-            _netChannel = (NetChannelType)fromReq.TransferInfo.ChannelType;
 
             if (fromReq.TransferInfo.SourceType == 2)
             {

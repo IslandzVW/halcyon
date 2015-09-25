@@ -327,8 +327,6 @@ namespace OpenSim.Region.Communications.OGS1
         {
             Hashtable respData = MapBlockQuery((int)x - 1, (int)y - 1, (int)x + 1, (int)y + 1);
 
-            List<SimpleRegionInfo> neighbours = new List<SimpleRegionInfo>();
-
             foreach (ArrayList neighboursList in respData.Values)
             {
                 foreach (Hashtable neighbourData in neighboursList)

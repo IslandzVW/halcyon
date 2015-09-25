@@ -35,7 +35,7 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public class UndoState
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public Vector3 Position = Vector3.Zero;
         public Vector3 Scale = Vector3.Zero;
         public Quaternion Rotation = Quaternion.Identity, ParentRotation = Quaternion.Identity;
@@ -93,22 +93,15 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 part.Undoing = true;
 
-                bool ChangedScale = false;
-                bool ChangedRot = false;
-                bool ChangedPos = false;
-
                 if (part.ParentID == 0)
                 {
                     if (Position != Vector3.Zero)
                     {
-                        ChangedPos = true;
                         part.ParentGroup.AbsolutePosition = Position;
                     }
-                    ChangedRot = true;
                     part.RotationOffset = Rotation;
                     if (Scale != Vector3.Zero)
                     {
-                        ChangedScale = true;
                         part.Scale = Scale;
                     }
 
@@ -125,23 +118,17 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (Position != Vector3.Zero)
                     {
-                        ChangedPos = true;
                         part.OffsetPosition = Position;
                     }
-
-                    ChangedRot = true;
+						
                     part.UpdateRotation(Rotation);
                     if (Scale != Vector3.Zero)
                     {
-                        ChangedScale = true;
                         part.Resize(Scale);
                     }
                 }
                 part.Undoing = false;
                 part.ScheduleFullUpdate();
-                //part.ScheduleUpdate((ChangedScale ? PrimUpdateFlags.Shape : PrimUpdateFlags.None) |
-                //                    (ChangedPos ? PrimUpdateFlags.Position : PrimUpdateFlags.None) |
-                //                    (ChangedRot ? PrimUpdateFlags.Rotation : PrimUpdateFlags.None));
             }
         }
 
@@ -151,22 +138,15 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 part.Undoing = true;
 
-                bool ChangedScale = false;
-                bool ChangedRot = false;
-                bool ChangedPos = false;
-
                 if (part.ParentID == 0)
                 {
                     if (Position != Vector3.Zero)
                     {
-                        ChangedPos = true;
                         part.ParentGroup.AbsolutePosition = Position;
                     }
-                    ChangedRot = true;
                     part.RotationOffset = Rotation;
                     if (Scale != Vector3.Zero)
                     {
-                        ChangedScale = true;
                         part.Scale = Scale;
                     }
 
@@ -183,23 +163,17 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (Position != Vector3.Zero)
                     {
-                        ChangedPos = true;
                         part.OffsetPosition = Position;
                     }
 
-                    ChangedRot = true;
                     part.UpdateRotation(Rotation);
                     if (Scale != Vector3.Zero)
                     {
-                        ChangedScale = true;
                         part.Resize(Scale);
                     }
                 }
                 part.Undoing = false;
                 part.ScheduleFullUpdate();
-                //part.ScheduleUpdate((ChangedScale ? PrimUpdateFlags.Shape : PrimUpdateFlags.None) |
-                //                    (ChangedPos ? PrimUpdateFlags.Position : PrimUpdateFlags.None) |
-                //                    (ChangedRot ? PrimUpdateFlags.Rotation : PrimUpdateFlags.None));
             }
         }
     }

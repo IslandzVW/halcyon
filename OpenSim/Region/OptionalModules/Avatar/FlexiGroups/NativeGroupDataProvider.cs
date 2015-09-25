@@ -331,7 +331,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                     }
                 }
 
-                List<OpenSim.Framework.GroupMembersData> memberResults = new List<OpenSim.Framework.GroupMembersData>();
                 return new List<OpenSim.Framework.GroupMembersData>(memberData.Values);
             }
         }
@@ -1372,7 +1371,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                     }
                 }
 
-                List<OpenSim.Framework.GroupMembershipData> memberResults = new List<OpenSim.Framework.GroupMembershipData>();
                 return new List<OpenSim.Framework.GroupMembershipData>(membershipData.Values);
             }
         }

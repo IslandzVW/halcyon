@@ -46,8 +46,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
     [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule", Id = "RegionConsoleModule")]
     public class RegionConsoleModule : INonSharedRegionModule, IRegionConsole
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly Commands m_commands = new Commands();
         private Scene m_scene;
@@ -157,8 +156,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
     public class ConsoleHandler : BaseStreamHandler
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly UUID m_agentID;
         private readonly RegionConsoleModule m_consoleModule;

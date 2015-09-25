@@ -111,17 +111,13 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         private class SeedCapsHandler
         {
-            private UUID m_agentID;
             private Caps m_Caps;
-            private string m_regionName;
             private Scene m_Scene;
 
             public SeedCapsHandler(Scene scene, UUID agentID, Caps caps)
             {
-                m_agentID = agentID;
                 m_Caps = caps;
                 m_Scene = scene;
-                m_regionName = m_Scene.RegionInfo.RegionName;
             }
 
             /// <summary>

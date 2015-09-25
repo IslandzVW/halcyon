@@ -1159,8 +1159,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public override void Update()
         {
-            int timeSpanMS = (int)(m_timespan * 1000.0);
-
             while (!shuttingdown)
             {
                 int SinceLastFrame = Environment.TickCount - m_lastUpdate;
@@ -5649,7 +5647,7 @@ namespace OpenSim.Region.Framework.Scenes
                 UserId = scenePresence.UUID,
             };
 
-            var transit = m_transitController.TryBeginTransit(args);
+            m_transitController.TryBeginTransit(args);
         }
 
         internal bool AvatarIsInTransit(UUID uuid)

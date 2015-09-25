@@ -40,7 +40,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
 {
     public class GesturesModule : IRegionModule
     { 
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
         protected Scene m_scene;
         

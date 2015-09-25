@@ -46,7 +46,7 @@ namespace OpenSim.Framework
     /// </summary>
     public class ObjectPool<T> where T : new()
     {
-        private static readonly ILog s_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog s_Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Maximum memory to allocate in all pools in bytes

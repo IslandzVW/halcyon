@@ -62,8 +62,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
         //
         // Module vars
         //
-        private IConfigSource m_gConfig;
-        private List<Scene> m_Scenes = new List<Scene>();
         private Dictionary<ulong, Scene> m_scenel = new Dictionary<ulong, Scene>();
 
 
@@ -76,7 +74,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
         /// </summary>
         ///
 
-        private UUID EconomyBaseAccount = UUID.Zero;
         private float EnergyEfficiency = 0f;
         //private ObjectPaid handlerOnObjectPaid;
 
@@ -105,9 +102,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
 
         public void Initialise(Scene scene, IConfigSource config)
         {
-
-            m_gConfig = config;
-
             IConfig economyConfig = config.Configs["Economy"];
             // Adding the line from Profile in order to get the connection string
             // TODO: clean up the ini file to just allow this connection for Profile, Search and Money
@@ -153,9 +147,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 PriceParcelRent = economyConfig.GetInt("PriceParcelRent", DEFAULT_PRICE_PARCEL_RENT);
                 PriceGroupCreate = economyConfig.GetInt("PriceGroupCreate", DEFAULT_PRICE_GROUP_CREATE);
 
-                string BankerAccount = economyConfig.GetString("EconomyBaseAccount", UUID.Zero.ToString());
-                UUID.TryParse(BankerAccount, out EconomyBaseAccount);
-
                 // easy way for all accounts on debug servers to have some cash to test Buy operations and transfers
                 MinDebugMoney = economyConfig.GetInt("MinDebugMoney", Int32.MinValue);
                 if (MinDebugMoney != Int32.MinValue)
@@ -180,7 +171,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 PriceParcelRent = DEFAULT_PRICE_PARCEL_RENT;
                 PriceGroupCreate = DEFAULT_PRICE_GROUP_CREATE;
 
-                EconomyBaseAccount = UUID.Zero;
                 MinDebugMoney = Int32.MinValue;
             }
 
@@ -629,8 +619,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             string sourceText = "";
             string destText = "";
 
-            UUID sourceID = e.sender;
-
             TransactionInfoBlock transInfo = new TransactionInfoBlock();
             transInfo.Amount = transAmount;
             transInfo.TransactionType = transType;
@@ -920,7 +908,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
 
             int transType = (int)MoneyTransactionType.LandSale;
             string transDesc = "Land purchase";
-            Scene scene = (Scene)osender;
             UUID sourceClientID = e.agentId;
 
             IClientAPI sourceClient = LocateClientObject(sourceClientID);

@@ -48,10 +48,9 @@ namespace OpenSim.Framework.Communications
     /// </summary>
     public abstract class UserManagerBase : IUserService, IUserAdminService, IAvatarService, IMessagingService, IAuthentication
     {
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private bool m_isUserServer = false;
+		private bool m_isUserServer = false;
 
         /// <value>
         /// List of plugins to search for user data

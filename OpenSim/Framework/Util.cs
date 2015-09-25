@@ -466,7 +466,6 @@ namespace OpenSim.Framework
         public static int LocalTimeOffset()
         {
             DateTime utcNow = DateTime.UtcNow;
-            DateTime locNow = DateTime.SpecifyKind(utcNow, DateTimeKind.Utc);   // store as same time scale for subtraction
 
             int utcOffset = (int)((utcNow - unixEpoch).TotalSeconds);
             int locOffset = (int)((utcNow.ToLocalTime() - unixEpoch).TotalSeconds);

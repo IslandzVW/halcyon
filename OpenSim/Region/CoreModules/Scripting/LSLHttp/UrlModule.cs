@@ -448,7 +448,6 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             Hashtable request = asyncRequest.RequestData;
 
             string uri = request["uri"].ToString();
-            bool is_ssl = uri.Contains("lslhttps");
 
             try
             {

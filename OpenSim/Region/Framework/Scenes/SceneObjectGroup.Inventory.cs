@@ -361,7 +361,6 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //m_log.Debug(" >>> GetStateSnapshot <<<");
 
-            List<string> assemblies = new List<string>();
             Dictionary<UUID, string> states = new Dictionary<UUID, string>();
             StopScriptReason stopScriptReason = fromCrossing ? StopScriptReason.Crossing : StopScriptReason.Derez;
 

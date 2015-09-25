@@ -82,7 +82,6 @@ namespace OpenSim.Framework.Servers.HttpServer
                 request.ContentLength = length;
 
                 Stream requestStream = request.GetRequestStream();
-                string debug = buffer.ToString();
                 requestStream.Write(buffer.ToArray(), 0, length);
             }
 

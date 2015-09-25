@@ -41,7 +41,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 {
     public class OSHttpRequest
     {
-        private static readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public HttpListenerRequest Request { get; set; }
 

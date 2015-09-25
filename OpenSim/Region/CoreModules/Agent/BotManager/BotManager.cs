@@ -325,7 +325,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     InventoryItemBase item = provider.GetItem(attachment.ItemID, UUID.Zero);
                     if ((item.CurrentPermissions & (uint)PermissionMask.Copy) != (uint)PermissionMask.Copy)
                     {
-                        bool isModal = !isSavedOutfit;
                         if (ownerSP == null)
                             ownerSP = m_scene.GetScenePresence(originalOwner);
                         if (ownerSP != null)
@@ -385,8 +384,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool RemoveBot(UUID botID, UUID attemptingUser)
         {
-            IBot bot;
-            if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
+            if (GetBotWithPermission(botID, attemptingUser) == null)
                 return false;
 
             lock (m_bots)
@@ -703,8 +701,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public Vector3 GetBotPosition(UUID botID, UUID attemptingUser)
         {
-            IBot bot;
-            if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
+            if (GetBotWithPermission(botID, attemptingUser) == null)
                 return Vector3.Zero;
 
             ScenePresence sp = m_scene.GetScenePresence(botID);
@@ -715,8 +712,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool SetBotPosition(UUID botID, Vector3 position, UUID attemptingUser)
         {
-            IBot bot;
-            if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
+            if (GetBotWithPermission(botID, attemptingUser) == null)
                 return false;
 
             ScenePresence sp = m_scene.GetScenePresence(botID);
@@ -730,8 +726,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool SetBotRotation(UUID botID, Quaternion rotation, UUID attemptingUser)
         {
-            IBot bot;
-            if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
+            if (GetBotWithPermission(botID, attemptingUser) == null)
                 return false;
 
             ScenePresence sp = m_scene.GetScenePresence(botID);
@@ -753,8 +748,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool AddTagToBot(UUID botID, string tag, UUID attemptingUser)
         {
-            IBot bot;
-            if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
+            if (GetBotWithPermission(botID, attemptingUser) == null)
                 return false;
 
             if (!m_botTags.ContainsKey(tag))
@@ -776,8 +770,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             bool success = true;
             foreach (UUID botID in bots)
             {
-                IBot bot;
-                if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
+                if (GetBotWithPermission(botID, attemptingUser) == null)
                 {
                     success = false;
                     continue;
@@ -791,8 +784,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool RemoveTagFromBot(UUID botID, string tag, UUID attemptingUser)
         {
-            IBot bot;
-            if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
+            if (GetBotWithPermission(botID, attemptingUser) == null)
                 return false;
 
             if (m_botTags.ContainsKey(tag))
@@ -802,8 +794,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool RemoveAllTagsFromBot(UUID botID, UUID attemptingUser)
         {
-            IBot bot;
-            if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
+            if (GetBotWithPermission(botID, attemptingUser) == null)
                 return false;
 
             List<string> tagsToRemove = new List<string>();
@@ -922,8 +913,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool BotRegisterForCollisionEvents(UUID botID, SceneObjectGroup group, UUID attemptingUser)
         {
-            IBot bot;
-            if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
+            if (GetBotWithPermission(botID, attemptingUser) == null)
                 return false;
 
             ScenePresence botSP = m_scene.GetScenePresence(botID);
@@ -936,8 +926,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool BotDeregisterFromCollisionEvents(UUID botID, SceneObjectGroup group, UUID attemptingUser)
         {
-            IBot bot;
-            if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
+            if (GetBotWithPermission(botID, attemptingUser) == null)
                 return false;
 
             ScenePresence botSP = m_scene.GetScenePresence(botID);
@@ -978,8 +967,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool CheckPermission(UUID botID, UUID attemptingUser)
         {
-            IBot bot;
-            if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
+            if (GetBotWithPermission(botID, attemptingUser) == null)
                 return false;
             return true;
         }

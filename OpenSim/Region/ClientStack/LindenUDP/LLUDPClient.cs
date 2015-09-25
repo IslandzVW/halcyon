@@ -325,7 +325,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int texture = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
             int asset = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f);
 
-            int totalKbps = ((resend + land + wind + cloud + task + texture + asset)/1024)*8;   // save this original value for below
+            //int totalKbps = ((resend + land + wind + cloud + task + texture + asset)/1024)*8;   // save this original value for below
 
             // State is a subcategory of task that we allocate a percentage to
             int state = (int)((float)task * STATE_TASK_PERCENTAGE);
@@ -477,7 +477,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (category >= 0 && category < m_packetOutboxes.Length)
             {
                 OpenSim.Framework.LocklessQueue<OutgoingPacket> queue = m_packetOutboxes[category];
-                TokenBucket bucket = m_throttleCategories[category];
 
                 // Not enough tokens in the bucket, queue this packet
 

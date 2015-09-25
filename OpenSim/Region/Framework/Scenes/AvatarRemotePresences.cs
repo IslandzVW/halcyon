@@ -129,7 +129,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //set up our initial connections to neighbors
                 //let the task run async in the background
                 const int CROSSING_RESYNC_DELAY = 500;
-                var task = this.CalculateAndResyncNeighbors((uint)presence.DrawDistance, CROSSING_RESYNC_DELAY);
+                this.CalculateAndResyncNeighbors((uint)presence.DrawDistance, CROSSING_RESYNC_DELAY);
             }
         }
 
@@ -183,11 +183,11 @@ namespace OpenSim.Region.Framework.Scenes
             switch (changeType)
             {
                 case NeighborStateChangeType.NeighborUp:
-                    var task1 = this.HandleNeighborUp(neighbor);
+                    this.HandleNeighborUp(neighbor);
                     break;
 
                 case NeighborStateChangeType.NeighborDown:
-                    var task2 = this.HandleNeighborDown(neighbor);
+                    this.HandleNeighborDown(neighbor);
                     break;
             }
         }

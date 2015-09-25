@@ -56,7 +56,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
         //
         // Log module
         //
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         //
         // Module vars
@@ -160,7 +160,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
             private const int QUERY_SIZE = 50;
             private ISimpleDB m_rdb = null;
             private string m_query = String.Empty;
-            private uint m_queryFlags = 0;
             private Dictionary<string, object> m_parms = null;
             private int m_offset = 0;
             private List<Dictionary<string, string>> m_results = new List<Dictionary<string, string>>();
@@ -169,7 +168,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
             {
                 m_rdb = rdb;
                 m_query = query;
-                m_queryFlags = queryFlags;
                 m_parms = parms;
                 RefreshResults();
             }
@@ -312,7 +310,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                 return coreDb.QueryWithResults(query, parms);
             }
 
-            List<List<Dictionary<string, string>>> rdbResults = new List<List<Dictionary<string, string>>>();
             List<RDBConnectionQuery> rdbQueries = new List<RDBConnectionQuery>();
             int whichDB = 0;
             foreach (string host in rdbHosts)
@@ -441,7 +438,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
             queryText = queryText.Trim();   // newer viewers sometimes append a space
 
             string query = "";
-            string searchCategory = Convert.ToString(category);
 
             //string newQueryText = "%" + queryText + "%";
             Dictionary<string, object> parms = new Dictionary<string, object>();
@@ -451,13 +447,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                 parms.Add("?searchCategory", category);
             //parms.Add("?searchSimName", simName);
 
-            bool checkMatureFlag = Convert.ToBoolean(queryFlags & (uint)DirFindFlags.MatureSimsOnly);
-            bool checkPGFlag = Convert.ToBoolean(queryFlags & (uint)DirFindFlags.PgSimsOnly);
-            bool checkAdultFlag = Convert.ToBoolean(queryFlags & (uint)DirFindFlags.AdultOnly);
-
             Single dwell = 0;
 
-            string searchStart = Convert.ToString(queryStart);
             int count = MAX_RESULTS + 1;    // +1 so that the viewer knows to enable the NEXT button (it seems)
             int i = 0;
 

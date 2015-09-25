@@ -41,8 +41,7 @@ namespace InWorldz.PhysxPhysics.Debugging
     {
         public delegate void DataCallback(IEnumerable<KeyValuePair<PhysX.Actor, int>> data);
 
-        private static readonly ILog m_log
-            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private const int SAMPLE_TIME_MS = 250;
 

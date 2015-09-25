@@ -1385,7 +1385,6 @@ namespace InWorldz.PhysxPhysics.Vehicle
 
                         // Convert that to a z-torque in world coordinates
                         // The movement takes place in the angular motor.
-                        OpenMetaverse.Vector3 ztorque = OpenMetaverse.Vector3.Zero;
                         _props.Dynamics.BankingDirection  = -xangle * attitude * efficiency * (1.0f - bankingmix) * (float)Math.PI; // static banking
                         _props.Dynamics.BankingDirection += -xangle * attitude * efficiency * bankingmix * xspeedpct * (float)Math.PI; // dynamic banking
                         if (VehicleLimits.DebugBanking) m_log.DebugFormat("[Vehicle Simulate] banking dir={0} xang={1} att={2} mix={3} eff={4} ts={5}", _props.Dynamics.BankingDirection, xangle, attitude, bankingmix, efficiency, timescale);

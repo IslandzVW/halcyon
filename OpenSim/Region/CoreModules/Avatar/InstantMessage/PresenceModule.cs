@@ -45,9 +45,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         private bool m_Enabled = false;
         private bool m_Gridmode = false;
 
-        // some default scene for doing things that aren't connected to a specific scene. Avoids locking.
-        private Scene m_initialScene;
-
         private List<Scene> m_Scenes = new List<Scene>();
 
         // we currently are only interested in root-agents. If the root isn't here, we don't know the region the
@@ -77,8 +74,6 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                         m_Gridmode = cnf.GetBoolean("gridmode", false);
 
                     m_Enabled = true;
-
-                    m_initialScene = scene;
                 }
 
                 if (m_Gridmode)

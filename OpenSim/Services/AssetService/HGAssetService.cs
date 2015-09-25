@@ -45,8 +45,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Asset
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
             {
-                string name = moduleConfig.GetString("AssetServices", "");
-
                 IConfig assetConfig = source.Configs["AssetService"];
                 if (assetConfig == null)
                 {

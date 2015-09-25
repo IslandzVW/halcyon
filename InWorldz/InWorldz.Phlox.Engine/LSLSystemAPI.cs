@@ -5296,11 +5296,6 @@ namespace InWorldz.Phlox.Engine
                         DataserverPlugin.RegisterRequest(m_localID,
                                                      m_itemID, item.AssetID.ToString());
 
-                    Vector3 region = new Vector3(
-                        World.RegionInfo.RegionLocX * Constants.RegionSize,
-                        World.RegionInfo.RegionLocY * Constants.RegionSize,
-                        0);
-
                     World.CommsManager.AssetCache.GetAsset(item.AssetID,
                         delegate(UUID i, AssetBase a)
                         {
@@ -5928,7 +5923,6 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkInventoryKey(int linknumber, string name)
         {
-            UUID who = UUID.Zero;
             SceneObjectPart[] parts = GetLinkParts(linknumber);
 
             if (parts.Length != 1)
@@ -5953,7 +5947,6 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkInventoryDesc(int linknumber, string name)
         {
-            UUID who = UUID.Zero;
             SceneObjectPart[] parts = GetLinkParts(linknumber);
 
             if (parts.Length != 1)
@@ -5979,7 +5972,6 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkInventoryLastOwner(int linknumber, string name)
         {
-            UUID who = UUID.Zero;
             SceneObjectPart[] parts = GetLinkParts(linknumber);
 
             if (parts.Length != 1)
@@ -14963,7 +14955,6 @@ namespace InWorldz.Phlox.Engine
         {
             List<object> results = new List<object>();
             int idx = 0;
-            int remain = options.Length - idx;
             Vector3 dir = end - start;
 
             float dist = Vector3.Mag(dir);
@@ -15202,7 +15193,6 @@ namespace InWorldz.Phlox.Engine
         // iwGroupEject(key group, key user)
         public int iwGroupEject(string group, string user)
         {
-            UUID roleID = UUID.Zero;
             UUID groupID = UUID.Zero;
             if ((!UUID.TryParse(group, out groupID)) || (groupID == UUID.Zero))
                 return (int)Constants.GenericReturnCodes.PARAMETER;

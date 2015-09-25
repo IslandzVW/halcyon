@@ -51,12 +51,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         protected TarArchiveReader archive;
 
         private CachedUserInfo m_userInfo;
-        private string m_invPath;
-
-        /// <value>
-        /// The stream from which the inventory archive will be loaded.
-        /// </value>
-        private Stream m_loadStream;
 
         protected CommunicationsManager m_commsManager;
 
@@ -74,8 +68,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             CachedUserInfo userInfo, string invPath, Stream loadStream, CommunicationsManager commsManager)
         {
             m_userInfo = userInfo;
-            m_invPath = invPath;
-            m_loadStream = loadStream;
             m_commsManager = commsManager;
         }
 

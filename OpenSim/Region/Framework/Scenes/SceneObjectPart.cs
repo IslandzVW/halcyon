@@ -360,7 +360,6 @@ namespace OpenSim.Region.Framework.Scenes
         private byte m_clickAction = 0;
         private Color m_textColor = Color.Black;
         private string m_description = String.Empty;
-        private readonly HashSet<uint> m_lastColliders = new HashSet<uint>();
         // private OpenMetaverse.Vector3 m_lastRotationalVelocity = OpenMetaverse.Vector3.Zero;
         private int m_linkNum = 0;
         [XmlIgnore]

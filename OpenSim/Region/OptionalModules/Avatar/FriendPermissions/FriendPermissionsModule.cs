@@ -16,8 +16,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FriendPermissions
 {
     class FriendPermissionsModule : INonSharedRegionModule
     {
-        private static readonly ILog m_log =
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private OpenSim.Region.Framework.Scenes.Scene m_scene = null;
 
