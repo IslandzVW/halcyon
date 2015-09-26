@@ -13628,9 +13628,10 @@ namespace InWorldz.Phlox.Engine
             {
                 OSD o = OSDParser.DeserializeJson(json);
                 OSD specVal = JsonGetSpecific(o, specifiers, 0);
+                if (specVal == null) return ScriptBaseClass.JSON_NULL;
                 string ret = specVal.AsString();
                 if (ret == "") return ScriptBaseClass.JSON_NULL;
-                if (specVal == null) return ScriptBaseClass.JSON_NULL;
+                return ret;
             }
             catch (Exception)
             {
