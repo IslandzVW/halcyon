@@ -481,28 +481,17 @@ namespace OpenSim.Framework
             {
                 case "region_flags":
                     RegionFlags flags = (RegionFlags)(uint)configuration_result;
-                    if ((flags & RegionFlags.AllowVoice) != 0)
-                        m_AllowVoice = true;
-                    if ((flags & RegionFlags.AllowDirectTeleport) != 0)
-                        m_AllowDirectTeleport = true;
-                    if ((flags & RegionFlags.DenyAnonymous) != 0)
-                         m_DenyAnonymous = true;
-                    if ((flags & RegionFlags.DenyIdentified) != 0)
-                        m_DenyIdentified = true;
-                    if ((flags & RegionFlags.DenyTransacted) != 0)
-                        m_DenyTransacted = true;
-                    if ((flags & RegionFlags.AbuseEmailToEstateOwner) != 0)
-                        m_AbuseEmailToEstateOwner = true;
-                    if ((flags & RegionFlags.BlockDwell) != 0)
-                        m_BlockDwell = true;
-                    if ((flags & RegionFlags.EstateSkipScripts) != 0)
-                        m_EstateSkipScripts = true;
-                    if ((flags & RegionFlags.ResetHomeOnTeleport) != 0)
-                        m_ResetHomeOnTeleport = true;
-                    if ((flags & RegionFlags.TaxFree) != 0)
-                        m_TaxFree = true;
-                    if ((flags & RegionFlags.PublicAllowed) != 0)
-                        m_PublicAccess = true;
+                    m_AllowVoice = ((flags & RegionFlags.AllowVoice) != 0);
+                    m_AllowDirectTeleport = ((flags & RegionFlags.AllowDirectTeleport) != 0);
+                    m_DenyAnonymous = ((flags & RegionFlags.DenyAnonymous) != 0);
+                    m_DenyIdentified = ((flags & RegionFlags.DenyIdentified) != 0);
+                    m_DenyTransacted = ((flags & RegionFlags.DenyTransacted) != 0);
+                    m_AbuseEmailToEstateOwner = ((flags & RegionFlags.AbuseEmailToEstateOwner) != 0);
+                    m_BlockDwell = ((flags & RegionFlags.BlockDwell) != 0);
+                    m_EstateSkipScripts = ((flags & RegionFlags.EstateSkipScripts) != 0);
+                    m_ResetHomeOnTeleport = ((flags & RegionFlags.ResetHomeOnTeleport) != 0);
+                    m_TaxFree = ((flags & RegionFlags.TaxFree) != 0);
+                    m_PublicAccess = ((flags & RegionFlags.PublicAllowed) != 0);
                     break;
                 case "billable_factor":
                     m_BillableFactor = (float) configuration_result;
