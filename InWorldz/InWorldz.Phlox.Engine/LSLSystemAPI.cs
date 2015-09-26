@@ -13630,7 +13630,7 @@ namespace InWorldz.Phlox.Engine
                 OSD specVal = JsonGetSpecific(o, specifiers, 0);
                 string ret = specVal.AsString();
                 if (ret == "") return ScriptBaseClass.JSON_NULL;
-                return specVal.AsString();
+                if (specVal == null) return ScriptBaseClass.JSON_NULL;
             }
             catch (Exception)
             {
@@ -13714,6 +13714,8 @@ namespace InWorldz.Phlox.Engine
                     {
                         if (!(values.Data[i] is string))
                             return ScriptBaseClass.JSON_INVALID;
+                        if (i + 1 >= values.Data.Length)
+                            return ScriptBaseClass.JSON_INVALID;
                         map.Add((string)values.Data[i], ListToJson(values.Data[i + 1]));
                     }
                     return OSDParser.SerializeJsonString(map);
@@ -13742,53 +13744,60 @@ namespace InWorldz.Phlox.Engine
         {
             string trimmed = orig.Trim();
 
-            if (IsJsonFramed(trimmed, '[', ']'))
-                return LitJson.JsonMapper.ToObject(trimmed);
-
-            if (IsJsonFramed(trimmed, '{', '}'))
-                return LitJson.JsonMapper.ToObject(trimmed);
-
-            if (trimmed == ScriptBaseClass.JSON_FALSE)
-                return new LitJson.JsonData(false);
-
-            if (trimmed == ScriptBaseClass.JSON_TRUE)
-                return new LitJson.JsonData(true);
-
-            if (IsJsonFramed(trimmed, '"', '"'))
-                return new LitJson.JsonData(trimmed.Substring(1, trimmed.Length - 2));
-
-            // If none of the above, it must be numeric.
-            if (trimmed.All(c => "0123456789".Contains(c)))
+            try
             {
-                long lval = Convert.ToInt64(trimmed);
-                int ival = (int)lval;
-                return (lval == (long)ival) ? new LitJson.JsonData(ival) : new LitJson.JsonData(lval);
-            }
+                if (IsJsonFramed(trimmed, '[', ']'))
+                    return LitJson.JsonMapper.ToObject(trimmed);
 
-            if (trimmed.All(c => "-0123456789.eE+".Contains(c)))
+                if (IsJsonFramed(trimmed, '{', '}'))
+                    return LitJson.JsonMapper.ToObject(trimmed);
+
+                if (trimmed == ScriptBaseClass.JSON_FALSE)
+                    return new LitJson.JsonData(false);
+
+                if (trimmed == ScriptBaseClass.JSON_TRUE)
+                    return new LitJson.JsonData(true);
+
+                if (IsJsonFramed(trimmed, '"', '"'))
+                    return new LitJson.JsonData(trimmed.Substring(1, trimmed.Length - 2));
+
+                // If none of the above, it must be numeric.
+                if (trimmed.All(c => "0123456789".Contains(c)))
+                {
+                    long lval = Convert.ToInt64(trimmed);
+                    int ival = (int)lval;
+                    return (lval == (long)ival) ? new LitJson.JsonData(ival) : new LitJson.JsonData(lval);
+                }
+
+                if (trimmed.All(c => "-0123456789.eE+".Contains(c)))
+                {
+                    bool isDouble = true;
+                    double val;
+                    try {
+                        val = Convert.ToDouble(trimmed);
+                    }
+                    catch (Exception)
+                    {
+                        isDouble = false;
+                        val = 0.0;
+                    }
+                    if (isDouble)
+                    {
+                        return new LitJson.JsonData(val);
+                    }
+                }
+
+                if (trimmed == "true")
+                    return new LitJson.JsonData(true);
+                if (trimmed == "false")
+                    return new LitJson.JsonData(false);
+                if (trimmed == "null")
+                    return new LitJson.JsonData(null);
+            }
+            catch (LitJson.JsonException)
             {
-                bool isDouble = true;
-                double val;
-                try {
-                    val = Convert.ToDouble(trimmed);
-                }
-                catch (Exception)
-                {
-                    isDouble = false;
-                    val = 0.0;
-                }
-                if (isDouble)
-                {
-                    return new LitJson.JsonData(val);
-                }
+                // Invalid JSON passed to this function (return null)
             }
-
-            if (trimmed == "true")
-                return new LitJson.JsonData(true);
-            if (trimmed == "false")
-                return new LitJson.JsonData(false);
-            if (trimmed == "null")
-                return new LitJson.JsonData(null);
 
             // JSON strings must be quoted (LL testcase expects JSON_INVALID)
             return null;    // treated as JSON_INVALID
@@ -13844,13 +13853,17 @@ namespace InWorldz.Phlox.Engine
             OSD nextVal = null;
             if (o is OSDArray)
             {
+                OSDArray array = (OSDArray)o;
                 if (spec is int)
-                    nextVal = ((OSDArray)o)[(int)spec];
+                    if (((int)spec >= 0) && ((int)spec < array.Count))
+                        nextVal = ((OSDArray)o)[(int)spec];
             }
             if (o is OSDMap)
             {
+                OSDMap map = (OSDMap)o;
                 if (spec is string)
-                    nextVal = ((OSDMap)o)[(string)spec];
+                    if (map.ContainsKey((string)spec))
+                        nextVal = map[(string)spec];
             }
             if (nextVal != null)
             {
