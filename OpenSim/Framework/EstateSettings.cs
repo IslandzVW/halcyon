@@ -481,7 +481,7 @@ namespace OpenSim.Framework
             {
                 case "region_flags":
                     RegionFlags flags = (RegionFlags)(uint)configuration_result;
-                    if ((flags & (RegionFlags)(1<<29)) != 0)
+                    if ((flags & RegionFlags.AllowVoice) != 0)
                         m_AllowVoice = true;
                     if ((flags & RegionFlags.AllowDirectTeleport) != 0)
                         m_AllowDirectTeleport = true;
