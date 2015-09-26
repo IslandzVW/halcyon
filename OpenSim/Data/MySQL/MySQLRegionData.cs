@@ -2001,10 +2001,6 @@ namespace OpenSim.Data.MySQL
                 //Enum. libsecondlife.Parcel.ParcelStatus
             newData.Flags = Convert.ToUInt32(row["LandFlags"]);
 
-            //temporarily OR in estate voice on all parcels
-            newData.Flags |= (uint)OpenMetaverse.ParcelFlags.AllowVoiceChat;
-            newData.Flags |= (uint)OpenMetaverse.ParcelFlags.UseEstateVoiceChan;
-
             newData.LandingType = Convert.ToByte(row["LandingType"]);
             newData.MediaAutoScale = Convert.ToByte(row["MediaAutoScale"]);
             newData.MediaID = new UUID(Convert.ToString(row["MediaTextureUUID"]));

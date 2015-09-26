@@ -1362,12 +1362,18 @@ namespace OpenSim.Region.CoreModules.World.Estate
             if (m_scene.RegionInfo.RegionSettings.AllowLandJoinDivide)
                 flags |= RegionFlags.AllowParcelChanges;
             if (m_scene.RegionInfo.RegionSettings.BlockShowInSearch)
-                flags |= (RegionFlags)(1 << 29);
+                flags |= RegionFlags.BlockParcelSearch;
 
             if (m_scene.RegionInfo.RegionSettings.FixedSun)
                 flags |= RegionFlags.SunFixed;
             if (m_scene.RegionInfo.RegionSettings.Sandbox)
                 flags |= RegionFlags.Sandbox;
+            if (m_scene.RegionInfo.EstateSettings.AllowVoice)
+                flags |= RegionFlags.AllowVoice;
+            if (m_scene.RegionInfo.EstateSettings.BlockDwell)
+                flags |= RegionFlags.BlockDwell;
+            if (m_scene.RegionInfo.EstateSettings.ResetHomeOnTeleport)
+                flags |= RegionFlags.ResetHomeOnTeleport;
 
             // Fudge these to always on, so the menu options activate
             //
@@ -1414,7 +1420,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             if (m_scene.RegionInfo.EstateSettings.TaxFree)
                 flags |= RegionFlags.TaxFree;
             if (m_scene.RegionInfo.EstateSettings.DenyMinors)
-                flags |= (RegionFlags)(1 << 30);
+                flags |= (RegionFlags.DenyAgeUnverified);
 
             return (uint)flags;
         }

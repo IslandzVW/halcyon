@@ -188,7 +188,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void sendLandProperties(int sequence_id, bool snap_selection, int request_result, IClientAPI remote_client)
         {
             IEstateModule estateModule = m_scene.RequestModuleInterface<IEstateModule>();
-            uint regionFlags = 336723974 & ~((uint)(RegionFlags.AllowLandmark | RegionFlags.AllowSetHome));
+            uint regionFlags = (uint)(RegionFlags.PublicAllowed | RegionFlags.AllowDirectTeleport | RegionFlags.AllowParcelChanges | RegionFlags.AllowVoice);
             if (estateModule != null)
                 regionFlags = estateModule.GetRegionFlags();
 
