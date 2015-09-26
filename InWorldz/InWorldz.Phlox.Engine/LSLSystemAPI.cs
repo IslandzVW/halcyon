@@ -13737,6 +13737,63 @@ namespace InWorldz.Phlox.Engine
             return ((str.Length >= 2) && (str[0] == start) && (str[str.Length - 1] == end));
         }
 
+        // This function returns null for JSON_INVALID cases.
+        private LitJson.JsonData DetectJson(string orig)
+        {
+            string trimmed = orig.Trim();
+
+            if (IsJsonFramed(trimmed, '[', ']'))
+                return LitJson.JsonMapper.ToObject(trimmed);
+
+            if (IsJsonFramed(trimmed, '{', '}'))
+                return LitJson.JsonMapper.ToObject(trimmed);
+
+            if (trimmed == ScriptBaseClass.JSON_FALSE)
+                return new LitJson.JsonData(false);
+
+            if (trimmed == ScriptBaseClass.JSON_TRUE)
+                return new LitJson.JsonData(true);
+
+            if (IsJsonFramed(trimmed, '"', '"'))
+                return new LitJson.JsonData(trimmed.Substring(1, trimmed.Length - 2));
+
+            // If none of the above, it must be numeric.
+            if (trimmed.All(c => "0123456789".Contains(c)))
+            {
+                long lval = Convert.ToInt64(trimmed);
+                int ival = (int)lval;
+                return (lval == (long)ival) ? new LitJson.JsonData(ival) : new LitJson.JsonData(lval);
+            }
+
+            if (trimmed.All(c => "-0123456789.eE+".Contains(c)))
+            {
+                bool isDouble = true;
+                double val;
+                try {
+                    val = Convert.ToDouble(trimmed);
+                }
+                catch (Exception)
+                {
+                    isDouble = false;
+                    val = 0.0;
+                }
+                if (isDouble)
+                {
+                    return new LitJson.JsonData(val);
+                }
+            }
+
+            if (trimmed == "true")
+                return new LitJson.JsonData(true);
+            if (trimmed == "false")
+                return new LitJson.JsonData(false);
+            if (trimmed == "null")
+                return new LitJson.JsonData(null);
+
+            // JSON strings must be quoted (LL testcase expects JSON_INVALID)
+            return null;    // treated as JSON_INVALID
+        }
+
         private OSD ListToJson(object o)
         {
             if (o is float)
@@ -13803,12 +13860,19 @@ namespace InWorldz.Phlox.Engine
             return nextVal;
         }
 
-        public string llJsonSetValue(string json, LSL_List specifiers, string value)
+        public string llJsonSetValue(string str, LSL_List specifiers, string value)
         {
-            json = StripBOM(json);
+            str = StripBOM(str);
             try
             {
-                OSD o = OSDParser.DeserializeJson(json);
+                LitJson.JsonData json = LitJson.JsonMapper.ToObject(str);
+                LitJson.JsonType jtype = json.GetJsonType();
+
+                OSD o;
+                if (jtype == LitJson.JsonType.None)
+                    o = new OSDArray();
+                else
+                    o= OSDParser.DeserializeJson(str);
                 JsonSetSpecific(o, specifiers, 0, value);
                 return OSDParser.SerializeJsonString(o);
             }
@@ -13869,7 +13933,10 @@ namespace InWorldz.Phlox.Engine
             object specNext = i + 1 >= specifiers.Data.Length ? null : specifiers.Data[i + 1];
 
             if (spec == null)
-                return OSD.FromString(val);
+            {
+                LitJson.JsonData json = DetectJson(val);
+                return OSDParser.DeserializeJson(json);
+            }
 
             if (spec is int)
             {
@@ -13886,9 +13953,13 @@ namespace InWorldz.Phlox.Engine
             return new OSD();
         }
 
-        public string llJsonValueType(string json, LSL_List specifiers)
+        public string llJsonValueType(string str, LSL_List specifiers)
         {
-            json = StripBOM(json);
+            str = StripBOM(str);
+            LitJson.JsonData json = DetectJson(str);
+            if (json == null)
+                return ScriptBaseClass.JSON_INVALID;
+
             OSD o = OSDParser.DeserializeJson(json);
             OSD specVal = JsonGetSpecific(o, specifiers, 0);
             if (specVal == null)
