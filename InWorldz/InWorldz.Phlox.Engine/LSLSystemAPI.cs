@@ -13621,6 +13621,24 @@ namespace InWorldz.Phlox.Engine
             return str;
         }
 
+        private string OSDToJsonStringValue(OSD specVal)
+        {
+            string ret;
+            switch (specVal.Type)
+            {
+                case OSDType.Boolean:
+                    ret = specVal.AsBoolean() ? ScriptBaseClass.JSON_TRUE : ScriptBaseClass.JSON_FALSE;
+                    break;
+                case OSDType.Real:
+                    ret = specVal.AsReal().ToString("0.0#####");
+                    break;
+                default:
+                    ret = specVal.ToString();
+                    break;
+            }
+            return ret;
+        }
+
         public string llJsonGetValue(string json, LSL_List specifiers)
         {
             json = StripBOM(json);
@@ -13628,8 +13646,8 @@ namespace InWorldz.Phlox.Engine
             {
                 OSD o = OSDParser.DeserializeJson(json);
                 OSD specVal = JsonGetSpecific(o, specifiers, 0);
-                if (specVal == null) return ScriptBaseClass.JSON_NULL;
-                string ret = specVal.AsString();
+                if (specVal == null) return ScriptBaseClass.JSON_INVALID;
+                string ret = OSDToJsonStringValue(specVal);
                 if (ret == "") return ScriptBaseClass.JSON_NULL;
                 return ret;
             }
@@ -13916,7 +13934,15 @@ namespace InWorldz.Phlox.Engine
                         if (v >= array.Count)
                             array.Add(JsonBuildRestOfSpec(specifiers, i + 1, val));
                         else
-                            nextVal = ((OSDArray)o)[v];
+                        {
+                            if (specNext == null)
+                            {
+                                // no more specifiers, this is the final one
+                                array[v] = JsonBuildRestOfSpec(specifiers, i + 1, val);
+                            }
+                            else
+                                nextVal = array[v];
+                        }
                     }
                 }
             }
@@ -13926,7 +13952,15 @@ namespace InWorldz.Phlox.Engine
                 {
                     OSDMap map = ((OSDMap)o);
                     if (map.ContainsKey((string)spec))
-                        nextVal = map[(string)spec];
+                    {
+                        if (specNext == null)
+                        {
+                            // no more specifiers, this is the final one
+                            map[(string)spec] = JsonBuildRestOfSpec(specifiers, i + 1, val);
+                        }
+                        else
+                            nextVal = map[(string)spec];
+                    }
                     else
                         map.Add((string)spec, JsonBuildRestOfSpec(specifiers, i + 1, val));
                 }
@@ -13949,7 +13983,7 @@ namespace InWorldz.Phlox.Engine
             if (spec == null)
             {
                 LitJson.JsonData json = DetectJson(val);
-                return OSDParser.DeserializeJson(json);
+                return (json == null) ? OSD.FromString(val) : OSDParser.DeserializeJson(json);
             }
 
             if (spec is int)
