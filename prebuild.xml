@@ -1816,6 +1816,7 @@
       <Reference name="protobuf-net" path="../../bin/"/>
       <Reference name="Antlr3.Runtime" path="../../bin/"/>
       <Reference name="System.Data.SQLite" path="../../bin/"/>
+      <Reference name="Mono.Data.Sqlite"/>
       <Reference name="SmartThreadPool"/>
       <Files>
         <Match buildAction="EmbeddedResource" path="Resources" pattern="*.addin.xml" recurse="true"/>
@@ -2223,6 +2224,7 @@
       <Reference name="PhysX.Net.dll" path="../../bin/"/>
       <Reference name="protobuf-net" path="../../bin/"/>
       <Reference name="System.Data.SQLite" path="../../bin/"/>
+      <Reference name="Mono.Data.Sqlite"/>
 
       <Files>
         <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
@@ -2313,6 +2315,7 @@
       <Reference name="protobuf-net" path="../../bin/"/>
       <Reference name="Antlr3.Runtime" path="../../bin/"/>
       <Reference name="System.Data.SQLite" path="../../bin/"/>
+      <Reference name="Mono.Data.Sqlite"/>
       <Reference name="SmartThreadPool"/>
       <Files>
         <Match pattern="*.cs" recurse="true"/>
@@ -2360,6 +2363,7 @@
       <Reference name="protobuf-net" path="../../../bin/"/>
       <Reference name="Antlr3.Runtime" path="../../../bin/"/>
       <Reference name="System.Data.SQLite" path="../../../bin/"/>
+      <Reference name="Mono.Data.Sqlite"/>
       <Reference name="KellermanSoftware.Compare-NET-Objects" path="../../../bin/"/>
       <Reference name="SmartThreadPool"/>
       <Files>
