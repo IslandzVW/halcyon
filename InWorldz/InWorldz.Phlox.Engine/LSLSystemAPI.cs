@@ -13905,7 +13905,7 @@ namespace InWorldz.Phlox.Engine
                     o = new OSDArray();
                 else
                     o= OSDParser.DeserializeJson(str);
-                JsonSetSpecific(o, specifiers, 0, value);
+                JsonSetSpecific(null, o, specifiers, 0, value);
                 return OSDParser.SerializeJsonString(o);
             }
             catch (Exception)
@@ -13914,7 +13914,7 @@ namespace InWorldz.Phlox.Engine
             return ScriptBaseClass.JSON_INVALID;
         }
 
-        private void JsonSetSpecific(OSD o, LSL_List specifiers, int i, string val)
+        private void JsonSetSpecific(OSD parent, OSD o, LSL_List specifiers, int i, string val)
         {
             object spec = specifiers.Data[i];
             object specNext = i + 1 == specifiers.Data.Length ? null : specifiers.Data[i + 1];
@@ -13931,14 +13931,24 @@ namespace InWorldz.Phlox.Engine
                     else
                     {
                         int v = (int)spec;
-                        if (v >= array.Count)
-                            array.Add(JsonBuildRestOfSpec(specifiers, i + 1, val));
+                        if (v > array.Count)
+                            throw new Exception(ScriptBaseClass.JSON_INVALID);
+                        else if (v == array.Count)
+                        {
+                            if (val == ScriptBaseClass.JSON_DELETE)
+                                throw new Exception(ScriptBaseClass.JSON_INVALID);
+                            else
+                                array.Add(JsonBuildRestOfSpec(specifiers, i + 1, val));
+                        }
                         else
                         {
                             if (specNext == null)
                             {
                                 // no more specifiers, this is the final one
-                                array[v] = JsonBuildRestOfSpec(specifiers, i + 1, val);
+                                if (val == ScriptBaseClass.JSON_DELETE)
+                                    array.RemoveAt(v);
+                                else
+                                    array[v] = JsonBuildRestOfSpec(specifiers, i + 1, val);
                             }
                             else
                                 nextVal = array[v];
@@ -13946,6 +13956,7 @@ namespace InWorldz.Phlox.Engine
                     }
                 }
             }
+            else
             if (o is OSDMap)
             {
                 if (spec is string)
@@ -13956,20 +13967,46 @@ namespace InWorldz.Phlox.Engine
                         if (specNext == null)
                         {
                             // no more specifiers, this is the final one
-                            map[(string)spec] = JsonBuildRestOfSpec(specifiers, i + 1, val);
+                            if (val == ScriptBaseClass.JSON_DELETE)
+                                map.Remove((string)spec);
+                            else
+                                map[(string)spec] = JsonBuildRestOfSpec(specifiers, i + 1, val);
                         }
                         else
                             nextVal = map[(string)spec];
                     }
                     else
-                        map.Add((string)spec, JsonBuildRestOfSpec(specifiers, i + 1, val));
+                    {
+                        if (val == ScriptBaseClass.JSON_DELETE)
+                            throw new Exception(ScriptBaseClass.JSON_INVALID);
+                        else
+                            map.Add((string)spec, JsonBuildRestOfSpec(specifiers, i + 1, val));
+                    }
+                }
+
+                // This is the case where we need to completely replace a whole node tree with something that doesn't match at all
+                if ((parent != null) && (spec is int))
+                {
+                    if (parent is OSDArray)
+                    {
+                        OSDArray parentArray = (OSDArray)parent;
+                        object parentSpec = specifiers.Data[i - 1];
+                        if (parentSpec is int)
+                            parentArray[(int)parentSpec] = JsonBuildRestOfSpec(specifiers, i, val);
+                    }
                 }
             }
+            else
+            {
+                // spec is trying to index into something other than an array or object
+                throw new Exception(ScriptBaseClass.JSON_INVALID);
+            }
+
             if (nextVal != null)
             {
                 if (specifiers.Data.Length - 1 > i)
                 {
-                    JsonSetSpecific(nextVal, specifiers, i + 1, val);
+                    JsonSetSpecific(o, nextVal, specifiers, i + 1, val);
                     return;
                 }
             }
