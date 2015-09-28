@@ -39,9 +39,14 @@ using InWorldz.Phlox.Serialization;
 using System.IO;
 using log4net;
 using System.Reflection;
+#if __MonoCS__
+using Mono.Data.Sqlite;
+#else
 using System.Data.SQLite;
+#endif
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework;
+
 
 namespace InWorldz.Phlox.Engine
 {
@@ -60,7 +65,11 @@ namespace InWorldz.Phlox.Engine
         /// <summary>
         /// The connection to the databases is kept open for the duration of the application
         /// </summary>
+        #if __MonoCS__
+        private SqliteConnection _connection;
+        #else
         private SQLiteConnection _connection;
+        #endif
 
 
         private DateTime _lastReport = DateTime.Now;
@@ -140,8 +149,12 @@ namespace InWorldz.Phlox.Engine
 
         private void SetupAndOpenDatabase()
         {
-            _connection = new SQLiteConnection(
-                String.Format("Data Source={0}", this.GetDBFileName()));
+            #if __MonoCS__
+            _connection = new SqliteConnection(String.Format("Data Source={0}", this.GetDBFileName()));
+            #else
+            _connection = new SQLiteConnection(String.Format("Data Source={0}", this.GetDBFileName()));
+            #endif
+
 
             _connection.Open();
 
@@ -149,7 +162,11 @@ namespace InWorldz.Phlox.Engine
 										        "FROM sqlite_master " +
 										        "WHERE type = 'table' AND tbl_name='StateData';";
 
+            #if __MonoCS__
+            using (SqliteCommand cmd = new SqliteCommand(INITIALIZED_QUERY, _connection))
+            #else
             using (SQLiteCommand cmd = new SQLiteCommand(INITIALIZED_QUERY, _connection))
+            #endif
             {
                 long count = (long)cmd.ExecuteScalar();
 
@@ -160,7 +177,11 @@ namespace InWorldz.Phlox.Engine
                                                     "   state_data BLOB " +
                                                     ")";
 
+                    #if __MonoCS__
+                    using (SqliteCommand createCmd = new SqliteCommand(SETUP_QUERY, _connection))
+                    #else
                     using (SQLiteCommand createCmd = new SQLiteCommand(SETUP_QUERY, _connection))
+                    #endif
                     {
                         createCmd.ExecuteNonQuery();
                     }
@@ -257,7 +278,11 @@ namespace InWorldz.Phlox.Engine
             lock (_connection)
             {
                 //write each state to disk
+                #if __MonoCS__
+                SqliteTransaction transaction = _connection.BeginTransaction();
+                #else
                 SQLiteTransaction transaction = _connection.BeginTransaction();
+                #endif
 
                 try
                 {
@@ -346,7 +371,11 @@ namespace InWorldz.Phlox.Engine
 
             lock (_connection)
             {
+                #if __MonoCS__
+                using (SqliteCommand cmd = new SqliteCommand(deleteQuery.ToString(), _connection))
+                #else
                 using (SQLiteCommand cmd = new SQLiteCommand(deleteQuery.ToString(), _connection))
+                #endif
                 {
                     cmd.ExecuteNonQuery();
                 }
@@ -378,15 +407,27 @@ namespace InWorldz.Phlox.Engine
                 lock (_connection)
                 {
                     const string FIND_CMD = "SELECT state_data FROM StateData WHERE item_id = @itemId";
+                    #if __MonoCS__
+                    using (SqliteCommand cmd = new SqliteCommand(FIND_CMD, _connection))
+                    #else
                     using (SQLiteCommand cmd = new SQLiteCommand(FIND_CMD, _connection))
+                    #endif
                     {
+                        #if __MonoCS__
+                        SqliteParameter itemIdParam = cmd.CreateParameter();
+                        #else
                         SQLiteParameter itemIdParam = cmd.CreateParameter();
+                        #endif
                         itemIdParam.ParameterName = "@itemId";
                         itemIdParam.Value = itemId.Guid.ToString("N");
 
                         cmd.Parameters.Add(itemIdParam);
 
+                        #if __MonoCS__
+                        using (SqliteDataReader reader = cmd.ExecuteReader())
+                        #else
                         using (SQLiteDataReader reader = cmd.ExecuteReader())
+                        #endif
                         {
                             if (reader.Read())
                             {
@@ -480,13 +521,25 @@ namespace InWorldz.Phlox.Engine
         private void WriteBlobRow(UUID uuid, MemoryStream ms)
         {
             const string INSERT_CMD = "INSERT OR REPLACE INTO StateData(item_id, state_data) VALUES(@itemId, @stateBlob)";
+            #if __MonoCS__
+            using (SqliteCommand cmd = new SqliteCommand(INSERT_CMD, _connection))
+            #else
             using (SQLiteCommand cmd = new SQLiteCommand(INSERT_CMD, _connection))
+            #endif
             {
+                #if __MonoCS__
+                SqliteParameter itemIdParam = cmd.CreateParameter();
+                #else
                 SQLiteParameter itemIdParam = cmd.CreateParameter();
+                #endif
                 itemIdParam.ParameterName = "@itemId";
                 itemIdParam.Value = uuid.Guid.ToString("N");
 
+                #if __MonoCS__
+                SqliteParameter stateBlobParam = cmd.CreateParameter();
+                #else
                 SQLiteParameter stateBlobParam = cmd.CreateParameter();
+                #endif
                 stateBlobParam.ParameterName = "@stateBlob";
                 stateBlobParam.Value = ms.ToArray();
 
