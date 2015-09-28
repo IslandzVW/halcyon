@@ -468,6 +468,31 @@
       </Files>
     </Project>
 
+    <Project frameworkVersion="v4_5" name="OpenSim.Region.Physics.BasicPhysicsPlugin" path="OpenSim/Region/Physics/BasicPhysicsPlugin" type="Library">
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="OpenMetaverseTypes" path="../../../../bin/"/>
+      <Reference name="Nini" path="../../../../bin/"/>
+      <Reference name="OpenSim.Framework"/>
+      <Reference name="OpenSim.Framework.Console"/>
+      <Reference name="OpenSim.Region.Interfaces"/>
+      <Reference name="OpenSim.Region.Physics.Manager"/>
+      <Files>
+        <Match pattern="*.cs" recurse="false"/>
+      </Files>
+    </Project>
+
 <!--    <Project frameworkVersion="v4_5" name="OpenSim.Region.Physics.BulletDotNETPlugin" path="OpenSim/Region/Physics/BulletDotNETPlugin" type="Library">
       <Configuration name="Debug" platform="x64">
         <Options>
