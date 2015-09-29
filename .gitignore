@@ -197,16 +197,19 @@ FakesAssemblies/
 *.opt
 
 # Bin stuff that we don't want to commit that gets created when you run the server
-bin/Halcyon.vshost.exe.manifest
-bin/Halcyon.vshost.exe.config
-bin/addin-db-002/hosts/Halcyon.addins
-bin/addin-db-002/host-index
-bin/addin-db-002/fdb-update-lock
-bin/addin-db-002/fdb-lock
 *.nxs
 *.maddin
 *.data
 *.plx
+bin/estate_settings.xml
+bin/hacd_hulls.cache.db3
+bin/Halcyon.vshost.exe.manifest
+bin/Halcyon.vshost.exe.config
+bin/trustednetworks.txt
+bin/addin-db-001/
+bin/addin-db-002/
+bin/ScriptEngines/Phlox/states/script_states.db3
+
 # Other files that need to be created per-installation
 bin/Halcyon.ini
 bin/Regions/region.xml
