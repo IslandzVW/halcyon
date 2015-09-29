@@ -20,7 +20,7 @@ echo Parameters: %1 %2
 echo ##########################################
 
 :: run prebuild to generate solution/project files from prebuild.xml configuration file
-bin\Prebuild.exe /target vs2008
+.\Programs\Prebuild\Prebuild.exe /target vs2008
 
 :: build compile.bat file based on command line parameters
 echo @echo off > compile.bat
