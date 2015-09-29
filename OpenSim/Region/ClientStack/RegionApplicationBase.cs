@@ -111,7 +111,7 @@ namespace OpenSim.Region.ClientStack
             m_httpServer.HostName = m_networkServersInfo.HostName; 
             MainServer.AddHttpServer(m_httpServer);
 
-            m_log.Info("[REGION]: Starting HTTP server");
+            m_log.InfoFormat("[REGION]: Starting HTTP server on {0}:{1}", m_httpServer.HostName, m_httpServerPort);
             m_httpServer.Start();
 
             // If specified configure an ssl server for use as well

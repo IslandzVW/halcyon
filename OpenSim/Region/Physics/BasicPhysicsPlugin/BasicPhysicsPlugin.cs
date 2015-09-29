@@ -67,6 +67,8 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         private List<BasicActor> _actors = new List<BasicActor>();
         private float[] _heightMap;
 
+        private bool _simulating = false;
+
         //protected internal string sceneIdentifier;
 
         public BasicScene(string _sceneIdentifier)
@@ -74,16 +76,18 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             //sceneIdentifier = _sceneIdentifier;
         }
 
-        public override void Initialise(IMesher meshmerizer, IConfigSource config)
+        public override void Initialize(IMesher meshmerizer, IConfigSource config, UUID regionId)
         {
-            // Does nothing right now
+            // Does nothing much right now
+            _mesher = meshmerizer;
         }
 
         public override void Dispose()
         {
 
         }
-        public override PhysicsActor AddAvatar(string avName, OpenMetaverse.Vector3 position, OpenMetaverse.Vector3 size, bool isFlying)
+
+        public override PhysicsActor AddAvatar(string avName, OpenMetaverse.Vector3 position, OpenMetaverse.Quaternion rotation, OpenMetaverse.Vector3 size, bool isFlying, OpenMetaverse.Vector3 initialVelocity)
         {
             BasicActor act = new BasicActor();
             act.Position = position;
@@ -98,28 +102,21 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void RemoveAvatar(PhysicsActor actor)
         {
-            BasicActor act = (BasicActor) actor;
+            BasicActor act = (BasicActor)actor;
             if (_actors.Contains(act))
             {
                 _actors.Remove(act);
             }
         }
 
-/*
+        /*
         public override PhysicsActor AddPrim(OpenMetaverse.Vector3 position, OpenMetaverse.Vector3 size, Quaternion rotation)
         {
             return null;
         }
 */
 
-        public override PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, OpenMetaverse.Vector3 position,
-                                                  OpenMetaverse.Vector3 size, Quaternion rotation)
-        {
-            return AddPrimShape(primName, pbs, position, size, rotation, false);
-        }
-
-        public override PhysicsActor AddPrimShape(string primName, PrimitiveBaseShape pbs, OpenMetaverse.Vector3 position,
-                                                  OpenMetaverse.Vector3 size, Quaternion rotation, bool isPhysical)
+        public override PhysicsActor AddPrimShape(string primName, AddPrimShapeFlags flags, BulkShapeData shapeData)
         {
             return null;
         }
@@ -128,56 +125,64 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
-        public override float Simulate(float timeStep)
+        public override float Simulate(float timeStep, uint ticksSinceLastSimulate, uint frameNum, bool dilated)
         {
+            if (!_simulating)
+                return 0;
+            
             float fps = 0;
             for (int i = 0; i < _actors.Count; ++i)
             {
                 BasicActor actor = _actors[i];
 
-                actor.Position.X += actor.Velocity.X*timeStep;
-                actor.Position.Y += actor.Velocity.Y*timeStep;
+                Vector3 temp;
 
-                if (actor.Position.Y < 0)
+                temp.X = actor.Position.X + actor.Velocity.X * timeStep;
+                temp.Y = actor.Position.Y + actor.Velocity.Y * timeStep;
+                temp.Z = actor.Position.Z;
+
+                if (temp.Y < 0)
                 {
-                    actor.Position.Y = 0.1F;
+                    temp.Y = 0.1F;
                 }
-                else if (actor.Position.Y >= Constants.RegionSize)
+                else if (temp.Y >= Constants.RegionSize)
                 {
-                    actor.Position.Y = 255.9F;
+                    temp.Y = 255.9F;
                 }
 
-                if (actor.Position.X < 0)
+                if (temp.X < 0)
                 {
-                    actor.Position.X = 0.1F;
+                    temp.X = 0.1F;
                 }
                 else if (actor.Position.X >= Constants.RegionSize)
                 {
-                    actor.Position.X = 255.9F;
+                    temp.X = 255.9F;
                 }
 
-                float height = _heightMap[(int)actor.Position.Y * Constants.RegionSize + (int)actor.Position.X] + actor.Size.Z;
+                float height = _heightMap[(int)temp.Y * Constants.RegionSize + (int)temp.X] + actor.Size.Z;
                 if (actor.Flying)
                 {
-                    if (actor.Position.Z + (actor.Velocity.Z*timeStep) <
-                        _heightMap[(int)actor.Position.Y * Constants.RegionSize + (int)actor.Position.X] + 2)
+                    if (temp.Z + (temp.Z * timeStep) <
+                        _heightMap[(int)temp.Y * Constants.RegionSize + (int)temp.X] + 2)
                     {
-                        actor.Position.Z = height;
-                        actor.Velocity.Z = 0;
+                        temp.Z = height;
+                        temp.Z = 0;
                         actor.IsColliding = true;
                     }
                     else
                     {
-                        actor.Position.Z += actor.Velocity.Z*timeStep;
+                        temp.Z += actor.Velocity.Z * timeStep;
                         actor.IsColliding = false;
                     }
                 }
                 else
                 {
-                    actor.Position.Z = height;
-                    actor.Velocity.Z = 0;
+                    temp.Z = height;
+                    temp.Z = 0;
                     actor.IsColliding = true;
                 }
+
+                actor.Position = temp;
             }
             return fps;
         }
@@ -188,28 +193,108 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override bool IsThreaded
         {
-            get { return (false); // for now we won't be multithreaded
+            get
+            {
+                return (false); // for now we won't be multithreaded
             }
         }
 
-        public override void SetTerrain(float[] heightMap)
+        public override void SetTerrain(float[] heightMap, int revision)
         {
             _heightMap = heightMap;
         }
 
         public override void SetWaterLevel(float baseheight)
         {
-
         }
 
         public override void DeleteTerrain()
         {
         }
+
         public override Dictionary<uint, float> GetTopColliders()
         {
             Dictionary<uint, float> returncolliders = new Dictionary<uint, float>();
             return returncolliders;
         }
+
+        #region implemented abstract members of PhysicsScene
+
+        public override void BulkAddPrimShapes(ICollection<BulkShapeData> shapeData, AddPrimShapeFlags flags)
+        {
+            // TODO maybe
+        }
+
+        public override void AddPhysicsActorTaint(PhysicsActor prim, TaintType taint)
+        {
+        }
+
+        public override IMaterial FindMaterialImpl(OpenMetaverse.Material materialEnum)
+        {
+            return new Material(OpenMetaverse.Material.Wood);
+            ; // Plywood is everything! Everything is plywood!
+        }
+
+        public override void DumpCollisionInfo()
+        {
+        }
+
+        public override void SendPhysicsWindData(Vector2[] sea, Vector2[] gnd, Vector2[] air, float[] ranges, float[] maxheights)
+        {
+        }
+
+        public override void RayCastWorld(Vector3 start, Vector3 direction, float distance, int hitAmounts, System.Action<List<ContactResult>> result)
+        {
+        }
+
+        public override List<ContactResult> RayCastWorld(Vector3 start, Vector3 direction, float distance, int hitAmounts)
+        {
+            return null;
+        }
+
+        public override float SimulationFPS
+        {
+            get
+            {
+                return 999;
+            }
+        }
+
+        public override int SimulationFrameTimeAvg
+        {
+            get
+            {
+                return 999;
+            }
+        }
+
+        public override bool Simulating
+        {
+            get
+            {
+                return _simulating;
+            }
+            set
+            {
+                _simulating = value;
+            }
+        }
+
+        IMesher _mesher;
+
+        public override IMesher Mesher
+        {
+            get
+            {
+                return _mesher;
+            }
+        }
+
+        public override OpenSim.Region.Interfaces.ITerrainChannel TerrainChannel { get; set; }
+
+        public override RegionSettings RegionSettings { get; set; }
+
+        #endregion
     }
 
     public class BasicActor : PhysicsActor
@@ -221,6 +306,15 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         private OpenMetaverse.Vector3 m_rotationalVelocity = OpenMetaverse.Vector3.Zero;
         private bool flying;
         private bool iscolliding;
+
+        /// <summary>
+        /// Whether or not this character is frozen in place with its state intact.
+        /// Used when moving a character between regions.
+        /// </summary>
+        private bool _suspended = false;
+
+        private bool _disposed = false;
+
         public BasicActor()
         {
             _velocity = new OpenMetaverse.Vector3();
@@ -229,27 +323,25 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             _size = new OpenMetaverse.Vector3();
         }
 
-        public override int PhysicsActorType
+        public override ActorType PhysicsActorType
         {
-            get { return (int) ActorTypes.Agent; }
-            set { return; }
+            get
+            {
+                return ActorType.Agent;
+            }
         }
 
-        public override OpenMetaverse.Vector3 RotationalVelocity
-        {
-            get { return m_rotationalVelocity; }
-            set { m_rotationalVelocity = value; }
-        }
 
         public override bool SetAlwaysRun
         {
             get { return false; }
-            set { return; }
+            set { }
         }
 
         public override uint LocalID
         {
-            set { return; }
+            get;
+            set;
         }
 
         public override bool Grabbed
@@ -259,7 +351,8 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override bool Selected
         {
-            set { return; }
+            get;
+            set;
         }
 
         public override float Buoyancy
@@ -276,7 +369,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override bool IsPhysical
         {
             get { return false; }
-            set { return; }
         }
 
         public override bool ThrottleUpdates
@@ -324,15 +416,17 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override OpenMetaverse.Vector3 Size
         {
             get { return _size; }
-            set {
-                  _size = value;
-                  _size.Z = _size.Z / 2.0f;
-                }
+            set
+            {
+                _size = value;
+                _size.Z = _size.Z / 2.0f;
+            }
         }
 
         public override PrimitiveBaseShape Shape
         {
-            set { return; }
+            set;
+            get;
         }
 
         public override float Mass
@@ -343,33 +437,6 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override OpenMetaverse.Vector3 Force
         {
             get { return OpenMetaverse.Vector3.Zero; }
-            set { return; }
-        }
-
-        public override int VehicleType
-        {
-            get { return 0; }
-            set { return; }
-        }
-
-        public override void VehicleFloatParam(int param, float value)
-        {
-
-        }
-
-        public override void VehicleVectorParam(int param, OpenMetaverse.Vector3 value)
-        {
-
-        }
-
-        public override void VehicleRotationParam(int param, Quaternion rotation)
-        {
-
-        }
-
-        public override void SetVolumeDetect(int param)
-        {
-
         }
 
         public override OpenMetaverse.Vector3 CenterOfMass
@@ -400,29 +467,9 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set { }
         }
 
-        public override Quaternion Orientation
-        {
-            get { return Quaternion.Identity; }
-            set { }
-        }
-
         public override OpenMetaverse.Vector3 Acceleration
         {
             get { return _acceleration; }
-        }
-
-        public override bool Kinematic
-        {
-            get { return true; }
-            set { }
-        }
-
-        public override void link(PhysicsActor obj)
-        {
-        }
-
-        public override void delink()
-        {
         }
 
         public override void LockAngularMotion(OpenMetaverse.Vector3 axis)
@@ -435,43 +482,251 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             _acceleration = accel;
         }
 
-        public override void AddForce(OpenMetaverse.Vector3 force, bool pushforce)
-        {
-        }
-
-        public override void AddAngularForce(OpenMetaverse.Vector3 force, bool pushforce)
-        {
-        }
-
-        public override void SetMomentum(OpenMetaverse.Vector3 momentum)
-        {
-        }
-
         public override void CrossingFailure()
         {
         }
 
-        public override OpenMetaverse.Vector3 PIDTarget { set { return; } }
-        public override bool PIDActive { set { return; } }
-        public override float PIDTau { set { return; } }
-
-        public override float PIDHoverHeight { set { return; } }
-        public override bool PIDHoverActive { set { return; } }
-        public override PIDHoverType PIDHoverType { set { return; } }
-        public override float PIDHoverTau { set { return; } }
-
-
-        public override void SubscribeEvents(int ms)
-        {
-
-        }
         public override void UnSubscribeEvents()
         {
 
         }
+
         public override bool SubscribedEvents()
         {
             return false;
         }
+
+        #region implemented abstract members of PhysicsActor
+
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                // ...
+
+                _disposed = true;
+            }
+        }
+
+        public override void LinkToNewParent(PhysicsActor obj, Vector3 localPos, Quaternion localRot)
+        {
+            
+        }
+
+        public override void DelinkFromParent(Vector3 newWorldPosition, Quaternion newWorldRotation)
+        {
+            
+        }
+
+        public override Vector3 GetLockedAngularMotion()
+        {
+            return OpenMetaverse.Vector3.Zero;
+        }
+
+        public override void SetVolumeDetect(bool vd)
+        {
+        }
+
+        public override void AddForce(Vector3 force, ForceType ftype)
+        {
+        }
+
+        public override void AddAngularForce(Vector3 force, ForceType ftype)
+        {
+        }
+
+        public override void SubscribeCollisionEvents(int ms)
+        {
+        }
+
+        public override void SyncWithPhysics(float timeStep, uint ticksSinceLastSimulate, uint frameNum)
+        {
+            if (_suspended)
+            {
+                // character is in the middle of a crossing. we do not simulate
+                return;
+            }
+
+            // TODO
+
+        }
+
+        public override void AddForceSync(Vector3 Force, Vector3 forceOffset, ForceType type)
+        {
+            // TODO Maybe
+        }
+
+        public override void UpdateOffsetPosition(Vector3 newOffset, Quaternion rotOffset)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override void GatherTerseUpdate(out Vector3 position, out Quaternion rotation, out Vector3 velocity, out Vector3 acceleration, out Vector3 angularVelocity)
+        {
+            position = _position;
+            rotation = OpenMetaverse.Quaternion.Identity;
+            velocity = _velocity;
+            acceleration = _acceleration;
+            angularVelocity = OpenMetaverse.Vector3.Zero;
+        }
+
+        public override void Suspend()
+        {
+            //TODO
+        }
+
+        public override void Resume(bool interpolate, AfterResumeCallback callback)
+        {
+            //TODO
+        }
+
+        public override UUID Uuid
+        {
+            get
+            {
+                return OpenMetaverse.UUID.Zero;
+            }
+            set
+            {
+            }
+        }
+
+        public override bool Disposed
+        {
+            get
+            {
+                return _disposed;
+            }
+        }
+
+        public override Vector3 ConstantForce
+        {
+            get
+            {
+                return Vector3.Zero;
+            }
+        }
+
+        public override bool ConstantForceIsLocal
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public override OpenSim.Framework.Geom.Box OBBobject
+        {
+            get
+            {
+                return null;
+            }
+            set
+            {
+            }
+        }
+
+        public override Quaternion Rotation
+        {
+            get { return Quaternion.Identity; }
+            set { }
+        }
+
+        public override Vector3 AngularVelocity
+        {
+            get
+            {
+                return new OpenMetaverse.Vector3();
+            }
+            set
+            {
+            }
+        }
+
+        public override Vector3 AngularVelocityTarget
+        {
+            get
+            {
+                return new OpenMetaverse.Vector3();
+            }
+            set
+            {
+            }
+        }
+
+        public override IPhysicsProperties Properties
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        #endregion
+    }
+
+    public class Material : IMaterial
+    {
+        private OpenMetaverse.Material _material;
+
+        public Material(OpenMetaverse.Material mat)
+        {
+            _material = mat;
+        }
+
+        #region IMaterial implementation
+
+        public int MaterialPreset
+        {
+            get
+            {
+                return (int)_material;
+            }
+        }
+
+        public float Density
+        {
+            get
+            {
+                return 1000.0f;
+            }
+        }
+
+        public float StaticFriction
+        {
+            get
+            {
+                return 0.6f;
+            }
+        }
+
+        public float DynamicFriction
+        {
+            get
+            {
+                return 0.55f;
+            }
+        }
+
+        public float Restitution
+        {
+            get
+            {
+                return 0.5f;
+            }
+        }
+
+        public float GravityMultiplier
+        {
+            get
+            {
+                return 1.0f;
+            }
+        }
+
+        #endregion
+
+
     }
 }
