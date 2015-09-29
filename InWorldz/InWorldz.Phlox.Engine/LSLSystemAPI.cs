@@ -13657,13 +13657,19 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
-        public LSL_List llJson2List(string json)
+        public LSL_List llJson2List(string text)
         {
-            json = StripBOM(json);
+            text = StripBOM(text);
             try
             {
+                // Special case an empty string as meaning empty list
+                if (text == "")
+                    return new LSL_List();
+                LitJson.JsonData json = DetectJson(text);
+                if (json == null)
+                    json = new LitJson.JsonData(text);  // interpret non-json as a string
                 OSD o = OSDParser.DeserializeJson(json);
-                return (LSL_List)ParseJsonNode(o);
+                return JsonNode2List(o);
             }
             catch (Exception)
             {
@@ -13671,7 +13677,52 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
-        private object ParseJsonNode(OSD node)
+        private LSL_List JsonNode2List(OSD node)
+        {
+            if (node.Type == OSDType.Integer)
+            {
+                return new LSL_List(node.AsInteger());
+            }
+            else if (node.Type == OSDType.Boolean)
+            {
+                return new LSL_List(node.AsBoolean() ? "true" : "false");
+            }
+            else if (node.Type == OSDType.Real)
+            {
+                return new LSL_List((float)node.AsReal());
+            }
+            else if ((node.Type == OSDType.UUID) || (node.Type == OSDType.String))
+            {
+                return new LSL_List(node.AsString());
+            }
+            else if (node.Type == OSDType.Array)
+            {
+                // JSON arrays are stored in LSL lists as strings
+                List<object> resp = new List<object>();
+                OSDArray ar = node as OSDArray;
+                foreach (OSD o in ar)
+                    resp.Add(JsonNode2ListElement(o, false));
+
+                return new LSL_List(resp);
+            }
+            else if (node.Type == OSDType.Map)
+            {
+                // JSON objects are stored in LSL lists as strings
+                List<object> resp = new List<object>();
+                OSDMap ar = node as OSDMap;
+                foreach (KeyValuePair<string, OSD> o in ar)
+                {
+                    resp.Add(o.Key.ToString());
+                    resp.Add(JsonNode2ListElement(o.Value, false));
+                }
+                return new LSL_List(resp);
+            }
+
+            throw new Exception(ScriptBaseClass.JSON_INVALID);
+        }
+
+        // This function returns the stringified version of a JSON array/object element
+        private object JsonNode2ListElement(OSD node, bool nested)
         {
             if (node.Type == OSDType.Integer)
             {
@@ -13679,35 +13730,51 @@ namespace InWorldz.Phlox.Engine
             }
             else if (node.Type == OSDType.Boolean)
             {
-                return (node.AsBoolean() ? 1 : 0);
+                if (nested)
+                    return (node.AsBoolean() ? "true" : "false");
+                else
+                    return (node.AsBoolean() ? ScriptBaseClass.JSON_TRUE : ScriptBaseClass.JSON_FALSE);
             }
             else if (node.Type == OSDType.Real)
             {
-                return (float)node.AsReal();
+                if (nested)
+                    return ((float)node.AsReal()).ToString("0.0#####");
+                else
+                    return (float)node.AsReal();
             }
-            else if ((node.Type == OSDType.UUID) || (node.Type == OSDType.String))
+            else if (node.Type == OSDType.UUID)
             {
                 return node.AsString();
             }
+            else if (node.Type == OSDType.String)
+            {
+                if (nested)
+                    return "\""+node.AsString()+"\"";
+                else
+                    return node.AsString();
+            }
             else if (node.Type == OSDType.Array)
             {
-                List<object> resp = new List<object>();
+                string resp = "";
                 OSDArray ar = node as OSDArray;
                 foreach (OSD o in ar)
-                    resp.Add(ParseJsonNode(o));
+                {
+                    if (resp != "") resp += ",";
+                    resp += JsonNode2ListElement(o, true);
+                }
 
-                return new LSL_List(resp);
+                return "[" + resp + "]";
             }
             else if (node.Type == OSDType.Map)
             {
-                List<object> resp = new List<object>();
+                string resp = "";
                 OSDMap ar = node as OSDMap;
                 foreach (KeyValuePair<string, OSD> o in ar)
                 {
-                    resp.Add(o.Key);
-                    resp.Add(ParseJsonNode(o.Value));
+                    if (resp != "") resp += ",";
+                    resp += "\""+o.Key.ToString() + "\":" + JsonNode2ListElement(o.Value, true).ToString();
                 }
-                return new LSL_List(resp);
+                return "{" + resp + "}";
             }
 
             throw new Exception(ScriptBaseClass.JSON_INVALID);
@@ -15110,7 +15177,6 @@ namespace InWorldz.Phlox.Engine
         public LSL_List llCastRay(Vector3 start, Vector3 end, LSL_List options)
         {
             List<object> results = new List<object>();
-            int idx = 0;
             Vector3 dir = end - start;
 
             float dist = Vector3.Mag(dir);
