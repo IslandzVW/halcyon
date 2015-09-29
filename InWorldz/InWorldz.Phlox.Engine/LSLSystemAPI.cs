@@ -13915,6 +13915,38 @@ namespace InWorldz.Phlox.Engine
             return ScriptBaseClass.JSON_INVALID;
         }
 
+        public int iwListIncludesElements(LSL_List src, LSL_List elements, int any)
+        {
+            for(int a=0; a < elements.Length; a++)
+            {
+                bool found = false;
+                for(int b=0; b < src.Length; b++)
+                {
+                    //src.Data[i].Equals(test.Data[0])
+                    if (src.Data[b].Equals(elements.Data[a]))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (any == 1)
+                {
+                    if(found == true)
+                    {
+                        return 1;
+                    }
+                } else
+                {
+                    if(found == false)
+                    {
+                        return 0;
+                    }
+                }
+            }
+            if (any == 1) return 0;
+            else return 1;
+        }
+
         public int iwChar2Int(string src, int index)
         {
             if (index < 0) index = src.Length + index;
