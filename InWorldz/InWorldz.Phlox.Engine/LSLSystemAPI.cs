@@ -13621,6 +13621,24 @@ namespace InWorldz.Phlox.Engine
             return str;
         }
 
+        private string OSDToJsonStringValue(OSD specVal)
+        {
+            string ret;
+            switch (specVal.Type)
+            {
+                case OSDType.Boolean:
+                    ret = specVal.AsBoolean() ? ScriptBaseClass.JSON_TRUE : ScriptBaseClass.JSON_FALSE;
+                    break;
+                case OSDType.Real:
+                    ret = specVal.AsReal().ToString("0.0#####");
+                    break;
+                default:
+                    ret = specVal.ToString();
+                    break;
+            }
+            return ret;
+        }
+
         public string llJsonGetValue(string json, LSL_List specifiers)
         {
             json = StripBOM(json);
@@ -13628,9 +13646,10 @@ namespace InWorldz.Phlox.Engine
             {
                 OSD o = OSDParser.DeserializeJson(json);
                 OSD specVal = JsonGetSpecific(o, specifiers, 0);
-                string ret = specVal.AsString();
+                if (specVal == null) return ScriptBaseClass.JSON_INVALID;
+                string ret = OSDToJsonStringValue(specVal);
                 if (ret == "") return ScriptBaseClass.JSON_NULL;
-                return specVal.AsString();
+                return ret;
             }
             catch (Exception)
             {
@@ -13638,13 +13657,19 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
-        public LSL_List llJson2List(string json)
+        public LSL_List llJson2List(string text)
         {
-            json = StripBOM(json);
+            text = StripBOM(text);
             try
             {
+                // Special case an empty string as meaning empty list
+                if (text == "")
+                    return new LSL_List();
+                LitJson.JsonData json = DetectJson(text);
+                if (json == null)
+                    json = new LitJson.JsonData(text);  // interpret non-json as a string
                 OSD o = OSDParser.DeserializeJson(json);
-                return (LSL_List)ParseJsonNode(o);
+                return JsonNode2List(o);
             }
             catch (Exception)
             {
@@ -13652,7 +13677,52 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
-        private object ParseJsonNode(OSD node)
+        private LSL_List JsonNode2List(OSD node)
+        {
+            if (node.Type == OSDType.Integer)
+            {
+                return new LSL_List(node.AsInteger());
+            }
+            else if (node.Type == OSDType.Boolean)
+            {
+                return new LSL_List(node.AsBoolean() ? "true" : "false");
+            }
+            else if (node.Type == OSDType.Real)
+            {
+                return new LSL_List((float)node.AsReal());
+            }
+            else if ((node.Type == OSDType.UUID) || (node.Type == OSDType.String))
+            {
+                return new LSL_List(node.AsString());
+            }
+            else if (node.Type == OSDType.Array)
+            {
+                // JSON arrays are stored in LSL lists as strings
+                List<object> resp = new List<object>();
+                OSDArray ar = node as OSDArray;
+                foreach (OSD o in ar)
+                    resp.Add(JsonNode2ListElement(o, false));
+
+                return new LSL_List(resp);
+            }
+            else if (node.Type == OSDType.Map)
+            {
+                // JSON objects are stored in LSL lists as strings
+                List<object> resp = new List<object>();
+                OSDMap ar = node as OSDMap;
+                foreach (KeyValuePair<string, OSD> o in ar)
+                {
+                    resp.Add(o.Key.ToString());
+                    resp.Add(JsonNode2ListElement(o.Value, false));
+                }
+                return new LSL_List(resp);
+            }
+
+            throw new Exception(ScriptBaseClass.JSON_INVALID);
+        }
+
+        // This function returns the stringified version of a JSON array/object element
+        private object JsonNode2ListElement(OSD node, bool nested)
         {
             if (node.Type == OSDType.Integer)
             {
@@ -13660,35 +13730,51 @@ namespace InWorldz.Phlox.Engine
             }
             else if (node.Type == OSDType.Boolean)
             {
-                return (node.AsBoolean() ? 1 : 0);
+                if (nested)
+                    return (node.AsBoolean() ? "true" : "false");
+                else
+                    return (node.AsBoolean() ? ScriptBaseClass.JSON_TRUE : ScriptBaseClass.JSON_FALSE);
             }
             else if (node.Type == OSDType.Real)
             {
-                return (float)node.AsReal();
+                if (nested)
+                    return ((float)node.AsReal()).ToString("0.0#####");
+                else
+                    return (float)node.AsReal();
             }
-            else if ((node.Type == OSDType.UUID) || (node.Type == OSDType.String))
+            else if (node.Type == OSDType.UUID)
             {
                 return node.AsString();
             }
+            else if (node.Type == OSDType.String)
+            {
+                if (nested)
+                    return "\""+node.AsString()+"\"";
+                else
+                    return node.AsString();
+            }
             else if (node.Type == OSDType.Array)
             {
-                List<object> resp = new List<object>();
+                string resp = "";
                 OSDArray ar = node as OSDArray;
                 foreach (OSD o in ar)
-                    resp.Add(ParseJsonNode(o));
+                {
+                    if (resp != "") resp += ",";
+                    resp += JsonNode2ListElement(o, true);
+                }
 
-                return new LSL_List(resp);
+                return "[" + resp + "]";
             }
             else if (node.Type == OSDType.Map)
             {
-                List<object> resp = new List<object>();
+                string resp = "";
                 OSDMap ar = node as OSDMap;
                 foreach (KeyValuePair<string, OSD> o in ar)
                 {
-                    resp.Add(o.Key);
-                    resp.Add(ParseJsonNode(o.Value));
+                    if (resp != "") resp += ",";
+                    resp += "\""+o.Key.ToString() + "\":" + JsonNode2ListElement(o.Value, true).ToString();
                 }
-                return new LSL_List(resp);
+                return "{" + resp + "}";
             }
 
             throw new Exception(ScriptBaseClass.JSON_INVALID);
@@ -13714,6 +13800,8 @@ namespace InWorldz.Phlox.Engine
                     {
                         if (!(values.Data[i] is string))
                             return ScriptBaseClass.JSON_INVALID;
+                        if (i + 1 >= values.Data.Length)
+                            return ScriptBaseClass.JSON_INVALID;
                         map.Add((string)values.Data[i], ListToJson(values.Data[i + 1]));
                     }
                     return OSDParser.SerializeJsonString(map);
@@ -13735,6 +13823,70 @@ namespace InWorldz.Phlox.Engine
         private bool IsJsonFramed(string str, char start, char end)
         {
             return ((str.Length >= 2) && (str[0] == start) && (str[str.Length - 1] == end));
+        }
+
+        // This function returns null for JSON_INVALID cases.
+        private LitJson.JsonData DetectJson(string orig)
+        {
+            string trimmed = orig.Trim();
+
+            try
+            {
+                if (IsJsonFramed(trimmed, '[', ']'))
+                    return LitJson.JsonMapper.ToObject(trimmed);
+
+                if (IsJsonFramed(trimmed, '{', '}'))
+                    return LitJson.JsonMapper.ToObject(trimmed);
+
+                if (trimmed == ScriptBaseClass.JSON_FALSE)
+                    return new LitJson.JsonData(false);
+
+                if (trimmed == ScriptBaseClass.JSON_TRUE)
+                    return new LitJson.JsonData(true);
+
+                if (IsJsonFramed(trimmed, '"', '"'))
+                    return new LitJson.JsonData(trimmed.Substring(1, trimmed.Length - 2));
+
+                // If none of the above, it must be numeric.
+                if (trimmed.All(c => "0123456789".Contains(c)))
+                {
+                    long lval = Convert.ToInt64(trimmed);
+                    int ival = (int)lval;
+                    return (lval == (long)ival) ? new LitJson.JsonData(ival) : new LitJson.JsonData(lval);
+                }
+
+                if (trimmed.All(c => "-0123456789.eE+".Contains(c)))
+                {
+                    bool isDouble = true;
+                    double val;
+                    try {
+                        val = Convert.ToDouble(trimmed);
+                    }
+                    catch (Exception)
+                    {
+                        isDouble = false;
+                        val = 0.0;
+                    }
+                    if (isDouble)
+                    {
+                        return new LitJson.JsonData(val);
+                    }
+                }
+
+                if (trimmed == "true")
+                    return new LitJson.JsonData(true);
+                if (trimmed == "false")
+                    return new LitJson.JsonData(false);
+                if (trimmed == "null")
+                    return new LitJson.JsonData(null);
+            }
+            catch (LitJson.JsonException)
+            {
+                // Invalid JSON passed to this function (return null)
+            }
+
+            // JSON strings must be quoted (LL testcase expects JSON_INVALID)
+            return null;    // treated as JSON_INVALID
         }
 
         private OSD ListToJson(object o)
@@ -13787,13 +13939,17 @@ namespace InWorldz.Phlox.Engine
             OSD nextVal = null;
             if (o is OSDArray)
             {
+                OSDArray array = (OSDArray)o;
                 if (spec is int)
-                    nextVal = ((OSDArray)o)[(int)spec];
+                    if (((int)spec >= 0) && ((int)spec < array.Count))
+                        nextVal = ((OSDArray)o)[(int)spec];
             }
             if (o is OSDMap)
             {
+                OSDMap map = (OSDMap)o;
                 if (spec is string)
-                    nextVal = ((OSDMap)o)[(string)spec];
+                    if (map.ContainsKey((string)spec))
+                        nextVal = map[(string)spec];
             }
             if (nextVal != null)
             {
@@ -13803,13 +13959,20 @@ namespace InWorldz.Phlox.Engine
             return nextVal;
         }
 
-        public string llJsonSetValue(string json, LSL_List specifiers, string value)
+        public string llJsonSetValue(string str, LSL_List specifiers, string value)
         {
-            json = StripBOM(json);
+            str = StripBOM(str);
             try
             {
-                OSD o = OSDParser.DeserializeJson(json);
-                JsonSetSpecific(o, specifiers, 0, value);
+                LitJson.JsonData json = LitJson.JsonMapper.ToObject(str);
+                LitJson.JsonType jtype = json.GetJsonType();
+
+                OSD o;
+                if (jtype == LitJson.JsonType.None)
+                    o = new OSDArray();
+                else
+                    o= OSDParser.DeserializeJson(str);
+                JsonSetSpecific(null, o, specifiers, 0, value);
                 return OSDParser.SerializeJsonString(o);
             }
             catch (Exception)
@@ -13818,7 +13981,7 @@ namespace InWorldz.Phlox.Engine
             return ScriptBaseClass.JSON_INVALID;
         }
 
-        private void JsonSetSpecific(OSD o, LSL_List specifiers, int i, string val)
+        private void JsonSetSpecific(OSD parent, OSD o, LSL_List specifiers, int i, string val)
         {
             object spec = specifiers.Data[i];
             object specNext = i + 1 == specifiers.Data.Length ? null : specifiers.Data[i + 1];
@@ -13835,29 +13998,82 @@ namespace InWorldz.Phlox.Engine
                     else
                     {
                         int v = (int)spec;
-                        if (v >= array.Count)
-                            array.Add(JsonBuildRestOfSpec(specifiers, i + 1, val));
+                        if (v > array.Count)
+                            throw new Exception(ScriptBaseClass.JSON_INVALID);
+                        else if (v == array.Count)
+                        {
+                            if (val == ScriptBaseClass.JSON_DELETE)
+                                throw new Exception(ScriptBaseClass.JSON_INVALID);
+                            else
+                                array.Add(JsonBuildRestOfSpec(specifiers, i + 1, val));
+                        }
                         else
-                            nextVal = ((OSDArray)o)[v];
+                        {
+                            if (specNext == null)
+                            {
+                                // no more specifiers, this is the final one
+                                if (val == ScriptBaseClass.JSON_DELETE)
+                                    array.RemoveAt(v);
+                                else
+                                    array[v] = JsonBuildRestOfSpec(specifiers, i + 1, val);
+                            }
+                            else
+                                nextVal = array[v];
+                        }
                     }
                 }
             }
+            else
             if (o is OSDMap)
             {
                 if (spec is string)
                 {
                     OSDMap map = ((OSDMap)o);
                     if (map.ContainsKey((string)spec))
-                        nextVal = map[(string)spec];
+                    {
+                        if (specNext == null)
+                        {
+                            // no more specifiers, this is the final one
+                            if (val == ScriptBaseClass.JSON_DELETE)
+                                map.Remove((string)spec);
+                            else
+                                map[(string)spec] = JsonBuildRestOfSpec(specifiers, i + 1, val);
+                        }
+                        else
+                            nextVal = map[(string)spec];
+                    }
                     else
-                        map.Add((string)spec, JsonBuildRestOfSpec(specifiers, i + 1, val));
+                    {
+                        if (val == ScriptBaseClass.JSON_DELETE)
+                            throw new Exception(ScriptBaseClass.JSON_INVALID);
+                        else
+                            map.Add((string)spec, JsonBuildRestOfSpec(specifiers, i + 1, val));
+                    }
+                }
+
+                // This is the case where we need to completely replace a whole node tree with something that doesn't match at all
+                if ((parent != null) && (spec is int))
+                {
+                    if (parent is OSDArray)
+                    {
+                        OSDArray parentArray = (OSDArray)parent;
+                        object parentSpec = specifiers.Data[i - 1];
+                        if (parentSpec is int)
+                            parentArray[(int)parentSpec] = JsonBuildRestOfSpec(specifiers, i, val);
+                    }
                 }
             }
+            else
+            {
+                // spec is trying to index into something other than an array or object
+                throw new Exception(ScriptBaseClass.JSON_INVALID);
+            }
+
             if (nextVal != null)
             {
                 if (specifiers.Data.Length - 1 > i)
                 {
-                    JsonSetSpecific(nextVal, specifiers, i + 1, val);
+                    JsonSetSpecific(o, nextVal, specifiers, i + 1, val);
                     return;
                 }
             }
@@ -13869,7 +14085,10 @@ namespace InWorldz.Phlox.Engine
             object specNext = i + 1 >= specifiers.Data.Length ? null : specifiers.Data[i + 1];
 
             if (spec == null)
-                return OSD.FromString(val);
+            {
+                LitJson.JsonData json = DetectJson(val);
+                return (json == null) ? OSD.FromString(val) : OSDParser.DeserializeJson(json);
+            }
 
             if (spec is int)
             {
@@ -13886,9 +14105,13 @@ namespace InWorldz.Phlox.Engine
             return new OSD();
         }
 
-        public string llJsonValueType(string json, LSL_List specifiers)
+        public string llJsonValueType(string str, LSL_List specifiers)
         {
-            json = StripBOM(json);
+            str = StripBOM(str);
+            LitJson.JsonData json = DetectJson(str);
+            if (json == null)
+                return ScriptBaseClass.JSON_INVALID;
+
             OSD o = OSDParser.DeserializeJson(json);
             OSD specVal = JsonGetSpecific(o, specifiers, 0);
             if (specVal == null)
@@ -14986,7 +15209,6 @@ namespace InWorldz.Phlox.Engine
         public LSL_List llCastRay(Vector3 start, Vector3 end, LSL_List options)
         {
             List<object> results = new List<object>();
-            int idx = 0;
             Vector3 dir = end - start;
 
             float dist = Vector3.Mag(dir);
