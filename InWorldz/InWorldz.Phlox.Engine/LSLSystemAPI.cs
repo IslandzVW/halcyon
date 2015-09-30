@@ -14138,6 +14138,31 @@ namespace InWorldz.Phlox.Engine
             return ScriptBaseClass.JSON_INVALID;
         }
 
+        public LSL_List iwReverseList(LSL_List src, int stride)
+        {
+            if (src.Length <= 1) return src;
+            if (stride < 1) return new LSL_List(src.Data.Reverse());
+            if(src.Length % stride != 0)
+            {
+                LSLError(string.Format("Error: stride argument is {0}, but source list length is not divisible by {0}", stride));
+                return new LSL_List();
+            }
+            
+            List<object> ret = new List<object>();
+            for(int a = src.Length - 1; a >= 0; a -= stride)
+            {
+                ret.AddRange(src.GetSublist(a - (stride - 1), a).Data.ToList());
+            }
+
+            return new LSL_List(ret);
+        }
+
+        public string iwReverseString(string src)
+        {
+            if (src.Length <= 1) return src;
+            return new string(src.Reverse().ToArray());
+        }
+
         public int iwListIncludesElements(LSL_List src, LSL_List elements, int any)
         {
             for(int a=0; a < elements.Length; a++)
