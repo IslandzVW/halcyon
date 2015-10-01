@@ -4829,6 +4829,52 @@ namespace InWorldz.Phlox.Engine
             return name;
         }
 
+        private LSL_List SearchInventory(SceneObjectPart part, int type, string pattern, int matchType)
+        {
+            if(matchType < 2)
+            {
+                if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for iwSearchInventory or iwSearchLinkInventory.");
+                else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for iwSearchInventory or iwSearchLinkInventory.");
+                return new LSL_List();
+            }
+            ArrayList keys = new ArrayList();
+            lock(part.TaskInventory)
+            {
+                foreach(KeyValuePair<UUID, TaskInventoryItem> inv in part.TaskInventory)
+                {
+                    if(inv.Value.Type == type || type == -1)
+                    {
+                        if(iwMatchString(inv.Value.Name, pattern, matchType) == 1)
+                            keys.Add(inv.Value.Name);
+                    }
+                }
+            }
+
+            if(keys.Count > 0)
+            {
+                keys.Sort(InvNameSorter());
+                return new LSL_List(keys.ToArray());
+            }
+
+
+            return new LSL_List();
+        }
+
+        public LSL_List iwSearchInventory(int type, string pattern, int matchType)
+        {
+            return SearchInventory(m_host, type, pattern, matchType);
+        }
+
+        public LSL_List iwSearchLinkInventory(int link, int type, string pattern, int matchtype)
+        {
+            SceneObjectPart[] parts = GetLinkParts(link);
+
+            if (parts.Length == 1)
+                return SearchInventory(parts[0], type, pattern, matchtype);
+            else
+                return new LSL_List();
+        }
+
         public int GetPartScriptTotal(SceneObjectPart part, int which)
         {
             IScriptEngine engine = m_ScriptEngine;
@@ -14270,6 +14316,10 @@ namespace InWorldz.Phlox.Engine
             }
             switch (matchType)
             {
+                case -2: //IW_MATCH_INCLUDE
+                    return (str.IndexOf(pattern) != -1) ? 1 : 0;
+                case -1: //IW_MATCH_EQUAL
+                    return (str == pattern) ? 1 : 0;
                 case 0: //IW_MATCH_HEAD
                     return str.StartsWith(pattern) ? 1 : 0;
                 case 1: //IW_MATCH_TAIL
