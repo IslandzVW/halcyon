@@ -4829,45 +4829,6 @@ namespace InWorldz.Phlox.Engine
             return name;
         }
 
-        public int GetInventoryIndex(SceneObjectPart part, int type, string name)
-        {
-            ArrayList keys = new ArrayList();
-            
-            lock (part.TaskInventory)
-            {
-                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in part.TaskInventory)
-                {
-                    if (inv.Value.Type == type || type == -1)
-                    {
-                        keys.Add(inv.Value.Name);
-                    }
-                }
-            }
-
-            if (keys.Count == 0) return -1;
-            keys.Sort(InvNameSorter());
-            for(int i=0; i < keys.Count; i++)
-            {
-                if (keys[i].ToString() == name) return i;
-            }
-
-            return -1;
-        }
-
-        public int iwGetInventoryIndex(int type, string name)
-        {
-            return GetInventoryIndex(m_host, type, name);
-        }
-        public int iwGetLinkInventoryIndex(int linknumber, int type, string name)
-        {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
-
-            if (parts.Length == 1)
-                return GetInventoryIndex(parts[0], type, name);
-
-            return -1;
-        }
-
         public int GetPartScriptTotal(SceneObjectPart part, int which)
         {
             IScriptEngine engine = m_ScriptEngine;
