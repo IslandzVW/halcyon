@@ -750,6 +750,32 @@ namespace InWorldz.Phlox.Engine
             return (float)Math.Abs(f);
         }
 
+        public int iwIntRandRange(int min, int max)
+        {
+            if (min == max) return min;
+            lock(Util.RandomClass)
+            {
+                return Util.RandomClass.Next(min, max+1);
+            }
+        }
+
+        public int iwIntRand(int max)
+        {
+            lock(Util.RandomClass)
+            {
+                return Util.RandomClass.Next(max+1);
+            }
+        }
+
+        public float iwFrandRange(float min, float max)
+        {
+            if (min == max) return min;
+            lock(Util.RandomClass)
+            {
+                return (float)(Util.RandomClass.NextDouble() * ((max) - min) + min);
+            }
+        }
+
         public float llFrand(float mag)
         {
             lock (Util.RandomClass)
@@ -11790,6 +11816,21 @@ namespace InWorldz.Phlox.Engine
             Math.DivRem(Convert.ToInt64(Math.Pow(a, b)), c, out tmp);
             // ScriptSleep(1000);
             return Convert.ToInt32(tmp);
+        }
+
+        public int GetInventoryPrice(SceneObjectPart part, string name)
+        {
+            lock (part.TaskInventory)
+            {
+                foreach(KeyValuePair<UUID, TaskInventoryItem> inv in part.TaskInventory)
+                {
+                    if(inv.Value.Name == name)
+                    {
+                        //return inv.Value.SalePrice
+                    }
+                }
+            }
+            return 0;
         }
 
         public int GetInventoryType(SceneObjectPart part, string name)
