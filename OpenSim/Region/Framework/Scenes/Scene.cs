@@ -47,6 +47,7 @@ using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Scripting;
 using OpenSim.Region.Framework.Scenes.Serialization;
+
 using OpenSim.Region.Physics.Manager;
 using Timer=System.Timers.Timer;
 using System.Diagnostics;
@@ -880,6 +881,26 @@ namespace OpenSim.Region.Framework.Scenes
                     break;
                 case "agent_limit":
                     ret = m_maxRootAgents.ToString();
+                    break;
+                case "region_product_name":
+                    switch (m_regInfo.Product)
+                    {
+                        case ProductRulesUse.FullUse:
+                            if (m_regInfo.PrimLimit == 12000)
+                                ret = "Estate / Landmass";
+                            else
+                                ret = "Estate / Full Region";
+                            break;
+                        case ProductRulesUse.OceanUse:
+                            ret = "Estate / Ocean";
+                            break;
+                        case ProductRulesUse.PlusUse:
+                            ret = "Estate / Plus Region";
+                            break;
+                        case ProductRulesUse.ScenicUse:
+                            ret = "Estate / Scenic";
+                            break;
+                    }
                     break;
             }
             return ret;
