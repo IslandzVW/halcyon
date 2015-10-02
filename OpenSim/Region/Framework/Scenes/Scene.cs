@@ -875,6 +875,12 @@ namespace OpenSim.Region.Framework.Scenes
                 case "iw_physics_fps":
                     ret = PhysicsScene.SimulationFPS.ToString();
                     break;
+                case "simulator_hostname":
+                    ret = System.Environment.MachineName;
+                    break;
+                case "agent_limit":
+                    ret = m_maxRootAgents.ToString();
+                    break;
             }
             return ret;
         }
