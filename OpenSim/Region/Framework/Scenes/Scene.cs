@@ -83,6 +83,8 @@ namespace OpenSim.Region.Framework.Scenes
         private const long DEFAULT_MIN_TIME_FOR_PERSISTENCE = 60L;
         private const long DEFAULT_MAX_TIME_FOR_PERSISTENCE = 600L;
 
+        protected int m_regionStartTime = Util.UnixTimeSinceEpoch();
+
         public static Vector3 DEFAULT_CHILD_AGENT_POS = new Vector3(128, 128, 70);
 
         // For returning users' where the preferred region is down
@@ -900,6 +902,29 @@ namespace OpenSim.Region.Framework.Scenes
                         case ProductRulesUse.ScenicUse:
                             ret = "Estate / Scenic";
                             break;
+                        case ProductRulesUse.UnknownUse:
+                            ret = "Estate / Unknown";
+                            break;
+                    }
+                    break;
+                case "region_product_sku":
+                    switch(m_regInfo.Product)
+                    {
+                        case ProductRulesUse.FullUse:
+                            ret = "1";
+                            break;
+                        case ProductRulesUse.OceanUse:
+                            ret = "2";
+                            break;
+                        case ProductRulesUse.ScenicUse:
+                            ret = "3";
+                            break;
+                        case ProductRulesUse.PlusUse:
+                            ret = "4";
+                            break;
+                        case ProductRulesUse.UnknownUse:
+                            ret = "0";
+                            break;
                     }
                     break;
                 case "estate_id":
@@ -907,6 +932,12 @@ namespace OpenSim.Region.Framework.Scenes
                     break;
                 case "estate_name":
                     ret = m_regInfo.EstateSettings.EstateName;
+                    break;
+                case "region_cpu_ratio":
+                    ret = "1";
+                    break;
+                case "region_start_time":
+                    ret = m_regionStartTime.ToString();
                     break;
             }
             return ret;
