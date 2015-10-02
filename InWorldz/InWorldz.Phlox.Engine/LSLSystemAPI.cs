@@ -15878,6 +15878,36 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
+        public void botSearchBotOutfits(string pattern, int matchType, int start, int end)
+        {
+            List<object> retVal = new List<object>();
+            const int delay = 1000;
+
+            try
+            {
+                IBotManager manager = World.RequestModuleInterface<IBotManager>();
+                if (manager != null)
+                {
+                    List<string> itms = manager.GetBotOutfitsByOwner(m_host.OwnerID);
+                    int count=0;
+                    foreach(string outfit in itms)
+                    {
+                        if(pattern == "" || iwMatchString(outfit, pattern, matchType) == 1)
+                        {
+                            if(++count >= start && (end == -1 || count <=end))
+                                retVal.Add(outfit);
+                            if (end != -1 && count >= end)
+                                break;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                m_ScriptEngine.SysReturn(m_itemID, new LSL_List(retVal), delay);
+            }
+        }
+
         public void botGetBotOutfits()
         {
             object retVal = new LSL_List();
