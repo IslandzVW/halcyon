@@ -882,7 +882,7 @@ namespace OpenSim.Region.Framework.Scenes
                     ret = System.Environment.MachineName;
                     break;
                 case "agent_limit":
-                    ret = m_maxRootAgents.ToString();
+                    ret = m_regInfo.RegionSettings.AgentLimit.ToString();
                     break;
                 case "region_product_name":
                     switch (m_regInfo.Product)
