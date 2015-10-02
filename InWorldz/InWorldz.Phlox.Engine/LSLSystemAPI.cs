@@ -12722,6 +12722,17 @@ namespace InWorldz.Phlox.Engine
                     case ScriptBaseClass.OBJECT_TEMP_ON_REZ:
                         ret.Add(0);  // always 0 for avatars
                         break;
+                    case ScriptBaseClass.OBJECT_RENDER_WEIGHT:
+                        ret.Add(0);
+                        break;
+                    case ScriptBaseClass.OBJECT_HOVER_HEIGHT:
+                        ret.Add(0);
+                        break;
+                    case ScriptBaseClass.OBJECT_BODY_SHAPE_TYPE:
+                        int value = iwGetAppearanceParam(av.UUID.ToString(), 31);
+                        if (value == 255) ret.Add(1f);
+                        else ret.Add(0f);
+                        break;
                 }
             }
 
@@ -12831,6 +12842,22 @@ namespace InWorldz.Phlox.Engine
                                 else
                                     ret.Add(0);
                                 break;
+                            case ScriptBaseClass.OBJECT_RENDER_WEIGHT:
+                                ret.Add(0);
+                                break;
+                            case ScriptBaseClass.OBJECT_HOVER_HEIGHT:
+                                ret.Add(0f);
+                                break;
+                            case ScriptBaseClass.OBJECT_BODY_SHAPE_TYPE:
+                                ret.Add(-1);
+                                break;
+                            case ScriptBaseClass.OBJECT_LAST_OWNER_ID:
+                                ret.Add(part.LastOwnerID);
+                                break;
+                            case ScriptBaseClass.OBJECT_CLICK_ACTION:
+                                ret.Add(Convert.ToInt32(part.ClickAction));
+                                break;
+
                         }
                     }
                     return new LSL_List(ret);
