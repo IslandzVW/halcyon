@@ -1548,7 +1548,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (group != null)
             {
-                if (!Permissions.CanEditObject(group.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                if (!Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                     return;
 
                 // Object itself must be modify to delete items
@@ -4345,7 +4345,7 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                 {   
                     // This is the deed-to-group case.
-                    if (!Permissions.CanEditObject(sog.UUID, remoteClient.AgentId, (uint)PermissionMask.Transfer))
+                    if (!Permissions.CanEditObject(sog.UUID, remoteClient.AgentId))
                         continue;
 
                     if (sog.GroupID != groupID)

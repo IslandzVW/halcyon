@@ -44,7 +44,7 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool TakeObjectHandler(UUID objectID, UUID stealer, Scene scene);
     public delegate bool TakeCopyObjectHandler(UUID objectID, UUID userID, Scene inScene);
     public delegate bool DuplicateObjectHandler(int objectCount, UUID objectID, UUID owner, Scene scene, Vector3 objectPosition);
-    public delegate bool EditObjectHandler(UUID objectID, UUID editorID, Scene scene, uint requiredPermissionMask);
+    public delegate bool EditObjectHandler(UUID objectID, UUID editorID, Scene scene);
     public delegate bool EditObjectInventoryHandler(UUID objectID, UUID editorID, Scene scene);
     public delegate bool MoveObjectHandler(UUID objectID, UUID moverID, Scene scene);
     public delegate bool ObjectEntryHandler(UUID objectID, bool enteringRegion, Vector3 newPoint, Scene scene);
@@ -310,7 +310,7 @@ namespace OpenSim.Region.Framework.Scenes
         #endregion
 
         #region EDIT OBJECT
-        public bool CanEditObject(UUID objectID, UUID editorID, uint requiredPermissionMask)
+        public bool CanEditObject(UUID objectID, UUID editorID)
         {
             EditObjectHandler handler = OnEditObject;
             if (handler != null)
@@ -318,7 +318,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Delegate[] list = handler.GetInvocationList();
                 foreach (EditObjectHandler h in list)
                 {
-                    if (h(objectID, editorID, m_scene, requiredPermissionMask) == false)
+                    if (h(objectID, editorID, m_scene) == false)
                         return false;
                 }
             }

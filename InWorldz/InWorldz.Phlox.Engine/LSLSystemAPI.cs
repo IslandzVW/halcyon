@@ -4462,7 +4462,7 @@ namespace InWorldz.Phlox.Engine
             if (sp != null)
                 client = sp.ControllingClient;
 
-            if (!World.Permissions.CanEditObject(m_host.ParentGroup.UUID, client.AgentId, (uint)PermissionMask.Modify))
+            if (!World.Permissions.CanEditObject(m_host.ParentGroup.UUID, client.AgentId))
                 return; // host object is not editable
 
             SceneObjectPart targetPart = World.GetSceneObjectPart((UUID)target);
@@ -4473,7 +4473,7 @@ namespace InWorldz.Phlox.Engine
             if (targetPart.ParentGroup.RootPart.AttachmentPoint != 0)
                 return; // Fail silently if attached
 
-            if (!World.Permissions.CanEditObject(targetPart.ParentGroup.UUID, client.AgentId, (uint)PermissionMask.Modify))
+            if (!World.Permissions.CanEditObject(targetPart.ParentGroup.UUID, client.AgentId))
                 return; // target object is not editable
             if ((targetPart.ParentGroup.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                 return; // target is no-mod

@@ -621,7 +621,7 @@ namespace OpenSim.Region.Framework.Scenes
                 SceneObjectPart part = m_parentScene.GetSceneObjectPart(primId);
                 if (part != null)
                 {
-                    if (m_parentScene.Permissions.CanEditObject(part.ParentGroup.RootPart.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                    if (m_parentScene.Permissions.CanEditObject(part.ParentGroup.RootPart.UUID, remoteClient.AgentId))
                     {
                         part.Undo();
                     }
@@ -636,7 +636,7 @@ namespace OpenSim.Region.Framework.Scenes
                 SceneObjectPart part = m_parentScene.GetSceneObjectPart(primId);
                 if (part != null)
                 {
-                    if (m_parentScene.Permissions.CanEditObject(part.ParentGroup.RootPart.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                    if (m_parentScene.Permissions.CanEditObject(part.ParentGroup.RootPart.UUID, remoteClient.AgentId))
                     {
                         part.Redo();
                     }
@@ -1520,7 +1520,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup group = GetGroupByPrim(localID);
             if (group != null)
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
                     group.Resize(scale, localID);
                 }
@@ -1532,7 +1532,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup group = GetGroupByPrim(localID);
             if (group != null)
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
                     group.GroupResize(scale, localID);
                 }
@@ -1694,7 +1694,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup group = GetGroupByPrim(localID);
             if (group != null)
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
                     group.UpdateTextureEntry(localID, texture);
                 }
@@ -1715,7 +1715,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectPart part = GetPrimByLocalId(localID);
             if (part != null)
             {
-                if (m_parentScene.Permissions.CanEditObject(part.ParentGroup.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                if (m_parentScene.Permissions.CanEditObject(part.ParentGroup.UUID, remoteClient.AgentId))
                 {
                     bool VolDetect = false;  // VolumeDetect can't be set via UI and will always be off when a change is made there
                     if (part.IsRootPart())
@@ -1813,7 +1813,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup group = GetGroupByPrim(primLocalID);
             if (group != null)
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
                     group.SetPartName(Util.CleanString(name), primLocalID);
                     group.HasGroupChanged = true;
@@ -1831,7 +1831,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup group = GetGroupByPrim(primLocalID);
             if (group != null)
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
                     group.SetPartDescription(Util.CleanString(description), primLocalID);
                     group.GetProperties(remoteClient);
@@ -1845,7 +1845,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup group = GetGroupByPrim(primLocalID);
             if (group != null)
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
                     SceneObjectPart part = m_parentScene.GetSceneObjectPart(primLocalID);
                     part.ClickAction = Convert.ToByte(clickAction);
@@ -1859,7 +1859,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup group = GetGroupByPrim(primLocalID);
             if (group != null)
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId))
                 {
                     SceneObjectPart part = m_parentScene.GetSceneObjectPart(primLocalID);
                     part.Material = Convert.ToByte(material);
@@ -1874,7 +1874,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (group != null)
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, agentID, (uint)PermissionMask.Modify))
+                if (m_parentScene.Permissions.CanEditObject(group.UUID, agentID))
                 {
                     group.UpdateExtraParam(primLocalID, type, inUse, data);
                 }
@@ -1891,7 +1891,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup group = GetGroupByPrim(primLocalID);
             if (group != null)
             {
-                if (m_parentScene.Permissions.CanEditObject(group.UUID, agentID, (uint)PermissionMask.Modify))
+                if (m_parentScene.Permissions.CanEditObject(group.UUID, agentID))
                 {
                     ObjectShapePacket.ObjectDataBlock shapeData = new ObjectShapePacket.ObjectDataBlock();
                     shapeData.ObjectLocalID = shapeBlock.ObjectLocalID;
@@ -1935,7 +1935,7 @@ namespace OpenSim.Region.Framework.Scenes
                 parentGroup = GetGroupByPrim(parentPrimId);
                 if (parentGroup == null) return;
 
-                if (!m_parentScene.Permissions.CanEditObject(parentGroup.UUID, client.AgentId, (uint)PermissionMask.Modify))
+                if (!m_parentScene.Permissions.CanEditObject(parentGroup.UUID, client.AgentId))
                     return;
                 if ((parentGroup.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                     return;
@@ -1945,7 +1945,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectGroup group = this.GetGroupByPrim(id);
                     if (group.OwnerID != parentGroup.OwnerID)
                         return; // two different owners
-                    if (!m_parentScene.Permissions.CanEditObject(group.UUID, client.AgentId, (uint)PermissionMask.Modify))
+                    if (!m_parentScene.Permissions.CanEditObject(group.UUID, client.AgentId))
                         return;
                     if ((group.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                         return;
@@ -2030,7 +2030,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectPart part = this.GetSceneObjectPart(primID);
                     if (part != null)
                     {
-                        if (!m_parentScene.Permissions.CanEditObject(part.ParentGroup.RootPart.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                        if (!m_parentScene.Permissions.CanEditObject(part.ParentGroup.RootPart.UUID, remoteClient.AgentId))
                             continue;
                         if ((part.ParentGroup.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                             continue;
@@ -2174,7 +2174,7 @@ namespace OpenSim.Region.Framework.Scenes
             // libomv will complain about PrimFlags.JointWheel being
             // deprecated, so we
 #pragma warning disable 0612
-            if (IncludeInSearch && m_parentScene.Permissions.CanEditObject(obj.ParentGroup.UUID, user, (uint)PermissionMask.Modify))
+            if (IncludeInSearch && m_parentScene.Permissions.CanEditObject(obj.ParentGroup.UUID, user))
             {
                 obj.ParentGroup.RootPart.AddFlag(PrimFlags.JointWheel);
                 obj.ParentGroup.HasGroupChanged = true;
