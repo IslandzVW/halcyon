@@ -902,6 +902,12 @@ namespace OpenSim.Region.Framework.Scenes
                             break;
                     }
                     break;
+                case "estate_id":
+                    ret = m_regInfo.EstateSettings.EstateID.ToString();
+                    break;
+                case "estate_name":
+                    ret = m_regInfo.EstateSettings.EstateName;
+                    break;
             }
             return ret;
         }
