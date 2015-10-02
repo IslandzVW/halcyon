@@ -4870,7 +4870,9 @@ namespace InWorldz.Phlox.Engine
                 {
                     if(inv.Value.Type == type || type == -1)
                     {
-                        if(iwMatchString(inv.Value.Name, pattern, matchType) == 1)
+                        if (pattern == "")
+                            keys.Add(inv.Value.Name);
+                        else if (iwMatchString(inv.Value.Name, pattern, matchType) == 1)
                             keys.Add(inv.Value.Name);
                     }
                 }
