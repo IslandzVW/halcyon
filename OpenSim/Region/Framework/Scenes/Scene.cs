@@ -47,6 +47,7 @@ using OpenSim.Framework.Console;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes.Scripting;
 using OpenSim.Region.Framework.Scenes.Serialization;
+
 using OpenSim.Region.Physics.Manager;
 using Timer=System.Timers.Timer;
 using System.Diagnostics;
@@ -81,6 +82,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         private const long DEFAULT_MIN_TIME_FOR_PERSISTENCE = 60L;
         private const long DEFAULT_MAX_TIME_FOR_PERSISTENCE = 600L;
+
+        protected int m_regionStartTime = Util.UnixTimeSinceEpoch();
 
         public static Vector3 DEFAULT_CHILD_AGENT_POS = new Vector3(128, 128, 70);
 
@@ -874,6 +877,67 @@ namespace OpenSim.Region.Framework.Scenes
                     break;
                 case "iw_physics_fps":
                     ret = PhysicsScene.SimulationFPS.ToString();
+                    break;
+                case "simulator_hostname":
+                    ret = System.Environment.MachineName;
+                    break;
+                case "agent_limit":
+                    ret = m_regInfo.RegionSettings.AgentLimit.ToString();
+                    break;
+                case "region_product_name":
+                    switch (m_regInfo.Product)
+                    {
+                        case ProductRulesUse.FullUse:
+                            if (m_regInfo.PrimLimit == 12000)
+                                ret = "Estate / Landmass";
+                            else
+                                ret = "Estate / Full Region";
+                            break;
+                        case ProductRulesUse.OceanUse:
+                            ret = "Estate / Ocean";
+                            break;
+                        case ProductRulesUse.PlusUse:
+                            ret = "Estate / Plus Region";
+                            break;
+                        case ProductRulesUse.ScenicUse:
+                            ret = "Estate / Scenic";
+                            break;
+                        case ProductRulesUse.UnknownUse:
+                            ret = "Estate / Unknown";
+                            break;
+                    }
+                    break;
+                case "region_product_sku":
+                    switch(m_regInfo.Product)
+                    {
+                        case ProductRulesUse.FullUse:
+                            ret = "1";
+                            break;
+                        case ProductRulesUse.OceanUse:
+                            ret = "2";
+                            break;
+                        case ProductRulesUse.ScenicUse:
+                            ret = "3";
+                            break;
+                        case ProductRulesUse.PlusUse:
+                            ret = "4";
+                            break;
+                        case ProductRulesUse.UnknownUse:
+                            ret = "0";
+                            break;
+                    }
+                    break;
+                case "estate_id":
+                    ret = m_regInfo.EstateSettings.EstateID.ToString();
+                    break;
+                case "estate_name":
+                    ret = m_regInfo.EstateSettings.EstateName;
+                    break;
+                case "region_cpu_ratio":
+                    ret = "1";
+                    break;
+                case "region_start_time":
+                    ret = m_regionStartTime.ToString();
                     break;
             }
             return ret;

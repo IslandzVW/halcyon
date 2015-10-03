@@ -750,6 +750,32 @@ namespace InWorldz.Phlox.Engine
             return (float)Math.Abs(f);
         }
 
+        public int iwIntRandRange(int min, int max)
+        {
+            if (min == max) return min;
+            lock(Util.RandomClass)
+            {
+                return Util.RandomClass.Next(min, max+1);
+            }
+        }
+
+        public int iwIntRand(int max)
+        {
+            lock(Util.RandomClass)
+            {
+                return Util.RandomClass.Next(max+1);
+            }
+        }
+
+        public float iwFrandRange(float min, float max)
+        {
+            if (min == max) return min;
+            lock(Util.RandomClass)
+            {
+                return (float)(Util.RandomClass.NextDouble() * ((max) - min) + min);
+            }
+        }
+
         public float llFrand(float mag)
         {
             lock (Util.RandomClass)
@@ -4827,6 +4853,54 @@ namespace InWorldz.Phlox.Engine
                 name = GetInventoryName(parts[0], type, number);
 
             return name;
+        }
+
+        private LSL_List SearchInventory(SceneObjectPart part, int type, string pattern, int matchType)
+        {
+            if(matchType < 2)
+            {
+                if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for iwSearchInventory or iwSearchLinkInventory.");
+                else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for iwSearchInventory or iwSearchLinkInventory.");
+                return new LSL_List();
+            }
+            ArrayList keys = new ArrayList();
+            lock(part.TaskInventory)
+            {
+                foreach(KeyValuePair<UUID, TaskInventoryItem> inv in part.TaskInventory)
+                {
+                    if(inv.Value.Type == type || type == -1)
+                    {
+                        if (pattern == "")
+                            keys.Add(inv.Value.Name);
+                        else if (iwMatchString(inv.Value.Name, pattern, matchType) == 1)
+                            keys.Add(inv.Value.Name);
+                    }
+                }
+            }
+
+            if(keys.Count > 0)
+            {
+                keys.Sort(InvNameSorter());
+                return new LSL_List(keys.ToArray());
+            }
+
+
+            return new LSL_List();
+        }
+
+        public LSL_List iwSearchInventory(int type, string pattern, int matchType)
+        {
+            return SearchInventory(m_host, type, pattern, matchType);
+        }
+
+        public LSL_List iwSearchLinkInventory(int link, int type, string pattern, int matchtype)
+        {
+            SceneObjectPart[] parts = GetLinkParts(link);
+
+            if (parts.Length == 1)
+                return SearchInventory(parts[0], type, pattern, matchtype);
+            else
+                return new LSL_List();
         }
 
         public int GetPartScriptTotal(SceneObjectPart part, int which)
@@ -11746,6 +11820,21 @@ namespace InWorldz.Phlox.Engine
             return Convert.ToInt32(tmp);
         }
 
+        public int GetInventoryPrice(SceneObjectPart part, string name)
+        {
+            lock (part.TaskInventory)
+            {
+                foreach(KeyValuePair<UUID, TaskInventoryItem> inv in part.TaskInventory)
+                {
+                    if(inv.Value.Name == name)
+                    {
+                        //return inv.Value.SalePrice
+                    }
+                }
+            }
+            return 0;
+        }
+
         public int GetInventoryType(SceneObjectPart part, string name)
         {
             lock (part.TaskInventory)
@@ -12635,6 +12724,17 @@ namespace InWorldz.Phlox.Engine
                     case ScriptBaseClass.OBJECT_TEMP_ON_REZ:
                         ret.Add(0);  // always 0 for avatars
                         break;
+                    case ScriptBaseClass.OBJECT_RENDER_WEIGHT:
+                        ret.Add(0);
+                        break;
+                    case ScriptBaseClass.OBJECT_HOVER_HEIGHT:
+                        ret.Add(0);
+                        break;
+                    case ScriptBaseClass.OBJECT_BODY_SHAPE_TYPE:
+                        int value = iwGetAppearanceParam(av.UUID.ToString(), 31);
+                        if (value == 255) ret.Add(1f);
+                        else ret.Add(0f);
+                        break;
                 }
             }
 
@@ -12744,6 +12844,22 @@ namespace InWorldz.Phlox.Engine
                                 else
                                     ret.Add(0);
                                 break;
+                            case ScriptBaseClass.OBJECT_RENDER_WEIGHT:
+                                ret.Add(0);
+                                break;
+                            case ScriptBaseClass.OBJECT_HOVER_HEIGHT:
+                                ret.Add(0f);
+                                break;
+                            case ScriptBaseClass.OBJECT_BODY_SHAPE_TYPE:
+                                ret.Add(-1);
+                                break;
+                            case ScriptBaseClass.OBJECT_LAST_OWNER_ID:
+                                ret.Add(part.LastOwnerID);
+                                break;
+                            case ScriptBaseClass.OBJECT_CLICK_ACTION:
+                                ret.Add(Convert.ToInt32(part.ClickAction));
+                                break;
+
                         }
                     }
                     return new LSL_List(ret);
@@ -14138,6 +14254,31 @@ namespace InWorldz.Phlox.Engine
             return ScriptBaseClass.JSON_INVALID;
         }
 
+        public LSL_List iwReverseList(LSL_List src, int stride)
+        {
+            if (src.Length <= 1) return src;
+            if (stride < 1) return new LSL_List(src.Data.Reverse());
+            if(src.Length % stride != 0)
+            {
+                LSLError(string.Format("Error: stride argument is {0}, but source list length is not divisible by {0}", stride));
+                return new LSL_List();
+            }
+            
+            List<object> ret = new List<object>();
+            for(int a = src.Length - 1; a >= 0; a -= stride)
+            {
+                ret.AddRange(src.GetSublist(a - (stride - 1), a).Data.ToList());
+            }
+
+            return new LSL_List(ret);
+        }
+
+        public string iwReverseString(string src)
+        {
+            if (src.Length <= 1) return src;
+            return new string(src.Reverse().ToArray());
+        }
+
         public int iwListIncludesElements(LSL_List src, LSL_List elements, int any)
         {
             for(int a=0; a < elements.Length; a++)
@@ -14245,6 +14386,10 @@ namespace InWorldz.Phlox.Engine
             }
             switch (matchType)
             {
+                case -2: //IW_MATCH_INCLUDE
+                    return (str.IndexOf(pattern) != -1) ? 1 : 0;
+                case -1: //IW_MATCH_EQUAL
+                    return (str == pattern) ? 1 : 0;
                 case 0: //IW_MATCH_HEAD
                     return str.StartsWith(pattern) ? 1 : 0;
                 case 1: //IW_MATCH_TAIL
@@ -15732,6 +15877,36 @@ namespace InWorldz.Phlox.Engine
             finally
             {
                 m_ScriptEngine.SysReturn(m_itemID, null, delay);
+            }
+        }
+
+        public void botSearchBotOutfits(string pattern, int matchType, int start, int end)
+        {
+            List<object> retVal = new List<object>();
+            const int delay = 1000;
+
+            try
+            {
+                IBotManager manager = World.RequestModuleInterface<IBotManager>();
+                if (manager != null)
+                {
+                    List<string> itms = manager.GetBotOutfitsByOwner(m_host.OwnerID);
+                    int count=0;
+                    foreach(string outfit in itms)
+                    {
+                        if(pattern == "" || iwMatchString(outfit, pattern, matchType) == 1)
+                        {
+                            if(++count >= start && (end == -1 || count <=end))
+                                retVal.Add(outfit);
+                            if (end != -1 && count >= end)
+                                break;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                m_ScriptEngine.SysReturn(m_itemID, new LSL_List(retVal), delay);
             }
         }
 
