@@ -621,7 +621,7 @@ namespace OpenSim.Region.Framework.Scenes
                 SceneObjectPart part = m_parentScene.GetSceneObjectPart(primId);
                 if (part != null)
                 {
-                    if (m_parentScene.Permissions.CanEditObject(part.ParentGroup.RootPart.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                    if (m_parentScene.Permissions.CanEditObject(part.ParentGroup.RootPart.UUID, remoteClient.AgentId, 0))
                     {
                         part.Undo();
                     }
@@ -636,7 +636,7 @@ namespace OpenSim.Region.Framework.Scenes
                 SceneObjectPart part = m_parentScene.GetSceneObjectPart(primId);
                 if (part != null)
                 {
-                    if (m_parentScene.Permissions.CanEditObject(part.ParentGroup.RootPart.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
+                    if (m_parentScene.Permissions.CanEditObject(part.ParentGroup.RootPart.UUID, remoteClient.AgentId, 0))
                     {
                         part.Redo();
                     }

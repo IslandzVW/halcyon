@@ -952,7 +952,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     Success = true
                 };
             }
-        
+
             return permission;
         }
 
@@ -2139,7 +2139,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (part.ParentGroup != null) prim = part.ParentGroup.UUID;
 
             // You can reset the scripts in any object you can edit
-            return GenericObjectPermission(agentID, prim, false, (uint)PermissionMask.Move).Success;
+            return GenericObjectPermission(agentID, prim, false, (uint)PermissionMask.Modify).Success;
         }
 
         private bool CanStartScript(SceneObjectPart part, UUID script, UUID agentID, Scene scene)
