@@ -831,7 +831,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             public enum ResultReason
             {
                 Basics,
-                NoMod,
+                NoPerm,
                 Locked,
                 Owner,
                 Attachment,
@@ -884,11 +884,30 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             // Nobody but the object owner can set permissions on an object
             //
 
-            if (denyOnLocked && locked && !IsGodUser(currentUser))
+            // Admin should be able to edit anything in the sim (including admin objects)
+            if (IsGodUser(currentUser))
+            {
+                permission = new GenericPermissionResult
+                {
+                    Reason = GenericPermissionResult.ResultReason.Admin,
+                    Success = true
+                };
+            }
+
+            if (locked && denyOnLocked)
             {
                 return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.Locked,
+                    Success = false
+                };
+            }
+
+            if ((group.RootPart.OwnerMask & requiredPermissionMask) != requiredPermissionMask)
+            {
+                permission = new GenericPermissionResult
+                {
+                    Reason = GenericPermissionResult.ResultReason.NoPerm,
                     Success = false
                 };
             }
@@ -899,7 +918,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 permission = new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.Owner,
-                    Success = ((group.RootPart.OwnerMask & requiredPermissionMask) == requiredPermissionMask)
+                    Success = true
                 };
             }
             else if (group.IsAttachment)
@@ -920,6 +939,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     Success = friendEdit
                 };
             }
+            if (permission.Success)
+                return permission;
 
             // Group members should be able to edit group objects
             if ((permission.Success != true) && (group.GroupID != UUID.Zero) && ((group.RootPart.GroupMask & (uint)PermissionMask.Modify) == (uint)PermissionMask.Modify) && IsAgentInGroupRole(group.GroupID, currentUser, 0))
@@ -930,20 +951,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     Reason = GenericPermissionResult.ResultReason.Group,
                     Success = true
                 };
-
-                return permission;
             }
         
-            // Admin should be able to edit anything in the sim (including admin objects)
-            if (IsGodUser(currentUser))
-            {
-                permission = new GenericPermissionResult
-                {
-                    Reason = GenericPermissionResult.ResultReason.Admin,
-                    Success = true
-                };
-            }
-
             return permission;
         }
 
