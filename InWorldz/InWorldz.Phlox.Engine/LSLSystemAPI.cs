@@ -102,8 +102,13 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
-        VM.Interpreter _thisScript;
+        private VM.Interpreter _thisScript;
 
+        /// <summary>
+        /// Random number generator used for all scripts. This does not have to be 
+        /// locked before use because all scripts run inside the script engine thread
+        /// </summary>
+        private static Random s_random = new Random();
 
         public LSLSystemAPI(IScriptEngine ScriptEngine, SceneObjectPart host, uint localID, UUID itemID)
         {
@@ -753,35 +758,23 @@ namespace InWorldz.Phlox.Engine
         public int iwIntRandRange(int min, int max)
         {
             if (min == max) return min;
-            lock(Util.RandomClass)
-            {
-                return Util.RandomClass.Next(min, max+1);
-            }
+            return s_random.Next(min, max + 1);
         }
 
         public int iwIntRand(int max)
         {
-            lock(Util.RandomClass)
-            {
-                return Util.RandomClass.Next(max+1);
-            }
+            return s_random.Next(max + 1);
         }
 
         public float iwFrandRange(float min, float max)
         {
             if (min == max) return min;
-            lock(Util.RandomClass)
-            {
-                return (float)(Util.RandomClass.NextDouble() * ((max) - min) + min);
-            }
+            return (float)(s_random.NextDouble() * ((max) - min) + min);
         }
 
         public float llFrand(float mag)
         {
-            lock (Util.RandomClass)
-            {
-                return (float)(Util.RandomClass.NextDouble() * mag);
-            }
+            return (float)(s_random.NextDouble() * mag);
         }
 
         public int llFloor(float f)
