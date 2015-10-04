@@ -1717,8 +1717,8 @@ namespace OpenSim.Region.Framework.Scenes
                 if((flag & PrimFlags.Scripted) != 0)
                 {
                     m_isScripted = true;
-                    if (ParentGroup.RootPart != this)
-                        ParentGroup.RootPart.IsScripted = true;
+                    if (ParentGroup.RootPart != this && ParentGroup.RootPart.IsScripted == false)
+                        ParentGroup.RootPart.CheckIsScripted();
                 }
             }
         }
@@ -4964,22 +4964,31 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if(ParentGroup.RootPart == this && this.LinkNum != 0)
             {
-                if((GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
+                bool oldIsScripted = IsScripted;
+                if ((GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
                 {
                     this.m_isScripted = true;
-                    return;
                 }
-                foreach (SceneObjectPart part in ParentGroup.Children.Values)
+                else
                 {
-                    if (part == null)
-                        continue;
-                    if((part.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
+                    bool newIsScripted = false;
+                    foreach (SceneObjectPart part in ParentGroup.Children.Values)
                     {
-                        this.m_isScripted = true;
-                        break;
+                        if (part == null)
+                            continue;
+                        if ((part.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
+                        {
+                            newIsScripted = true;
+                            break;
+                        }
                     }
+                    this.m_isScripted = newIsScripted;
                 }
-                this.m_isScripted = false;
+                if (oldIsScripted != this.m_isScripted)
+                {
+                    //m_log.Debug("Sending Update for IsScripted  flag");
+                    this.ScheduleFullUpdate();
+                }
             }
             else
             {
