@@ -2215,7 +2215,16 @@ namespace OpenSim.Region.Framework.Scenes
 
         public PrimFlags GetEffectiveObjectFlags()
         {
-            return _flags | LocalFlags;
+            PrimFlags ChildFlags = 0;
+            if (ParentGroup.RootPart == this)
+            {
+                foreach (SceneObjectPart part in ParentGroup.Children.Values)
+                {
+                    if(part != this)
+                        ChildFlags |= part.GetEffectiveObjectFlags();
+                }
+            }
+            return _flags | LocalFlags | ChildFlags;
         }
 
         public Vector3 GetGeometricCenter()
