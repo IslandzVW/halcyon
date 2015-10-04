@@ -1446,7 +1446,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (ent is SceneObjectGroup)
                 {
                     SceneObjectGroup grp = (SceneObjectGroup)ent;
-                    if ((grp.RootPart.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
+                    if (((grp.RootPart.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0) || grp.RootPart.IsScripted == true)
                     {
                         //this will cause a clear if the script hasnt run in a while
                         grp.AddScriptLPS(0.0);

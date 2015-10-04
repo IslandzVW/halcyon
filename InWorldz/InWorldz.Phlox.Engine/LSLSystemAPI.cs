@@ -12728,6 +12728,13 @@ namespace InWorldz.Phlox.Engine
                         if (value == 255) ret.Add(1f);
                         else ret.Add(0f);
                         break;
+                    case ScriptBaseClass.OBJECT_LAST_OWNER_ID:
+                        ret.Add(UUID.Zero);
+                        break;
+                    case ScriptBaseClass.OBJECT_CLICK_ACTION:
+                        ret.Add(0);
+                        break;
+
                 }
             }
 

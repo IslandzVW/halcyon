@@ -217,7 +217,10 @@ namespace OpenSim.Region.Framework.Scenes
         
         [XmlIgnore]
         public UUID FromItemID = UUID.Zero;
-               
+
+        [XmlIgnore]
+        private bool m_isScripted = false;
+
         /// <value>
         /// The UUID of the user inventory item from which this object was rezzed if this is a root part.  
         /// If UUID.Zero then either this is not a root part or there is no connection with a user inventory item.
@@ -1711,6 +1714,12 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (flag == PrimFlags.TemporaryOnRez)
                     ResetExpire();
+                if((flag & PrimFlags.Scripted) != 0)
+                {
+                    m_isScripted = true;
+                    if (ParentGroup.RootPart != this && ParentGroup.RootPart.IsScripted == false)
+                        ParentGroup.RootPart.CheckIsScripted();
+                }
             }
         }
 
@@ -2710,7 +2719,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             DetectedType type = DetectedType.None;
 
-            if (obj.ParentGroup.GroupScriptEvents != Scenes.ScriptEvents.None)
+            if (obj.ParentGroup.GroupScriptEvents != Scenes.ScriptEvents.None || ParentGroup.RootPart.IsScripted == true)
             {
                 type |= DetectedType.Scripted;
             }
@@ -2795,6 +2804,12 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //m_log.Debug("Removing flag: " + ((PrimFlags)flag).ToString());
                 _flags &= ~flag;
+                if((flag & PrimFlags.Scripted) != 0)
+                {
+                    if (ParentGroup.RootPart != this)
+                        m_isScripted = false;
+                    ParentGroup.RootPart.CheckIsScripted();
+                }
             }
             //m_log.Debug("prev: " + prevflag.ToString() + " curr: " + Flags.ToString());
             //ScheduleFullUpdate();
@@ -3037,6 +3052,8 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             clientFlags &= ~(uint) PrimFlags.CreateSelected;
+            if (IsScripted)
+                clientFlags |= (uint)PrimFlags.Scripted;
 
             if (remoteClient.AgentId == _ownerID)
             {
@@ -3059,6 +3076,8 @@ namespace OpenSim.Region.Framework.Scenes
         public void SendFullUpdateToClientImmediate(IClientAPI remoteClient, Vector3 lPos, uint clientFlags)
         {
             clientFlags &= ~(uint)PrimFlags.CreateSelected;
+            if (IsScripted)
+                clientFlags |= (uint)PrimFlags.Scripted;
 
             if (remoteClient.AgentId == _ownerID)
             {
@@ -4924,6 +4943,57 @@ namespace OpenSim.Region.Framework.Scenes
             if (ParentGroup.FromCrossing) flags |= PhysicsScene.AddPrimShapeFlags.FromCrossing;
 
             return flags;
+        }
+
+        public bool IsScripted
+        {
+            get
+            {
+                if (ParentGroup.RootPart == this && LinkNum != 0)
+                    return m_isScripted;                    
+                else
+                    return ((GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0);
+            }
+            set
+            {
+                m_isScripted = value;
+            }
+        }
+
+        public void CheckIsScripted()
+        {
+            if(ParentGroup.RootPart == this && this.LinkNum != 0)
+            {
+                bool oldIsScripted = IsScripted;
+                if ((GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
+                {
+                    this.m_isScripted = true;
+                }
+                else
+                {
+                    bool newIsScripted = false;
+                    foreach (SceneObjectPart part in ParentGroup.Children.Values)
+                    {
+                        if (part == null)
+                            continue;
+                        if ((part.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
+                        {
+                            newIsScripted = true;
+                            break;
+                        }
+                    }
+                    this.m_isScripted = newIsScripted;
+                }
+                if (oldIsScripted != this.m_isScripted)
+                {
+                    //m_log.Debug("Sending Update for IsScripted  flag");
+                    this.ScheduleFullUpdate();
+                }
+            }
+            else
+            {
+                m_isScripted = (GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0;
+            }
         }
 
         public bool IsPhantom

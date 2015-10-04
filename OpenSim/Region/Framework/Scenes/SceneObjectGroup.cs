@@ -1510,6 +1510,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 RecalcPrimWeights();
             }
+            RootPart.CheckIsScripted();
         }
 
         /// <summary>
@@ -1534,6 +1535,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 // Update the ServerWeight/LandImpact
                 RecalcPrimWeights();
+                RootPart.CheckIsScripted();
             }
         }
 
@@ -2100,6 +2102,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                 ScheduleGroupForFullUpdate();
             }
+
+            dupe.RootPart.CheckIsScripted();
 
             return dupe;
         }
@@ -2818,6 +2822,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             this.RootPart.ClearUndoState();
 
+            this.RootPart.CheckIsScripted();
+
             HasGroupChanged = true;
             ScheduleGroupForFullUpdate();
         }
@@ -2919,6 +2925,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Update the ServerWeight/LandImpact and StreamingCost
             RecalcPrimWeights();
+            RootPart.CheckIsScripted();
 
             if (sendGroupUpdate)
             {
