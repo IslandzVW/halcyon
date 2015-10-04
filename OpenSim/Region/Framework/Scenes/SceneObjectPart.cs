@@ -4962,8 +4962,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void CheckIsScripted()
         {
-            if(ParentGroup.RootPart == this)
+            if(ParentGroup.RootPart == this && this.LinkNum != 0)
             {
+                if((GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
+                {
+                    this.m_isScripted = true;
+                    return;
+                }
                 foreach (SceneObjectPart part in ParentGroup.Children.Values)
                 {
                     if (part == null)
@@ -4975,7 +4980,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 this.m_isScripted = false;
-            } else
+            }
+            else
             {
                 m_isScripted = (GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0;
             }
