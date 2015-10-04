@@ -2223,7 +2223,16 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     return true;
                 return GenericParcelOwnerPermission(client.AgentId, parcel, (ulong)GroupPowers.ReturnNonGroup);
             case (uint)ObjectReturnType.List:
-                break;
+                    foreach (SceneObjectGroup g in new List<SceneObjectGroup>(retlist))
+                    {
+                        if (!CanReturnObject(g.UUID, client.AgentId, scene))
+                        {
+                            retlist.Remove(g);
+                        }
+                    }
+                    // And allow the operation
+                    //
+                    return true;
             }
 
             return GenericParcelPermission(client.AgentId, parcel, 0);
