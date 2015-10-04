@@ -731,12 +731,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         protected bool HasReturnPermission(UUID currentUser, UUID objId, bool denyOnLocked)
         {
-            if (!this.TestPermissionBasics(currentUser, objId, denyOnLocked))
-            {
+            SceneObjectGroup group = FindGroup(objId);
+            if (group == null)
                 return false;
-            }
-
-            SceneObjectGroup group = this.FindObjectGroup(objId);
 
             //admins can do what they need
             if (IsGodUser(currentUser))
@@ -816,20 +813,17 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             return null;
         }
 
-        protected bool TestPermissionBasics(UUID currentUser, UUID objId, bool denyOnLocked)
+        protected SceneObjectGroup FindGroup(UUID objId)
         {
-            if (!m_scene.Entities.ContainsKey(objId))
-            {
-                return false;
-            }
+            EntityBase ent = null;
+            if (!m_scene.Entities.TryGetValue(objId, out ent))
+                return null;
 
             // If it's not an object, we cant edit it.
-            if ((!(m_scene.Entities[objId] is SceneObjectGroup)))
-            {
-                return false;
-            }
+            if (ent is SceneObjectGroup)
+                return ent as SceneObjectGroup;
 
-            return true;
+            return null;
         }
 
         protected struct GenericPermissionResult
@@ -837,6 +831,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             public enum ResultReason
             {
                 Basics,
+                NoPerm,
                 Locked,
                 Owner,
                 Attachment,
@@ -858,7 +853,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         /// <param name="objId"></param>
         /// <param name="denyOnLocked"></param>
         /// <returns></returns>
-        protected GenericPermissionResult GenericObjectPermission(UUID currentUser, UUID objId, bool denyOnLocked)
+        protected GenericPermissionResult GenericObjectPermission(UUID currentUser, UUID objId, bool denyOnLocked, uint requiredPermissionMask)
         {
             // Default: deny
             GenericPermissionResult permission = new GenericPermissionResult
@@ -869,7 +864,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             bool locked = false;
 
-            if (!this.TestPermissionBasics(currentUser, objId, denyOnLocked))
+            SceneObjectGroup group = FindGroup(objId);
+            if (group == null)
             {
                 return new GenericPermissionResult 
                 { 
@@ -877,8 +873,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     Success = false 
                 };
             }
-
-            SceneObjectGroup group = (SceneObjectGroup)m_scene.Entities[objId];
 
             UUID objectOwner = group.OwnerID;
             locked = ((group.RootPart.OwnerMask & PERM_LOCKED) == 0);   // only locked when neither bit is on
@@ -890,11 +884,30 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             // Nobody but the object owner can set permissions on an object
             //
 
-            if (locked && (!IsGodUser(currentUser)) && denyOnLocked)
+            // Admin should be able to edit anything in the sim (including admin objects)
+            if (IsGodUser(currentUser))
+            {
+                permission = new GenericPermissionResult
+                {
+                    Reason = GenericPermissionResult.ResultReason.Admin,
+                    Success = true
+                };
+            }
+
+            if (locked && denyOnLocked)
             {
                 return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.Locked,
+                    Success = false
+                };
+            }
+
+            if ((group.RootPart.OwnerMask & requiredPermissionMask) != requiredPermissionMask)
+            {
+                permission = new GenericPermissionResult
+                {
+                    Reason = GenericPermissionResult.ResultReason.NoPerm,
                     Success = false
                 };
             }
@@ -926,26 +939,16 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     Success = friendEdit
                 };
             }
+            if (permission.Success)
+                return permission;
 
             // Group members should be able to edit group objects
-            if ((permission.Success != true) && (group.GroupID != UUID.Zero) && ((m_scene.GetSceneObjectPart(objId).GroupMask & (uint)PermissionMask.Modify) != 0) && IsAgentInGroupRole(group.GroupID, currentUser, 0))
+            if ((permission.Success != true) && (group.GroupID != UUID.Zero) && ((group.RootPart.GroupMask & (uint)PermissionMask.Modify) == (uint)PermissionMask.Modify) && IsAgentInGroupRole(group.GroupID, currentUser, 0))
             {
                 // Return immediately, so that the administrator can shares group objects
                 permission = new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.Group,
-                    Success = true
-                };
-
-                return permission;
-            }
-        
-            // Admin should be able to edit anything in the sim (including admin objects)
-            if (IsGodUser(currentUser))
-            {
-                permission = new GenericPermissionResult
-                {
-                    Reason = GenericPermissionResult.ResultReason.Admin,
                     Success = true
                 };
             }
@@ -1116,7 +1119,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            GenericPermissionResult genericResult = GenericObjectPermission(owner, objectID, true);
+            GenericPermissionResult genericResult = GenericObjectPermission(owner, objectID, true, (uint)PermissionMask.Copy);
             if (!genericResult.Success)
             {
                 //They can't even edit the object
@@ -1162,16 +1165,16 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            return GenericObjectPermission(deleter, objectID, false).Success;
+            return GenericObjectPermission(deleter, objectID, false, 0).Success;
         }
 
-        private bool CanEditObject(UUID objectID, UUID editorID, Scene scene)
+        private bool CanEditObject(UUID objectID, UUID editorID, Scene scene, uint requiredPermissionMask)
         {
             //DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-
-            return GenericObjectPermission(editorID, objectID, false).Success;
+            // This could test (uint)PermissionMask.Modify but CanEditObject is used for a lot more.
+            return GenericObjectPermission(editorID, objectID, false, requiredPermissionMask).Success;
         }
 
         private bool CanEditObjectInventory(UUID objectID, UUID editorID, Scene scene)
@@ -1189,7 +1192,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 part = m_scene.GetSceneObjectPart(objectID);
             }
 
-            return GenericObjectPermission(editorID, objectID, false).Success;
+            return GenericObjectPermission(editorID, objectID, false, (uint)PermissionMask.Modify).Success;
         }
 
         private bool CanEditParcel(UUID user, ILandObject parcel, GroupPowers p, Scene scene)
@@ -1368,7 +1371,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 return m_bypassPermissionsValue;
             }
 
-            bool permission = GenericObjectPermission(moverID, objectID, true).Success;
+            bool permission = GenericObjectPermission(moverID, objectID, true, (uint)PermissionMask.Move).Success;
             if (!permission)
             {
                 if (!m_scene.Entities.ContainsKey(objectID))
@@ -1688,7 +1691,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            GenericPermissionResult genericPermissionResult = GenericObjectPermission(stealer,objectID, false);
+            GenericPermissionResult genericPermissionResult = GenericObjectPermission(stealer,objectID, false,0);
             bool genericPermission = genericPermissionResult.Success;
             if (!genericPermission)
             {
@@ -1723,7 +1726,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            GenericPermissionResult genericResult = GenericObjectPermission(userID, objectID, false);
+            GenericPermissionResult genericResult = GenericObjectPermission(userID, objectID, false, (uint)PermissionMask.Copy);
             bool permission = genericResult.Success;
             if (!permission)
             {
@@ -2130,7 +2133,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (part.ParentGroup != null) prim = part.ParentGroup.UUID;
 
             // You can reset the scripts in any object you can edit
-            return GenericObjectPermission(agentID, prim, false).Success;
+            return GenericObjectPermission(agentID, prim, false, (uint)PermissionMask.Modify).Success;
         }
 
         private bool CanStartScript(SceneObjectPart part, UUID script, UUID agentID, Scene scene)
@@ -2145,7 +2148,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (part.ParentGroup != null) prim = part.ParentGroup.UUID;
 
             // You can reset the scripts in any object you can edit
-            return GenericObjectPermission(agentID, prim, false).Success;
+            return GenericObjectPermission(agentID, prim, false, 0).Success;
         }
 
         private bool CanStopScript(SceneObjectPart part, UUID script, UUID agentID, Scene scene)
@@ -2160,7 +2163,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (part.ParentGroup != null) prim = part.ParentGroup.UUID;
 
             // You can reset the scripts in any object you can edit
-            return GenericObjectPermission(agentID, prim, false).Success;
+            return GenericObjectPermission(agentID, prim, false, 0).Success;
         }
 
         private bool CanUseObjectReturn(ILandObject parcel, uint type, IClientAPI client, List<SceneObjectGroup> retlist, Scene scene)
@@ -2217,7 +2220,16 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     return true;
                 return GenericParcelOwnerPermission(client.AgentId, parcel, (ulong)GroupPowers.ReturnNonGroup);
             case (uint)ObjectReturnType.List:
-                break;
+                    foreach (SceneObjectGroup g in new List<SceneObjectGroup>(retlist))
+                    {
+                        if (!CanReturnObject(g.UUID, client.AgentId, scene))
+                        {
+                            retlist.Remove(g);
+                        }
+                    }
+                    // And allow the operation
+                    //
+                    return true;
             }
 
             return GenericParcelPermission(client.AgentId, parcel, 0);
