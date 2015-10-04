@@ -1711,6 +1711,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (flag == PrimFlags.TemporaryOnRez)
                     ResetExpire();
+                if((flag & PrimFlags.Scripted) != 0 && !ParentGroup.IsScripted)
+                    ParentGroup.CheckIsScripted();
             }
         }
 
@@ -2710,7 +2712,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             DetectedType type = DetectedType.None;
 
-            if (obj.ParentGroup.GroupScriptEvents != Scenes.ScriptEvents.None)
+            if (obj.ParentGroup.GroupScriptEvents != Scenes.ScriptEvents.None || obj.ParentGroup.IsScripted)
             {
                 type |= DetectedType.Scripted;
             }
@@ -2795,6 +2797,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //m_log.Debug("Removing flag: " + ((PrimFlags)flag).ToString());
                 _flags &= ~flag;
+                if ((flag & PrimFlags.Scripted) != 0)
+                    ParentGroup.CheckIsScripted();
             }
             //m_log.Debug("prev: " + prevflag.ToString() + " curr: " + Flags.ToString());
             //ScheduleFullUpdate();
@@ -3037,6 +3041,8 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             clientFlags &= ~(uint) PrimFlags.CreateSelected;
+            if (ParentGroup.IsScripted && ParentGroup.RootPart == this)
+                clientFlags |= (uint)PrimFlags.Scripted;
 
             if (remoteClient.AgentId == _ownerID)
             {
@@ -3059,6 +3065,8 @@ namespace OpenSim.Region.Framework.Scenes
         public void SendFullUpdateToClientImmediate(IClientAPI remoteClient, Vector3 lPos, uint clientFlags)
         {
             clientFlags &= ~(uint)PrimFlags.CreateSelected;
+            if (ParentGroup.IsScripted && ParentGroup.RootPart == this)
+                clientFlags |= (uint)PrimFlags.Scripted;
 
             if (remoteClient.AgentId == _ownerID)
             {
