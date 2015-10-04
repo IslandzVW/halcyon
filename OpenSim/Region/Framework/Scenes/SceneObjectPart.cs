@@ -2213,18 +2213,23 @@ namespace OpenSim.Region.Framework.Scenes
             return Math.Sqrt(dx * dx + dy * dy + dz * dz);
         }
 
-        public PrimFlags GetEffectiveObjectFlags()
+        public PrimFlags GetEffectiveObjectFlagsFull()
         {
             PrimFlags ChildFlags = 0;
             if (ParentGroup.RootPart == this)
             {
                 foreach (SceneObjectPart part in ParentGroup.Children.Values)
                 {
-                    if(part != this)
+                    if (part != this)
                         ChildFlags |= part.GetEffectiveObjectFlags();
                 }
             }
             return _flags | LocalFlags | ChildFlags;
+        }
+
+        public PrimFlags GetEffectiveObjectFlags()
+        {
+            return _flags | LocalFlags;
         }
 
         public Vector3 GetGeometricCenter()
