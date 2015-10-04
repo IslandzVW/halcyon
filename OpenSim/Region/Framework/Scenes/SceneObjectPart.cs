@@ -4971,9 +4971,10 @@ namespace OpenSim.Region.Framework.Scenes
                     if((part.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
                     {
                         this.m_isScripted = true;
-                        return;
+                        break;
                     }
                 }
+                this.m_isScripted = false;
             } else
             {
                 m_isScripted = (GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0;
