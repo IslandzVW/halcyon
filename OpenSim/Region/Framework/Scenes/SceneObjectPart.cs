@@ -2215,16 +2215,16 @@ namespace OpenSim.Region.Framework.Scenes
 
         public PrimFlags GetEffectiveObjectFlagsFull()
         {
-            PrimFlags ChildFlags = 0;
-            if (ParentGroup.RootPart == this)
+            foreach (SceneObjectPart part in ParentGroup.Children.Values)
             {
-                foreach (SceneObjectPart part in ParentGroup.Children.Values)
-                {
-                    if (part != this)
-                        ChildFlags |= part.GetEffectiveObjectFlags();
-                }
+                if (part == null)
+                    continue;
+                if (part == this)
+                    continue;
+                if ((part.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
+                    return _flags | LocalFlags | PrimFlags.Scripted;
             }
-            return _flags | LocalFlags | ChildFlags;
+            return _flags | LocalFlags;
         }
 
         public PrimFlags GetEffectiveObjectFlags()
