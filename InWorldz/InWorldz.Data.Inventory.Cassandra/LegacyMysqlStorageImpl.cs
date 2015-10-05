@@ -893,6 +893,17 @@ namespace InWorldz.Data.Inventory.Cassandra
         /// <param name="folderID">the folder UUID</param>
         public void deleteItemsInFolder(UUID folderID)
         {
+            // Get a flattened list of all subfolders.
+            List<InventoryFolderBase> subFolders = getFolderHierarchy(folderID);
+
+            // Delete all sub-folders
+            foreach (InventoryFolderBase f in subFolders)
+            {
+                deleteOneFolder(f.ID);
+                deleteItemsInFolder(f.ID);
+            }
+
+            // Finally, delete the folder itself.
             try
             {
                 using (ISimpleDB conn = _connFactory.GetConnection())
