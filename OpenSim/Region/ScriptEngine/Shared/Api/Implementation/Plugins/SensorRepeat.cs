@@ -378,7 +378,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
                     if (part.AttachmentPoint != 0) // Attached so ignore
                         continue;
 
-                    if (part.Inventory.ContainsScripts() || part.ParentGroup.IsScripted)
+                    if (part.ParentGroup.IsScripted || part.Inventory.ContainsScripts())
                     {
                         objtype |= ACTIVE | SCRIPTED; // Scripted and active. It COULD have one hidden ...
                     }
