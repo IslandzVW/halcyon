@@ -671,11 +671,61 @@ namespace OpenSim.Region.Framework.Scenes
 
                 m_log.InfoFormat("[AGENT INVENTORY]: Purging descendents of {0} {1} for user {2}", folderID, folder.Name, remoteClient.Name);
 
-                if (!userProfile.PurgeFolder(folder))
+                if (!userProfile.PurgeFolderContents(folder))
                 {
                     m_log.ErrorFormat(
                             "[AGENT INVENTORY]: Failed to purge folder for user {0} {1}",
                             remoteClient.Name, remoteClient.AgentId);
+                }
+            });
+        }
+
+        /// <summary>
+        /// This should delete the given directory and all its descendents recursively.
+        /// </summary>
+        /// <param name="remoteClient"></param>
+        /// <param name="folderID"></param>
+        public void HandlePurgeInventoryFolder(IClientAPI remoteClient, UUID folderID)
+        {
+            Util.FireAndForget(Util.PoolSelection.LongIO, delegate(object obj)
+            {
+                CachedUserInfo userProfile = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+
+                if (null == userProfile)
+                {
+                    m_log.ErrorFormat(
+                        "[AGENT INVENTORY]: Could not find user profile for {0} {1}",
+                        remoteClient.Name, remoteClient.AgentId);
+                    return;
+                }
+
+                //make sure the user owns the source folder
+                InventoryFolderBase folder = userProfile.GetFolderAttributes(folderID);
+
+                if (folder.Owner != remoteClient.AgentId)
+                {
+                    m_log.ErrorFormat(
+                        "[AGENT INVENTORY]: Not purging descendents of {0} for user {1}, user does not own the folder",
+                        folderID, remoteClient.Name);
+
+                    return;
+                }
+
+                //make sure the folder is either the lost and found, the trash, or a descendant of it
+                if (!CheckFolderHeirarchyIsAppropriateForPurge(folder, userProfile))
+                {
+                    m_log.ErrorFormat(
+                        "[AGENT INVENTORY]: Not purging descendents of {0} for user {1}, folder is not part of a purgeable heirarchy",
+                        folderID, remoteClient.Name);
+                }
+
+                m_log.InfoFormat("[AGENT INVENTORY]: Purging {0} {1} for user {2}", folderID, folder.Name, remoteClient.Name);
+
+                if (!userProfile.PurgeFolder(folder))
+                {
+                    m_log.ErrorFormat(
+                        "[AGENT INVENTORY]: Failed to purge folder for user {0} {1}",
+                        remoteClient.Name, remoteClient.AgentId);
                 }
             });
         }

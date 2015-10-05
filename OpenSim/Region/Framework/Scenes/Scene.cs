@@ -3102,7 +3102,7 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnCopyInventoryItem += CopyInventoryItem;
             client.OnMoveInventoryItem += MoveInventoryItem;
             client.OnRemoveInventoryItem += RemoveInventoryItem;
-            client.OnRemoveInventoryFolder += RemoveInventoryFolder;
+            client.OnRemoveInventoryFolder += HandlePurgeInventoryFolder;
             client.OnRezScript += RezScript;
             client.OnRequestTaskInventory += RequestTaskInventory;
             client.OnRemoveTaskItem += RemoveTaskInventory;
