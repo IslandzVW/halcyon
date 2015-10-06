@@ -40,6 +40,19 @@ namespace OpenSim.Framework.Tests
             Assert.That (matFromOSD.DiffuseAlphaMode, Is.EqualTo((byte)RenderMaterial.eDiffuseAlphaMode.DIFFUSE_ALPHA_MODE_BLEND));
             Assert.That (matFromOSD.AlphaMaskCutoff, Is.EqualTo(0));
         }
+
+		[Test]
+		public void T001_ToFromBinaryTest()
+		{
+			RenderMaterial mat = new RenderMaterial ();
+			RenderMaterials mats = new RenderMaterials ();
+			String key = mats.AddMaterial (mat);
+
+			byte[] bytes = mats.GetBytes ();
+			RenderMaterials newmats = new RenderMaterials (bytes, 0, bytes.Length);
+			RenderMaterial newmat = newmats.GetMaterial (key);
+			Assert.That (mat, Is.EqualTo(newmat));
+		}
     }
 }
 

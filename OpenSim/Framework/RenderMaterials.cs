@@ -1,5 +1,7 @@
 using System;
+using System.Text;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -10,6 +12,7 @@ namespace OpenSim.Framework
     /// A single textured face. Don't instantiate this class yourself, use the
     /// methods in RenderMaterials
     /// </summary>
+	[Serializable]
     public class RenderMaterial : ICloneable
     {
         public enum eDiffuseAlphaMode : byte
@@ -222,7 +225,7 @@ namespace OpenSim.Framework
 
         public override string ToString ()
         {
-            return string.Format ("[RenderMaterial: NormalID={0}, NormalOffsetX={1}, NormalOffsetY={2}, NormalRepeatX={3}, NormalRepeatY={4}, NormalRotation={5}, SpecularID={6}, SpecularOffsetX={7}, SpecularOffsetY={8}, SpecularRepeatX={9}, SpecularRepeatY={10}, SpecularRotation={11}, SpecularLightColor={12}, SpecularLightExponent={13}, EnvironmentIntensity={14}, DiffuseAlphaMode={15}, AlphaMaskCutoff={16}]", 
+			return string.Format ("NormalID : {0}, NormalOffsetX : {1}, NormalOffsetY : {2}, NormalRepeatX : {3}, NormalRepeatY : {4}, NormalRotation : {5}, SpecularID : {6}, SpecularOffsetX : {7}, SpecularOffsetY : {8}, SpecularRepeatX : {9}, SpecularRepeatY : {10}, SpecularRotation : {11}, SpecularLightColor : {12}, SpecularLightExponent : {13}, EnvironmentIntensity : {14}, DiffuseAlphaMode : {15}, AlphaMaskCutoff : {16}", 
                 NormalID, NormalOffsetX, NormalOffsetY, NormalRepeatX, NormalRepeatY, NormalRotation, SpecularID, SpecularOffsetX, SpecularOffsetY, SpecularRepeatX, SpecularRepeatY, SpecularRotation, SpecularLightColor, SpecularLightExponent, EnvironmentIntensity, DiffuseAlphaMode, AlphaMaskCutoff);
         }
 
@@ -299,7 +302,9 @@ namespace OpenSim.Framework
     /// you have a RenderMaterial with a default texture uuid of X, and face 18
     /// has a texture UUID of Y, every face would be textured with X except for
     /// face 18 that uses Y. In practice however, primitives utilize a maximum
-    /// of nine faces</remarks>
+    /// of nine faces.  The values in this dictionary are linked through a UUID 
+	/// key to the textures in a TextureEntry via MaterialID there.</remarks>
+	[Serializable]
     public class RenderMaterials
     {
         public Dictionary<String, RenderMaterial> Materials;
@@ -321,60 +326,77 @@ namespace OpenSim.Framework
             FromBytes (data, pos, length);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public OSD GetOSD ()
-        {
-            OSDArray array = new OSDArray ();
-            return array;
-        }
-
-        public static RenderMaterials FromOSD (OSD osd)
-        {
-            if (osd.Type == OSDType.Array) {
-                OSDArray array = (OSDArray)osd;
-            }
-
-            return new RenderMaterials ();
-        }
-
         private void FromBytes (byte[] data, int pos, int length)
         {
+			var binFormatter = new BinaryFormatter ();
+			var mStream = new MemoryStream (data, pos, length);
+			Materials = (Dictionary<String, RenderMaterial>) binFormatter.Deserialize(mStream);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         public byte[] GetBytes ()
-        {
-            return Utils.EmptyBytes;
-
-
+		{
+			lock (Materials) {
+				var binFormatter = new BinaryFormatter ();
+				var mStream = new MemoryStream ();
+				binFormatter.Serialize (mStream, Materials);
+				return mStream.ToArray ();
+			}
         }
 
         public override int GetHashCode ()
         {
-            int hashcode = 0;
-            foreach (var mat in Materials.Values) {
-                hashcode ^= mat.GetHashCode ();
-            }
+			lock (Materials) {
+				int hashcode = 0;
+				foreach (var mat in Materials.Values)
+					hashcode ^= mat.GetHashCode ();
 
-            return hashcode;
+				return hashcode;
+			}
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         public override string ToString ()
         {
-            string output = String.Empty;
-            return output;
+			lock (Materials) {
+				StringBuilder builder = new StringBuilder ();
+				builder.Append ("[ ");
+				foreach (KeyValuePair<string, RenderMaterial> entry in Materials)
+					builder.AppendFormat (" MaterialId : {0}, RenderMaterial : {{ {1} }} ", entry.Key, entry.Value.ToString ());
+				builder.Append(" ]");
+				return builder.ToString();
+			};
         }
 
+		public string AddMaterial(RenderMaterial mat)
+		{
+			lock (Materials) {
+				foreach (KeyValuePair<string, RenderMaterial> entry in Materials) {
+					if (mat == entry.Value)
+						return (entry.Key);
+				}
+
+				string key = UUID.Random ().ToString ();
+				Materials.Add (key, mat);
+				return key;
+			}
+		}
+
+		public void DeleteMaterial(string key)
+		{
+			lock (Materials) {
+				if (Materials.ContainsKey (key))
+					Materials.Remove (key);
+			}
+		}
+
+		public RenderMaterial GetMaterial(string key)
+		{
+			lock (Materials) {
+				if (Materials.ContainsKey (key))
+					return (Materials[key]);
+				else
+					return null;
+			}
+		}
     }
 }
 
