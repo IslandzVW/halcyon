@@ -1596,6 +1596,8 @@ namespace OpenSim.Region.Framework.Scenes
             agentItem.AssetID = taskItem.AssetID;
             agentItem.Description = taskItem.Description;
             agentItem.Name = taskItem.Name;
+            agentItem.SalePrice = taskItem.SalePrice;
+            agentItem.SaleType = taskItem.SaleType;
             agentItem.AssetType = taskItem.Type;
             agentItem.InvType = taskItem.InvType;
             agentItem.Flags = taskItem.Flags;
@@ -1808,6 +1810,9 @@ namespace OpenSim.Region.Framework.Scenes
             destTaskItem.Name = srcTaskItem.Name;
             destTaskItem.InvType = srcTaskItem.InvType;
             destTaskItem.Type = srcTaskItem.Type;
+            destTaskItem.SalePrice = srcTaskItem.SalePrice;
+            destTaskItem.SaleType = srcTaskItem.SaleType;
+
 
             destPart.Inventory.AddInventoryItem(destTaskItem, part.OwnerID != destPart.OwnerID, true);
 
@@ -2101,6 +2106,8 @@ namespace OpenSim.Region.Framework.Scenes
                 taskItem.PermsGranter = UUID.Zero;
                 taskItem.PermsMask = 0;
                 taskItem.AssetID = asset.FullID;
+                taskItem.SalePrice = itemBase.SalePrice;
+                taskItem.SaleType = itemBase.SaleType;
 
                 part.Inventory.AddInventoryItem(taskItem, false, true);
                 part.GetProperties(remoteClient);
@@ -2200,6 +2207,8 @@ namespace OpenSim.Region.Framework.Scenes
             destTaskItem.Name = srcTaskItem.Name;
             destTaskItem.InvType = srcTaskItem.InvType;
             destTaskItem.Type = srcTaskItem.Type;
+            destTaskItem.SalePrice = srcTaskItem.SalePrice;
+            destTaskItem.SaleType = srcTaskItem.SaleType;
 
             // WARNING: This operation is asynchronous if the item is a script! Careful what occurs after this.
             ReplaceItemArgs replaceArgs = new ReplaceItemArgs(destTaskItem, running, start_param);

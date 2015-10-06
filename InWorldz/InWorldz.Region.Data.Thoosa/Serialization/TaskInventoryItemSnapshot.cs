@@ -108,6 +108,12 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
         [ProtoMember(22)]
         public int Type;
 
+        [ProtoMember(23)]
+        public int SalePrice;
+
+        [ProtoMember(24)]
+        public byte SaleType;
+
         internal OpenSim.Framework.TaskInventoryItem ToTaskInventoryItem()
         {
             return new OpenSim.Framework.TaskInventoryItem
@@ -133,7 +139,9 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 ParentPartID = new OpenMetaverse.UUID(this.ParentPartId),
                 PermsGranter = new OpenMetaverse.UUID(this.PermsGranter),
                 PermsMask = this.PermsMask,
-                Type = this.Type
+                Type = this.Type,
+                SalePrice = this.SalePrice,
+                SaleType = this.SaleType
             };
         }
     }

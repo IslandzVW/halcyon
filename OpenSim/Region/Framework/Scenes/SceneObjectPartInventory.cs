@@ -668,6 +668,8 @@ namespace OpenSim.Region.Framework.Scenes
                     item.CreationDate = fromItem.CreationDate;
                     item.InvType = fromItem.InvType;
                     item.Flags = fromItem.Flags;
+                    item.SalePrice = fromItem.SalePrice;
+                    item.SaleType = fromItem.SaleType;
 
                     if (slam)
                     {
@@ -925,8 +927,8 @@ namespace OpenSim.Region.Framework.Scenes
                     invString.AddNameValueLine("flags", Utils.UIntToHexString(item.Flags));
 
                     invString.AddSaleStart();
-                    invString.AddNameValueLine("sale_type", "not");
-                    invString.AddNameValueLine("sale_price", "0");
+                    invString.AddNameValueLine("sale_type", item.SaleType.ToString());
+                    invString.AddNameValueLine("sale_price", item.SalePrice.ToString());
                     invString.AddSectionEnd();
 
                     invString.AddNameValueLine("name", item.Name + "|");

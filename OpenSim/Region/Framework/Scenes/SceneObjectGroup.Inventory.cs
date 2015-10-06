@@ -162,6 +162,8 @@ namespace OpenSim.Region.Framework.Scenes
                 taskItem.CreatorID = item.CreatorIdAsUuid;
                 taskItem.Type = item.AssetType;
                 taskItem.InvType = item.InvType;
+                taskItem.SalePrice = item.SalePrice;
+                taskItem.SaleType = item.SaleType;
 
                 if (remoteClient != null &&
                         remoteClient.AgentId != part.OwnerID &&

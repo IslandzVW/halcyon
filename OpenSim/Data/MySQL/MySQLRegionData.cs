@@ -1903,6 +1903,8 @@ namespace OpenSim.Data.MySQL
             taskItem.EveryonePermissions  = Convert.ToUInt32(row["everyonePermissions"]);
             taskItem.GroupPermissions     = Convert.ToUInt32(row["groupPermissions"]);
             taskItem.Flags         = Convert.ToUInt32(row["flags"]);
+            taskItem.SalePrice = Convert.ToInt32(row["salePrice"]);
+            taskItem.SaleType = Convert.ToByte(row["saleType"]);
 
             if (Convert.ToInt32(row["canDebitOwner"]) == 1)
             {
@@ -2105,6 +2107,8 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("everyonePermissions", taskItem.EveryonePermissions);
             cmd.Parameters.AddWithValue("groupPermissions", taskItem.GroupPermissions);
             cmd.Parameters.AddWithValue("flags", taskItem.Flags);
+            cmd.Parameters.AddWithValue("salePrice", taskItem.SalePrice);
+            cmd.Parameters.AddWithValue("saleType", taskItem.SaleType);
 
             int debitOwner = 0;
             if ((taskItem.PermsMask & PERMISSION_DEBIT) != 0)

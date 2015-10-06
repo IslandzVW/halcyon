@@ -283,6 +283,40 @@ namespace OpenSim.Framework
             }
         }
 
+        /// <value>
+        ///
+        /// </value>
+        public int SalePrice
+        {
+            get
+            {
+                return m_salePrice;
+            }
+
+            set
+            {
+                m_salePrice = value;
+            }
+        }
+        protected int m_salePrice;
+
+        /// <value>
+        ///
+        /// </value>
+        public byte SaleType
+        {
+            get
+            {
+                return m_saleType;
+            }
+
+            set
+            {
+                m_saleType = value;
+            }
+        }
+        protected byte m_saleType;
+
         /// <summary>
         /// Added to support IInventoryItem
         /// </summary>

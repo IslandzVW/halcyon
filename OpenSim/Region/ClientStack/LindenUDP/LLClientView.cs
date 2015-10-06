@@ -10155,6 +10155,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 newTaskItem.Name = Util.FieldToString(updatetask.InventoryData.Name);
                 newTaskItem.Description = Util.FieldToString(updatetask.InventoryData.Description);
                 newTaskItem.CreationDate = (uint)updatetask.InventoryData.CreationDate;
+                newTaskItem.SalePrice = (int)updatetask.InventoryData.SalePrice;
+                newTaskItem.SaleType = (byte)updatetask.InventoryData.SaleType;
                 handlerUpdateTaskInventory(this, updatetask.InventoryData.TransactionID,
                                            newTaskItem, updatetask.UpdateData.LocalID);
             }
