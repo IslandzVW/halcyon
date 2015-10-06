@@ -14278,6 +14278,45 @@ namespace InWorldz.Phlox.Engine
             return new string(src.Reverse().ToArray());
         }
 
+        public LSL_List iwListRemoveDuplicates(LSL_List src)
+        {
+            //yarrr...
+            return new LSL_List(  src.Data.Distinct().ToList()  );
+        }
+
+        public LSL_List iwListRemoveElements(LSL_List src, LSL_List elements, int count)
+        {
+            if (src.Length == 0 || elements.Length == 0) return src;
+            if (count == 0) count = -1;
+            int counted = 0;
+
+            List<object> ret = new List<object>();
+
+            int len = src.Length - elements.Length + 1;
+            for(int i = 0; i < len; i++)
+            {
+                if(src.Data[i].Equals(elements.Data[0]))
+                {
+                    if(count == -1 || counted < count)
+                    {
+                        int x;
+                        for (x = 1; x < elements.Length; x++)
+                            if (!src.Data[i + x].Equals(elements.Data[x]))
+                                break;
+                        if (x == elements.Length)
+                        {
+                            counted++;
+                            i += elements.Length - 1;
+                            continue;
+                        }
+                    }
+                }
+                ret.Add(src.Data[i]);
+            }
+
+            return new LSL_List(ret);
+        }
+
         public int iwListIncludesElements(LSL_List src, LSL_List elements, int any)
         {
             for(int a=0; a < elements.Length; a++)
