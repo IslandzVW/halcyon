@@ -2798,7 +2798,8 @@ namespace OpenSim.Region.Framework.Scenes
                 //m_log.Debug("Removing flag: " + ((PrimFlags)flag).ToString());
                 _flags &= ~flag;
                 if ((flag & PrimFlags.Scripted) != 0)
-                    ParentGroup.CheckIsScripted();
+                    if(ParentGroup != null)
+                        ParentGroup.CheckIsScripted();
             }
             //m_log.Debug("prev: " + prevflag.ToString() + " curr: " + Flags.ToString());
             //ScheduleFullUpdate();
