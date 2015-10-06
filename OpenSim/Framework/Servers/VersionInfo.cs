@@ -27,18 +27,74 @@
 
 namespace OpenSim
 {
+    using System;
+    using System.IO;
+    using System.Reflection;
+   
     public class VersionInfo
     {
         /// <value>
-        /// This is the InWorldz version string.  Change this if you are releasing a new InWorldz version.
-        /// </value>        
-        public readonly static string Version = "InWorldz 0.9.8 R5415";  // stay within 27 chars (used in regioninfo)
+        /// This is the InWorldz Halcyon version string.  Change this if you are releasing a new InWorldz version.
+        /// This should be changed with every significant release.
+        /// </value>
+        public readonly static string LabelVersion = "0.9.18";
+
+        /// <summary>
+        /// This is name of the software product (separate from the grid it is running on).
+        /// This should not be changed.
+        /// </summary>
+        public readonly static string LabelName = "Halcyon";
+
+        /// <summary>
+        /// The Revision number is just a 6-digit YYMMDD date. 
+        /// To update this, force a full rebuild before delivering a new product.
+        /// </summary>
+        private static string _revision = null;
+        public static string Revision
+        {
+            get
+            {
+                if (_revision == null)
+                {
+                    string exePath = Assembly.GetExecutingAssembly().Location;
+                    System.DateTime exeDate = System.IO.File.GetLastWriteTime(exePath);
+                    _revision = exeDate.ToString("yyMMdd");
+                }
+                return _revision;
+            }
+        }
+
+        /// <summary>
+        /// This is the short version, such as "Halcyon 1.2.3", without revision info.
+        /// </summary>
+        public static string ShortVersion
+        {
+            get
+            {
+                return LabelName + " " + LabelVersion;
+            }
+        }
+
+        /// <summary>
+        /// This is the full version, with revision info, such as "Halcyon 1.2.3 R151131".
+        /// This is the one requested by most of the software, and passed in RegionInfo to viewers.
+        /// </summary>
+        private static string _version = null;
+        public static string Version
+        {
+            get {
+                if (_version == null)
+                {
+                    _version = ShortVersion + " R" + Revision;
+                }
+                return _version;
+            }
+        }
         
         /// <value>
-        /// This is the external interface version.  It is separate from the OpenSimulator project version.  
+        /// This is the external interface version.  It is separate from the externally-visible version info.
         /// 
-        /// This version number should be 
-        /// increased by 1 every time a code change makes the previous OpenSimulator revision incompatible
+        /// This version number should be increased by 1 every time a code change makes the previous revision incompatible
         /// with the new revision.  This will usually be due to interregion or grid facing interface changes.
         /// 
         /// Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
