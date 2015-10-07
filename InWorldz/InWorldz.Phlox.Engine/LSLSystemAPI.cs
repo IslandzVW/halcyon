@@ -758,6 +758,7 @@ namespace InWorldz.Phlox.Engine
 
         public int iwIntRand(int max)
         {
+            if (max < 0) return -1 * s_random.Next(Math.Abs(max) + 1);
             return s_random.Next(max + 1);
         }
 
