@@ -1,10 +1,10 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using ProtoBuf;
 
 namespace OpenSim.Framework
 {
@@ -12,7 +12,7 @@ namespace OpenSim.Framework
     /// A single textured face. Don't instantiate this class yourself, use the
     /// methods in RenderMaterials
     /// </summary>
-	[Serializable]
+	[ProtoContract]
     public class RenderMaterial : ICloneable
     {
         public enum eDiffuseAlphaMode : byte
@@ -55,8 +55,6 @@ namespace OpenSim.Framework
 
         public static Color4 DEFAULT_SPECULAR_LIGHT_COLOR = new Color4 (255, 255, 255, 255);
 
-        private RenderMaterial DefaultMaterial;
-
 #region Properties
 
         public UUID NormalID {
@@ -64,26 +62,37 @@ namespace OpenSim.Framework
             set;
         }
 
+        [ProtoMember(1)]
+        public Guid SerializableNormalID {
+            get { return NormalID.Guid; }
+            set { NormalID = new UUID(value); }
+        }
+
+		[ProtoMember(2)]
         public float NormalOffsetX {
             get;
             set;
         }
 
+		[ProtoMember(3)]
         public float NormalOffsetY {
             get;
             set;
         }
 
+		[ProtoMember(4)]
         public float NormalRepeatX {
             get;
             set;
         }
 
+		[ProtoMember(5)]
         public float NormalRepeatY {
             get;
             set;
         }
 
+		[ProtoMember(6)]
         public float NormalRotation {
             get;
             set;
@@ -94,51 +103,73 @@ namespace OpenSim.Framework
             set;
         }
 
+        [ProtoMember(7)]
+        public Guid SerializableSpecularID {
+            get { return SpecularID.Guid; }
+            set { SpecularID = new UUID(value); }
+        }
+
+		[ProtoMember(8)]
         public float SpecularOffsetX {
             get;
             set;
         }
 
+		[ProtoMember(9)]
         public float SpecularOffsetY {
             get;
             set;
         }
 
+		[ProtoMember(10)]
         public float SpecularRepeatX {
             get;
             set;
         }
 
+		[ProtoMember(11)]
         public float SpecularRepeatY {
             get;
             set;
         }
 
+		[ProtoMember(12)]
         public float SpecularRotation {
             get;
             set;
         }
-
+            
         public Color4 SpecularLightColor {
             get;
             set;
         }
 
+        [ProtoMember(13)]
+        public byte[] SerializableSpecularLightColor
+        {
+            get { return SpecularLightColor.GetBytes(); }
+            set { SpecularLightColor.FromBytes(value, 0, false); }
+        }
+
+		[ProtoMember(14)]
         public byte SpecularLightExponent {
             get;
             set;
         }
 
+		[ProtoMember(15)]
         public byte EnvironmentIntensity {
             get;
             set;
         }
 
+		[ProtoMember(16)]
         public byte DiffuseAlphaMode {
             get;
             set;
         }
 
+		[ProtoMember(17)]
         public byte AlphaMaskCutoff {
             get;
             set;
@@ -163,11 +194,6 @@ namespace OpenSim.Framework
             EnvironmentIntensity = (byte)DEFAULT_ENV_INTENSITY;
             DiffuseAlphaMode = (byte)eDiffuseAlphaMode.DIFFUSE_ALPHA_MODE_BLEND;
             AlphaMaskCutoff = 0;
-        }
-
-        public RenderMaterial(RenderMaterial defaultMaterial)
-        {
-            DefaultMaterial = defaultMaterial;
         }
 
         public override bool Equals (object obj)
@@ -242,7 +268,7 @@ namespace OpenSim.Framework
         {
             OSDMap material_data = new OSDMap (17);
 
-            material_data[MATERIALS_CAP_NORMAL_MAP_FIELD] = OSD.FromUUID(NormalID);
+            material_data [MATERIALS_CAP_NORMAL_MAP_FIELD] = OSD.FromUUID(NormalID);
             material_data [MATERIALS_CAP_NORMAL_MAP_OFFSET_X_FIELD] = OSD.FromReal (NormalOffsetX);
             material_data [MATERIALS_CAP_NORMAL_MAP_OFFSET_Y_FIELD] = OSD.FromReal (NormalOffsetY);
             material_data [MATERIALS_CAP_NORMAL_MAP_REPEAT_X_FIELD] = OSD.FromReal (NormalRepeatX);
@@ -304,43 +330,46 @@ namespace OpenSim.Framework
     /// face 18 that uses Y. In practice however, primitives utilize a maximum
     /// of nine faces.  The values in this dictionary are linked through a UUID 
 	/// key to the textures in a TextureEntry via MaterialID there.</remarks>
-	[Serializable]
+	[ProtoContract]
     public class RenderMaterials
-    {
-        public Dictionary<String, RenderMaterial> Materials;
+	{
+#region Properties
+
+		[ProtoMember(1)]
+        public Dictionary<String, RenderMaterial> Materials {
+			get;
+			private set;
+		}
+#endregion
 
         public RenderMaterials()
         {
             Materials = new Dictionary<String, RenderMaterial> ();
         }
 
-        /// <summary>
-        /// Constructor that creates the RenderMaterial class from a byte array
-        /// </summary>
-        /// <param name="data">Byte array containing the RenderMaterial field</param>
-        /// <param name="pos">Starting position of the RenderMaterial field in 
-        /// the byte array</param>
-        /// <param name="length">Length of the RenderMaterial field, in bytes</param>
-        public RenderMaterials (byte[] data, int pos, int length)
+        public static RenderMaterials FromBytes(byte[] bytes, int pos)
         {
-            FromBytes (data, pos, length);
+            using (MemoryStream ms = new MemoryStream(bytes, pos, bytes.Length - pos))
+            {
+                return ProtoBuf.Serializer.Deserialize<RenderMaterials>(ms);
+            }
         }
 
-        private void FromBytes (byte[] data, int pos, int length)
+        public static RenderMaterials FromBytes(byte[] bytes, int start, int length)
         {
-			var binFormatter = new BinaryFormatter ();
-			var mStream = new MemoryStream (data, pos, length);
-			Materials = (Dictionary<String, RenderMaterial>) binFormatter.Deserialize(mStream);
+            using (MemoryStream ms = new MemoryStream(bytes, start, length))
+            {
+                return ProtoBuf.Serializer.Deserialize<RenderMaterials>(ms);
+            }
         }
 
-        public byte[] GetBytes ()
-		{
-			lock (Materials) {
-				var binFormatter = new BinaryFormatter ();
-				var mStream = new MemoryStream ();
-				binFormatter.Serialize (mStream, Materials);
-				return mStream.ToArray ();
-			}
+        public byte[] ToBytes()
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                ProtoBuf.Serializer.Serialize<RenderMaterials>(ms, this);
+                return ms.ToArray();
+            }
         }
 
         public override int GetHashCode ()
@@ -365,38 +394,6 @@ namespace OpenSim.Framework
 				return builder.ToString();
 			};
         }
-
-		public string AddMaterial(RenderMaterial mat)
-		{
-			lock (Materials) {
-				foreach (KeyValuePair<string, RenderMaterial> entry in Materials) {
-					if (mat == entry.Value)
-						return (entry.Key);
-				}
-
-				string key = UUID.Random ().ToString ();
-				Materials.Add (key, mat);
-				return key;
-			}
-		}
-
-		public void DeleteMaterial(string key)
-		{
-			lock (Materials) {
-				if (Materials.ContainsKey (key))
-					Materials.Remove (key);
-			}
-		}
-
-		public RenderMaterial GetMaterial(string key)
-		{
-			lock (Materials) {
-				if (Materials.ContainsKey (key))
-					return (Materials[key]);
-				else
-					return null;
-			}
-		}
     }
 }
 

@@ -46,11 +46,12 @@ namespace OpenSim.Framework.Tests
 		{
 			RenderMaterial mat = new RenderMaterial ();
 			RenderMaterials mats = new RenderMaterials ();
-			String key = mats.AddMaterial (mat);
+            String key = UUID.Random().ToString();
+            mats.Materials.Add(key, mat);
 
-			byte[] bytes = mats.GetBytes ();
-			RenderMaterials newmats = new RenderMaterials (bytes, 0, bytes.Length);
-			RenderMaterial newmat = newmats.GetMaterial (key);
+			byte[] bytes = mats.ToBytes ();
+            RenderMaterials newmats = RenderMaterials.FromBytes(bytes, 0);
+            RenderMaterial newmat = newmats.Materials[key];
 			Assert.That (mat, Is.EqualTo(newmat));
 		}
     }
