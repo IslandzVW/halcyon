@@ -3021,6 +3021,30 @@ namespace InWorldz.Phlox.Engine
             // ScriptSleep(100);
         }
 
+        public int iwClampInt(int value, int min, int max)
+        {
+            //Min and max are equal, nothing to do
+            if (min == max) return min;
+
+            //max is less than min, switch the math inputs
+            if (max < min) return Math.Min(min, Math.Max(value, max));
+
+            //inputs are good, clamp the values
+            return Math.Min(max, Math.Max(value, min));
+        }
+
+        public float iwClampFloat(float value, float min, float max)
+        {
+            //Min and max are equal, nothing to do
+            if (min == max) return min;
+
+            //max is less than min, switch the math inputs
+            if (max < min) return Math.Min(min, Math.Max(value, max));
+
+            //inputs are good, clamp the values
+            return Math.Min(max, Math.Max(value, min));
+        }
+
         public int iwCheckRezError(Vector3 pos, int isTemp, int landImpact)
         {
             return m_host.ParentGroup.Scene.CheckRezError(m_host.OwnerID, m_host.UUID, pos, isTemp != 0, landImpact);
