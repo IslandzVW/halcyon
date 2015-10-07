@@ -16819,6 +16819,56 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
+        public LSL_List iwSearchLinksByName(string pattern, int matchType, int linksOnly)
+        {
+            List<object> ret = new List<object>();
+            List<SceneObjectPart> parts = new List<SceneObjectPart>();
+
+            foreach(SceneObjectPart part in m_host.ParentGroup.Children.Values)
+            {
+                if (iwMatchString(part.Name, pattern, matchType) == 1)
+                    parts.Add(part);
+            }
+
+            if(parts.Count > 0)
+            {
+                parts.Sort((x, y) => x.LinkNum.CompareTo(y.LinkNum));
+                foreach(SceneObjectPart part in parts)
+                {
+                    ret.Add(part.LinkNum);
+                    if (linksOnly == 0)
+                        ret.Add(part.Name);
+                }
+            }
+
+            return new LSL_List(ret);
+        }
+
+        public LSL_List iwSearchLinksByDesc(string pattern, int matchType, int linksOnly)
+        {
+            List<object> ret = new List<object>();
+            List<SceneObjectPart> parts = new List<SceneObjectPart>();
+
+            foreach (SceneObjectPart part in m_host.ParentGroup.Children.Values)
+            {
+                if (iwMatchString(part.Description, pattern, matchType) == 1)
+                    parts.Add(part);
+            }
+
+            if (parts.Count > 0)
+            {
+                parts.Sort((x, y) => x.LinkNum.CompareTo(y.LinkNum));
+                foreach (SceneObjectPart part in parts)
+                {
+                    ret.Add(part.LinkNum);
+                    if (linksOnly == 0)
+                        ret.Add(part.Description);
+                }
+            }
+
+            return new LSL_List(ret);
+        }
+
         #endregion
     }
 
