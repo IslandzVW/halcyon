@@ -16100,9 +16100,12 @@ namespace InWorldz.Phlox.Engine
                     {
                         if(pattern == "" || iwMatchString(outfit, pattern, matchType) == 1)
                         {
-                            if(++count >= start && (end == -1 || count <=end))
+                            if (count >= start && (end == -1 || count <= end))
+                            {
                                 retVal.Add(outfit);
-                            if (end != -1 && count >= end)
+                            }
+                            count++;
+                            if (end != -1 && count > end)
                                 break;
                         }
                     }
