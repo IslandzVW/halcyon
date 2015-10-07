@@ -16878,7 +16878,7 @@ namespace InWorldz.Phlox.Engine
 
             foreach(SceneObjectPart part in m_host.ParentGroup.Children.Values)
             {
-                if (iwMatchString(part.Name, pattern, matchType) == 1)
+                if (pattern == "" || iwMatchString(part.Name, pattern, matchType) == 1)
                     parts.Add(part);
             }
 
@@ -16903,7 +16903,7 @@ namespace InWorldz.Phlox.Engine
 
             foreach (SceneObjectPart part in m_host.ParentGroup.Children.Values)
             {
-                if (iwMatchString(part.Description, pattern, matchType) == 1)
+                if (pattern == "" || iwMatchString(part.Description, pattern, matchType) == 1)
                     parts.Add(part);
             }
 
