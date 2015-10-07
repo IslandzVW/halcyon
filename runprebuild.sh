@@ -1,4 +1,4 @@
 #!/bin/sh
 
 # mono bin/Prebuild.exe /target nant
-mono bin/Prebuild.exe /target vs2012
+mono bin/Prebuild.exe /target vs2015

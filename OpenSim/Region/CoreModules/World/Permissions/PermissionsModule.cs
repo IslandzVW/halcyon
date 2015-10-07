@@ -984,18 +984,12 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         public bool GenericEstatePermission(UUID user)
         {
-            // Default: deny
-            bool permission = false;
-
             // Estate admins should be able to use estate tools
             if (m_scene.IsEstateManager(user))
-                permission = true;
+                return true;
 
             // Administrators always have permission
-            if (IsGodUser(user))
-                permission = true;
-
-            return permission;
+            return IsGodUser(user);
         }
 
         protected bool GenericParcelPermission(UUID user, ILandObject parcel, ulong groupPowers)
