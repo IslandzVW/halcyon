@@ -161,6 +161,9 @@ namespace OpenSim.Region.Framework.Scenes
         private float[] _samples = new float[NUM_SCRIPT_SAMPLES];
         public int _currSample = 0;
 
+        [XmlIgnore]
+        private bool m_isScripted = false;
+
         private bool m_isBackedUp = false;
 
         /// <summary>
@@ -1510,6 +1513,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 RecalcPrimWeights();
             }
+            CheckIsScripted();
         }
 
         /// <summary>
@@ -1534,6 +1538,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 // Update the ServerWeight/LandImpact
                 RecalcPrimWeights();
+                CheckIsScripted();
             }
         }
 
@@ -2101,6 +2106,8 @@ namespace OpenSim.Region.Framework.Scenes
                 ScheduleGroupForFullUpdate();
             }
 
+            dupe.CheckIsScripted();
+
             return dupe;
         }
 
@@ -2666,6 +2673,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             return null;
         }
+        
 
         /// <summary>
         /// Does this group contain the child prim
@@ -2817,6 +2825,7 @@ namespace OpenSim.Region.Framework.Scenes
             RecalcPrimWeights();
 
             this.RootPart.ClearUndoState();
+            this.CheckIsScripted();
 
             HasGroupChanged = true;
             ScheduleGroupForFullUpdate();
@@ -2919,6 +2928,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Update the ServerWeight/LandImpact and StreamingCost
             RecalcPrimWeights();
+            CheckIsScripted();
 
             if (sendGroupUpdate)
             {
@@ -4778,6 +4788,38 @@ namespace OpenSim.Region.Framework.Scenes
             this.RootPart.AttachedPos = attachPos;
 
             return true;
+        }
+
+        public bool IsScripted
+        {
+            get { return m_isScripted; }
+            set { m_isScripted = value; }
+        }
+
+        public void CheckIsScripted()
+        {
+            bool oldIsScripted = IsScripted;
+            bool newIsScripted = false;
+            if ((RootPart.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
+                newIsScripted = true;
+            if(!newIsScripted && Children.Count > 1)
+            {
+                foreach(SceneObjectPart part in Children.Values)
+                {
+                    if (part == null || part == RootPart)
+                        continue;
+                    if ((part.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
+                    {
+                        newIsScripted = true;
+                        break;
+                    }
+                }
+            }
+            if(oldIsScripted != newIsScripted)
+            {
+                IsScripted = newIsScripted;
+                RootPart.ScheduleFullUpdate();
+            }
         }
 
         

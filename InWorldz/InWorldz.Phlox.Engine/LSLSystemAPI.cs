@@ -618,15 +618,15 @@ namespace InWorldz.Phlox.Engine
             return invItemID;
         }
 
-        private UUID InventoryKey(string name, int type)
+        private UUID InventoryKey(SceneObjectPart part, string name, int type)
         {
-            lock (m_host.TaskInventory)
+            lock (part.TaskInventory)
             {
-                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
+                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in part.TaskInventory)
                 {
                     if (inv.Value.Name == name)
                     {
-                        if (inv.Value.Type != type)
+                        if (inv.Value.Type != type || type == -1)
                             return UUID.Zero;
 
                         return inv.Value.AssetID;
@@ -635,22 +635,17 @@ namespace InWorldz.Phlox.Engine
             }
 
             return UUID.Zero;
+
+        }
+
+        private UUID InventoryKey(string name, int type)
+        {
+            return InventoryKey(m_host, name, type);
         }
 
         private UUID InventoryKey(string name)
         {
-            lock (m_host.TaskInventory)
-            {
-                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in m_host.TaskInventory)
-                {
-                    if (inv.Value.Name == name)
-                    {
-                        return inv.Value.AssetID;
-                    }
-                }
-            }
-
-            return UUID.Zero;
+            return InventoryKey(m_host, name, -1);
         }
 
         // returns a null string if asset ID not found (NOT a null ID as a string!)
@@ -3965,6 +3960,76 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
+        private void StartAnimation(SceneObjectPart part, string anim)
+        {
+            UUID invItemID = InventorySelf();
+            if (invItemID == UUID.Zero)
+                return;
+
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return;
+                else
+                    item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter == UUID.Zero)
+                return;
+
+            if (CheckRuntimePerms(item, item.PermsGranter, ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION))
+            {
+                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if ((presence != null) && (!presence.IsChildAgent))
+                {
+                    string result;
+                    // Do NOT try to parse UUID, animations cannot be triggered by ID
+                    UUID animID = InventoryKey(part, anim, (int)AssetType.Animation);
+                    //UUID animID = GetInventoryKey(part, anim);
+                    if (animID == UUID.Zero)
+                        result = presence.AddAnimation(anim, m_host.UUID);
+                    else
+                        result = presence.AddAnimation(animID, m_host.UUID);
+                    if (result != String.Empty)
+                        ScriptShoutError(result);
+                }
+                else
+                {
+                    // Emulate SL's behavior of clearing this permission when this is called for an agent outside this region.
+                    // See Mantis #2798 http://bugs.inworldz.com/mantis/view.php?id=2798
+                    item.PermsMask &= ~ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION;
+                    if (item.PermsMask == 0)
+                        item.PermsGranter = UUID.Zero;
+                    PermsChange(item, item.PermsGranter, item.PermsMask);
+                    m_ScriptEngine.PostScriptEvent(m_itemID, new EventParams(
+                            "run_time_permissions", new Object[] { (int)(item.PermsMask) }, new DetectParams[0]));
+                    // SL displays "llStopAnimation: Script trying to stop animations but agent not found" in the first call
+                    // and then "llStopAnimation: Unable to find agent, releasing animation permissions" on the second call.
+                    // However this is pointless and disruptive to role-play and other users in general. Let's not emulate that.
+                    // ScriptShoutError("llStartAnimation: Unable to find agent, releasing animation permissions");
+                }
+            }
+        }
+
+        public void llStartAnimation(string anim)
+        {
+            StartAnimation(m_host, anim);
+        }
+
+        public void iwStartLinkAnimation(int linknumber, string anim)
+        {
+            SceneObjectPart[] parts = GetLinkParts(linknumber);
+
+            if (parts.Length != 1) return;
+
+            StartAnimation(parts[0], anim);
+
+        }
+
+        /*
         public void llStartAnimation(string anim)
         {
             UUID invItemID = InventorySelf();
@@ -4017,7 +4082,78 @@ namespace InWorldz.Phlox.Engine
                 }
             }
         }
+        */
 
+        private void StopAnimation(SceneObjectPart part, string anim)
+        {
+            UUID invItemID = InventorySelf();
+            if (invItemID == UUID.Zero)
+                return;
+
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return;
+                else
+                    item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter == UUID.Zero)
+                return;
+
+            if (CheckRuntimePerms(item, item.PermsGranter, ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION))
+            {
+                UUID animID = new UUID();
+
+                if (!UUID.TryParse(anim, out animID))
+                {
+                    animID = InventoryKey(part, anim, (int)AssetType.Animation);
+                }
+
+                ScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if ((presence != null) && (!presence.IsChildAgent))
+                {
+                    if (animID == UUID.Zero)
+                        presence.RemoveAnimation(anim);
+                    else
+                        presence.RemoveAnimation(animID);
+                }
+                else
+                {
+                    // Emulate SL's behavior of clearing this permission when this is called for an agent outside this region.
+                    // See Mantis #2798 http://bugs.inworldz.com/mantis/view.php?id=2798
+                    item.PermsMask &= ~ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION;
+                    if (item.PermsMask == 0)
+                        item.PermsGranter = UUID.Zero;
+                    PermsChange(item, item.PermsGranter, item.PermsMask);
+                    m_ScriptEngine.PostScriptEvent(m_itemID, new EventParams(
+                            "run_time_permissions", new Object[] { (int)(item.PermsMask) }, new DetectParams[0]));
+                    // SL displays "llStopAnimation: Script trying to stop animations but agent not found" in the first call
+                    // and then "llStopAnimation: Unable to find agent, releasing animation permissions" on the second call.
+                    // However this is pointless and disruptive to role-play and other users in general. Let's not emulate that.
+                    // ScriptShoutError("llStopAnimation: Unable to find agent, releasing animation permissions");
+                }
+            }
+        }
+
+        public void llStopAnimation(string anim)
+        {
+            StopAnimation(m_host, anim);
+        }
+
+        public void iwStopLinkAnimation(int linknumber, string anim)
+        {
+            SceneObjectPart[] parts = GetLinkParts(linknumber);
+
+            if (parts.Length != 1) return;
+
+            StopAnimation(parts[0], anim);
+        }
+        
+        /*
         public void llStopAnimation(string anim)
         {
             UUID invItemID = InventorySelf();
@@ -4072,6 +4208,7 @@ namespace InWorldz.Phlox.Engine
                 }
             }
         }
+        */
 
         public void llPointAt(LSL_Vector pos)
         {
@@ -12728,6 +12865,12 @@ namespace InWorldz.Phlox.Engine
                         if (value == 255) ret.Add(1f);
                         else ret.Add(0f);
                         break;
+                    case ScriptBaseClass.OBJECT_LAST_OWNER_ID:
+                        ret.Add(UUID.Zero);
+                        break;
+                    case ScriptBaseClass.OBJECT_CLICK_ACTION:
+                        ret.Add(0);
+                        break;
                 }
             }
 
@@ -14270,6 +14413,45 @@ namespace InWorldz.Phlox.Engine
         {
             if (src.Length <= 1) return src;
             return new string(src.Reverse().ToArray());
+        }
+
+        public LSL_List iwListRemoveDuplicates(LSL_List src)
+        {
+            //yarrr...
+            return new LSL_List(  src.Data.Distinct().ToList()  );
+        }
+
+        public LSL_List iwListRemoveElements(LSL_List src, LSL_List elements, int count)
+        {
+            if (src.Length == 0 || elements.Length == 0) return src;
+            if (count == 0) count = -1;
+            int counted = 0;
+
+            List<object> ret = new List<object>();
+
+            int len = src.Length - elements.Length + 1;
+            for(int i = 0; i < len; i++)
+            {
+                if(src.Data[i].Equals(elements.Data[0]))
+                {
+                    if(count == -1 || counted < count)
+                    {
+                        int x;
+                        for (x = 1; x < elements.Length; x++)
+                            if (!src.Data[i + x].Equals(elements.Data[x]))
+                                break;
+                        if (x == elements.Length)
+                        {
+                            counted++;
+                            i += elements.Length - 1;
+                            continue;
+                        }
+                    }
+                }
+                ret.Add(src.Data[i]);
+            }
+
+            return new LSL_List(ret);
         }
 
         public int iwListIncludesElements(LSL_List src, LSL_List elements, int any)
