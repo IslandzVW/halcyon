@@ -14483,6 +14483,7 @@ namespace InWorldz.Phlox.Engine
 
         public int iwListIncludesElements(LSL_List src, LSL_List elements, int any)
         {
+            if (elements.Length == 0 || src.Length == 0) return 0;
             for(int a=0; a < elements.Length; a++)
             {
                 bool found = false;
