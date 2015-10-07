@@ -888,11 +888,22 @@ namespace InWorldz.Data.Inventory.Cassandra
         }
 
         /// <summary>
-        /// Delete all item in a folder
+        /// Delete all subfolders and items in a folder.
         /// </summary>
         /// <param name="folderID">the folder UUID</param>
-        public void deleteItemsInFolder(UUID folderID)
+        public void deleteFolderContents(UUID folderID)
         {
+            // Get a flattened list of all subfolders.
+            List<InventoryFolderBase> subFolders = getFolderHierarchy(folderID);
+
+            // Delete all sub-folders
+            foreach (InventoryFolderBase f in subFolders)
+            {
+                deleteFolderContents(f.ID);
+                deleteOneFolder(f.ID);
+            }
+
+            // Finally, delete the actual items in this folder.
             try
             {
                 using (ISimpleDB conn = _connFactory.GetConnection())
@@ -922,14 +933,13 @@ namespace InWorldz.Data.Inventory.Cassandra
             //Delete all sub-folders
             foreach (InventoryFolderBase f in subFolders)
             {
-                deleteItemsInFolder(f.ID); // Delete the items,
-                deleteOneFolder(f.ID); // then delete the folder.
+                deleteOneFolder(f.ID);
+                deleteFolderContents(f.ID);
             }
 
             //Delete the actual row
-            deleteItemsInFolder(folderID); // Delete the items,
-            deleteOneFolder(folderID); // then delete the folder.
-            // The above order is irrelevent when the database doesn't have foreign key contraints, but it's better to do it right anyway.
+            deleteOneFolder(folderID);
+            deleteFolderContents(folderID);
         }
 
         public List<InventoryItemBase> fetchActiveGestures(UUID avatarID)

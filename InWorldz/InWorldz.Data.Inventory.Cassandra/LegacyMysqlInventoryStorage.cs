@@ -150,7 +150,7 @@ namespace InWorldz.Data.Inventory.Cassandra
 
         public void PurgeFolderContents(InventoryFolderBase folder)
         {
-            _impl.deleteItemsInFolder(folder.ID);
+            _impl.deleteFolderContents(folder.ID);
         }
 
         public void PurgeFolder(InventoryFolderBase folder)
