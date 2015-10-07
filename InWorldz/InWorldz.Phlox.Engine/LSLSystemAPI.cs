@@ -16807,6 +16807,19 @@ namespace InWorldz.Phlox.Engine
             return 0;
         }
 
+        public LSL_List botGetBotTags(string botID)
+        {
+            UUID botUUID = UUID.Zero;
+            if (!UUID.TryParse(botID, out botUUID) || (botUUID == UUID.Zero))
+                return new LSL_List();
+
+
+            IBotManager manager = World.RequestModuleInterface<IBotManager>();
+            if (manager != null)
+                return new LSL_List(manager.GetBotTags(botUUID).ToList<object>());
+            return new LSL_List();
+        }
+
         public LSL_List botGetBotsWithTag(string tag)
         {
             IBotManager manager = World.RequestModuleInterface<IBotManager>();

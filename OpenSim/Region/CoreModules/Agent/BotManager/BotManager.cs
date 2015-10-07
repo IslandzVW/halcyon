@@ -764,6 +764,15 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             return false;
         }
 
+        public List<string> GetBotTags(UUID botID)
+        {
+            List<string> ret = new List<string>();
+            foreach (KeyValuePair<string, List<UUID>> tag in m_botTags)
+                if (tag.Value.Contains(botID))
+                    ret.Add(tag.Key);
+            return ret;
+        }
+
         public List<UUID> GetBotsWithTag(string tag)
         {
             if (!m_botTags.ContainsKey(tag))
