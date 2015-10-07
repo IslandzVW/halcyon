@@ -628,10 +628,10 @@ namespace OpenSim.Region.Framework.Scenes
                         folderID, parentID, remoteClient.Name);
             }
             
-        }      
+        }
         
         /// <summary>
-        /// This should delete all the items and folders in the given directory.
+        /// This should recursively delete all the items and folders in the given directory.
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="folderID"></param>
