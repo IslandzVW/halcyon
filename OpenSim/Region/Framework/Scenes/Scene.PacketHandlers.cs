@@ -667,6 +667,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.ErrorFormat(
                             "[AGENT INVENTORY]: Not purging descendents of {0} for user {1}, folder is not part of a purgeable heirarchy",
                             folderID, remoteClient.Name);
+                    return;
                 }
 
                 m_log.InfoFormat("[AGENT INVENTORY]: Purging descendents of {0} {1} for user {2}", folderID, folder.Name, remoteClient.Name);
@@ -717,6 +718,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.ErrorFormat(
                         "[AGENT INVENTORY]: Not purging descendents of {0} for user {1}, folder is not part of a purgeable heirarchy",
                         folderID, remoteClient.Name);
+                    return;
                 }
 
                 m_log.InfoFormat("[AGENT INVENTORY]: Purging {0} {1} for user {2}", folderID, folder.Name, remoteClient.Name);
