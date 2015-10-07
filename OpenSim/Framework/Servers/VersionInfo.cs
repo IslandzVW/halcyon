@@ -54,18 +54,9 @@ namespace OpenSim
         {
             if (_revision == null)
             {
-                UInt32 days;
-                System.Version ver = typeof(VersionInfo).Assembly.GetName().Version;
+                Version ver = typeof(VersionInfo).Assembly.GetName().Version;
                 _version = String.Format("{0}.{1}.{2}", ver.Major/10, ver.Major % 10, ver.Minor);
                 _revision = ver.Build.ToString();
-                try {
-                    days = Convert.ToUInt32(_revision);
-                    System.DateTime exeDate = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Local).AddDays(days);
-                    _revision = exeDate.ToString("yyMMdd");
-                }
-                catch (Exception)
-                {
-                }
             }
             return _revision;
         }
