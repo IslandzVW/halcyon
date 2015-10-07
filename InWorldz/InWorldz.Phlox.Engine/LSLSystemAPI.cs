@@ -4045,6 +4045,7 @@ namespace InWorldz.Phlox.Engine
 
         public void iwStartLinkAnimation(int linknumber, string anim)
         {
+            if (linknumber < 0) return;
             SceneObjectPart[] parts = GetLinkParts(linknumber);
 
             if (parts.Length != 1) return;
@@ -4170,6 +4171,7 @@ namespace InWorldz.Phlox.Engine
 
         public void iwStopLinkAnimation(int linknumber, string anim)
         {
+            if (linknumber < 0) return;
             SceneObjectPart[] parts = GetLinkParts(linknumber);
 
             if (parts.Length != 1) return;
