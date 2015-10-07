@@ -5051,6 +5051,7 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List iwSearchLinkInventory(int link, int type, string pattern, int matchtype)
         {
+            if (link < 0) return new LSL_List();
             SceneObjectPart[] parts = GetLinkParts(link);
 
             if (parts.Length == 1)
