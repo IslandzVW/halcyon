@@ -1881,6 +1881,10 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.WarnFormat("[LAND]: Parcel init {0} [{1}] flags={2} owner={3} group={4} groupOwned={5}",
                     origLocalID, origParcelID, origFlags.ToString("X8"), origOwner, origGroup, origGroupOwned);
 
+                // Override: Parcels in Plus regions are always [x] Public access parcels
+                if (RegionInfo.Product == ProductRulesUse.PlusUse)
+                    parcel.Flags &= ~(uint)ParcelFlags.UseAccessList;
+
                 if (parcel.OwnerID == UUID.Zero)
                 {
                     parcel.OwnerID = RegionInfo.EstateSettings.EstateOwner;
