@@ -16795,6 +16795,18 @@ namespace InWorldz.Phlox.Engine
                 manager.RemoveTagFromBot(botUUID, tag, m_host.OwnerID);
         }
 
+        public int botHasTag(string botID, string tag)
+        {
+            UUID botUUID = UUID.Zero;
+            if (!UUID.TryParse(botID, out botUUID) || (botUUID == UUID.Zero))
+                return 0;
+
+            IBotManager manager = World.RequestModuleInterface<IBotManager>();
+            if (manager != null)
+                return manager.BotHasTag(botUUID, tag) ? 1 : 0;
+            return 0;
+        }
+
         public LSL_List botGetBotsWithTag(string tag)
         {
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
