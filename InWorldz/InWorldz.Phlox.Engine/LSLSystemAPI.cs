@@ -753,6 +753,7 @@ namespace InWorldz.Phlox.Engine
         public int iwIntRandRange(int min, int max)
         {
             if (min == max) return min;
+            if (max < min) return s_random.Next(max, min + 1); //max needs to be more than minimum, swapping min and max
             return s_random.Next(min, max + 1);
         }
 
@@ -765,6 +766,7 @@ namespace InWorldz.Phlox.Engine
         public float iwFrandRange(float min, float max)
         {
             if (min == max) return min;
+            if (max < min) return (float)(s_random.NextDouble() * ((min) - max) + max); //max needs to be more than minimum, swapping min and max.
             return (float)(s_random.NextDouble() * ((max) - min) + min);
         }
 
