@@ -14445,6 +14445,7 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List iwListRemoveDuplicates(LSL_List src)
         {
+			if(src.Length <= 1) return src;
             //yarrr...
             return new LSL_List(  src.Data.Distinct().ToList()  );
         }
