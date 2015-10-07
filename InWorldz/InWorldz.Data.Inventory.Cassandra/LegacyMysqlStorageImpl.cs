@@ -916,18 +916,20 @@ namespace InWorldz.Data.Inventory.Cassandra
         /// <param name="folderId">Id of folder to delete</param>
         public void deleteInventoryFolder(UUID folderID)
         {
+            // Get a flattened list of all subfolders.
             List<InventoryFolderBase> subFolders = getFolderHierarchy(folderID);
 
             //Delete all sub-folders
             foreach (InventoryFolderBase f in subFolders)
             {
-                deleteOneFolder(f.ID);
-                deleteItemsInFolder(f.ID);
+                deleteItemsInFolder(f.ID); // Delete the items,
+                deleteOneFolder(f.ID); // then delete the folder.
             }
 
             //Delete the actual row
-            deleteOneFolder(folderID);
-            deleteItemsInFolder(folderID);
+            deleteItemsInFolder(folderID); // Delete the items,
+            deleteOneFolder(folderID); // then delete the folder.
+            // The above order is irrelevent when the database doesn't have foreign key contraints, but it's better to do it right anyway.
         }
 
         public List<InventoryItemBase> fetchActiveGestures(UUID avatarID)
