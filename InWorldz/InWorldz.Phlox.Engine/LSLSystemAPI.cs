@@ -14449,7 +14449,7 @@ namespace InWorldz.Phlox.Engine
             return new LSL_List(  src.Data.Distinct().ToList()  );
         }
 
-        public LSL_List iwListRemoveElements(LSL_List src, LSL_List elements, int count)
+        public LSL_List iwListRemoveElements(LSL_List src, LSL_List elements, int count, int mode)
         {
             if (src.Length == 0 || elements.Length == 0) return src;
             if (count == 0) count = -1;
@@ -14457,26 +14457,40 @@ namespace InWorldz.Phlox.Engine
 
             List<object> ret = new List<object>();
 
-            int len = src.Length - elements.Length + 1;
-            for(int i = 0; i < len; i++)
+            if (mode == 0)
             {
-                if(src.Data[i].Equals(elements.Data[0]))
+                int len = src.Length - elements.Length + 1;
+                for (int i = 0; i < len; i++)
                 {
-                    if(count == -1 || counted < count)
+                    if (src.Data[i].Equals(elements.Data[0]))
                     {
-                        int x;
-                        for (x = 1; x < elements.Length; x++)
-                            if (!src.Data[i + x].Equals(elements.Data[x]))
-                                break;
-                        if (x == elements.Length)
+                        if (count == -1 || counted < count)
                         {
-                            counted++;
-                            i += elements.Length - 1;
-                            continue;
+                            int x;
+                            for (x = 1; x < elements.Length; x++)
+                                if (!src.Data[i + x].Equals(elements.Data[x]))
+                                    break;
+                            if (x == elements.Length)
+                            {
+                                counted++;
+                                i += elements.Length - 1;
+                                continue;
+                            }
                         }
                     }
+                    ret.Add(src.Data[i]);
                 }
-                ret.Add(src.Data[i]);
+            }
+            else
+            {
+                int len = src.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    if(elements.Data.Contains<object>(src.Data[i]) == false)
+                    {
+                        ret.Add(src.Data[i]);
+                    }
+                }
             }
 
             return new LSL_List(ret);
