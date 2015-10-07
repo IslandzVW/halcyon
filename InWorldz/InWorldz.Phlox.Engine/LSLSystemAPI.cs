@@ -14488,7 +14488,11 @@ namespace InWorldz.Phlox.Engine
                 {
                     if(elements.Data.Contains<object>(src.Data[i]) == false)
                     {
-                        ret.Add(src.Data[i]);
+						if(count == -1 || counted < count)
+						{
+							ret.Add(src.Data[i]);
+							counted++;
+						}
                     }
                 }
             }
