@@ -925,10 +925,15 @@ namespace InWorldz.Data.Inventory.Cassandra
             {
                 using (ISimpleDB conn = _connFactory.GetConnection())
                 {
-                    deleteFolderContents(conn, folderID);
+                    using (ITransaction transaction = conn.BeginTransaction()) // Use a transaction to guarantee that the following it atomic - it'd be bad to have a partial delete of the tree!
+                    {
+                        deleteFolderContents(conn, folderID);
 
-                    // Increment the version of the purged folder.
-                    this.IncrementSpecifiedFolderVersion(conn, folderID);
+                        // Increment the version of the purged folder.
+                        this.IncrementSpecifiedFolderVersion(conn, folderID);
+
+                        transaction.Commit();
+                    }
                 }
             }
             catch (Exception e)
@@ -950,22 +955,28 @@ namespace InWorldz.Data.Inventory.Cassandra
             {
                 using (ISimpleDB conn = _connFactory.GetConnection())
                 {
-                    // Since the DB doesn't currently have foreign key constraints the order of delete ops doean't matter, 
-                    //  however it's better practice to remove the contents and then remove the folder itself.
 
-                    // Delete all sub-folders
-                    foreach (InventoryFolderBase f in subFolders)
+                    using (ITransaction transaction = conn.BeginTransaction()) // Use a transaction to guarantee that the following it atomic - it'd be bad to have a partial delete of the tree!
                     {
-                        deleteFolderContents(conn, f.ID);
-                        deleteOneFolder(conn, f);
+                        // Since the DB doesn't currently have foreign key constraints the order of delete ops doean't matter, 
+                        //  however it's better practice to remove the contents and then remove the folder itself.
+
+                        // Delete all sub-folders
+                        foreach (InventoryFolderBase f in subFolders)
+                        {
+                            deleteFolderContents(conn, f.ID);
+                            deleteOneFolder(conn, f);
+                        }
+
+                        // Delete the actual row
+                        deleteFolderContents(conn, folder.ID);
+                        deleteOneFolder(conn, folder);
+
+                        // Increment the version of the parent of the purged folder.
+                        this.IncrementSpecifiedFolderVersion(conn, folder.ParentID);
+
+                        transaction.Commit();
                     }
-
-                    // Delete the actual row
-                    deleteFolderContents(conn, folder.ID);
-                    deleteOneFolder(conn, folder);
-
-                    // Increment the version of the parent of the purged folder.
-                    this.IncrementSpecifiedFolderVersion(conn, folder.ParentID);
                 }
             }
             catch (Exception e)
