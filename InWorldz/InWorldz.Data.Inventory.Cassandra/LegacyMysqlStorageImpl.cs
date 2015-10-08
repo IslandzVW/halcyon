@@ -508,12 +508,8 @@ namespace InWorldz.Data.Inventory.Cassandra
 
                     conn.QueryNoResults(sql, parms);
 
-
-                    string query = "update inventoryfolders set version=version+1 where folderID = ?folderID";
-                    Dictionary<string, object> updParms = new Dictionary<string, object>();
-                    updParms.Add("?folderID", item.Folder.ToString());
-
-                    conn.QueryNoResults(query, updParms);
+                    // Also increment the parent version number if not null.
+                    this.IncrementSpecifiedFolderVersion(conn, item.Folder);
                 }
             }
             catch (Exception e)
@@ -573,13 +569,8 @@ namespace InWorldz.Data.Inventory.Cassandra
 
                     conn.QueryNoResults(sql, parms);
 
-
-
-                    parms.Clear();
-                    sql = "update inventoryfolders set version=version+1 where folderID = ?folderID";
-                    parms.Add("?folderID", item.Folder.ToString());
-
-                    conn.QueryNoResults(sql, parms);
+                    // Also increment the parent version number if not null.
+                    this.IncrementSpecifiedFolderVersion(conn, item.Folder);
                 }
             }
             catch (Exception e)
@@ -593,7 +584,7 @@ namespace InWorldz.Data.Inventory.Cassandra
         /// Detele the specified inventory item
         /// </summary>
         /// <param name="item">The inventory item UUID to delete</param>
-        public void deleteInventoryItem(UUID itemID)
+        public void deleteInventoryItem(InventoryItemBase item)
         {
             try
             {
@@ -601,9 +592,12 @@ namespace InWorldz.Data.Inventory.Cassandra
                 {
                     string query = "DELETE FROM inventoryitems WHERE inventoryID=?uuid";
                     Dictionary<string, object> parms = new Dictionary<string, object>();
-                    parms.Add("?uuid", itemID.ToString());
+                    parms.Add("?uuid", item.ID.ToString());
 
                     conn.QueryNoResults(query, parms);
+
+                    // Also increment the parent version number if not null.
+                    this.IncrementSpecifiedFolderVersion(conn, item.Folder);
                 }
             }
             catch (Exception e)
@@ -652,8 +646,8 @@ namespace InWorldz.Data.Inventory.Cassandra
 
                     conn.QueryNoResults(sql, parms);
 
-                    //also increment the parent version number if not null
-                    this.IncrementParentFolderVersion(conn, folder.ParentID);
+                    // Also increment the parent version number if not null.
+                    this.IncrementSpecifiedFolderVersion(conn, folder.ParentID);
                 }
             }
             catch (Exception e)
@@ -662,13 +656,18 @@ namespace InWorldz.Data.Inventory.Cassandra
             }
         }
 
-        private void IncrementParentFolderVersion(ISimpleDB conn, UUID parentId)
+        /// <summary>
+        /// Increments the version of the passed folder, making sure the folder isn't Zero. Must be called from within a using{} block!
+        /// </summary>
+        /// <param name="conn">Database connection.</param>
+        /// <param name="folderId">Folder UUID to increment</param>
+        private void IncrementSpecifiedFolderVersion(ISimpleDB conn, UUID folderId)
         {
-            if (parentId != UUID.Zero)
+            if (folderId != UUID.Zero)
             {
                 string query = "update inventoryfolders set version=version+1 where folderID = ?folderID";
                 Dictionary<string, object> updParms = new Dictionary<string, object>();
-                updParms.Add("?folderID", parentId.ToString());
+                updParms.Add("?folderID", folderId.ToString());
 
                 conn.QueryNoResults(query, updParms);
             }
@@ -692,8 +691,9 @@ namespace InWorldz.Data.Inventory.Cassandra
                     parms.Add("?folderID", folder.ID.ToString());
 
                     conn.QueryNoResults(sql, parms);
-                    //also increment the parent version number if not null
-                    this.IncrementParentFolderVersion(conn, folder.ID);
+
+                    // Also increment the version number if not null.
+                    this.IncrementSpecifiedFolderVersion(conn, folder.ID);
                 }
             }
             catch (Exception e)
@@ -708,7 +708,7 @@ namespace InWorldz.Data.Inventory.Cassandra
         /// </summary>
         /// <param name="folder">Folder to move</param>
         /// <remarks>UPDATE inventoryfolders SET parentFolderID=?parentFolderID WHERE folderID=?folderID</remarks>
-        public void moveInventoryFolder(InventoryFolderBase folder)
+        public void moveInventoryFolder(InventoryFolderBase folder, UUID parentId)
         {
             string sql = "UPDATE inventoryfolders SET parentFolderID=?parentFolderID WHERE folderID=?folderID";
 
@@ -718,9 +718,15 @@ namespace InWorldz.Data.Inventory.Cassandra
                 {
                     Dictionary<string, object> parms = new Dictionary<string, object>();
                     parms.Add("?folderID", folder.ID.ToString());
-                    parms.Add("?parentFolderID", folder.ParentID.ToString());
+                    parms.Add("?parentFolderID", parentId.ToString());
 
                     conn.QueryNoResults(sql, parms);
+
+                    folder.ParentID = parentId; // Only change if the above succeeded.
+
+                    // Increment both the old and the new parents - checking for null.
+                    this.IncrementSpecifiedFolderVersion(conn, parentId);
+                    this.IncrementSpecifiedFolderVersion(conn, folder.ParentID);
                 }
             }
             catch (Exception e)
@@ -865,26 +871,48 @@ namespace InWorldz.Data.Inventory.Cassandra
         }
 
         /// <summary>
-        /// Delete a folder from database
+        /// Delete a folder from database. Must be called from within a using{} block for the database connection.
         /// </summary>
+        /// Passing in the connection allows for consolidation of the DB connections, important as this method is often called from an inner loop.
         /// <param name="folderID">the folder UUID</param>
-        protected void deleteOneFolder(UUID folderID)
+        /// <param name="conn">the database connection</param>
+        private void deleteOneFolder(ISimpleDB conn, InventoryFolderBase folder)
         {
-            try
-            {
-                using (ISimpleDB conn = _connFactory.GetConnection())
-                {
-                    string query = "DELETE FROM inventoryfolders WHERE folderID=?uuid";
-                    Dictionary<string, object> parms = new Dictionary<string, object>();
-                    parms.Add("?uuid", folderID.ToString());
+            string query = "DELETE FROM inventoryfolders WHERE folderID=?uuid";
+            Dictionary<string, object> parms = new Dictionary<string, object>();
+            parms.Add("?uuid", folder.ID.ToString());
 
-                    conn.QueryNoResults(query, parms);
-                }
-            }
-            catch (Exception e)
+            conn.QueryNoResults(query, parms);
+
+            // As the callers of this function will increment the version, there's no need to do so here.
+        }
+
+        /// <summary>
+        /// Delete all subfolders and items in a folder. Must be called from within a using{} block for the database connection.
+        /// </summary>
+        /// Passing in the connection allows for consolidation of the DB connections, important as this method is often called from an inner loop.
+        /// <param name="folderID">the folder UUID</param>
+        /// <param name="conn">the database connection</param>
+        private void deleteFolderContents(ISimpleDB conn, UUID folderID)
+        {
+            // Get a flattened list of all subfolders.
+            List<InventoryFolderBase> subFolders = getFolderHierarchy(folderID);
+
+            // Delete all sub-folders
+            foreach (InventoryFolderBase f in subFolders)
             {
-                m_log.Error(e.ToString());
+                deleteFolderContents(conn, f.ID); // Recurse!
+                deleteOneFolder(conn, f);
             }
+
+            // Delete the actual items in this folder.
+            string query = "DELETE FROM inventoryitems WHERE parentFolderID=?uuid";
+            Dictionary<string, object> parms = new Dictionary<string, object>();
+            parms.Add("?uuid", folderID.ToString());
+
+            conn.QueryNoResults(query, parms);
+
+            // As the callers of this function will increment the version, there's no need to do so here where this is most often ceing called from an inner loop!
         }
 
         /// <summary>
@@ -893,26 +921,14 @@ namespace InWorldz.Data.Inventory.Cassandra
         /// <param name="folderID">the folder UUID</param>
         public void deleteFolderContents(UUID folderID)
         {
-            // Get a flattened list of all subfolders.
-            List<InventoryFolderBase> subFolders = getFolderHierarchy(folderID);
-
-            // Delete all sub-folders
-            foreach (InventoryFolderBase f in subFolders)
-            {
-                deleteFolderContents(f.ID);
-                deleteOneFolder(f.ID);
-            }
-
-            // Finally, delete the actual items in this folder.
             try
             {
                 using (ISimpleDB conn = _connFactory.GetConnection())
                 {
-                    string query = "DELETE FROM inventoryitems WHERE parentFolderID=?uuid";
-                    Dictionary<string, object> parms = new Dictionary<string, object>();
-                    parms.Add("?uuid", folderID.ToString());
+                    deleteFolderContents(conn, folderID);
 
-                    conn.QueryNoResults(query, parms);
+                    // Increment the version of the purged folder.
+                    this.IncrementSpecifiedFolderVersion(conn, folderID);
                 }
             }
             catch (Exception e)
@@ -925,21 +941,37 @@ namespace InWorldz.Data.Inventory.Cassandra
         /// Deletes an inventory folder
         /// </summary>
         /// <param name="folderId">Id of folder to delete</param>
-        public void deleteInventoryFolder(UUID folderID)
+        public void deleteInventoryFolder(InventoryFolderBase folder)
         {
             // Get a flattened list of all subfolders.
-            List<InventoryFolderBase> subFolders = getFolderHierarchy(folderID);
+            List<InventoryFolderBase> subFolders = getFolderHierarchy(folder.ID);
 
-            //Delete all sub-folders
-            foreach (InventoryFolderBase f in subFolders)
+            try
             {
-                deleteOneFolder(f.ID);
-                deleteFolderContents(f.ID);
-            }
+                using (ISimpleDB conn = _connFactory.GetConnection())
+                {
+                    // Since the DB doesn't currently have foreign key constraints the order of delete ops doean't matter, 
+                    //  however it's better practice to remove the contents and then remove the folder itself.
 
-            //Delete the actual row
-            deleteOneFolder(folderID);
-            deleteFolderContents(folderID);
+                    // Delete all sub-folders
+                    foreach (InventoryFolderBase f in subFolders)
+                    {
+                        deleteFolderContents(conn, f.ID);
+                        deleteOneFolder(conn, f);
+                    }
+
+                    // Delete the actual row
+                    deleteFolderContents(conn, folder.ID);
+                    deleteOneFolder(conn, folder);
+
+                    // Increment the version of the parent of the purged folder.
+                    this.IncrementSpecifiedFolderVersion(conn, folder.ParentID);
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.Error(e.ToString());
+            }
         }
 
         public List<InventoryItemBase> fetchActiveGestures(UUID avatarID)
