@@ -1840,7 +1840,7 @@ namespace InWorldz.Data.Inventory.Cassandra
         {
             if (item.Folder == UUID.Zero)
             {
-                _log.WarnFormat("[Inworldz.Data.Inventory.Cassandra] Repairing prent folder ID for item {0} for {1}: Folder set to UUID.Zero", item.ID, item.Owner);
+                _log.WarnFormat("[Inworldz.Data.Inventory.Cassandra] Repairing parent folder ID for item {0} for {1}: Folder set to UUID.Zero", item.ID, item.Owner);
                 item.Folder = this.FindFolderForType(item.Owner, AssetType.RootFolder).ID;
             }
         }
