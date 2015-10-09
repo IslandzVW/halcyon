@@ -5016,7 +5016,7 @@ namespace InWorldz.Phlox.Engine
 
         private LSL_List SearchInventory(SceneObjectPart part, int type, string pattern, int matchType)
         {
-            if(matchType < 2)
+            if(matchType > 2)
             {
                 if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for iwSearchInventory or iwSearchLinkInventory.");
                 else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for iwSearchInventory or iwSearchLinkInventory.");
@@ -16111,7 +16111,7 @@ namespace InWorldz.Phlox.Engine
             try
             {
 				
-				if(matchType < 2)
+				if(matchType > 2)
 				{
 					if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for botSearchBotOutfits");
 					else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for botSearchBotOutfits");
@@ -16882,7 +16882,7 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List iwSearchLinksByName(string pattern, int matchType, int linksOnly)
         {
-            if(matchType < 2)
+            if(matchType > 2)
             {
                 if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for iwSearchLinksByName()");
                 else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for iwSearchLinksByName()");
@@ -16913,7 +16913,7 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List iwSearchLinksByDesc(string pattern, int matchType, int linksOnly)
         {
-            if(matchType < 2)
+            if(matchType > 2)
             {
                 if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for iwSearchLinksByDesc()");
                 else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for iwSearchLinksByDesc()");
