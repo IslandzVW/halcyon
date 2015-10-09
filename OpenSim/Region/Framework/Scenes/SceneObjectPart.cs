@@ -1712,7 +1712,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (flag == PrimFlags.TemporaryOnRez)
                     ResetExpire();
                 if((flag & PrimFlags.Scripted) != 0 && !ParentGroup.IsScripted)
-                    ParentGroup.CheckIsScripted();
+                    ParentGroup.CheckIfScriptedStatusChanged();
             }
         }
 
@@ -2799,7 +2799,7 @@ namespace OpenSim.Region.Framework.Scenes
                 _flags &= ~flag;
                 if ((flag & PrimFlags.Scripted) != 0)
                     if(ParentGroup != null)
-                        ParentGroup.CheckIsScripted();
+                        ParentGroup.CheckIfScriptedStatusChanged();
             }
             //m_log.Debug("prev: " + prevflag.ToString() + " curr: " + Flags.ToString());
             //ScheduleFullUpdate();
