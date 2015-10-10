@@ -31,7 +31,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using log4net;
 using OpenSim.Data;
 using OpenMetaverse;
 using OpenSim.Framework;
@@ -43,6 +45,9 @@ namespace InWorldz.Data.Inventory.Cassandra
     /// </summary>
     public class LegacyMysqlInventoryStorage : IInventoryStorage
     {
+        private static readonly ILog m_log
+            = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private LegacyMysqlStorageImpl _impl;
 
         public LegacyMysqlInventoryStorage(string connStr)
@@ -111,8 +116,21 @@ namespace InWorldz.Data.Inventory.Cassandra
 
         public void MoveFolder(InventoryFolderBase folder, UUID parentId)
         {
-            folder.ParentID = parentId;
-            _impl.moveInventoryFolder(folder);
+            // Don't do anything with a folder that wants to set its new parent to the same folder as its current parent.
+            if (folder.ParentID == parentId)
+            {
+                m_log.WarnFormat("[LegacyMysqlInventoryStorage] Refusing to move folder {0} to new parent {1} for {2}. The source and destination are the same", folder.ID, parentId, folder.Owner);
+                return;
+            }
+
+            // Don't do anything with a folder that wants to set its new parent to UUID.Zero
+            if (parentId == UUID.Zero)
+            {
+                m_log.WarnFormat("[LegacyMysqlInventoryStorage] Refusing to move folder {0} to new parent {1} for {2}. New parent has ID UUID.Zero", folder.ID, parentId, folder.Owner);
+                return;
+            }
+
+            _impl.moveInventoryFolder(folder, parentId);
         }
 
         public UUID SendFolderToTrash(InventoryFolderBase folder, UUID trashFolderHint)
@@ -150,19 +168,19 @@ namespace InWorldz.Data.Inventory.Cassandra
 
         public void PurgeFolderContents(InventoryFolderBase folder)
         {
-            _impl.deleteItemsInFolder(folder.ID);
+            _impl.deleteFolderContents(folder.ID);
         }
 
         public void PurgeFolder(InventoryFolderBase folder)
         {
-            _impl.deleteInventoryFolder(folder.ID);
+            _impl.deleteInventoryFolder(folder);
         }
 
         public void PurgeFolders(IEnumerable<InventoryFolderBase> folders)
         {
             foreach (InventoryFolderBase folder in folders)
             {
-                _impl.deleteInventoryFolder(folder.ID);
+                _impl.deleteInventoryFolder(folder);
             }
         }
 
@@ -178,11 +196,15 @@ namespace InWorldz.Data.Inventory.Cassandra
 
         public void CreateItem(InventoryItemBase item)
         {
+            // TODO: Maybe. Cassandra does a CheckAndFixItemParentFolder(item) here.   Not sure if that should be replicated here too... ~Ricky 20151007
+
             _impl.addInventoryItem(item);
         }
 
         public void SaveItem(InventoryItemBase item)
         {
+            // TODO: Maybe. Cassandra does a CheckAndFixItemParentFolder(item) here.   Not sure if that should be replicated here too... ~Ricky 20151007
+
             _impl.updateInventoryItem(item);
         }
 
@@ -202,14 +224,14 @@ namespace InWorldz.Data.Inventory.Cassandra
 
         public void PurgeItem(InventoryItemBase item)
         {
-            _impl.deleteInventoryItem(item.ID);
+            _impl.deleteInventoryItem(item);
         }
 
         public void PurgeItems(IEnumerable<InventoryItemBase> items)
         {
             foreach (InventoryItemBase item in items)
             {
-                _impl.deleteInventoryItem(item.ID);
+                _impl.deleteInventoryItem(item);
             }
         }
 

@@ -1513,7 +1513,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 RecalcPrimWeights();
             }
-            CheckIsScripted();
+            CheckIfScriptedStatusChanged();
         }
 
         /// <summary>
@@ -1538,7 +1538,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 // Update the ServerWeight/LandImpact
                 RecalcPrimWeights();
-                CheckIsScripted();
+                CheckIfScriptedStatusChanged();
             }
         }
 
@@ -2106,7 +2106,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ScheduleGroupForFullUpdate();
             }
 
-            dupe.CheckIsScripted();
+            dupe.IsScripted = this.IsScripted;
 
             return dupe;
         }
@@ -2825,7 +2825,7 @@ namespace OpenSim.Region.Framework.Scenes
             RecalcPrimWeights();
 
             this.RootPart.ClearUndoState();
-            this.CheckIsScripted();
+            this.CheckIfScriptedStatusChanged();
 
             HasGroupChanged = true;
             ScheduleGroupForFullUpdate();
@@ -2928,7 +2928,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Update the ServerWeight/LandImpact and StreamingCost
             RecalcPrimWeights();
-            CheckIsScripted();
+            CheckIfScriptedStatusChanged();
 
             if (sendGroupUpdate)
             {
@@ -4796,13 +4796,20 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_isScripted = value; }
         }
 
-        public void CheckIsScripted()
+        /// <summary>
+        /// Checks if this group or any of its children are scripted and sets 
+        /// a flag appropriately if so
+        /// </summary>
+        /// <returns>True if the scripted status changed, false if not</returns>
+        public bool CheckIfScriptedStatusChanged()
         {
             bool oldIsScripted = IsScripted;
             bool newIsScripted = false;
+
             if ((RootPart.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
                 newIsScripted = true;
-            if(!newIsScripted && Children.Count > 1)
+
+            if (!newIsScripted && Children.Count > 1)
             {
                 foreach(SceneObjectPart part in Children.Values)
                 {
@@ -4815,11 +4822,14 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+
             if(oldIsScripted != newIsScripted)
             {
                 IsScripted = newIsScripted;
-                RootPart.ScheduleFullUpdate();
+                return true;
             }
+
+            return false;
         }
 
         

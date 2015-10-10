@@ -1476,37 +1476,6 @@ namespace OpenSim.Region.Framework.Scenes
             userInfo.DeleteItem(item);
         }
 
-        /// <summary>
-        /// Removes an inventory folder.  Although there is a packet in the Linden protocol for this, it may be
-        /// legacy and not currently used (purge folder is used to remove folders from trash instead).
-        /// </summary>
-        /// <param name="remoteClient"></param>
-        /// <param name="folderID"></param>
-        private void RemoveInventoryFolder(IClientAPI remoteClient, UUID folderID)
-        {
-            CachedUserInfo userInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
-
-            if (userInfo == null)
-            {
-                m_log.Warn("[AGENT INVENTORY]: Failed to find user " + remoteClient.AgentId.ToString());
-                return;
-            }
-
-            InventoryItemBase folder = userInfo.FindItem(folderID);
-
-            if (folder != null)
-            {
-                m_log.WarnFormat(
-                        "[AGENT INVENTORY]: Remove folder not implemented in request by {0} {1} for {2}",
-                        remoteClient.Name, remoteClient.AgentId, folderID);
-
-                // doesn't work just yet, commented out. will fix in next patch.
-                // userInfo.DeleteItem(folder);
-            }
-            
-        }
-
         private SceneObjectGroup GetGroupByPrim(uint localID)
         {
             return m_sceneGraph.GetGroupByPrim(localID);

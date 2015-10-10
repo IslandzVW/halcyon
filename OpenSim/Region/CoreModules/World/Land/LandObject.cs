@@ -359,6 +359,11 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             uint preserve = landData.Flags & ~allowedDelta;
             newData.Flags = preserve | (args.ParcelFlags & allowedDelta);
+
+            // Override: Parcels in Plus regions are always [x] Public access parcels
+            if (m_scene.RegionInfo.Product == ProductRulesUse.PlusUse)
+                newData.Flags &= ~(uint)ParcelFlags.UseAccessList;
+
             m_log.InfoFormat("[LAND]: updateLandProperties for land parcel {0} [{1}] flags {2} -> {3} by {4}",
                 newData.LocalID, newData.GlobalID, landData.Flags.ToString("X8"), newData.Flags.ToString("X8"), remote_client.Name);
             m_scene.LandChannel.UpdateLandObject(landData.LocalID, newData);

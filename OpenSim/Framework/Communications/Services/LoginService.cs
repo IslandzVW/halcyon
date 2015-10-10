@@ -218,7 +218,10 @@ namespace OpenSim.Framework.Communications.Services
 
                 UserProfileData userProfile;
                 
+                string clientChannel = "Unknown";
                 string clientVersion = "Unknown";
+                string clientPlatform = "Unknown";
+                string clientPlatformVer = "Unknown";
 
                 if (GoodXML)
                 {
@@ -231,9 +234,21 @@ namespace OpenSim.Framework.Communications.Services
                         "[LOGIN BEGIN]: XMLRPC Received login request message from user '{0}' '{1}'",
                         firstname, lastname);
 
+                    if (requestData.Contains("channel"))
+                    {
+                        clientChannel = (string)requestData["channel"];
+                    }
                     if (requestData.Contains("version"))
                     {
                         clientVersion = (string)requestData["version"];
+                    }
+                    if (requestData.Contains("platform"))
+                    {
+                        clientPlatform = (string)requestData["platform"];
+                    }
+                    if (requestData.Contains("platform_version"))
+                    {
+                        clientPlatformVer = (string)requestData["platform_version"];
                     }
 
                     if (this.IsViewerBlacklisted(clientVersion))
@@ -243,7 +258,8 @@ namespace OpenSim.Framework.Communications.Services
                     }
 
                     m_log.DebugFormat(
-                        "[LOGIN]: XMLRPC Client is {0}, start location is {1}", clientVersion, startLocationRequest);
+                        "[LOGIN]: XMLRPC Client is {0} {1} on {2} {3}, start location is {4}",
+                            clientChannel, clientVersion, clientPlatform, clientPlatformVer, startLocationRequest);
 
                     if (!TryAuthenticateXmlRpcLogin(request, firstname, lastname, out userProfile))
                     {

@@ -1881,6 +1881,10 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.WarnFormat("[LAND]: Parcel init {0} [{1}] flags={2} owner={3} group={4} groupOwned={5}",
                     origLocalID, origParcelID, origFlags.ToString("X8"), origOwner, origGroup, origGroupOwned);
 
+                // Override: Parcels in Plus regions are always [x] Public access parcels
+                if (RegionInfo.Product == ProductRulesUse.PlusUse)
+                    parcel.Flags &= ~(uint)ParcelFlags.UseAccessList;
+
                 if (parcel.OwnerID == UUID.Zero)
                 {
                     parcel.OwnerID = RegionInfo.EstateSettings.EstateOwner;
@@ -3160,13 +3164,13 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnUpdateInventoryFolder += HandleUpdateInventoryFolder;
             client.OnMoveInventoryFolder += HandleMoveInventoryFolder;
             client.OnFetchInventoryDescendents += HandleFetchInventoryDescendents;
-            client.OnPurgeInventoryDescendents += HandlePurgeInventoryDescendents;
+            client.OnPurgeInventoryDescendents += HandlePurgeInventoryDescendents; // Called when the user empties the Trash or 'Lost and Found', or purges a folder that has children. If the last case, OnRemoveInventoryFolder is called first for some silly reason.
             client.OnFetchInventory += HandleFetchInventory;
             client.OnUpdateInventoryItem += UpdateInventoryItemAsset;
             client.OnCopyInventoryItem += CopyInventoryItem;
             client.OnMoveInventoryItem += MoveInventoryItem;
             client.OnRemoveInventoryItem += RemoveInventoryItem;
-            client.OnRemoveInventoryFolder += RemoveInventoryFolder;
+            client.OnRemoveInventoryFolder += HandlePurgeInventoryFolder; // Called when the user purges a folder.  If the folder has children OnPurgeInventoryDescendents is also called.
             client.OnRezScript += RezScript;
             client.OnRequestTaskInventory += RequestTaskInventory;
             client.OnRemoveTaskItem += RemoveTaskInventory;

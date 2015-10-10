@@ -338,6 +338,21 @@ namespace OpenSim.Region.Framework.Interfaces
         bool AddTagToBot(UUID botID, string tag, UUID attemptingUser);
 
         /// <summary>
+        /// Returns true if a bot has the specified tag
+        /// </summary>
+        /// <param name="botID">Bot to check the tag of</param>
+        /// <param name="tag">The tag to check for</param>
+        /// <returns>true if the bot has the tag, false if not</returns>
+        bool BotHasTag(UUID botID, string tag);
+
+        /// <summary>
+        /// Returns a list of all tags associated with a bot.
+        /// </summary>
+        /// <param name="botID">Bot to list the tags of</param>
+        /// <returns>A list of all tags associated with a bot, if any.</returns>
+        List<string> GetBotTags(UUID botID);
+
+        /// <summary>
         /// Return all bots with the given tag attached in this region
         /// </summary>
         /// <param name="tag">The tag to look for</param>

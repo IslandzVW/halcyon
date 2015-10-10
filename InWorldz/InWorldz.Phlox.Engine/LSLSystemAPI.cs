@@ -753,17 +753,20 @@ namespace InWorldz.Phlox.Engine
         public int iwIntRandRange(int min, int max)
         {
             if (min == max) return min;
+            if (max < min) return s_random.Next(max, min + 1); //max needs to be more than minimum, swapping min and max
             return s_random.Next(min, max + 1);
         }
 
         public int iwIntRand(int max)
         {
+            if (max < 0) return -1 * s_random.Next(Math.Abs(max) + 1);
             return s_random.Next(max + 1);
         }
 
         public float iwFrandRange(float min, float max)
         {
             if (min == max) return min;
+            if (max < min) return (float)(s_random.NextDouble() * ((min) - max) + max); //max needs to be more than minimum, swapping min and max.
             return (float)(s_random.NextDouble() * ((max) - min) + min);
         }
 
@@ -3021,6 +3024,30 @@ namespace InWorldz.Phlox.Engine
             // ScriptSleep(100);
         }
 
+        public int iwClampInt(int value, int min, int max)
+        {
+            //Min and max are equal, nothing to do
+            if (min == max) return min;
+
+            //max is less than min, switch the math inputs
+            if (max < min) return Math.Min(min, Math.Max(value, max));
+
+            //inputs are good, clamp the values
+            return Math.Min(max, Math.Max(value, min));
+        }
+
+        public float iwClampFloat(float value, float min, float max)
+        {
+            //Min and max are equal, nothing to do
+            if (min == max) return min;
+
+            //max is less than min, switch the math inputs
+            if (max < min) return Math.Min(min, Math.Max(value, max));
+
+            //inputs are good, clamp the values
+            return Math.Min(max, Math.Max(value, min));
+        }
+
         public int iwCheckRezError(Vector3 pos, int isTemp, int landImpact)
         {
             return m_host.ParentGroup.Scene.CheckRezError(m_host.OwnerID, m_host.UUID, pos, isTemp != 0, landImpact);
@@ -4021,6 +4048,7 @@ namespace InWorldz.Phlox.Engine
 
         public void iwStartLinkAnimation(int linknumber, string anim)
         {
+            if (linknumber < 0) return;
             SceneObjectPart[] parts = GetLinkParts(linknumber);
 
             if (parts.Length != 1) return;
@@ -4146,6 +4174,7 @@ namespace InWorldz.Phlox.Engine
 
         public void iwStopLinkAnimation(int linknumber, string anim)
         {
+            if (linknumber < 0) return;
             SceneObjectPart[] parts = GetLinkParts(linknumber);
 
             if (parts.Length != 1) return;
@@ -4987,7 +5016,7 @@ namespace InWorldz.Phlox.Engine
 
         private LSL_List SearchInventory(SceneObjectPart part, int type, string pattern, int matchType)
         {
-            if(matchType < 2)
+            if(matchType > 2)
             {
                 if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for iwSearchInventory or iwSearchLinkInventory.");
                 else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for iwSearchInventory or iwSearchLinkInventory.");
@@ -5000,9 +5029,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     if(inv.Value.Type == type || type == -1)
                     {
-                        if (pattern == "")
-                            keys.Add(inv.Value.Name);
-                        else if (iwMatchString(inv.Value.Name, pattern, matchType) == 1)
+                        if (pattern == "" || iwMatchString(inv.Value.Name, pattern, matchType) == 1)
                             keys.Add(inv.Value.Name);
                     }
                 }
@@ -5025,6 +5052,7 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List iwSearchLinkInventory(int link, int type, string pattern, int matchtype)
         {
+            if (link < 0) return new LSL_List();
             SceneObjectPart[] parts = GetLinkParts(link);
 
             if (parts.Length == 1)
@@ -14417,11 +14445,12 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List iwListRemoveDuplicates(LSL_List src)
         {
+			if(src.Length <= 1) return src;
             //yarrr...
             return new LSL_List(  src.Data.Distinct().ToList()  );
         }
 
-        public LSL_List iwListRemoveElements(LSL_List src, LSL_List elements, int count)
+        public LSL_List iwListRemoveElements(LSL_List src, LSL_List elements, int count, int mode)
         {
             if (src.Length == 0 || elements.Length == 0) return src;
             if (count == 0) count = -1;
@@ -14429,26 +14458,44 @@ namespace InWorldz.Phlox.Engine
 
             List<object> ret = new List<object>();
 
-            int len = src.Length - elements.Length + 1;
-            for(int i = 0; i < len; i++)
+            if (mode == 0)
             {
-                if(src.Data[i].Equals(elements.Data[0]))
+                int len = src.Length - elements.Length + 1;
+                for (int i = 0; i < len; i++)
                 {
-                    if(count == -1 || counted < count)
+                    if (src.Data[i].Equals(elements.Data[0]))
                     {
-                        int x;
-                        for (x = 1; x < elements.Length; x++)
-                            if (!src.Data[i + x].Equals(elements.Data[x]))
-                                break;
-                        if (x == elements.Length)
+                        if (count == -1 || counted < count)
                         {
-                            counted++;
-                            i += elements.Length - 1;
-                            continue;
+                            int x;
+                            for (x = 1; x < elements.Length; x++)
+                                if (!src.Data[i + x].Equals(elements.Data[x]))
+                                    break;
+                            if (x == elements.Length)
+                            {
+                                counted++;
+                                i += elements.Length - 1;
+                                continue;
+                            }
                         }
                     }
+                    ret.Add(src.Data[i]);
                 }
-                ret.Add(src.Data[i]);
+            }
+            else
+            {
+                int len = src.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    if(elements.Data.Contains<object>(src.Data[i]) == false)
+                    {
+						if(count == -1 || counted < count)
+						{
+							ret.Add(src.Data[i]);
+							counted++;
+						}
+                    }
+                }
             }
 
             return new LSL_List(ret);
@@ -14456,6 +14503,7 @@ namespace InWorldz.Phlox.Engine
 
         public int iwListIncludesElements(LSL_List src, LSL_List elements, int any)
         {
+            if (elements.Length == 0 || src.Length == 0) return 0;
             for(int a=0; a < elements.Length; a++)
             {
                 bool found = false;
@@ -16062,22 +16110,34 @@ namespace InWorldz.Phlox.Engine
 
             try
             {
-                IBotManager manager = World.RequestModuleInterface<IBotManager>();
-                if (manager != null)
-                {
-                    List<string> itms = manager.GetBotOutfitsByOwner(m_host.OwnerID);
-                    int count=0;
-                    foreach(string outfit in itms)
-                    {
-                        if(pattern == "" || iwMatchString(outfit, pattern, matchType) == 1)
-                        {
-                            if(++count >= start && (end == -1 || count <=end))
-                                retVal.Add(outfit);
-                            if (end != -1 && count >= end)
-                                break;
-                        }
-                    }
-                }
+				
+				if(matchType > 2)
+				{
+					if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for botSearchBotOutfits");
+					else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for botSearchBotOutfits");
+				}
+				else 
+				{
+					IBotManager manager = World.RequestModuleInterface<IBotManager>();
+					if (manager != null)
+					{
+						List<string> itms = manager.GetBotOutfitsByOwner(m_host.OwnerID);
+						int count=0;
+						foreach(string outfit in itms)
+						{
+							if(pattern == "" || iwMatchString(outfit, pattern, matchType) == 1)
+							{
+								if (count >= start && (end == -1 || count <= end))
+								{
+									retVal.Add(outfit);
+								}
+								count++;
+								if (end != -1 && count > end)
+									break;
+							}
+						}
+					}
+				}
             }
             finally
             {
@@ -16766,6 +16826,31 @@ namespace InWorldz.Phlox.Engine
                 manager.RemoveTagFromBot(botUUID, tag, m_host.OwnerID);
         }
 
+        public int botHasTag(string botID, string tag)
+        {
+            UUID botUUID = UUID.Zero;
+            if (!UUID.TryParse(botID, out botUUID) || (botUUID == UUID.Zero))
+                return 0;
+
+            IBotManager manager = World.RequestModuleInterface<IBotManager>();
+            if (manager != null)
+                return manager.BotHasTag(botUUID, tag) ? 1 : 0;
+            return 0;
+        }
+
+        public LSL_List botGetBotTags(string botID)
+        {
+            UUID botUUID = UUID.Zero;
+            if (!UUID.TryParse(botID, out botUUID) || (botUUID == UUID.Zero))
+                return new LSL_List();
+
+
+            IBotManager manager = World.RequestModuleInterface<IBotManager>();
+            if (manager != null)
+                return new LSL_List(manager.GetBotTags(botUUID).ToList<object>());
+            return new LSL_List();
+        }
+
         public LSL_List botGetBotsWithTag(string tag)
         {
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
@@ -16793,6 +16878,69 @@ namespace InWorldz.Phlox.Engine
             {
                 m_ScriptEngine.SysReturn(m_itemID, null, delay);
             }
+        }
+
+        public LSL_List iwSearchLinksByName(string pattern, int matchType, int linksOnly)
+        {
+            if(matchType > 2)
+            {
+                if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for iwSearchLinksByName()");
+                else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for iwSearchLinksByName()");
+                return new LSL_List();
+            }
+            List<object> ret = new List<object>();
+            List<SceneObjectPart> parts = new List<SceneObjectPart>();
+
+            foreach(SceneObjectPart part in m_host.ParentGroup.Children.Values)
+            {
+                if (pattern == "" || iwMatchString(part.Name, pattern, matchType) == 1)
+                    parts.Add(part);
+            }
+
+            if(parts.Count > 0)
+            {
+                parts.Sort((x, y) => x.LinkNum.CompareTo(y.LinkNum));
+                foreach(SceneObjectPart part in parts)
+                {
+                    ret.Add(part.LinkNum);
+                    if (linksOnly == 0)
+                        ret.Add(part.Name);
+                }
+            }
+
+            return new LSL_List(ret);
+        }
+
+        public LSL_List iwSearchLinksByDesc(string pattern, int matchType, int linksOnly)
+        {
+            if(matchType > 2)
+            {
+                if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for iwSearchLinksByDesc()");
+                else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for iwSearchLinksByDesc()");
+                return new LSL_List();
+            }
+            
+            List<object> ret = new List<object>();
+            List<SceneObjectPart> parts = new List<SceneObjectPart>();
+
+            foreach (SceneObjectPart part in m_host.ParentGroup.Children.Values)
+            {
+                if (pattern == "" || iwMatchString(part.Description, pattern, matchType) == 1)
+                    parts.Add(part);
+            }
+
+            if (parts.Count > 0)
+            {
+                parts.Sort((x, y) => x.LinkNum.CompareTo(y.LinkNum));
+                foreach (SceneObjectPart part in parts)
+                {
+                    ret.Add(part.LinkNum);
+                    if (linksOnly == 0)
+                        ret.Add(part.Description);
+                }
+            }
+
+            return new LSL_List(ret);
         }
 
         #endregion

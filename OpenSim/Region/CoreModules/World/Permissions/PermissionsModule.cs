@@ -984,18 +984,12 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         public bool GenericEstatePermission(UUID user)
         {
-            // Default: deny
-            bool permission = false;
-
             // Estate admins should be able to use estate tools
             if (m_scene.IsEstateManager(user))
-                permission = true;
+                return true;
 
             // Administrators always have permission
-            if (IsGodUser(user))
-                permission = true;
-
-            return permission;
+            return IsGodUser(user);
         }
 
         protected bool GenericParcelPermission(UUID user, ILandObject parcel, ulong groupPowers)
@@ -1783,11 +1777,15 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            // Estate override
+            // Estate override (EO, EM and gods)
             if (GenericEstatePermission(user))
                 return true;
 
             if (m_scene.RegionInfo.RegionSettings.BlockTerraform)
+                return false;
+
+            // Plus parcels cannot be terraformed by their owners
+            if (m_scene.RegionInfo.Product == ProductRulesUse.PlusUse)
                 return false;
 
             float X = position.X;

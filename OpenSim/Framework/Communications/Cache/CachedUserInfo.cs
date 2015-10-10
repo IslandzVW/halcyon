@@ -323,12 +323,35 @@ namespace OpenSim.Framework.Communications.Cache
         /// for this user then the request will be queued.
         ///
         /// <param name="folderID"></param>
-        public bool PurgeFolder(InventoryFolderBase folder)
+        public bool PurgeFolderContents(InventoryFolderBase folder)
         {
             try
             {
                 IInventoryProviderSelector inventorySelect = ProviderRegistry.Instance.Get<IInventoryProviderSelector>();
                 inventorySelect.GetProvider(m_userProfile.ID).PurgeFolderContents(folder);
+
+                return true;
+            }
+            catch (InventoryStorageException)
+            {
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// This method will delete the given folder and all the items and folders in it.
+        /// </summary>
+        /// If the inventory service has not yet delievered the inventory
+        /// for this user then the request will be queued.
+        ///
+        /// <param name="folderID"></param>
+        public bool PurgeFolder(InventoryFolderBase folder)
+        {
+            try
+            {
+                IInventoryProviderSelector inventorySelect = ProviderRegistry.Instance.Get<IInventoryProviderSelector>();
+                inventorySelect.GetProvider(m_userProfile.ID).PurgeFolder(folder);
 
                 return true;
             }
