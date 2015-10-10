@@ -4354,6 +4354,17 @@ namespace InWorldz.Phlox.Engine
                                 ScriptBaseClass.PERMISSION_TRACK_CAMERA |
                                 ScriptBaseClass.PERMISSION_TAKE_CONTROLS;
             }
+            else
+            {
+                ScenePresence presence = World.GetScenePresence(agentID);
+                if ((presence != null) && (presence.IsBot) && (!presence.IsChildAgent))
+                {
+                    if (presence.OwnerID == m_host.OwnerID)
+                    {
+                        implicitPerms = ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION;
+                    }
+                }
+            }
 
             return implicitPerms;
         }
