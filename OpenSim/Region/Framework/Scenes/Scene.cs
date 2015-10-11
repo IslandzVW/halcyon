@@ -3372,6 +3372,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         // stick in offset format from the original prim
                         pos = pos - target.ParentGroup.AbsolutePosition;
+
                         if (CopyRotates)
                         {
                             Quaternion worldRot = target2.GetWorldRotation();

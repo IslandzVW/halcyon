@@ -114,6 +114,9 @@ namespace OpenSim.Framework
 
         private PhysicsShapeType _preferredPhysicsShape;
 
+        // Materials
+        [XmlIgnore] private RenderMaterials _renderMaterials;
+
         // Sculpted
         [XmlIgnore] private UUID _sculptTexture = UUID.Zero;
         [XmlIgnore] private byte _sculptType = (byte)0;
@@ -1002,6 +1005,18 @@ namespace OpenSim.Framework
             }
         }
 
+        public RenderMaterials RenderMaterials
+        {
+            get
+            {
+                return _renderMaterials;
+            }
+            set
+            {
+                _renderMaterials = value;
+            }
+        }
+
         public ulong GetMeshKey(Vector3 size, float lod)
         {
             ulong hash = 5381;
@@ -1049,6 +1064,13 @@ namespace OpenSim.Framework
                     hash = djb2(hash, scaleBytes[i]);
 
                 hash = djb2(hash, this.SculptType);
+            }
+
+            if (this.RenderMaterials != null)
+            {
+                scaleBytes = this.RenderMaterials.ToBytes();
+                for (int i = 0; i < scaleBytes.Length; i++)
+                    hash = djb2(hash, scaleBytes[i]);
             }
 
             return hash;

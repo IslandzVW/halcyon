@@ -152,6 +152,8 @@ namespace OpenSim.Region.Framework.Scenes
                         if (!assetUuids.ContainsKey(tii.AssetID))
                             GatherAssetUuids(tii.AssetID, (AssetType)tii.Type, assetUuids);
                     }
+
+                    GatherMaterialsUuids(part, assetUuids); 
                 }
                 catch (Exception e)
                 {
@@ -160,7 +162,61 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }         
-        
+
+        /// <summary>
+        /// Gather all of the texture asset UUIDs used to reference "Materials" such as normal and specular maps
+        /// </summary>
+        /// <param name="part"></param>
+        /// <param name="assetUuids"></param>
+        public void GatherMaterialsUuids(SceneObjectPart part, IDictionary<UUID, int> assetUuids)
+        {
+            // scan through the rendermaterials of this part for any textures used as materials
+            if (part.Shape.RenderMaterials == null)
+                return;
+            #if false
+
+            lock (part.Shape.RenderMaterials)
+            {
+            OSDArray matsArr = OSD.FromBinary(part.Shape.RenderMaterials) as OSDArray;
+            foreach (OSDMap matMap in matsArr)
+            {
+            try
+            {
+            if (matMap.ContainsKey("Material"))
+            {
+            OSDMap mat = matMap["Material"] as OSDMap;
+            if (mat.ContainsKey("NormMap"))
+            {
+            UUID normalMapId = mat["NormMap"].AsUUID();
+            if (normalMapId != UUID.Zero)
+            {
+            assetUuids[normalMapId] = (int)AssetType.Texture;
+            //m_log.Info("[UUID Gatherer]: found normal map ID: " + normalMapId.ToString());
+            }
+            }
+            if (mat.ContainsKey("SpecMap"))
+            {
+            UUID specularMapId = mat["SpecMap"].AsUUID();
+            if (specularMapId != UUID.Zero)
+            {
+            assetUuids[specularMapId] = (int)AssetType.Texture;
+            //m_log.Info("[UUID Gatherer]: found specular map ID: " + specularMapId.ToString());
+            }
+            }
+            }
+            //Add the material itself
+            assetUuids[matMap["ID"].AsUUID()] = (int)AssetType.Texture;
+            }
+            catch (Exception e)
+            {
+            MainConsole.Instance.Warn("[UUID Gatherer]: exception getting materials: " + e.ToString());
+            }
+            } 
+            }
+
+            #endif
+        }
+
         /// <summary>
         /// The callback made when we request the asset for an object from the asset service.
         /// </summary>

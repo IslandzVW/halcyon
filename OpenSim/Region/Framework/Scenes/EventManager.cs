@@ -261,6 +261,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         public event EstateToolsSunUpdate OnEstateToolsSunUpdate;
 
+        /// <summary>
+        /// Triggered when an object is added to the scene.
+        /// </summary>
+        public event Action<SceneObjectGroup> OnObjectAddedToScene;
+
         public delegate void ObjectBeingRemovedFromScene(SceneObjectGroup obj);
         public event ObjectBeingRemovedFromScene OnObjectBeingRemovedFromScene;
 
@@ -704,6 +709,28 @@ namespace OpenSim.Region.Framework.Scenes
             if (handlerParcelPrimCountAdd != null)
             {
                 handlerParcelPrimCountAdd(obj);
+            }
+        }
+
+        public void TriggerObjectAddedToScene(SceneObjectGroup obj)
+        {
+            Action<SceneObjectGroup> handler = OnObjectAddedToScene;
+
+            if (handler != null)
+            {
+                foreach (Action<SceneObjectGroup> d in handler.GetInvocationList())
+                {
+                    try
+                    {
+                        d(obj);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for TriggerObjectAddedToScene failed - continuing.  {0} {1}",
+                            e.Message, e.StackTrace);
+                    }
+                }
             }
         }
 
