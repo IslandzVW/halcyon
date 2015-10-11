@@ -1061,6 +1061,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Need the bounding box now.
             BoundingBox();
+
+            //Signal a new object appearing in the scene
+            Scene.EventManager.TriggerObjectAddedToScene(this);
         }
 
         /// <summary>
