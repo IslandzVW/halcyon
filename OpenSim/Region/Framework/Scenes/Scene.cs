@@ -61,11 +61,15 @@ namespace OpenSim.Region.Framework.Scenes
 
     public partial class Scene : SceneBase
     {
+        #if __MonoCS__
+        // TODO: Some cross-platform implementation.
+        #else
         [DllImport("kernel32.dll")]
         static extern bool SetThreadPriority(IntPtr hThread, ThreadPriorityLevel nPriority);
 
         [DllImport("kernel32.dll")]
         static extern IntPtr GetCurrentThread();
+        #endif
 
         /// <summary>
         /// The lowest an object can fall/travel before being considered off world
@@ -1149,8 +1153,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         void DoTiming()
         {
+            #if __MonoCS__
+            // TODO: Some cross-platform implementation.
+            #else
             IntPtr thrdHandle = GetCurrentThread();
             SetThreadPriority(thrdHandle, ThreadPriorityLevel.TimeCritical);
+            #endif
 
             byte tickNum = 0;
             while (true)
