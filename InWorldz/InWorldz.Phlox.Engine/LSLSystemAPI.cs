@@ -4363,11 +4363,14 @@ namespace InWorldz.Phlox.Engine
                     {
                         implicitPerms = ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION;
                     }
-                    ScenePresence.PositionInfo info = presence.GetPosInfo();
-                    if(info.Parent != null && info.Parent.ObjectOwner == m_host.OwnerID)
+                    else
                     {
-                        implicitPerms = ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION;
-                    }
+						ScenePresence.PositionInfo info = presence.GetPosInfo();
+						if(info.Parent != null && info.Parent.ObjectOwner == m_host.OwnerID)
+						{
+							implicitPerms = ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION;
+						}
+					}
                 }
             }
 
