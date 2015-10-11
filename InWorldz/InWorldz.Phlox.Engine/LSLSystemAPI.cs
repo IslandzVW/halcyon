@@ -7013,12 +7013,6 @@ namespace InWorldz.Phlox.Engine
                     flags |= ScriptBaseClass.AGENT_SCRIPTED;
             }
 
-            if ((agent.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0)
-            {
-                flags |= ScriptBaseClass.AGENT_FLYING;
-                flags |= ScriptBaseClass.AGENT_IN_AIR; // flying always implies in-air, even if colliding with e.g. a wall
-            }
-
             if ((agent.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AWAY) != 0)
             {
                 flags |= ScriptBaseClass.AGENT_AWAY;
@@ -7069,6 +7063,17 @@ namespace InWorldz.Phlox.Engine
             if (agent.Animations.DefaultAnimation.AnimID == AnimationSet.Animations.AnimsUUID["SIT_GROUND_CONSTRAINED"])
             {
                 flags |= ScriptBaseClass.AGENT_SITTING;
+            }
+
+            //Workaround for issue where AGENT_FLYING is sometimes set while sitting
+            //Since a seated avatar cannot be flying or in the air, do not set the flags if agent is seated
+            if((flags & ScriptBaseClass.AGENT_SITTING) == 0)
+            {
+                if ((agent.AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0)
+                {
+                    flags |= ScriptBaseClass.AGENT_FLYING;
+                    flags |= ScriptBaseClass.AGENT_IN_AIR; // flying always implies in-air, even if colliding with e.g. a wall
+                }
             }
 
             // not colliding implies in air. Note: flying also implies in-air, even if colliding (see above)
