@@ -39,6 +39,7 @@ namespace OpenSim.Framework
         public string DatabaseConnect = String.Empty;
         public string DefaultStartupMsg = String.Empty;
         public string MapServerURI = String.Empty;
+        public string WebProfileURI = String.Empty;
         public uint DefaultX = 1000;
         public uint DefaultY = 1000;
         public string GridRecvKey = String.Empty;
@@ -202,6 +203,9 @@ namespace OpenSim.Framework
                     break;
                 case "map_server_uri":
                     MapServerURI = (string)configuration_result;
+                    break;
+                case "web_profile_uri":
+                    WebProfileURI = (string)configuration_result;
                     break;
             }
 

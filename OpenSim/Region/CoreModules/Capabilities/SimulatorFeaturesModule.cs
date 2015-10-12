@@ -70,6 +70,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         private string m_MapImageServerURL = string.Empty;
         private string m_SearchURL = string.Empty;
+        private string m_ProfileURL = string.Empty;
         private bool m_MeshEnabled = true;
         private bool m_PhysicsMaterialsEnabled = true;
         private bool m_DynamicPathfindingEnabled = false;
@@ -93,6 +94,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 }
 
                 m_SearchURL = config.GetString("SearchServerURI", string.Empty);
+                m_ProfileURL = config.GetString("WebProfileURI", string.Empty);
                 m_MeshEnabled = config.GetBoolean("MeshEnabled", m_MeshEnabled);
                 m_PhysicsMaterialsEnabled = config.GetBoolean("PhysicsMaterialsEnabled", m_MeshEnabled);
                 m_DynamicPathfindingEnabled = config.GetBoolean("DynamicPathfindingEnabled", m_DynamicPathfindingEnabled);
@@ -175,13 +177,15 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     opensimFeatures["map-server-url"] = OSD.FromString(m_MapImageServerURL);
                 if (m_SearchURL != string.Empty)
                     opensimFeatures["search-server-url"] = OSD.FromString(m_SearchURL);
+                if (m_ProfileURL != string.Empty)
+                    opensimFeatures["web-profile-url"] = OSD.FromString(m_ProfileURL);
                 opensimFeatures["ExportSupported"] = m_ExportSupported;
                 opensimFeatures["whisper-range"] = m_whisperdistance;
                 opensimFeatures["say-range"] = m_saydistance;
                 opensimFeatures["shout-range"] = m_shoutdistance;
                 m_features["OpenSimExtras"] = opensimFeatures;
 
-                m_log.InfoFormat("[SimulatorFeatures]: mesh={0} physMat={1} exp={2} map='{3}' search='{4}'", m_MeshEnabled, m_PhysicsMaterialsEnabled, m_ExportSupported, m_MapImageServerURL, m_SearchURL);
+                m_log.InfoFormat("[SimulatorFeatures]: mesh={0} physMat={1} exp={2} map='{3}' search='{4}' profile='{4}'", m_MeshEnabled, m_PhysicsMaterialsEnabled, m_ExportSupported, m_MapImageServerURL, m_SearchURL, m_ProfileURL);
             }
         }
 

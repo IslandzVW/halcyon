@@ -106,6 +106,7 @@ namespace OpenSim.Framework.Communications.Services
         private string seedCapability;
         private string lookAt;
         private string mapServerURI;
+        private string webProfileURI;
 
         private BuddyList m_buddyList = null;
 
@@ -400,6 +401,7 @@ namespace OpenSim.Framework.Communications.Services
                 responseData["region_y"] = (Int32)(RegionY * Constants.RegionSize);
 
                 responseData["map-server-url"] = MapServerURI;
+                responseData["web-profile-url"] = WebProfileURI;
                 responseData["max-agent-groups"] = Constants.MaxGroups.ToString();
 
                 if (m_buddyList != null)
@@ -771,6 +773,12 @@ namespace OpenSim.Framework.Communications.Services
         {
             get { return mapServerURI; }
             set { mapServerURI = value; }
+        }
+
+        public string WebProfileURI
+        {
+            get { return webProfileURI; }
+            set { webProfileURI = value; }
         }
 
         #endregion
