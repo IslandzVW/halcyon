@@ -212,6 +212,11 @@ bin/ScriptEngines/Phlox/states/script_states.db3
 
 # Other files that need to be created per-installation
 bin/Halcyon.ini
+bin/aperture.cfg
 bin/Regions/region.xml
+
+# Other testing folder ignores 
+bin/Grid
+bin/GridLogin
 
 #Other ignores
