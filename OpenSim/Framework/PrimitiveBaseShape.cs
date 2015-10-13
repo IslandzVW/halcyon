@@ -211,6 +211,7 @@ namespace OpenSim.Framework
             PCode = (byte) PCodeEnum.Primitive;
             ExtraParams = new byte[1];
             Textures = new Primitive.TextureEntry(DEFAULT_TEXTURE_ID);
+            RenderMaterials = new RenderMaterials();
         }
 
         public PrimitiveBaseShape(bool noShape)
@@ -221,6 +222,7 @@ namespace OpenSim.Framework
             PCode = (byte)PCodeEnum.Primitive;
             ExtraParams = new byte[1];
             Textures = new Primitive.TextureEntry(DEFAULT_TEXTURE_ID);
+            RenderMaterials = new RenderMaterials();
         }
 
         /// <summary>
@@ -268,6 +270,8 @@ namespace OpenSim.Framework
             {
                 SculptType = (byte)OpenMetaverse.SculptType.None;
             }
+
+            RenderMaterials = new RenderMaterials();
         }
 
         [XmlIgnore]
