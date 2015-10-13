@@ -147,7 +147,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         lock (part.Shape.RenderMaterials)
                         {
-                            foreach(KeyValuePair<string, RenderMaterial> entry in part.Shape.RenderMaterials)
+                            foreach(KeyValuePair<string, RenderMaterial> entry in part.Shape.RenderMaterials.Materials)
                             {
                                 if (entry.Value.NormalID != UUID.Zero)
                                     assetUuids[entry.Value.NormalID] = 1;
