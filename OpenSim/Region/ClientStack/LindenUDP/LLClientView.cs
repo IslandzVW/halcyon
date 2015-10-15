@@ -4318,17 +4318,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             updateMessage.ObscureMusic = landData.ObscureMusic;
             updateMessage.ObscureMedia = landData.ObscureMedia;
 
-#if false
-            if (landData.SimwideArea > 0)
-            {
-                int simulatorCapacity = (int)(((float)landData.SimwideArea / 65536.0f) * (float)m_scene.RegionInfo.ObjectCapacity * (float)m_scene.RegionInfo.RegionSettings.ObjectBonus);
-                updateMessage.SimWideMaxPrims = simulatorCapacity;
-            }
-            else
-            {
-                updateMessage.SimWideMaxPrims = 0;
-            }
-#endif
             updateMessage.SimWideMaxPrims = simObjectCapacity;
 
             updateMessage.OwnerPrims = landData.OwnerPrims;

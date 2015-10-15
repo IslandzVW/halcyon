@@ -657,13 +657,6 @@ namespace OpenSim.Grid.GridServer.Modules
             {
                 UUID regionID = new UUID((string)requestData["region_UUID"]);
                 simData = m_gridDBService.GetRegion(regionID);
-#if false   // this happens all the time normally and pollutes the log 
-                if (simData == null)
-                {
-                    m_log.WarnFormat("[DATA] didn't find regionID {0} from {1}",
-                                     regionID, request.Params.Count > 1 ? request.Params[1] : "unknown source");
-                }
-#endif
             }
             else if (requestData.ContainsKey("region_handle"))
             {

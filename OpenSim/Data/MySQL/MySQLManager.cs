@@ -966,11 +966,6 @@ namespace OpenSim.Data.MySQL
             {
                 IDbCommand result = Query(sql, parameters);
 
-                // int x;
-                // if ((x = result.ExecuteNonQuery()) > 0)
-                // {
-                //     returnval = true;
-                // }
                 if (result.ExecuteNonQuery() > 0)
                 {
                     returnval = true;
@@ -1006,11 +1001,6 @@ namespace OpenSim.Data.MySQL
 
                 IDbCommand result = Query(sql, parameters);
 
-                // int x;
-                // if ((x = result.ExecuteNonQuery()) > 0)
-                // {
-                //     returnval = true;
-                // }
                 if (result.ExecuteNonQuery() > 0)
                 {
                     returnval = true;
@@ -1058,11 +1048,6 @@ namespace OpenSim.Data.MySQL
             {
                 IDbCommand result = Query(sql, parameters);
 
-                // int x;
-                // if ((x = result.ExecuteNonQuery()) > 0)
-                // {
-                //     returnval = true;
-                // }
                 if (result.ExecuteNonQuery() > 0)
                 {
                     returnval = true;

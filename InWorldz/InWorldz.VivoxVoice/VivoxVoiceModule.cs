@@ -1069,18 +1069,6 @@ namespace InWorldz.VivoxVoice
             return false;
         }
 
-        // private static readonly string m_vivoxChannelById = "http://{0}/api2/viv_chan_mod.php?mode={1}&chan_id={2}&auth_token={3}";
-
-        // private XmlElement VivoxGetChannelById(string parent, string channelid)
-        // {
-        //     string requrl = String.Format(m_vivoxChannelById, m_vivoxServer, "get", channelid, m_authToken);
-
-        //     if (parent != null && parent != String.Empty)
-        //         return VivoxGetChild(parent, channelid);
-        //     else
-        //         return VivoxCall(requrl, true);
-        // }
-
         /// <summary>
         /// Delete a channel.
         /// Once again, there a multitude of options possible. In the simplest case 
@@ -1117,37 +1105,6 @@ namespace InWorldz.VivoxVoice
             return VivoxCall(requrl, true);
         }
 
-        // private XmlElement VivoxGetChild(string parent, string child)
-        // {
-
-        //     XmlElement children = VivoxListChildren(parent);
-        //     string count;
-
-        //    if (XmlFind(children, "response.level0.channel-search.count", out count))
-        //     {
-        //         int cnum = Convert.ToInt32(count);
-        //         for (int i = 0; i < cnum; i++)
-        //         {
-        //             string name;
-        //             string id;
-        //             if (XmlFind(children, "response.level0.channel-search.channels.channels.level4.name", i, out name))
-        //             {
-        //                 if (name == child)
-        //                 {
-        //                    if (XmlFind(children, "response.level0.channel-search.channels.channels.level4.id", i, out id))
-        //                     {
-        //                         return VivoxGetChannelById(null, id);
-        //                     }
-        //                 }
-        //             } 
-        //         }
-        //     }
-
-        //     // One we *know* does not exist.
-        //     return VivoxGetChannel(null, Guid.NewGuid().ToString());
-
-        // }
-   
         /// <summary>
         /// This method handles the WEB side of making a request over the
         /// Vivox interface. The returned values are tansferred to a has

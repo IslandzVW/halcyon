@@ -12562,23 +12562,6 @@ namespace InWorldz.Phlox.Engine
                 userAgent.IndexOf("InWorldz", StringComparison.CurrentCultureIgnoreCase) < 0)
                 return; // Not the embedded browser. Is this check good enough?  
 
-#if false
-            // Use the IP address of the client and check against the request
-            // seperate logins from the same IP will allow all of them to get non-text/plain as long
-            // as the owner is in the region. Same as SL!
-            string logonFromIPAddress = agent.ControllingClient.RemoteEndPoint.Address.ToString();
-            string requestFromIPAddress = m_UrlModule.GetHttpHeader(key, "remote_addr");
-            //m_log.Debug("IP from header='" + requestFromIPAddress + "' IP from endpoint='" + logonFromIPAddress + "'");
-            if (requestFromIPAddress == null || requestFromIPAddress.Trim() == "")
-                return;
-            if (logonFromIPAddress == null || logonFromIPAddress.Trim() == "")
-                return;
-
-            // If the request isnt from the same IP address then the request cannot be from the owner
-            if (!requestFromIPAddress.Trim().Equals(logonFromIPAddress.Trim()))
-                return;
-#endif
-
             switch (type)
             {
                 case ScriptBaseClass.CONTENT_TYPE_HTML:

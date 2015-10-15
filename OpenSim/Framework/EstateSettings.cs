@@ -34,7 +34,6 @@ namespace OpenSim.Framework
 {
     public class EstateSettings
     {
-        // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly ConfigurationMember configMember;
 
         public enum EstateSaveOptions : uint { EstateSaveSettingsOnly = 0, EstateSaveManagers = 1, EstateSaveUsers = 2, EstateSaveGroups = 4, EstateSaveBans = 8 };
@@ -406,14 +405,6 @@ namespace OpenSim.Framework
                     ConfigurationOption.ConfigurationTypes.TYPE_FLOAT,
                     String.Empty, "0.0", true);
 
-//            configMember.addConfigurationOption("estate_id",
-//                    ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
-//                    String.Empty, "100", true);
-
-//            configMember.addConfigurationOption("parent_estate_id",
-//                    ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
-//                    String.Empty, "1", true);
-
             configMember.addConfigurationOption("redirect_grid_x",
                     ConfigurationOption.ConfigurationTypes.TYPE_INT32,
                     String.Empty, "0", true);
@@ -496,12 +487,6 @@ namespace OpenSim.Framework
                 case "billable_factor":
                     m_BillableFactor = (float) configuration_result;
                     break;
-//                case "estate_id":
-//                    m_EstateID = (uint) configuration_result;
-//                    break;
-//                case "parent_estate_id":
-//                    m_ParentEstateID = (uint) configuration_result;
-//                    break;
                 case "redirect_grid_x":
                     m_RedirectGridX = (int) configuration_result;
                     break;

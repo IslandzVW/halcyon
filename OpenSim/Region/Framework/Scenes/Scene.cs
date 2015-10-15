@@ -2736,12 +2736,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (success)
                 {
-#if false
-                int threadId = Thread.CurrentThread.ManagedThreadId;
-                m_log.WarnFormat("[CROSSING]: Thread {0} region {1} now sleeping.", threadId.ToString(), RegionInfo.RegionName);
-                Thread.Sleep(6000);
-                m_log.WarnFormat("[CROSSING]: Thread {0} region {1} now resuming.", threadId.ToString(), RegionInfo.RegionName);w
-#endif
                     //separate kill step in case this object left the view of other avatars
                     var regionInfo = SurroundingRegions.GetKnownNeighborByHandle(newRegionHandle);
 

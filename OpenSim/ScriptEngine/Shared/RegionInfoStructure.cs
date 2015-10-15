@@ -101,20 +101,5 @@ namespace OpenSim.ScriptEngine.Shared
             return Schedulers[scheduler];
             }
         }
-
-        //public Assembly[] GetCommandProviderAssemblies()
-        //{
-        //    lock (CommandProviders)
-        //    {
-        //        Assembly[] ass = new Assembly[CommandProviders.Count];
-        //        int i = 0;
-        //        foreach (string key in CommandProviders.Keys)
-        //        {
-        //            ass[i] = CommandProviders[key].GetType().Assembly;
-        //            i++;
-        //        }
-        //        return ass;
-        //    }
-        //}
     }
 }

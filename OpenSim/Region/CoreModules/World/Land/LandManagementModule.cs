@@ -526,15 +526,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                         // Either entering a new parcel from the side, or entering the restricted zone from above.
                         handleAvatarChangingParcel(avatar, parcel.landData.LocalID, m_scene.RegionInfo.RegionID);
                     }
-#if false
-// redundant parcel access check for the parcel we're already in, don't do group access lookups for every movement...
-                    else if (zpos < LandChannel.BAN_LINE_SAFETY_HEIGHT)
-                    {
-                        ParcelPropertiesStatus reason;
-                        if (parcel.DenyParcelAccess(avatar.UUID, out reason))
-                            SendNoEntryNotice(avatar,reason);
-                    }
-#endif
                 }
             }
         }
