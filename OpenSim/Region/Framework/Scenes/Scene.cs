@@ -61,11 +61,13 @@ namespace OpenSim.Region.Framework.Scenes
 
     public partial class Scene : SceneBase
     {
-        [DllImport("kernel32.dll")]
-        static extern bool SetThreadPriority(IntPtr hThread, ThreadPriorityLevel nPriority);
+        #if _WIN32
+            [DllImport("kernel32.dll")]
+            static extern bool SetThreadPriority(IntPtr hThread, ThreadPriorityLevel nPriority);
 
-        [DllImport("kernel32.dll")]
-        static extern IntPtr GetCurrentThread();
+            [DllImport("kernel32.dll")]
+            static extern IntPtr GetCurrentThread();
+        #endif
 
         /// <summary>
         /// The lowest an object can fall/travel before being considered off world
@@ -1149,8 +1151,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         void DoTiming()
         {
-            IntPtr thrdHandle = GetCurrentThread();
-            SetThreadPriority(thrdHandle, ThreadPriorityLevel.TimeCritical);
+            #if _WIN32
+                IntPtr thrdHandle = GetCurrentThread();
+                SetThreadPriority(thrdHandle, ThreadPriorityLevel.TimeCritical);
+            #endif
+            // This thread is already assigned ThreadPriority.Highest, shouldn't that be enough for most people?
 
             byte tickNum = 0;
             while (true)

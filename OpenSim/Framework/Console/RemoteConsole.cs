@@ -255,7 +255,7 @@ namespace OpenSim.Framework.Console
             string password = post["PASS"].ToString();
             
             // Validate the username/password pair
-            if (Util.AuthenicateAsSystemUser(username, password) == false)
+            if (Util.AuthenticateAsSystemUser(username, password) == false)
                 return reply;
 
             ConsoleConnection c = new ConsoleConnection();
