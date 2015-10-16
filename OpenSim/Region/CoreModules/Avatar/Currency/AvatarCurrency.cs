@@ -100,7 +100,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
 
         public event ObjectPaid OnObjectPaid;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             IConfig economyConfig = config.Configs["Economy"];
             // Adding the line from Profile in order to get the connection string
@@ -284,7 +284,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             return transID;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

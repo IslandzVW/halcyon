@@ -136,7 +136,7 @@ namespace OpenSim.Grid.GridServer
         protected virtual void LoadPlugins()
         {
             PluginLoader<IGridPlugin> loader =
-                new PluginLoader<IGridPlugin>(new GridPluginInitialiser(this));
+                new PluginLoader<IGridPlugin>(new GridPluginInitializer(this));
 
             loader.Load("/OpenSim/GridServer");
             m_plugins = loader.Plugins;

@@ -34,7 +34,7 @@ namespace OpenSim.Region.ClientStack
 {
     public interface IClientNetworkServer
     {
-        void Initialise(
+        void Initialize(
             IPAddress _listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource);
 
         void NetworkStop();

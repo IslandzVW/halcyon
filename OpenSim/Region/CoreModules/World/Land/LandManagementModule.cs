@@ -88,7 +88,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private DateTime _rdbCacheTime;
         private List<string> _rdbHostCache = new List<string>();
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_scene = scene;
             m_landIDList.Initialize();
@@ -228,7 +228,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -1558,7 +1558,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (!m_scene.TryGetClient(agentID, out client))
             {
                 m_log.WarnFormat("[LAND MANAGEMENT MODULE]: Unable to retrieve IClientAPI for {0}", agentID);
-                return LLSDHelpers.SerialiseLLSDReply(new LLSDEmpty());
+                return LLSDHelpers.SerializeLLSDReply(new LLSDEmpty());
             }
 
             ParcelPropertiesUpdateMessage properties = new ParcelPropertiesUpdateMessage();
@@ -1609,7 +1609,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 m_log.WarnFormat("[LAND MANAGEMENT MODULE]: Unable to find parcelID {0}", parcelID);
             }
-            return LLSDHelpers.SerialiseLLSDReply(new LLSDEmpty());
+            return LLSDHelpers.SerializeLLSDReply(new LLSDEmpty());
         }
 
 
@@ -1687,7 +1687,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             response.parcel_id = parcelID;
             m_log.DebugFormat("[LAND]: got parcelID {0}", parcelID);
 
-            return LLSDHelpers.SerialiseLLSDReply(response);
+            return LLSDHelpers.SerializeLLSDReply(response);
         }
 
         #endregion

@@ -55,7 +55,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected ITerrainModule m_terrainModule;
-        protected IRegionSerialiserModule m_serialiser;
+        protected IRegionSerializerModule m_serializer;
         protected List<SceneObjectGroup> m_sceneObjects;
         protected Scene m_scene;
         protected TarArchiveWriter m_archiveWriter;
@@ -64,14 +64,14 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         public ArchiveWriteRequestExecution(
              List<SceneObjectGroup> sceneObjects,
              ITerrainModule terrainModule,
-             IRegionSerialiserModule serialiser,
+             IRegionSerializerModule serializer,
              Scene scene,
              TarArchiveWriter archiveWriter,
              Guid requestId)
         {
             m_sceneObjects = sceneObjects;
             m_terrainModule = terrainModule;
-            m_serialiser = serialiser;
+            m_serializer = serializer;
             m_scene = scene;
             m_archiveWriter = archiveWriter;
             m_requestId = requestId;
@@ -121,7 +121,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                 Vector3 position = sceneObject.AbsolutePosition;
 
-                string serializedObject = m_serialiser.SaveGroupToXml2(sceneObject);
+                string serializedObject = m_serializer.SaveGroupToXml2(sceneObject);
                 string filename
                     = string.Format(
                         "{0}{1}_{2:000}-{3:000}-{4:000}__{5}.xml",

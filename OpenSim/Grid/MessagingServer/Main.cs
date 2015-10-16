@@ -195,19 +195,19 @@ namespace OpenSim.Grid.MessagingServer
            // RegisterInterface<UserDataBaseService>(m_userDataBaseService);
 
             m_userServerModule = new InterMessageUserServerModule(Cfg, this);
-            m_userServerModule.Initialise();
+            m_userServerModule.Initialize();
 
             msgsvc = new MessageService(Cfg, this, m_userDataBaseService);
-            msgsvc.Initialise();
+            msgsvc.Initialize();
 
             m_regionModule = new MessageRegionModule(Cfg, this);
-            m_regionModule.Initialise();
+            m_regionModule.Initialize();
 
             registerWithUserServer();
 
-            m_userServerModule.PostInitialise();
-            msgsvc.PostInitialise();
-            m_regionModule.PostInitialise();
+            m_userServerModule.PostInitialize();
+            msgsvc.PostInitialize();
+            m_regionModule.PostInitialize();
 
             m_log.Info("[SERVER]: Messageserver 0.5 - Startup complete");
 

@@ -53,7 +53,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
         private Scene m_scene;
         protected IGroupsModule m_groupService;
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
         }
 
@@ -87,7 +87,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             get { return null; }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

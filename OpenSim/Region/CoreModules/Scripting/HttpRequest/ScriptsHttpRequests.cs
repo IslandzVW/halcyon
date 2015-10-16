@@ -171,7 +171,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IHttpRequestModule>(this);
@@ -210,7 +210,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 HttpRequestConsoleCommand);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

@@ -77,7 +77,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             get { return null; }
         }
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             m_useAperture = false;
             IConfig startupConfig = source.Configs["Startup"];
@@ -354,7 +354,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     LLSDAssetUploadResponse uploadResponse = new LLSDAssetUploadResponse();
                     uploadResponse.uploader = uploaderURL;
                     uploadResponse.state = "upload";
-                    return LLSDHelpers.SerialiseLLSDReply(uploadResponse);
+                    return LLSDHelpers.SerializeLLSDReply(uploadResponse);
                 }
                 catch (Exception e)
                 {
@@ -407,7 +407,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         Hashtable badReply = new Hashtable();
                         badReply["state"] = "error";
                         badReply["new_asset"] = UUID.Zero;
-                        result = LLSDHelpers.SerialiseLLSDReply(badReply);
+                        result = LLSDHelpers.SerializeLLSDReply(badReply);
                     }
                     else
                     {
@@ -423,7 +423,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         uploadComplete.new_inventory_item = UUID.Zero;
                         uploadComplete.state = "complete";
 
-                        result = LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+                        result = LLSDHelpers.SerializeLLSDReply(uploadComplete);
                         // m_log.DebugFormat("[BAKED TEXTURE UPLOADER]: baked texture upload completed for {0}", newAssetID);
                     }
 

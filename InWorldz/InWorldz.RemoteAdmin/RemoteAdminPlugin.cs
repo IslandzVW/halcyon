@@ -81,19 +81,19 @@ namespace InWorldz.RemoteAdmin
             get { return m_name; }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
             m_log.Info("[RADMIN]: " + Name + " cannot be default-initialized!");
-            throw new PluginNotInitialisedException(Name);
+            throw new PluginNotInitializedException(Name);
         }
 
-        public void Initialise(OpenSimBase openSim)
+        public void Initialize(OpenSimBase openSim)
         {
             m_app = openSim;
             m_admin = new RemoteAdmin();
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             m_admin.AddCommand("Region", "Restart", RegionRestartHandler);
             m_admin.AddCommand("Region", "SendAlert", RegionSendAlertHandler);

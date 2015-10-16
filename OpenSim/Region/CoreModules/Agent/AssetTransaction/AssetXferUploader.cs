@@ -149,13 +149,13 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         }
 
         /// <summary>
-        /// Initialise asset transfer from the client
+        /// Initialize asset transfer from the client
         /// </summary>
         /// <param name="xferID"></param>
         /// <param name="packetID"></param>
         /// <param name="data"></param>
         /// <returns>True if the transfer is complete, false otherwise</returns>
-        public bool Initialise(IClientAPI remoteClient, UUID assetID, UUID transaction, sbyte type, byte[] data, bool storeLocal, bool tempFile)
+        public bool Initialize(IClientAPI remoteClient, UUID assetID, UUID transaction, sbyte type, byte[] data, bool storeLocal, bool tempFile)
         {
             ourClient = remoteClient;
             m_asset = new AssetBase();

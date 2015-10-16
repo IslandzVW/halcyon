@@ -105,11 +105,11 @@ namespace OpenSim.Region.CoreModules.Plus
 
         #region INonSharedRegionModule members
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

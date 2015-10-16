@@ -57,7 +57,7 @@ namespace InWorldz.Testing
             gridSvc.UnitTest_SetCommsOut(restComms);
             Scene scene = new Scene(regionInfo, commsManager, gridSvc);
 
-            restComms.Initialise_Unittest(scene);
+            restComms.Initialize_Unittest(scene);
 
             server.Start();
 

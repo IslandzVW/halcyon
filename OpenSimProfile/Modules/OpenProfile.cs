@@ -44,7 +44,7 @@ namespace OpenSimProfile.Modules.OpenProfile
         private ConnectionFactory _connFactory;
         private ConnectionFactory _regionConnFactory;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (!m_Enabled)
                 return;
@@ -72,7 +72,7 @@ namespace OpenSimProfile.Modules.OpenProfile
             scene.EventManager.OnNewClient += OnNewClient;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (!m_Enabled)
                 return;

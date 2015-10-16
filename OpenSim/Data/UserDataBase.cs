@@ -76,8 +76,8 @@ namespace OpenSim.Data
 
         public abstract string Version {get;}
         public abstract string Name {get;}
-        public abstract void Initialise(string connect);
-        public abstract void Initialise();
+        public abstract void Initialize(string connect);
+        public abstract void Initialize();
         public abstract void Dispose();
 
         public abstract void SaveUserPreferences(UserPreferencesData userPrefs);

@@ -92,7 +92,7 @@ namespace OpenSim.Grid.UserServer.Modules
             MessageServers = new Dictionary<string, MessageServerInfo>();
         }
 
-        public void Initialise(IGridServiceCore core)
+        public void Initialize(IGridServiceCore core)
         {
             m_core = core;
             m_core.RegisterInterface<MessageServersConnector>(this);
@@ -100,7 +100,7 @@ namespace OpenSim.Grid.UserServer.Modules
             m_NotifyThread.Start();
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

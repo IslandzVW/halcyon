@@ -160,7 +160,7 @@ namespace InWorldz.ApplicationPlugins.AvatarRemoteCommandModule
 
         #region INonSharedRegionModule members
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             IConfig config = source.Configs["AvatarRemoteCommands"];
             if (config == null || !config.GetBoolean("Enabled", false))
@@ -169,7 +169,7 @@ namespace InWorldz.ApplicationPlugins.AvatarRemoteCommandModule
             _enabled = true;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

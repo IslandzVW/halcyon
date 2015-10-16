@@ -108,7 +108,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
         private const uint STATUS_SEARCH_CLASSIFIEDS_FOUNDNONE = 0x1 << 2;
         private const uint STATUS_SEARCH_CLASSIFIEDS_SEARCHDISABLED = 0x1 << 3;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (!m_Enabled)
                 return;
@@ -359,7 +359,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
         }
         // NOTE: END OF RDB-related code copied in LandManagementModule (for now).
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (!m_Enabled)
                 return;

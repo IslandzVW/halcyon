@@ -165,7 +165,7 @@ namespace OpenSim
         protected virtual void LoadPlugins()
         {
             PluginLoader<IApplicationPlugin> loader =
-                new PluginLoader<IApplicationPlugin>(new ApplicationPluginInitialiser(this));
+                new PluginLoader<IApplicationPlugin>(new ApplicationPluginInitializer(this));
 
             loader.Load("/OpenSim/Startup");
             m_plugins = loader.Plugins;
@@ -208,7 +208,7 @@ namespace OpenSim
             LoadPlugins();
             foreach (IApplicationPlugin plugin in m_plugins)
             {
-                plugin.PostInitialise();
+                plugin.PostInitialize();
             }
 
             // Only enable logins to the regions once we have completely finished starting up (apart from scripts)
@@ -283,11 +283,11 @@ namespace OpenSim
             // Called from base.StartUp()
 
             m_httpServerPort = m_networkServersInfo.HttpListenerPort;
-            InitialiseAssetCache();
+            InitializeAssetCache();
         }
 
         /// <summary>
-        /// Initialises the asset cache. This supports legacy configuration values
+        /// Initializes the asset cache. This supports legacy configuration values
         /// to ensure consistent operation, but values outside of that namespace
         /// are handled by the more generic resolution mechanism provided by 
         /// the ResolveAssetServer virtual method. If extended resolution fails, 
@@ -297,7 +297,7 @@ namespace OpenSim
         /// returns an IAssetCache implementation, if possible. This is a virtual
         /// method.
         /// </summary>
-        protected virtual void InitialiseAssetCache()
+        protected virtual void InitializeAssetCache()
         {
             IAssetServer assetServer = null;
             string mode = m_configSettings.AssetStorage;
@@ -307,7 +307,7 @@ namespace OpenSim
                 throw new Exception("No asset server specified");
             }
 
-            AssetClientPluginInitialiser linit = new AssetClientPluginInitialiser(m_configSettings);
+            AssetClientPluginInitializer linit = new AssetClientPluginInitializer(m_configSettings);
 
             //todo: hack to handle transition from whip
             if (mode.ToUpper() == "WHIP") mode = mode.ToUpper();
@@ -327,9 +327,9 @@ namespace OpenSim
         }
 
         // This method loads the identified asset server, passing an approrpiately
-        // initialized Initialise wrapper. There should to be exactly one match,
+        // initialized Initialize wrapper. There should to be exactly one match,
         // if not, then the first match is used.
-        private IAssetServer loadAssetServer(string id, PluginInitialiserBase pi)
+        private IAssetServer loadAssetServer(string id, PluginInitializerBase pi)
         {
             if (id != null && id != String.Empty)
             {
@@ -367,33 +367,6 @@ namespace OpenSim
         /// </summary>
         protected virtual IAssetCache ResolveAssetCache(IAssetServer assetServer)
         {
-            /*IAssetCache assetCache = null;
-            if (m_configSettings.AssetCache != null && m_configSettings.AssetCache != String.Empty)
-            {
-                m_log.DebugFormat("[OPENSIMBASE]: Attempting to load asset cache id = {0}", m_configSettings.AssetCache);
-                
-                try
-                {
-                    PluginInitialiserBase init = new AssetCachePluginInitialiser(m_configSettings, assetServer);
-                    PluginLoader<IAssetCache> loader = new PluginLoader<IAssetCache>(init);
-                    loader.AddFilter(PLUGIN_ASSET_CACHE, new PluginProviderFilter(m_configSettings.AssetCache));
-
-                    loader.Load(PLUGIN_ASSET_CACHE);
-                    if (loader.Plugins.Count > 0)
-                        assetCache = (IAssetCache) loader.Plugins[0];
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[OPENSIMBASE]: ResolveAssetCache failed");
-                    m_log.Error(e);
-                }
-            }
-
-            // If everything else fails, we force load the built-in asset cache
-            return (IAssetCache) ((assetCache != null) ? assetCache 
-                : new Framework.Communications.Cache.AssetCache(assetServer));
-            */
-
             return new Framework.Communications.Cache.AssetCache(assetServer);
         }
 
@@ -462,7 +435,7 @@ namespace OpenSim
 
             // This needs to be ahead of the script engine load, so the
             // script module can pick up events exposed by a module
-            m_moduleLoader.InitialiseSharedModules(scene);
+            m_moduleLoader.InitializeSharedModules(scene);
 
             // Use this in the future, the line above will be deprecated soon
             m_log.Info("[MODULES]: Loading Region's modules (new style)");
@@ -519,7 +492,7 @@ namespace OpenSim
             {
                 foreach (IRegionModule module in modules)
                 {
-                    module.PostInitialise();
+                    module.PostInitialize();
                 }
             }
 
@@ -656,7 +629,7 @@ namespace OpenSim
             scene.PhysicsScene = GetPhysicsScene(scene.RegionInfo.RegionName, scene.RegionInfo.RegionID);
             scene.PhysicsScene.TerrainChannel = scene.Heightmap;
             scene.PhysicsScene.RegionSettings = scene.RegionInfo.RegionSettings;
-            scene.PhysicsScene.SetStartupTerrain(scene.Heightmap.GetFloatsSerialised(), scene.Heightmap.RevisionNumber);
+            scene.PhysicsScene.SetStartupTerrain(scene.Heightmap.GetFloatsSerialized(), scene.Heightmap.RevisionNumber);
             scene.PhysicsScene.SetWaterLevel((float) regionInfo.RegionSettings.WaterHeight);
 
             return scene;

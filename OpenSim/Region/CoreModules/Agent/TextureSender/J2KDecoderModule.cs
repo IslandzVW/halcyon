@@ -63,7 +63,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         {
         }
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             bool useFileCache = true;
             IConfig myConfig = source.Configs["J2KDecoder"];
@@ -83,7 +83,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
 			scene.RegisterModuleInterface<IJ2KDecoder>(this);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             
         }

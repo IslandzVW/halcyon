@@ -63,7 +63,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             Enabled = false;
         }
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             IConfig config = source.Configs["Mesh"];
             if (config == null)
@@ -93,7 +93,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
         {
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

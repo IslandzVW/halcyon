@@ -54,7 +54,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IRegionModule>(this);
@@ -79,10 +79,10 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
             if (m_active_trees)
                 activeizeTreeze(true);
 
-            m_log.Debug("[TREES]: Initialised tree module");
+            m_log.Debug("[TREES]: Initialized tree module");
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

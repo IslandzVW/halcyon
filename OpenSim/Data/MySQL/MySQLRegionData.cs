@@ -58,7 +58,7 @@ namespace OpenSim.Data.MySQL
 
         private object m_PrimDBLock = new object();
 
-        public void Initialise(string connectionString)
+        public void Initialize(string connectionString)
         {
             m_ConnectionString = connectionString;
         }

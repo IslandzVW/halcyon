@@ -80,7 +80,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
 
         #region IApplicationPlugin Members
 
-        public void Initialise(OpenSimBase openSim)
+        public void Initialize(OpenSimBase openSim)
         {
             IConfig config = openSim.ConfigSource.Source.Configs["ChatLogModule"];
             if (config == null) return;
@@ -125,7 +125,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -139,7 +139,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
             get { return "InworldzChatLogMessageCassandra12Backend"; }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
         }
 

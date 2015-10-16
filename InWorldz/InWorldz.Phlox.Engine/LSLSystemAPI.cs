@@ -6085,7 +6085,7 @@ namespace InWorldz.Phlox.Engine
             }
             else
             {
-                x = rot.X / s; // normalise axis
+                x = rot.X / s; // normalize axis
                 y = rot.Y / s;
                 z = rot.Z / s;
             }

@@ -67,7 +67,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
 
         private bool m_Enabled = false;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_Config = config;
             IConfig SMTPConfig;
@@ -133,7 +133,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
