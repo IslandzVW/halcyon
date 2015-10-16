@@ -217,6 +217,7 @@ bin/Regions
 
 # Other testing folder ignores 
 bin/Halcyon.exe
+bin/Halcyon.vshost.exe
 bin/crashes
 bin/Grid
 bin/GridLogin
