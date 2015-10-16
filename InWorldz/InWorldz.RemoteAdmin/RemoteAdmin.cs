@@ -196,7 +196,7 @@ namespace InWorldz.RemoteAdmin
             string password = (string)args[1];
 
             // Is the username the same as the logged in user and do they have the password correct?
-            if ( Util.AuthenicateAsSystemUser(username, password))
+            if ( Util.AuthenticateAsSystemUser(username, password))
             {
                 lock (m_activeSessions)
                 {
