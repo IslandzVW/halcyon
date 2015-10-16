@@ -67,7 +67,7 @@ namespace OpenSim.Grid.GridServer.Modules
         {
         }
 
-        public void Initialize(string opensimVersion, GridDBService gridDBService, IGridServiceCore gridCore, GridConfig config)
+        public void Initialize(GridDBService gridDBService, IGridServiceCore gridCore, GridConfig config)
         {
             //m_opensimVersion = opensimVersion;
             m_gridDBService = gridDBService;

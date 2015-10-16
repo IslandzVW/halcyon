@@ -104,7 +104,7 @@ namespace OpenSim.Region.Framework.Scenes
             args["TimeZoneOffs"] = OSD.FromReal(utcOffset.TotalHours);
             args["UxTime"] = OSD.FromInteger(Util.ToUnixTime(DateTime.Now));
             args["Memory"] = OSD.FromReal(Math.Round(GC.GetTotalMemory(false) / 1024.0 / 1024.0));
-            args["Version"] = OSD.FromString(VersionInfo.Version);
+            args["Version"] = OSD.FromString(VersionInfo.FullVersion);
             
             string strBuffer = "";
             strBuffer = OSDParser.SerializeJsonString(args);

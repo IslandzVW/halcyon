@@ -78,7 +78,7 @@ namespace OpenSim.Framework.Communications.Services
 
         private void loadGridInfo(IConfigSource configSource)
         {
-            _info["platform"] = "OpenSim";
+            _info["platform"] = VersionInfo.SoftwareName;
             try
             {
                 IConfig startupCfg = configSource.Configs["Startup"];

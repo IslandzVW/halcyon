@@ -20,7 +20,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 using Nini.Config;
-using log4net;  
+using log4net;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
@@ -28,10 +28,11 @@ using OpenSim;
 using OpenSim.Framework;
 using OpenSim.Framework.Communications.Cache;
 using OpenSim.Framework.Geom;
+using OpenSim.Framework.Servers;
 using OpenSim.Region.CoreModules;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.CoreModules.World.Land;
 using OpenSim.Region.CoreModules.World.Terrain;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Physics.Manager.Vehicle;
@@ -11489,7 +11490,7 @@ namespace InWorldz.Phlox.Engine
                         if (simulator == World.RegionInfo.RegionName)
                             reply = m_host.ParentGroup.Scene.GetSimulatorVersion();
                         else
-                            reply = "InWorldz";
+                            reply = VersionInfo.SoftwareName;
                         break;
                     default:
                         // ScriptSleep(1000);

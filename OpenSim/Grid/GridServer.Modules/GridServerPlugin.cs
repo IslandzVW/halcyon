@@ -47,8 +47,6 @@ namespace OpenSim.Grid.GridServer.Modules
 
         protected GridDBService m_gridDBService;
 
-        protected string m_version;
-
         protected GridConfig m_config;
 
         protected IGridServiceCore m_core;
@@ -61,7 +59,6 @@ namespace OpenSim.Grid.GridServer.Modules
         {
             m_core = gridServer;
             m_config = gridServer.Config;
-            m_version = gridServer.Version;
             m_console = MainConsole.Instance;
 
             AddConsoleCommands();
@@ -99,13 +96,13 @@ namespace OpenSim.Grid.GridServer.Modules
             // RegisterInterface<GridDBService>(m_gridDBService);
 
             m_gridMessageModule = new GridMessagingModule();
-            m_gridMessageModule.Initialize(m_version, m_gridDBService, m_core, m_config);
+            m_gridMessageModule.Initialize(m_gridDBService, m_core, m_config);
 
             m_gridXmlRpcModule = new GridXmlRpcModule();
-            m_gridXmlRpcModule.Initialize(m_version, m_gridDBService, m_core, m_config);
+            m_gridXmlRpcModule.Initialize(m_gridDBService, m_core, m_config);
 
             m_gridRestModule = new GridRestModule();
-            m_gridRestModule.Initialize(m_version, m_gridDBService, m_core, m_config);
+            m_gridRestModule.Initialize(m_gridDBService, m_core, m_config);
 
             m_gridMessageModule.PostInitialize();
             m_gridXmlRpcModule.PostInitialize();

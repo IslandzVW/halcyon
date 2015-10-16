@@ -658,7 +658,7 @@ namespace OpenSim
             return new Scene(
                 regionInfo, m_commsManager, sceneGridService,
                 storageManager, m_moduleLoader, m_configSettings.PhysicalPrim,
-                m_configSettings.See_into_region_from_neighbor, m_config.Source, m_version);
+                m_configSettings.See_into_region_from_neighbor, m_config.Source);
         }
 
         # region Setup methods

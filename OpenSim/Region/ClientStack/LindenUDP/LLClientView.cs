@@ -163,7 +163,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private int m_animationSequenceNumber = 1;
 
-        private readonly byte[] m_channelVersion = Utils.StringToBytes("OpenSimulator Server"); // Dummy value needed by libSL
+        private readonly byte[] m_channelVersion = Utils.StringToBytes(VersionInfo.SoftwareName); // Dummy value needed by libSL
 
         private static readonly Dictionary<string, UUID> s_defaultAnimations = new Dictionary<string, UUID>();
 

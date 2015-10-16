@@ -54,10 +54,6 @@ namespace OpenSim.Grid.GridServer.Modules
         protected GridConfig m_config;
 
         protected IMessagingServerDiscovery m_messagingServerMapper;
-        /// <value>
-        /// Used to notify old regions as to which OpenSim version to upgrade to
-        /// </value>
-        private string m_opensimVersion;
 
         protected BaseHttpServer m_httpServer;
 
@@ -71,9 +67,8 @@ namespace OpenSim.Grid.GridServer.Modules
         {
         }
 
-        public void Initialize(string opensimVersion, IRegionProfileService gridDBService, IGridServiceCore gridCore, GridConfig config)
+        public void Initialize(IRegionProfileService gridDBService, IGridServiceCore gridCore, GridConfig config)
         {
-            m_opensimVersion = opensimVersion;
             m_gridDBService = gridDBService;
             m_gridCore = gridCore;
             m_config = config;
@@ -302,8 +297,8 @@ namespace OpenSim.Grid.GridServer.Modules
                     String.Format(
                         "Your region service implements OGS1 interface version {0}"
                         + " but this grid requires that the region implement OGS1 interface version {1} to connect."
-                        + "  Try changing to OpenSimulator {2}",
-                        majorInterfaceVersion, VersionInfo.MajorInterfaceVersion, m_opensimVersion));
+                        + "  Try changing to {2}",
+                        majorInterfaceVersion, VersionInfo.MajorInterfaceVersion, VersionInfo.ShortVersion));
             }
 
             existingSim = m_gridDBService.GetRegion(sim.regionHandle);

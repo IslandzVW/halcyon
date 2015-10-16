@@ -30,6 +30,8 @@ using System.Collections.Generic;
 //using System.Drawing;
 //using System.Drawing.Imaging;
 using System.IO;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Timers;
@@ -200,8 +202,6 @@ namespace OpenSim.Region.Framework.Scenes
         private volatile bool m_backingup = false;
 
         private Dictionary<UUID, ReturnInfo> m_returns = new Dictionary<UUID, ReturnInfo>();
-
-        protected string m_simulatorVersion = "InWorldz Server";
 
         protected ModuleLoader m_moduleLoader;
         protected StorageManager m_storageManager;
@@ -414,7 +414,7 @@ namespace OpenSim.Region.Framework.Scenes
                      CommunicationsManager commsMan, SceneCommunicationService sceneGridService,
                      StorageManager storeManager,
                      ModuleLoader moduleLoader, bool physicalPrim,
-                     bool SeeIntoRegionFromNeighbor, IConfigSource config, string simulatorVersion)
+                     bool SeeIntoRegionFromNeighbor, IConfigSource config)
         {
             m_config = config;
 
@@ -470,8 +470,6 @@ namespace OpenSim.Region.Framework.Scenes
             StatsReporter.OnStatsIncorrect += m_sceneGraph.RecalculateStats;
 
             StatsReporter.SetObjectCapacity(objectCapacity);
-
-            m_simulatorVersion = simulatorVersion;
 
             IConfig netConfig = m_config.Configs["Network"];
 
@@ -849,21 +847,16 @@ namespace OpenSim.Region.Framework.Scenes
                 m_eventManager.OnPermissionError += dm.SendAlertToUser;
         }
 
-        public override string GetSimulatorVersion()
-        {
-            return m_simulatorVersion;
-        }
-
         public string GetEnv(string name)
         {
             string ret = "";
             switch (name)
             {
-                case "sim_channel":     // Get the region's channel string, for example "Second Life Server".
-                    ret = "InWorldz Server";
+                case "sim_channel":     // Get the region's channel string, for example "Second Life Server". Does not change across grids as this is about the simulator software.
+                    ret = VersionInfo.SoftwareName;
                     break;
-                case "sim_version":     // Get the region's version number string, for example "10.11.30.215699".
-                    ret = m_simulatorVersion;
+                case "sim_version":     // Get the region's version number string, for example "10.11.30.215699". Does not change across grids as this is about the simulator software.
+                    ret = VersionInfo.Version;
                     break;
                 case "frame_number":    // (integer) Get the frame number of the simulator, for example "42042".
                     ret = m_frame.ToString();

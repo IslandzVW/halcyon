@@ -58,11 +58,6 @@ namespace OpenSim.Grid.GridServer
             get { return m_config; }
         }
 
-        public string Version
-        {
-            get { return m_version; }
-        }
-
         protected List<IGridPlugin> m_plugins = new List<IGridPlugin>();
 
         public void Work()
