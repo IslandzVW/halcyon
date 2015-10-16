@@ -67,7 +67,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.User
                     IConfig userConfig = source.Configs["UserService"];
                     if (userConfig == null)
                     {
-                        m_log.Error("[USER CONNECTOR]: UserService missing from OpenSim.ini");
+                        m_log.Error("[USER CONNECTOR]: UserService missing from Halcyon.ini");
                         return;
                     }
 

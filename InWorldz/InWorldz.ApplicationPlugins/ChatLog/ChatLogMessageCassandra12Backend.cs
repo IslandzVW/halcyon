@@ -52,7 +52,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
     ///     SeedNode3 = x.host.com
     ///     SeedNode4 = x.host.com
     ///     
-    /// into OpenSim.ini.
+    /// into Halcyon.ini.
     /// </summary>
     public class InworldzChatLogMessageCassandra12Backend : IApplicationPlugin, IChatMessageLogBackend
     {

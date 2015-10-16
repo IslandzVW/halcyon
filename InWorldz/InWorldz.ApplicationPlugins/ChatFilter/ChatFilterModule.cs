@@ -51,7 +51,7 @@ namespace InWorldz.ApplicationPlugins.ChatFilterModule
     /// [ChatFilterModule]
     ///     Enabled = true
     /// 
-    /// into OpenSim.ini.
+    /// into Halcyon.ini.
     /// </summary>
     public class ChatFilterModule : INonSharedRegionModule
     {

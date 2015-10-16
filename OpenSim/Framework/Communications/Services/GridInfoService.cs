@@ -51,7 +51,7 @@ namespace OpenSim.Framework.Communications.Services
         /// grid information</param>
         /// <remarks>
         /// GridInfoService uses the [GridInfo] section of the
-        /// standard OpenSim.ini file --- which is not optimal, but
+        /// standard Halcyon.ini file --- which is not optimal, but
         /// anything else requires a general redesign of the config
         /// system.
         /// </remarks>
@@ -61,7 +61,7 @@ namespace OpenSim.Framework.Communications.Services
         }
 
         /// <summary>
-        /// Default constructor, uses OpenSim.ini.
+        /// Default constructor, uses Halcyon.ini.
         /// </summary>
         public GridInfoService()
         {
@@ -72,7 +72,7 @@ namespace OpenSim.Framework.Communications.Services
             }
             catch (FileNotFoundException)
             {
-                _log.Warn("[GridInfoService] no OpenSim.ini file found --- GridInfoServices WILL NOT BE AVAILABLE to your users");
+                _log.Warn("[GridInfoService] no Halcyon.ini file found --- GridInfoServices WILL NOT BE AVAILABLE to your users");
             }
         }
 
@@ -131,7 +131,7 @@ namespace OpenSim.Framework.Communications.Services
 
         private void IssueWarning()
         {
-            _log.Warn("[GridInfoService] found no [GridInfo] section in your OpenSim.ini");
+            _log.Warn("[GridInfoService] found no [GridInfo] section in your Halcyon.ini");
             _log.Warn("[GridInfoService] trying to guess sensible defaults, you might want to provide better ones:");
             foreach (string k in _info.Keys)
             {

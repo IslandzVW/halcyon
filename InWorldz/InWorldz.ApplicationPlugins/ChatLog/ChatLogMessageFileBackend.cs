@@ -48,7 +48,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
     ///     Backend = FileBackend
     ///     File    = Chat.log
     /// 
-    /// into OpenSim.ini.
+    /// into Halcyon.ini.
     /// </summary>
     public class InworldzChatLogMessageFileBackend : IApplicationPlugin, IChatMessageLogBackend
     {

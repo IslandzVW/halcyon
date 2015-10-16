@@ -54,7 +54,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
     public class FlexiGroupsModule : ISharedRegionModule, IGroupsModule
     {
         /// <summary>
-        /// ; To use this module, you must specify the following in your OpenSim.ini
+        /// ; To use this module, you must specify the following in your Halcyon.ini
         /// [GROUPS]
         /// Enabled = true
         /// Module  = XmlRpcGroups

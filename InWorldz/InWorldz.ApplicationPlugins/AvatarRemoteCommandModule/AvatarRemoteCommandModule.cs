@@ -103,7 +103,7 @@ namespace InWorldz.ApplicationPlugins.AvatarRemoteCommandModule
     /// [AvatarRemoteCommands]
     ///     Enabled = true
     ///     
-    /// to your OpenSim.ini file
+    /// to your Halcyon.ini file
     /// </remarks>
     public class AvatarRemoteCommandModule : ISharedRegionModule
     {
