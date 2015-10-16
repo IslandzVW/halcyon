@@ -85,7 +85,7 @@ namespace OpenSim.TestSuite
         {
             Console.WriteLine(
                 "usage: pCampBot <-loginuri loginuri> [OPTIONS]\n" +
-                "Spawns a set of bots to test an OpenSim region\n\n" +
+                "Spawns a set of bots to test a Halcyon region\n\n" +
                 "  -l, -loginuri      loginuri for sim to log into (required)\n" +
                 // TODO: unused: "  -n, -botcount      number of bots to start (default: 1)\n" +
                 "  -firstname         first name for the bot(s) (default: random string)\n" +

@@ -624,7 +624,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
                 m_localBackend.SendCloseAgent(regionHandle, id);
 
             responsedata["int_response_code"] = 200;
-            responsedata["str_response_string"] = "OpenSim agent " + id.ToString();
+            responsedata["str_response_string"] = "Halcyon agent " + id.ToString();
 
             m_log.Debug("[REST COMMS]: Agent Deleted.");
         }

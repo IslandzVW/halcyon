@@ -333,7 +333,7 @@ namespace OpenSim
         {
             if (id != null && id != String.Empty)
             {
-                m_log.DebugFormat("[OPENSIMBASE] Attempting to load asset server id={0}", id);
+                m_log.DebugFormat("[HALCYONBASE] Attempting to load asset server id={0}", id);
 
                 try
                 {
@@ -343,13 +343,13 @@ namespace OpenSim
 
                     if (loader.Plugins.Count > 0)
                     {
-                        m_log.DebugFormat("[OPENSIMBASE] Asset server {0} loaded", id);
+                        m_log.DebugFormat("[HALCYONBASE] Asset server {0} loaded", id);
                         return (IAssetServer) loader.Plugins[0];
                     }
                 }
                 catch (Exception e)
                 {
-                    m_log.DebugFormat("[OPENSIMBASE] Asset server {0} not loaded ({1})", id, e.Message);
+                    m_log.DebugFormat("[HALCYONBASE] Asset server {0} not loaded ({1})", id, e.Message);
                 }
             }
             return null;
@@ -531,7 +531,7 @@ namespace OpenSim
             if (!String.IsNullOrEmpty(scene.RegionInfo.RegionFile))
             {
                 File.Delete(scene.RegionInfo.RegionFile);
-                m_log.InfoFormat("[OPENSIM]: deleting region file \"{0}\"", scene.RegionInfo.RegionFile);
+                m_log.InfoFormat("[HALCYON]: deleting region file \"{0}\"", scene.RegionInfo.RegionFile);
             }
         }
 

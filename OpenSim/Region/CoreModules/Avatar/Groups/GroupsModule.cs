@@ -84,7 +84,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Groups
                     if (m_SceneList.Count == 0)
                     {
                         osGroup.GroupID = opensimulatorGroupID;
-                        osGroup.GroupName = "OpenSimulator Testing";
+                        osGroup.GroupName = "Halcyon Testing";
                         osGroup.GroupPowers =
                                 (uint)(GroupPowers.AllowLandmark |
                                        GroupPowers.AllowSetHome);
