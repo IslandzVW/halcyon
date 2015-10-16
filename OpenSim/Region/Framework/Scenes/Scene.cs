@@ -2464,7 +2464,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             foreach (SceneObjectPart part in group.Children.Values)
             {
-                if (!group.IsAttachment)	// Optimization, can't sit on something you're wearing
+                if (!group.IsAttachment)    // Optimization, can't sit on something you're wearing
                 {
                     // Unsit the avatars sitting on the parts
                     UUID AgentID = part.GetAvatarOnSitTarget();
@@ -5214,7 +5214,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (part.ParentGroup.IsDeleted)
                 return;
 
-            if (client.AgentId != part.OwnerID)	// prevent spoofing/hacking
+            if (client.AgentId != part.OwnerID)    // prevent spoofing/hacking
                 return;
 
             part = part.ParentGroup.RootPart;

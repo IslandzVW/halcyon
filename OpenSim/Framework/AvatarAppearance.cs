@@ -346,8 +346,8 @@ namespace OpenSim.Framework
             SetHeight();
         }
 
-		public virtual void SetHeight()
-		{
+        public virtual void SetHeight()
+        {
             m_avatarHeight = 1.23077f  // Shortest possible avatar height
                            + 0.516945f * (float)m_visualparams[25] / 255.0f   // Body height
                            + 0.072514f * (float)m_visualparams[120] / 255.0f  // Head size

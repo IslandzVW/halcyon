@@ -454,7 +454,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (xPos < 0 || yPos < 0 || xPos >= Constants.RegionSize || yPos >= Constants.RegionSize)
                 return new Vector3(0.00000f, 0.00000f, 1.00000f);
-			
+            
             uint x = (uint)xPos;
             uint y = (uint)yPos;
             uint xPlusOne = x + 1;
@@ -488,7 +488,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!Util.IsValidRegionXY(xPos, yPos))
                 return new Vector3(0.00000f, 0.00000f, 1.00000f);
-			
+            
             uint x = (uint)xPos;
             uint y = (uint)yPos;
             uint xPlusOne = x + 1;

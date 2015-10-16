@@ -133,13 +133,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             overrideSimulatorMaxPrimCount = overrideDel;
         }
 
-		public int getMaxPrimCount(int areaSize, bool includeBonusFactor)
-		{
-			//Normal Calculations
+        public int getMaxPrimCount(int areaSize, bool includeBonusFactor)
+        {
+            //Normal Calculations
             double bonus = 1.0;
             if (includeBonusFactor)
                 bonus = m_scene.RegionInfo.RegionSettings.ObjectBonus;
-			int prims = Convert.ToInt32(
+            int prims = Convert.ToInt32(
                         Math.Round((Convert.ToDouble(areaSize) / 65536.0)
                                   * Convert.ToDouble(m_scene.RegionInfo.PrimLimit) 
                                   * bonus
@@ -147,7 +147,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (prims > m_scene.RegionInfo.PrimLimit)
                 prims = m_scene.RegionInfo.PrimLimit;
             return prims;
-		}
+        }
 
         public int getParcelMaxPrimCount(ILandObject thisObject, bool includeBonusFactor)
         {

@@ -159,13 +159,13 @@ namespace InWorldz.ApplicationPlugins.ChatLog
         {
             /*
              *  CREATE TABLE messages (
-	         *       message_id uuid PRIMARY KEY,
-	         *       from_agent uuid,
-	         *       to_agent uuid,
-	         *       region_id uuid,
-	         *       chat_type int,
-	         *       sent_on int,
-	         *       sent_on_day timestamp, 
+             *       message_id uuid PRIMARY KEY,
+             *       from_agent uuid,
+             *       to_agent uuid,
+             *       region_id uuid,
+             *       chat_type int,
+             *       sent_on int,
+             *       sent_on_day timestamp, 
              *       message text
              *   );
              */

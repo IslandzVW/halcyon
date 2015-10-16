@@ -54,8 +54,8 @@ namespace OpenSim.ApplicationPlugins.ScriptEngine
             // Make sure we have config
             try
             {
-				if (ConfigSource == null)
-					return;
+                if (ConfigSource == null)
+                    return;
 
                 if (ConfigSource.Configs["SECS"] == null)
                     ConfigSource.AddConfig("SECS");

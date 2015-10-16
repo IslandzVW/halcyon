@@ -55,17 +55,17 @@ namespace InWorldz.ApplicationPlugins.AvatarRemoteCommandModule
     /// Command [ app -> regionhost ] (HTTP POST)
     ///
     /// {
-    ///	  “id”:”[command_id]”
-    ///	  “userId”:”[user_uuid]”
-    ///	  “sessionId”:”[session_uuid]”
-    ///	  ”regionId”:”[region_uuid]”
-    ///	}
-    ///	
+    ///      “id”:”[command_id]”
+    ///      “userId”:”[user_uuid]”
+    ///      “sessionId”:”[session_uuid]”
+    ///      ”regionId”:”[region_uuid]”
+    ///    }
+    ///    
     /// <param name="id">the command type (RemoteCommandType)</param>
     /// <param name="userId">the user’s ID</param>
     /// <param name="sessionId">the user's current grid session id to verify this is a legitimate message</param>
     /// <param name="regionId">the user’s current regionID</param>
-    ///	
+    ///    
     /// More info can be added on, as shown below for the AvatarChatCommand.
     /// 
     /// The response to this request will be in the following format:
@@ -73,9 +73,9 @@ namespace InWorldz.ApplicationPlugins.AvatarRemoteCommandModule
     /// CommandReply [ regionhost -> app ] (REPLY TO HTTP POST)
     ///
     /// {
-    ///	  "status":"OK|MOVED|NOTFOUND|UNAUTHORIZED"
-    ///	  "data":"[new_region_hostname/ip]"
-    ///	  "newRegionId":"[new region id if set]"
+    ///      "status":"OK|MOVED|NOTFOUND|UNAUTHORIZED"
+    ///      "data":"[new_region_hostname/ip]"
+    ///      "newRegionId":"[new region id if set]"
     /// }
     ///
     /// <param name="status">The status of the command (RemoteCommandResponse)</param>
@@ -87,12 +87,12 @@ namespace InWorldz.ApplicationPlugins.AvatarRemoteCommandModule
     /// AvatarChatCommand [ app -> regionhost ] (HTTP POST)
     ///
     /// {
-    ///	  “id”:”[command_id]”
-    ///	  “userId”:”[user_uuid]”
-    ///	  “sessionId”:”[session_uuid]”
-    ///	  ”regionId”:”[region_uuid]”
+    ///      “id”:”[command_id]”
+    ///      “userId”:”[user_uuid]”
+    ///      “sessionId”:”[session_uuid]”
+    ///      ”regionId”:”[region_uuid]”
     ///   “channel”:”[chat_channel]”
-    ///	  “text”:”[text to be said]”
+    ///      “text”:”[text to be said]”
     /// } 
     /// 
     /// <param name="chat_channel">the channel number to say the chat on</param>

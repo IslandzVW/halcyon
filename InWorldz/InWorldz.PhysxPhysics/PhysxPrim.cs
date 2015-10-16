@@ -2406,15 +2406,15 @@ namespace InWorldz.PhysxPhysics
         {
             try
             {
-	            foreach (PhysX.Shape shape in shapes)
-	            {
-	                shape.SimulationFilterData = new PhysX.FilterData(flags, shape.SimulationFilterData.Word1,
-	                    shape.SimulationFilterData.Word2, shape.SimulationFilterData.Word3);
+                foreach (PhysX.Shape shape in shapes)
+                {
+                    shape.SimulationFilterData = new PhysX.FilterData(flags, shape.SimulationFilterData.Word1,
+                        shape.SimulationFilterData.Word2, shape.SimulationFilterData.Word3);
 
                     if (_hasSimulated)
-	                    shape.ResetFiltering();
-	            }
-			}
+                        shape.ResetFiltering();
+                }
+            }
             catch (Exception e)
             {
                 m_log.ErrorFormat("[PhysxPrim]: SetTouchNotificationOnGivenShapes exception:\n   {0}", e);

@@ -109,7 +109,7 @@ namespace OpenSim.Grid.UserServer.Modules
             m_httpServer = httpServer;
 
             m_httpServer.AddXmlRPCHandler("region_startup", RegionStartup);
-            m_httpServer.AddXmlRPCHandler("region_shutdown", RegionShutdown);	
+            m_httpServer.AddXmlRPCHandler("region_shutdown", RegionShutdown);    
             m_httpServer.AddXmlRPCHandler("agent_location", AgentLocation);
             m_httpServer.AddXmlRPCHandler("agent_leaving", AgentLeaving);
 

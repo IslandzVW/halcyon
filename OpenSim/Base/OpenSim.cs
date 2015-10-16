@@ -82,7 +82,7 @@ namespace OpenSim
             base.ReadExtraConfigSettings();
 
             IConfig startupConfig = m_config.Source.Configs["Startup"];
-			IConfig networkConfig = m_config.Source.Configs["Network"];
+            IConfig networkConfig = m_config.Source.Configs["Network"];
 
             if (startupConfig != null)
             {

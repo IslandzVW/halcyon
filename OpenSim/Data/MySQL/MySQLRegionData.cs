@@ -1934,7 +1934,7 @@ namespace OpenSim.Data.MySQL
             newSettings.TerrainTexture1 = new UUID(Convert.ToString(row["terrain_texture_1"]));
             newSettings.TerrainTexture2 = new UUID(Convert.ToString(row["terrain_texture_2"]));
             newSettings.TerrainTexture3 = new UUID(Convert.ToString(row["terrain_texture_3"]));
-			newSettings.TerrainTexture4 = new UUID(Convert.ToString(row["terrain_texture_4"]));
+            newSettings.TerrainTexture4 = new UUID(Convert.ToString(row["terrain_texture_4"]));
             newSettings.Elevation1NW = Convert.ToDouble(row["elevation_1_nw"]);
             newSettings.Elevation2NW = Convert.ToDouble(row["elevation_2_nw"]);
             newSettings.Elevation1NE = Convert.ToDouble(row["elevation_1_ne"]);
@@ -2012,7 +2012,7 @@ namespace OpenSim.Data.MySQL
             UUID snapshotID = UUID.Zero;
 
             UUID.TryParse(Convert.ToString(row["AuthBuyerID"]), out authedbuyer);
-			UUID.TryParse(Convert.ToString(row["SnapshotUUID"]), out snapshotID);
+            UUID.TryParse(Convert.ToString(row["SnapshotUUID"]), out snapshotID);
             newData.OtherCleanTime = Convert.ToInt32(row["OtherCleanTime"]);
             newData.Dwell = Convert.ToInt32(row["Dwell"]);
 

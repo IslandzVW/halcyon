@@ -104,7 +104,7 @@ namespace InWorldz.RemoteAdmin
             m_admin.AddCommand("Region", "SaveOAR", SaveOARHandler);
             m_admin.AddCommand("Region", "ChangeParcelFlags", RegionChangeParcelFlagsHandler);
 
-            m_admin.AddHandler(MainServer.Instance);	
+            m_admin.AddHandler(MainServer.Instance);    
         }
 
         public void Dispose()

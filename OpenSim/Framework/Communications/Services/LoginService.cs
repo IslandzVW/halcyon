@@ -73,34 +73,34 @@ namespace OpenSim.Framework.Communications.Services
         private const string DEFAULT_REGIONS_FILE = "defaultregions.txt";
         private List<string> _DefaultRegionsList = new List<string>();
 
-		/// <summary>
-		/// LoadStringListFromFile
-		/// </summary>
-		/// <param name="theList"></param>
-		/// <param name="fn"></param>
-		/// <param name="desc"></param>
-		private void LoadStringListFromFile(List<string> theList, string fn, string desc)
-		{
-			if (File.Exists(fn))
-			{
-				using (System.IO.StreamReader file = new System.IO.StreamReader(fn))
-				{
-					string line;
-					while ((line = file.ReadLine()) != null)
-					{
-						line = line.Trim();
-						if ((line != "") && !line.StartsWith(";") && !line.StartsWith("//"))
-						{
-							theList.Add(line);
-							m_log.InfoFormat("[LOGINSERVICE] Added {0} {1}", desc, line);
-						}
-					}
-				}
-			}
+        /// <summary>
+        /// LoadStringListFromFile
+        /// </summary>
+        /// <param name="theList"></param>
+        /// <param name="fn"></param>
+        /// <param name="desc"></param>
+        private void LoadStringListFromFile(List<string> theList, string fn, string desc)
+        {
+            if (File.Exists(fn))
+            {
+                using (System.IO.StreamReader file = new System.IO.StreamReader(fn))
+                {
+                    string line;
+                    while ((line = file.ReadLine()) != null)
+                    {
+                        line = line.Trim();
+                        if ((line != "") && !line.StartsWith(";") && !line.StartsWith("//"))
+                        {
+                            theList.Add(line);
+                            m_log.InfoFormat("[LOGINSERVICE] Added {0} {1}", desc, line);
+                        }
+                    }
+                }
+            }
 
-		}
+        }
 
-		/// <summary>
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="userManager"></param>
@@ -122,7 +122,7 @@ namespace OpenSim.Framework.Communications.Services
             // For returning users' where the preferred region is down
             LoadDefaultRegionsFromFile(DEFAULT_REGIONS_FILE);
             LoadStringListFromFile(_badViewerStrings, BAD_VIEWERS_FILE, "blacklisted viewer");
-		}
+        }
 
         /// <summary>
         /// If the user is already logged in, try to notify the region that the user they've got is dead.
@@ -283,7 +283,7 @@ namespace OpenSim.Framework.Communications.Services
                     if (userProfile.CurrentAgent != null && userProfile.CurrentAgent.AgentOnline)
                     {
                         // Force a refresh for this due to Commit below
-						UUID userID = userProfile.ID;
+                        UUID userID = userProfile.ID;
                         m_userManager.PurgeUserFromCaches(userID);
                         userProfile = m_userManager.GetUserProfile(userID);
                         // on an error, return the former error we returned before recovery was supported.
@@ -433,7 +433,7 @@ namespace OpenSim.Framework.Communications.Services
             return false;
         }
 
-		protected virtual bool TryAuthenticateXmlRpcLogin(
+        protected virtual bool TryAuthenticateXmlRpcLogin(
             XmlRpcRequest request, string firstname, string lastname, out UserProfileData userProfile)
         {
             Hashtable requestData = (Hashtable)request.Params[0];
@@ -851,13 +851,13 @@ namespace OpenSim.Framework.Communications.Services
 
         protected bool PrepareLoginToREURI(Regex reURI, LoginResponse response, UserProfileData theUser, string startLocationRequest, string StartLocationType, string desc, string clientVersion)
         {
-			string region;
-			RegionInfo regionInfo = null;
+            string region;
+            RegionInfo regionInfo = null;
             Match uriMatch = reURI.Match(startLocationRequest);
             if (uriMatch == null)
             {
                 m_log.InfoFormat("[LOGIN]: Got {0} {1}, but can't process it", desc, startLocationRequest);
-				return false;
+                return false;
             }
 
             region = uriMatch.Groups["region"].ToString();
@@ -865,15 +865,15 @@ namespace OpenSim.Framework.Communications.Services
             if (regionInfo == null)
             {
                 m_log.InfoFormat("[LOGIN]: Got {0} {1}, can't locate region {2}", desc, startLocationRequest, region);
-				return false;
+                return false;
             }
             theUser.CurrentAgent.Position = new Vector3(float.Parse(uriMatch.Groups["x"].Value),
                                                         float.Parse(uriMatch.Groups["y"].Value), float.Parse(uriMatch.Groups["z"].Value));
             response.LookAt = "[r0,r1,r0]";
             // can be: last, home, safe, url
-			response.StartLocation = StartLocationType;
-			return PrepareLoginToRegion(regionInfo, theUser, response, clientVersion);
-		}
+            response.StartLocation = StartLocationType;
+            return PrepareLoginToRegion(regionInfo, theUser, response, clientVersion);
+        }
 
         protected bool PrepareNextRegion(LoginResponse response, UserProfileData theUser, List<string> theList, string startLocationRequest, string clientVersion)
         {
@@ -891,15 +891,15 @@ namespace OpenSim.Framework.Communications.Services
 
         // For new users' first-time logins
         protected bool PrepareNextDefaultLogin(LoginResponse response, UserProfileData theUser, string startLocationRequest, string clientVersion)
-		{
+        {
             return PrepareNextRegion(response, theUser, _DefaultLoginsList, startLocationRequest, clientVersion);
-		}
+        }
 
         // For returning users' where the preferred region is down
         protected bool PrepareNextDefaultRegion(LoginResponse response, UserProfileData theUser, string clientVersion)
-		{
+        {
             return PrepareNextRegion(response, theUser, _DefaultRegionsList, "safe", clientVersion);
-		}
+        }
 
         /// <summary>
         /// Customises the login response and fills in missing values.  This method also tells the login region to
@@ -1008,7 +1008,7 @@ namespace OpenSim.Framework.Communications.Services
             }
 
             // No default regions available either.
-			// Send him to global default region home location instead (e.g. 1000,1000)
+            // Send him to global default region home location instead (e.g. 1000,1000)
             ulong defaultHandle = (((ulong)m_defaultHomeX * Constants.RegionSize) << 32) |
                                   ((ulong)m_defaultHomeY * Constants.RegionSize);
 

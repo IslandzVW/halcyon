@@ -780,7 +780,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             IClientAPI sourceAvatarClient = LocateClientObject(remoteClient.AgentId);
             if (sourceAvatarClient == null)
             {
-				sourceAvatarClient.SendAgentAlertMessage("Purchase failed. No Controlling client found for sourceAvatar!", false);
+                sourceAvatarClient.SendAgentAlertMessage("Purchase failed. No Controlling client found for sourceAvatar!", false);
                 return;
             }
 
@@ -790,29 +790,29 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             SceneObjectPart objectPart = s.GetSceneObjectPart(localID);
             if (objectPart == null)
             {
-				sourceAvatarClient.SendAgentAlertMessage("Purchase failed. The object was not found.", false);
+                sourceAvatarClient.SendAgentAlertMessage("Purchase failed. The object was not found.", false);
                 return;
             }
 
-			/////  Prevent purchase spoofing, as well as viewer bugs.  /////
-			// Verify that the object is actually for sale
-			if (objectPart.ObjectSaleType == (byte)SaleType.Not)
-			{
-				remoteClient.SendAgentAlertMessage("Purchase failed. The item is not for sale.", false);
-				return;
-			}
-			// Verify that the viewer sale type actually matches the correct sale type of the object
-			if (saleType != objectPart.ObjectSaleType)
-			{
-				remoteClient.SendAgentAlertMessage("Purchase failed.  The sale type does not match.", false);
-				return;
-			}
-			// Verify that the buyer is paying the correct amount
-			if (salePrice != objectPart.SalePrice)
-			{
-				remoteClient.SendAgentAlertMessage("Purchase failed.  The payment price does not match the sale price.", false);
-				return;
-			}
+            /////  Prevent purchase spoofing, as well as viewer bugs.  /////
+            // Verify that the object is actually for sale
+            if (objectPart.ObjectSaleType == (byte)SaleType.Not)
+            {
+                remoteClient.SendAgentAlertMessage("Purchase failed. The item is not for sale.", false);
+                return;
+            }
+            // Verify that the viewer sale type actually matches the correct sale type of the object
+            if (saleType != objectPart.ObjectSaleType)
+            {
+                remoteClient.SendAgentAlertMessage("Purchase failed.  The sale type does not match.", false);
+                return;
+            }
+            // Verify that the buyer is paying the correct amount
+            if (salePrice != objectPart.SalePrice)
+            {
+                remoteClient.SendAgentAlertMessage("Purchase failed.  The payment price does not match the sale price.", false);
+                return;
+            }
 
             string objName = objectPart.ParentGroup.RootPart.Name;
             Vector3 pos = objectPart.AbsolutePosition;

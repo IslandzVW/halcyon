@@ -753,7 +753,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             IClientAPI client;
             if (!m_scene.TryGetClient(address, out client) || !(client is LLClientView))
             {
-//				m_log.Warn("[LLUDPSERVER]: Received a " + packet.Type.ToString() + " packet from an unrecognized source: " + address.ToString() + " in " + m_scene.RegionInfo.RegionName);
+//                m_log.Warn("[LLUDPSERVER]: Received a " + packet.Type.ToString() + " packet from an unrecognized source: " + address.ToString() + " in " + m_scene.RegionInfo.RegionName);
                 return;
             }
 

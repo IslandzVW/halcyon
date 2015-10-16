@@ -211,7 +211,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             client.OnParcelReclaim += new ParcelReclaim(handleParcelReclaim);
             client.OnParcelInfoRequest += new ParcelInfoRequest(handleParcelInfo);
             client.OnParcelDwellRequest += new ParcelDwellRequest(handleParcelDwell);
-			client.OnParcelFreezeUser += new FreezeUserUpdate(OnParcelFreezeUser);
+            client.OnParcelFreezeUser += new FreezeUserUpdate(OnParcelFreezeUser);
             client.OnParcelEjectUser += new EjectUserUpdate(OnParcelEjectUser);
 
             client.OnParcelDeedToGroup += new ParcelDeedToGroup(handleParcelDeedToGroup);
@@ -1940,10 +1940,10 @@ namespace OpenSim.Region.CoreModules.World.Land
         }
 
         public void OnParcelEjectUser(IClientAPI client, UUID parcelowner, uint flags, UUID target)
-		{
-			// m_log.DebugFormat("OnParcelEjectUser: target {0} by {1} options {2}", target, parcelowner.ToString(), flags);
-			ScenePresence target_presence = m_scene.GetScenePresence(target); 
-			if (target_presence == null) return;
+        {
+            // m_log.DebugFormat("OnParcelEjectUser: target {0} by {1} options {2}", target, parcelowner.ToString(), flags);
+            ScenePresence target_presence = m_scene.GetScenePresence(target); 
+            if (target_presence == null) return;
 
             ILandObject land = GetLandObject(target_presence.AbsolutePosition.X, target_presence.AbsolutePosition.Y);
 
@@ -1965,7 +1965,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     targetClient.Close();
                 }
             }
-		}
+        }
 
         private LandObject FindParcelByUUID(UUID parcelID)
         {

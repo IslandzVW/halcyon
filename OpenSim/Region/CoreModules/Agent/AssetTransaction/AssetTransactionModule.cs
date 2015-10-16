@@ -39,8 +39,8 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 {
     public class AssetTransactionModule : IRegionModule, IAgentAssetTransactions
     {
-		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-		private readonly Dictionary<UUID, Scene> RegisteredScenes = new Dictionary<UUID, Scene>();
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly Dictionary<UUID, Scene> RegisteredScenes = new Dictionary<UUID, Scene>();
         private bool m_dumpAssetsToFile = false;
         private Scene m_scene = null;
 
@@ -199,7 +199,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         {
                         m_log.DebugFormat(
                             "[TRANSACTIONS MANAGER] Called HandleItemUpdateFromTransaction with item {0} transaction {1}",
-							item.Name, transactionID);
+                            item.Name, transactionID);
 
             AgentAssetTransactions transactions = GetUserTransactions(remoteClient.AgentId);
 
@@ -221,7 +221,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         {
                         m_log.DebugFormat(
                             "[TRANSACTIONS MANAGER] Called HandleTaskItemUpdateFromTransaction with part {0} transaction {1}",
-							item.Name, transactionID);
+                            item.Name, transactionID);
 
             AgentAssetTransactions transactions = GetUserTransactions(remoteClient.AgentId);
 
@@ -266,7 +266,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 remoteClient.SendAgentAlertMessage("Server error uploading asset. Could not allocate uploader.", false);
                 return;
             }
-//		    m_log.Debug("HandleUDPUploadRequest(Initialize) - assetID: " + assetID.ToString() + " transaction: " + transaction.ToString() + " type: " + type.ToString() + " storelocal: " + storeLocal + " tempFile: " + tempFile);
+//            m_log.Debug("HandleUDPUploadRequest(Initialize) - assetID: " + assetID.ToString() + " transaction: " + transaction.ToString() + " type: " + type.ToString() + " storelocal: " + storeLocal + " tempFile: " + tempFile);
 
             // Okay, start the upload.
             uploader.Initialize(remoteClient, assetID, transaction, type, data, storeLocal, tempFile);

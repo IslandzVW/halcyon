@@ -56,24 +56,24 @@ namespace OpenSim.Region.CoreModules.Plus
         ///
         /// POST to "http://regionIP:regionPort/plus/claim_parcel"
         /// {
-        ///	  “user_id”:”[user_uuid]”
-        ///	  “parcel_id:”[parcel_uuid]”
-        ///	}
-        ///	
+        ///      “user_id”:”[user_uuid]”
+        ///      “parcel_id:”[parcel_uuid]”
+        ///    }
+        ///    
         /// POST to "http://regionIP:regionPort/plus/abandon_parcel"
         /// {
-        ///	  “user_id”:”[user_uuid]”
-        ///	  “parcel_id:”[parcel_uuid]”
-        ///	}
-        ///	
+        ///      “user_id”:”[user_uuid]”
+        ///      “parcel_id:”[parcel_uuid]”
+        ///    }
+        ///    
         /// The response to both requests will be in the following format:
         /// 
         /// CommandReply [ regionhost -> app ] (REPLY TO HTTP POST)
         ///
         /// {
-        ///	  "status":"OK"|"UNAUTHORIZED"
-        ///	  “parcel_id:”[actual parcel ID]”
-        ///	  “user_id”:”[actual parcel ownerID]”
+        ///      "status":"OK"|"UNAUTHORIZED"
+        ///      “parcel_id:”[actual parcel ID]”
+        ///      “user_id”:”[actual parcel ownerID]”
         /// }
 
     public class PlusParcelModule : ISharedRegionModule

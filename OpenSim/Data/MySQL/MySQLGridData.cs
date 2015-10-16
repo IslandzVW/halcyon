@@ -177,7 +177,7 @@ namespace OpenSim.Data.MySQL
 
                 // World Map Addition
                 UUID.TryParse(Convert.ToString(reader["regionMapTexture"]), out retval.regionMapTextureID);
-				UUID.TryParse(Convert.ToString(reader["owner_uuid"]), out retval.owner_uuid);
+                UUID.TryParse(Convert.ToString(reader["owner_uuid"]), out retval.owner_uuid);
                 retval.maturity = Convert.ToUInt32(reader["access"]);
             }
             else
