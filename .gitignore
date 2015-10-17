@@ -216,7 +216,17 @@ bin/aperture.cfg
 bin/Regions
 
 # Other testing folder ignores 
+bin/*.dll
 bin/Halcyon.exe
+bin/Halcyon.vshost.exe
+bin/OpenSim.Grid.UserServer.exe
+bin/OpenSim.Grid.GridServer.exe
+bin/OpenSim.Grid.MessagingServer.exe
+bin/OpenSim.TestSuite.exe
+bin/Physics/InWorldz.PhysxPhysics.dll
+bin/Physics/OpenSim.Region.Physics.BasicPhysicsPlugin.dll
+bin/Physics/OpenSim.Region.Physics.Meshing.dll
+bin/Terrain/OpenSim.Region.CoreModules.World.Terrain.DefaultEffects.dll
 bin/crashes
 bin/Grid
 bin/GridLogin

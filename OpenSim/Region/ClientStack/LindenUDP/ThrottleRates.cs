@@ -39,40 +39,40 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     public sealed class ThrottleRates
     {
         /// <summary>Drip rate for resent packets</summary>
-        public int Resend;
+        public int Resend = 12500;
         /// <summary>Drip rate for terrain packets</summary>
-        public int Land;
+        public int Land = 1400;
         /// <summary>Drip rate for wind packets</summary>
-        public int Wind;
+        public int Wind = 1400;
         /// <summary>Drip rate for cloud packets</summary>
-        public int Cloud;
+        public int Cloud = 1400;
         /// <summary>Drip rate for task packets</summary>
-        public int Task;
+        public int Task = 1400;
         /// <summary>Drip rate for texture packets</summary>
-        public int Texture;
+        public int Texture = 1400;
         /// <summary>Drip rate for asset packets</summary>
-        public int Asset;
+        public int Asset = 1400;
         /// <summary>Drip rate for state packets</summary>
-        public int State;
+        public int State = 1400;
         /// <summary>Drip rate for the parent token bucket</summary>
         public int Total;
 
         /// <summary>Maximum burst rate for resent packets</summary>
-        public int ResendLimit;
+        public int ResendLimit = 12500;
         /// <summary>Maximum burst rate for land packets</summary>
-        public int LandLimit;
+        public int LandLimit = 1400;
         /// <summary>Maximum burst rate for wind packets</summary>
-        public int WindLimit;
+        public int WindLimit = 1400;
         /// <summary>Maximum burst rate for cloud packets</summary>
-        public int CloudLimit;
+        public int CloudLimit = 1400;
         /// <summary>Maximum burst rate for task (state and transaction) packets</summary>
-        public int TaskLimit;
+        public int TaskLimit = 1400;
         /// <summary>Maximum burst rate for texture packets</summary>
-        public int TextureLimit;
+        public int TextureLimit = 1400;
         /// <summary>Maximum burst rate for asset packets</summary>
-        public int AssetLimit;
+        public int AssetLimit = 1400;
         /// <summary>Maximum burst rate for state packets</summary>
-        public int StateLimit;
+        public int StateLimit = 1400;
         /// <summary>Burst rate for the parent token bucket</summary>
         public int TotalLimit;
 
@@ -86,25 +86,28 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 IConfig throttleConfig = config.Configs["ClientStack.LindenUDP"];
 
-                Resend = throttleConfig.GetInt("resend_default", 12500);
-                Land = throttleConfig.GetInt("land_default", 1400);
-                Wind = throttleConfig.GetInt("wind_default", 1400);
-                Cloud = throttleConfig.GetInt("cloud_default", 1400);
-                Task = throttleConfig.GetInt("task_default", 1400);
-                Texture = throttleConfig.GetInt("texture_default", 1400);
-                Asset = throttleConfig.GetInt("asset_default", 1400);
-                State = throttleConfig.GetInt("state_default", 1400);
+                if (throttleConfig != null)
+                {
+                    Resend = throttleConfig.GetInt("resend_default", Resend);
+                    Land = throttleConfig.GetInt("land_default", Land);
+                    Wind = throttleConfig.GetInt("wind_default", Wind);
+                    Cloud = throttleConfig.GetInt("cloud_default", Cloud);
+                    Task = throttleConfig.GetInt("task_default", Task);
+                    Texture = throttleConfig.GetInt("texture_default", Texture);
+                    Asset = throttleConfig.GetInt("asset_default", Asset);
+                    State = throttleConfig.GetInt("state_default", State);
 
-                ResendLimit = throttleConfig.GetInt("resend_limit", 12500);
-                LandLimit = throttleConfig.GetInt("land_limit", 1400);
-                WindLimit = throttleConfig.GetInt("wind_limit", 1400);
-                CloudLimit = throttleConfig.GetInt("cloud_limit", 1400);
-                TaskLimit = throttleConfig.GetInt("task_limit", 1400);
-                TextureLimit = throttleConfig.GetInt("texture_limit", 1400);
-                AssetLimit = throttleConfig.GetInt("asset_limit", 1400);
-                StateLimit = throttleConfig.GetInt("state_limit", 1400);
+                    ResendLimit = throttleConfig.GetInt("resend_limit", ResendLimit);
+                    LandLimit = throttleConfig.GetInt("land_limit", LandLimit);
+                    WindLimit = throttleConfig.GetInt("wind_limit", WindLimit);
+                    CloudLimit = throttleConfig.GetInt("cloud_limit", CloudLimit);
+                    TaskLimit = throttleConfig.GetInt("task_limit", TaskLimit);
+                    TextureLimit = throttleConfig.GetInt("texture_limit", TextureLimit);
+                    AssetLimit = throttleConfig.GetInt("asset_limit", AssetLimit);
+                    StateLimit = throttleConfig.GetInt("state_limit", StateLimit);
+                }
 
-                Total = Resend + Land + Wind + Cloud + Task + Texture + Asset + State;//= throttleConfig.GetInt("client_throttle_max_bps", 0);
+                Total = Resend + Land + Wind + Cloud + Task + Texture + Asset + State;
                 TotalLimit = Total;
             }
             catch (Exception) { }
