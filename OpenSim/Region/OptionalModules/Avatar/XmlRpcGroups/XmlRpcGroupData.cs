@@ -64,7 +64,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             if ((serviceURL == null) ||
                 (serviceURL == string.Empty))
             {
-                throw new Exception("Please specify a valid ServiceURL for XmlRpcGroupDataProvider in OpenSim.ini, [Groups], XmlRpcServiceURL");
+                throw new Exception("Please specify a valid ServiceURL for XmlRpcGroupDataProvider in Halcyon.ini, [Groups], XmlRpcServiceURL");
             }
 
             m_groupReadKey = groupReadKey;

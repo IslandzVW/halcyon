@@ -58,7 +58,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         public const byte LAND_TYPE_OWNED_BY_REQUESTER = 3; //Equals 00000011
         public const byte LAND_TYPE_PUBLIC = 0; //Equals 00000000
 
-		// Other parcel overlay flags
+        // Other parcel overlay flags
         public const byte LAND_SOUND_LOCAL = 32; //Equals 00100000
 
         //These are other constants. Yay!

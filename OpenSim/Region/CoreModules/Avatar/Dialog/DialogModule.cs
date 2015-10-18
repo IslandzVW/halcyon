@@ -42,7 +42,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
         
         protected Scene m_scene;
         
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IDialogModule>(this);
@@ -54,7 +54,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
                 this, "alert general", "alert general <message>", "Send an alert to everyone", HandleAlertConsoleCommand);            
         }
         
-        public void PostInitialise() {}
+        public void PostInitialize() {}
         public void Close() {}
         public string Name { get { return "Dialog Module"; } }
         public bool IsSharedModule { get { return false; } }

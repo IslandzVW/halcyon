@@ -282,7 +282,7 @@ namespace OpenSim.Region.CoreModules
 
         // Called immediately after the module is loaded for a given region
         // i.e. Immediately after instance creation.
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_scene = scene;
             m_frame = 0;
@@ -408,7 +408,7 @@ namespace OpenSim.Region.CoreModules
         }
 
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

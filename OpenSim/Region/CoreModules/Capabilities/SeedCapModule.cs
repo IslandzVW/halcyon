@@ -60,7 +60,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         #region ISharedRegionModule Members
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
         }
 
@@ -79,7 +79,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
         {
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -136,7 +136,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
                 Hashtable capsDetails = m_Caps.CapsHandlers.GetCapsDetails(true);
 
-                string result = LLSDHelpers.SerialiseLLSDReply(capsDetails);
+                string result = LLSDHelpers.SerializeLLSDReply(capsDetails);
 
                 // m_log.DebugFormat("[CAPS] CapsRequest {0}", result);
 

@@ -48,7 +48,7 @@ namespace OpenSim.Framework
         /// </value>        
         IAssetServer AssetServer { get; }
         
-        void Initialise(ConfigSettings cs, IAssetServer server);        
+        void Initialize(ConfigSettings cs, IAssetServer server);        
 
         /// <summary>
         /// Report statistical data to the log.
@@ -91,20 +91,20 @@ namespace OpenSim.Framework
         void AddAssetRequest(IClientAPI userInfo, TransferRequestPacket transferRequest);
     }
 
-    public class AssetCachePluginInitialiser : PluginInitialiserBase
+    public class AssetCachePluginInitializer : PluginInitializerBase
     {
         private ConfigSettings config;
         private IAssetServer   server;
 
-        public AssetCachePluginInitialiser (ConfigSettings p_sv, IAssetServer p_as)
+        public AssetCachePluginInitializer (ConfigSettings p_sv, IAssetServer p_as)
         {
             config = p_sv;
             server = p_as;
         }
-        public override void Initialise (IPlugin plugin)
+        public override void Initialize (IPlugin plugin)
         {
             IAssetCache p = plugin as IAssetCache;
-            p.Initialise (config, server);
+            p.Initialize (config, server);
         }
     }
 

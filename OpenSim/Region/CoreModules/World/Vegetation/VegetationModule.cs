@@ -45,13 +45,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
         protected static readonly PCode[] creationCapabilities = new PCode[] { PCode.Grass, PCode.NewTree, PCode.Tree };
         public PCode[] CreationCapabilities { get { return creationCapabilities; } }            
         
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IVegetationModule>(this);
         }
         
-        public void PostInitialise() {}
+        public void PostInitialize() {}
         public void Close() {}
         public string Name { get { return "Vegetation Module"; } }
         public bool IsSharedModule { get { return false; } }

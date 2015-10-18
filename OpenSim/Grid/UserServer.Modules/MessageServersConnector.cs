@@ -92,7 +92,7 @@ namespace OpenSim.Grid.UserServer.Modules
             MessageServers = new Dictionary<string, MessageServerInfo>();
         }
 
-        public void Initialise(IGridServiceCore core)
+        public void Initialize(IGridServiceCore core)
         {
             m_core = core;
             m_core.RegisterInterface<MessageServersConnector>(this);
@@ -100,7 +100,7 @@ namespace OpenSim.Grid.UserServer.Modules
             m_NotifyThread.Start();
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -109,7 +109,7 @@ namespace OpenSim.Grid.UserServer.Modules
             m_httpServer = httpServer;
 
             m_httpServer.AddXmlRPCHandler("region_startup", RegionStartup);
-            m_httpServer.AddXmlRPCHandler("region_shutdown", RegionShutdown);	
+            m_httpServer.AddXmlRPCHandler("region_shutdown", RegionShutdown);    
             m_httpServer.AddXmlRPCHandler("agent_location", AgentLocation);
             m_httpServer.AddXmlRPCHandler("agent_leaving", AgentLeaving);
 
@@ -118,7 +118,7 @@ namespace OpenSim.Grid.UserServer.Modules
             m_httpServer.AddStreamHandler(new XmlRpcStreamHandler("POST", Util.XmlRpcRequestPrefix("region_shutdown"), RegionShutdown));
             m_httpServer.AddStreamHandler(new XmlRpcStreamHandler("POST", Util.XmlRpcRequestPrefix("agent_location"), AgentLocation));
             m_httpServer.AddStreamHandler(new XmlRpcStreamHandler("POST", Util.XmlRpcRequestPrefix("agent_leaving"), AgentLeaving));
-			
+
             // Message Server ---> User Server
             m_httpServer.AddXmlRPCHandler("register_messageserver", XmlRPCRegisterMessageServer);
             m_httpServer.AddXmlRPCHandler("agent_change_region", XmlRPCUserMovedtoRegion);
@@ -281,10 +281,6 @@ namespace OpenSim.Grid.UserServer.Modules
                 {
                     m_log.Info("[MSGCONNECTOR]: Sending login notice to registered message servers");
                 }
-//                else
-//                {
-//                    m_log.Debug("[MSGCONNECTOR]: No Message Servers registered, ignoring");
-//                }
                 foreach (MessageServerInfo serv in MessageServers.Values)
                 {
                     NotifyMessageServerAboutUser(serv, agentID, sessionID, RegionID,

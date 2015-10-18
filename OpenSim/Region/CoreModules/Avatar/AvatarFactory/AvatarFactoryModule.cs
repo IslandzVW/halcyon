@@ -321,7 +321,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             return (new AvatarAppearance(avatarId));
         }
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             scene.RegisterModuleInterface<IAvatarFactory>(this);
             scene.EventManager.OnNewClient += NewClient;
@@ -342,7 +342,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             _appearanceUpdateTimer.Start();
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

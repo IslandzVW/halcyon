@@ -59,7 +59,7 @@ namespace OpenSim.Region.CoreModules.Asset
             get { return null; }
         }
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
@@ -70,7 +70,7 @@ namespace OpenSim.Region.CoreModules.Asset
                     IConfig assetConfig = source.Configs["AssetCache"];
                     if (assetConfig == null)
                     {
-                        m_log.Error("[ASSET CACHE]: AssetCache missing from OpenSim.ini");
+                        m_log.Error("[ASSET CACHE]: AssetCache missing from Halcyon.ini");
                         return;
                     }
 
@@ -83,7 +83,7 @@ namespace OpenSim.Region.CoreModules.Asset
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

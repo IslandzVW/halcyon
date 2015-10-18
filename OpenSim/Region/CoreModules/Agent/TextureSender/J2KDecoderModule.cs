@@ -63,7 +63,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         {
         }
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             bool useFileCache = true;
             IConfig myConfig = source.Configs["J2KDecoder"];
@@ -80,10 +80,10 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                 Name, (useFileCache ? "enabled" : "disabled"));
 
             fCache = new J2KDecodeFileCache(useFileCache, J2KDecodeFileCache.CacheFolder);
-			scene.RegisterModuleInterface<IJ2KDecoder>(this);
+            scene.RegisterModuleInterface<IJ2KDecoder>(this);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             
         }
@@ -155,7 +155,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                 }
             }
         }
-		
+        
         public bool Decode(UUID assetID, byte[] j2kData)
         {
             OpenJPEG.J2KLayerInfo[] layers;
@@ -165,7 +165,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         public bool Decode(UUID assetID, byte[] j2kData, out OpenJPEG.J2KLayerInfo[] layers)
         {
             bool decodedSuccessfully = true;
-			layers = new OpenJPEG.J2KLayerInfo[0]; // Dummy result for if it fails.  Informs that there's only full quality
+            layers = new OpenJPEG.J2KLayerInfo[0]; // Dummy result for if it fails.  Informs that there's only full quality
 
             if (! OpenJpegFail)
             {  
@@ -194,7 +194,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             
             return (decodedSuccessfully);    
         }
-		
+        
         #endregion
 
         /// <summary>
@@ -204,11 +204,11 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
         /// <param name="j2kdata">Byte Array Asset Data </param>
         private bool DoJ2KDecode(UUID assetID, byte[] j2kdata, out OpenJPEG.J2KLayerInfo[] layers)
         {
-			int DecodeTime = 0;
+            int DecodeTime = 0;
             DecodeTime = Environment.TickCount;
             bool decodedSuccessfully = true;
-			
-			layers = new OpenJPEG.J2KLayerInfo[0]; // Dummy result for if it fails.  Informs that there's only full quality
+            
+            layers = new OpenJPEG.J2KLayerInfo[0]; // Dummy result for if it fails.  Informs that there's only full quality
 
             try
             {
@@ -253,17 +253,17 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                 m_log.Error(
                     "[J2KDecoderModule]: OpenJpeg is not installed properly. Decoding disabled!  This will slow down texture performance!  Often times this is because of an old version of GLIBC.  You must have version 2.4 or above!");
                 OpenJpegFail = true;
-				decodedSuccessfully = false;
+                decodedSuccessfully = false;
             }
             catch (Exception ex)
             {
                 m_log.WarnFormat(
                     "[J2KDecoderModule]: JPEG2000 texture decoding threw an exception for {0}, {1}",
                     assetID, ex);
-				decodedSuccessfully = false;
+                decodedSuccessfully = false;
             }
 
-			return (decodedSuccessfully);
+            return (decodedSuccessfully);
         }
 
         private OpenJPEG.J2KLayerInfo[] CreateDefaultLayers(int j2kLength)
@@ -290,7 +290,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
 
             return layers;
         }
-		
+        
     }
 
 }

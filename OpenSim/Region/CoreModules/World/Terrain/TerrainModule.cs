@@ -99,11 +99,11 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         #region INonSharedRegionModule Members
 
         /// <summary>
-        /// Creates and initialises a terrain module for a region
+        /// Creates and initializes a terrain module for a region
         /// </summary>
-        /// <param name="scene">Region initialising</param>
+        /// <param name="scene">Region initializing</param>
         /// <param name="config">Config for the region</param>
-        public void Initialise(IConfigSource config)
+        public void Initialize(IConfigSource config)
         {
         }
 
@@ -508,7 +508,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             if (m_tainted)
             {
                 m_tainted = false;
-                m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialised(), m_channel.IncrementRevisionNumber());
+                m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialized(), m_channel.IncrementRevisionNumber());
                 m_scene.SaveTerrain();
 
                 // Clients who look at the map will never see changes after they looked at the map, so i've commented this out.
@@ -570,7 +570,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private void CheckForTerrainUpdates(bool respectEstateSettings)
         {
             bool shouldTaint = false;
-            float[] serialised = m_channel.GetFloatsSerialised();
+            float[] serialized = m_channel.GetFloatsSerialized();
             int x;
             for (x = 0; x < m_channel.Width; x += Constants.TerrainPatchSize)
             {
@@ -585,10 +585,10 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                         {
                             // this has been vetoed, so update
                             // what we are going to send to the client
-                            serialised = m_channel.GetFloatsSerialised();
+                            serialized = m_channel.GetFloatsSerialized();
                         }
 
-                        UpdateClientsSceneView(serialised, x, y);
+                        UpdateClientsSceneView(serialized, x, y);
                         shouldTaint = true;
                     }
                 }
@@ -637,13 +637,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
             return changesLimited;
         }
 
-        private void UpdateClientsSceneView(float[] serialised, int regionx, int regiony)
+        private void UpdateClientsSceneView(float[] serialized, int regionx, int regiony)
         {
             m_scene.ForEachScenePresence(
                 delegate(ScenePresence presence)
                 {
                     if (presence.SceneView != null)
-                        presence.SceneView.TerrainPatchUpdated(serialised,
+                        presence.SceneView.TerrainPatchUpdated(serialized,
                             regionx / Constants.TerrainPatchSize,
                             regiony / Constants.TerrainPatchSize);
                 });

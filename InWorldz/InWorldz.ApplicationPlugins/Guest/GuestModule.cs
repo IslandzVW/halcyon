@@ -50,7 +50,7 @@ namespace InWorldz.ApplicationPlugins.GuestModule
     /// [GuestModule]
     ///     Enabled = true
     /// 
-    /// into OpenSim.ini.
+    /// into Halcyon.ini.
     /// </summary>
     public class GuestModule : INonSharedRegionModule
     {
@@ -79,7 +79,7 @@ namespace InWorldz.ApplicationPlugins.GuestModule
             get { return null; }
         }
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             IConfig config = source.Configs[Name];
             if (config == null) return;

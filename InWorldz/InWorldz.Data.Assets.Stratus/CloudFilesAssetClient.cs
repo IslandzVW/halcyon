@@ -119,7 +119,7 @@ namespace InWorldz.Data.Assets.Stratus
 
 
 
-        public void Initialise(ConfigSettings settings)
+        public void Initialize(ConfigSettings settings)
         {
             //if this is being called, we were loaded as a plugin instead of the StratusAssetClient
             //we shouldnt be loaded like this, throw.
@@ -602,7 +602,7 @@ namespace InWorldz.Data.Assets.Stratus
             get { return "InWorldz.Data.Assets.Stratus.CloudFilesAssetClient"; }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
         }
 

@@ -81,7 +81,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             get { return null; }
         }
         
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             IConfig config = source.Configs["SceneView"];
             if (config != null)
@@ -714,7 +714,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             {
                 NeedsFullSceneUpdate = false;
                 if (UseCulling == false)//Send the entire heightmap
-                    m_presence.ControllingClient.SendLayerData(m_presence.Scene.Heightmap.GetFloatsSerialised());
+                    m_presence.ControllingClient.SendLayerData(m_presence.Scene.Heightmap.GetFloatsSerialized());
 
                 if (UseCulling == true && !m_presence.IsChildAgent)
                     m_timeBeforeChildAgentUpdate = Environment.TickCount;
@@ -1019,14 +1019,14 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// <summary>
         /// Informs the SceneView that the given patch has been modified and must be resent
         /// </summary>
-        /// <param name="serialised"></param>
+        /// <param name="serialized"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        public void TerrainPatchUpdated(float[] serialised, int x, int y)
+        public void TerrainPatchUpdated(float[] serialized, int x, int y)
         {
             //Check to make sure that we only send it if we can see it or culling is disabled
             if ((UseCulling == false) || ShowTerrainPatchToClient(x, y))
-                m_presence.ControllingClient.SendLayerData(x, y, serialised);
+                m_presence.ControllingClient.SendLayerData(x, y, serialized);
             else if (UseCulling == true)
                 m_TerrainCulling[x, y] = false;//Resend it next time it comes back into draw distance
         }
@@ -1047,7 +1047,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                 (((int)(m_presence.CameraPosition.X + m_presence.DrawDistance)) / Constants.TerrainPatchSize) + FUDGE_FACTOR);
             int endY = Math.Max((((int)(m_presence.AbsolutePosition.Y + m_presence.DrawDistance)) / Constants.TerrainPatchSize) + FUDGE_FACTOR,
                 (((int)(m_presence.CameraPosition.Y + m_presence.DrawDistance)) / Constants.TerrainPatchSize) + FUDGE_FACTOR);
-            float[] serializedMap = m_presence.Scene.Heightmap.GetFloatsSerialised();
+            float[] serializedMap = m_presence.Scene.Heightmap.GetFloatsSerialized();
 
             if (startX < 0) startX = 0;
             if (startY < 0) startY = 0;

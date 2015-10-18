@@ -57,7 +57,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         public override byte[] Handle(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
             XmlRpcRequest xmlRpcRequest = null;
- 			XmlRpcResponse xmlRpcResponse = null;
+             XmlRpcResponse xmlRpcResponse = null;
             string requestBody = null;
             byte[] response;
 
@@ -70,67 +70,67 @@ namespace OpenSim.Framework.Servers.HttpServer
             {
                 xmlRpcRequest = (XmlRpcRequest)(new XmlRpcRequestDeserializer()).Deserialize(requestBody);
             }
-			catch (XmlException e)
-			{
+            catch (XmlException e)
+            {
                 m_log.ErrorFormat("[XMLRPC STREAM HANDLER]: XmlRpc request failed to deserialize: {0} -> {1}", e, requestBody);
                 xmlRpcRequest = null;
             }
 
-			if (xmlRpcRequest != null)
+            if (xmlRpcRequest != null)
             {
-				string methodName = xmlRpcRequest.MethodName;
+                string methodName = xmlRpcRequest.MethodName;
                     
                 if (methodName != null)
-        	    {
-					xmlRpcRequest.Params.Add(httpRequest.RemoteIPEndPoint); // Param[1]
-					xmlRpcRequest.Params.Add(httpRequest.Url);              // Param[2]
-					xmlRpcRequest.Params.Add(getForwardedFor(httpRequest)); // Param[3]						
-						
-					try
-					{
-						xmlRpcResponse = m_xmlrpcMethod(xmlRpcRequest, httpRequest.RemoteIPEndPoint);
-					}
-					catch(Exception e)
-					{
-						string errorMessage = 
+                {
+                    xmlRpcRequest.Params.Add(httpRequest.RemoteIPEndPoint); // Param[1]
+                    xmlRpcRequest.Params.Add(httpRequest.Url);              // Param[2]
+                    xmlRpcRequest.Params.Add(getForwardedFor(httpRequest)); // Param[3]                        
+                        
+                    try
+                    {
+                        xmlRpcResponse = m_xmlrpcMethod(xmlRpcRequest, httpRequest.RemoteIPEndPoint);
+                    }
+                    catch(Exception e)
+                    {
+                        string errorMessage = 
                             String.Format(
-						        "Requested method [{0}] from {1} threw exception: {2} {3}",
-						        methodName, httpRequest.RemoteIPEndPoint.Address, e.Message, e.StackTrace);
+                                "Requested method [{0}] from {1} threw exception: {2} {3}",
+                                methodName, httpRequest.RemoteIPEndPoint.Address, e.Message, e.StackTrace);
 
                         m_log.ErrorFormat("[XMLRPC STREAM HANDLER]: {0}", errorMessage);
-						
-						// if the registered XmlRpc method threw an exception, we pass a fault-code along
-						xmlRpcResponse = new XmlRpcResponse();
-						
-						// Code probably set in accordance with http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
-						xmlRpcResponse.SetFault(-32603, errorMessage);
-					}
-			    }
-			    else
-			    {
-			        xmlRpcResponse = new XmlRpcResponse();
-			
-			        // Code set in accordance with http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
-			        xmlRpcResponse.SetFault(
-			            XmlRpcErrorCodes.SERVER_ERROR_METHOD,
-			            String.Format("Requested method [{0}] not found", methodName));
-			    }
-			
-			    response = Encoding.UTF8.GetBytes(XmlRpcResponseSerializer.Singleton.Serialize(xmlRpcResponse));
-			    httpResponse.ContentType = "text/xml";
+                        
+                        // if the registered XmlRpc method threw an exception, we pass a fault-code along
+                        xmlRpcResponse = new XmlRpcResponse();
+                        
+                        // Code probably set in accordance with http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
+                        xmlRpcResponse.SetFault(-32603, errorMessage);
+                    }
+                }
+                else
+                {
+                    xmlRpcResponse = new XmlRpcResponse();
+            
+                    // Code set in accordance with http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
+                    xmlRpcResponse.SetFault(
+                        XmlRpcErrorCodes.SERVER_ERROR_METHOD,
+                        String.Format("Requested method [{0}] not found", methodName));
+                }
+            
+                response = Encoding.UTF8.GetBytes(XmlRpcResponseSerializer.Singleton.Serialize(xmlRpcResponse));
+                httpResponse.ContentType = "text/xml";
             }
             else
-			{	
-			    response = Encoding.UTF8.GetBytes("Not found");
+            {    
+                response = Encoding.UTF8.GetBytes("Not found");
                     
                 httpResponse.ContentType = "text/plain";
-			    httpResponse.StatusCode = 404;
-			    httpResponse.StatusDescription = "Not Found";
-			    httpResponse.ProtocolVersion = new System.Version("1.0");
-		
-			    m_log.ErrorFormat(
+                httpResponse.StatusCode = 404;
+                httpResponse.StatusDescription = "Not Found";
+                httpResponse.ProtocolVersion = new System.Version("1.0");
+        
+                m_log.ErrorFormat(
                     "[XMLRPC STREAM HANDLER]: Handler not found for http request {0} {1}",
-			        httpRequest.HttpMethod, httpRequest.Url.PathAndQuery);
+                    httpRequest.HttpMethod, httpRequest.Url.PathAndQuery);
             }
 
             httpResponse.ContentLength64 = response.LongLength;
@@ -142,17 +142,17 @@ namespace OpenSim.Framework.Servers.HttpServer
 
         private static string getForwardedFor(OSHttpRequest httpRequest)
         {
-			string xff = "X-Forwarded-For";
-			string xfflower = xff.ToLower();
+            string xff = "X-Forwarded-For";
+            string xfflower = xff.ToLower();
 
-			foreach (string s in httpRequest.Headers.AllKeys)
-			{
-				if ((s != null) && s.Equals(xfflower))
-				{
-					xff = xfflower;
-					break;
-				}
-			}
+            foreach (string s in httpRequest.Headers.AllKeys)
+            {
+                if ((s != null) && s.Equals(xfflower))
+                {
+                    xff = xfflower;
+                    break;
+                }
+            }
 
             return (xff);
         }

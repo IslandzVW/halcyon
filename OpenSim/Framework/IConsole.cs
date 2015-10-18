@@ -68,7 +68,7 @@ namespace OpenSim.Framework
         /// <param name="args">WriteLine-style message arguments</param>
         void Notice(string sender, string format, params object[] args);
 
-		/// <summary>
+        /// <summary>
         /// Sends an error to the current console output
         /// </summary>
         /// <param name="format">The message to send</param>
@@ -103,7 +103,7 @@ namespace OpenSim.Framework
         void Debug(string sender, string format, params object[] args);
 
         void LockOutput();
-		void UnlockOutput();
+        void UnlockOutput();
 
         void Output(string text);
         void Output(string text, string level);

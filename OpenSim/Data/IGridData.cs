@@ -45,9 +45,9 @@ namespace OpenSim.Data
     public interface IGridDataPlugin : IPlugin
     {
         /// <summary>
-        /// Initialises the interface
+        /// Initializes the interface
         /// </summary>
-        void Initialise(string connect);
+        void Initialize(string connect);
 
         /// <summary>
         /// Returns a sim profile from a regionHandle
@@ -128,14 +128,14 @@ namespace OpenSim.Data
         ReservationData GetReservationAtPoint(uint x, uint y);
     }
 
-    public class GridDataInitialiser : PluginInitialiserBase
+    public class GridDataInitializer : PluginInitializerBase
     {
         private string connect;
-        public GridDataInitialiser (string s) { connect = s; }
-        public override void Initialise (IPlugin plugin)
+        public GridDataInitializer (string s) { connect = s; }
+        public override void Initialize (IPlugin plugin)
         {
             IGridDataPlugin p = plugin as IGridDataPlugin;
-            p.Initialise (connect);
+            p.Initialize (connect);
         }
     }
 }

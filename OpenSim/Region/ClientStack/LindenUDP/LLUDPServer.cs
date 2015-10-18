@@ -55,7 +55,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
         }
 
-        public void Initialise(IPAddress listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource)
+        public void Initialize(IPAddress listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource)
         {
             m_udpServer = new LLUDPServer(listenIP, ref port, proxyPortOffsetParm, allow_alternate_port, configSource);
         }
@@ -753,7 +753,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             IClientAPI client;
             if (!m_scene.TryGetClient(address, out client) || !(client is LLClientView))
             {
-//				m_log.Warn("[LLUDPSERVER]: Received a " + packet.Type.ToString() + " packet from an unrecognized source: " + address.ToString() + " in " + m_scene.RegionInfo.RegionName);
+//                m_log.Warn("[LLUDPSERVER]: Received a " + packet.Type.ToString() + " packet from an unrecognized source: " + address.ToString() + " in " + m_scene.RegionInfo.RegionName);
                 return;
             }
 

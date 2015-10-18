@@ -60,7 +60,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             scene.RegisterModuleInterface<IBotManager>(this);
             m_scene = scene;
@@ -73,7 +73,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

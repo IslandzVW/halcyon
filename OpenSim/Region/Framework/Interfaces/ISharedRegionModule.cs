@@ -33,8 +33,8 @@ namespace OpenSim.Region.Framework.Interfaces
     {
         /// <summary>
         /// This is called exactly once after all the shared region-modules have been instanciated and
-        /// <see cref="IRegionModuleBase.Initialise"/>d.
+        /// <see cref="IRegionModuleBase.Initialize"/>d.
         /// </summary>
-        void PostInitialise();
+        void PostInitialize();
     }
 }

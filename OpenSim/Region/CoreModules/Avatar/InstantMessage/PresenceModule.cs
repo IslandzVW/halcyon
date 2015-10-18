@@ -55,11 +55,11 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         public event PresenceChange OnPresenceChange;
         public event BulkPresenceData OnBulkPresenceData;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             lock (m_Scenes)
             {
-                // This is a shared module; Initialise will be called for every region on this server.
+                // This is a shared module; Initialize will be called for every region on this server.
                 // Only check config once for the first region.
                 if (m_Scenes.Count == 0)
                 {
@@ -89,7 +89,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             scene.EventManager.OnMakeChildAgent += OnMakeChildAgent;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

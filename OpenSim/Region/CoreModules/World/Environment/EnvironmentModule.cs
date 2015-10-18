@@ -57,7 +57,7 @@ namespace OpenSim.Region.CoreModules.World.LightShare
         private static readonly string capsBase = "/CAPS/0020/";
 
         #region INonSharedRegionModule
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             m_isEnabled = true;
             IConfig config = source.Configs["Environment"];
@@ -191,7 +191,7 @@ namespace OpenSim.Region.CoreModules.World.LightShare
             if (!m_scene.Permissions.CanIssueEstateCommand(agentID, false))
             {
                 setResponse.fail_reason = "Insufficient estate permissions, settings has not been saved.";
-                return LLSDHelpers.SerialiseLLSDReply(setResponse);
+                return LLSDHelpers.SerializeLLSDReply(setResponse);
             }
 
             try
@@ -211,7 +211,7 @@ namespace OpenSim.Region.CoreModules.World.LightShare
                 setResponse.fail_reason = String.Format("Environment Set for region {0} has failed, settings has not been saved.", caps.RegionName);
             }
 
-            string response = LLSDHelpers.SerialiseLLSDReply(setResponse);
+            string response = LLSDHelpers.SerializeLLSDReply(setResponse);
             return response;
         }
     }

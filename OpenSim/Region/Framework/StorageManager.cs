@@ -70,7 +70,7 @@ namespace OpenSim.Region.Framework
                     {
                         IRegionDataStore plug =
                             (IRegionDataStore) Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
-                        plug.Initialise(connectionstring);
+                        plug.Initialize(connectionstring);
 
                         m_dataStore = plug;
 
@@ -83,14 +83,14 @@ namespace OpenSim.Region.Framework
                     {
                         IEstateDataStore estPlug =
                             (IEstateDataStore) Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
-                        estPlug.Initialise(estateconnectionstring);
+                        estPlug.Initialize(estateconnectionstring);
 
                         m_estateDataStore = estPlug;
                     }
                 }
             }
 
-            //TODO: Add checking and warning to make sure it initialised.
+            //TODO: Add checking and warning to make sure it initialized.
         }
     }
 }

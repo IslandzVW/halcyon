@@ -52,7 +52,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (config.Configs["Messaging"] != null)
             {
@@ -85,7 +85,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

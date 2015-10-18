@@ -50,13 +50,13 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
         public bool IsSharedModule { get { return false; } }
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IRegionArchiverModule>(this);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

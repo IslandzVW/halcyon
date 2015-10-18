@@ -37,9 +37,9 @@ namespace OpenSim.Region.Framework.Scenes
     [Serializable]
     public class AnimationSet
     {
-		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-		public static AvatarAnimations Animations = new AvatarAnimations();
+        public static AvatarAnimations Animations = new AvatarAnimations();
 
         private OpenSim.Framework.Animation m_defaultAnimation = new OpenSim.Framework.Animation();
         private List<OpenSim.Framework.Animation> m_animations = new List<OpenSim.Framework.Animation>();
@@ -117,17 +117,17 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public bool SetDefaultAnimation(UUID animID, int sequenceNum, UUID objectID)
         {
-			bool rc = false;
-			lock (m_defaultAnimation)
-			{
-				if (m_defaultAnimation.AnimID != animID)
-				{
+            bool rc = false;
+            lock (m_defaultAnimation)
+            {
+                if (m_defaultAnimation.AnimID != animID)
+                {
                     m_defaultAnimation = new OpenSim.Framework.Animation(animID, sequenceNum, objectID);
-					rc = true;
-				}
-			}
-//			if (!rc) m_log.ErrorFormat("SetDefaultAnimation: Animation '{0}' already set.", animID.ToString());
-			return rc;
+                    rc = true;
+                }
+            }
+//            if (!rc) m_log.ErrorFormat("SetDefaultAnimation: Animation '{0}' already set.", animID.ToString());
+            return rc;
         }
 
         protected bool ResetDefaultAnimation()
@@ -144,7 +144,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 return SetDefaultAnimation(Animations.AnimsUUID[anim], sequenceNum, objectID);
             }
-			m_log.ErrorFormat("TrySetDefaultAnimation: Animation '{0}' not found.", anim);
+            m_log.ErrorFormat("TrySetDefaultAnimation: Animation '{0}' not found.", anim);
             return false;
         }
 

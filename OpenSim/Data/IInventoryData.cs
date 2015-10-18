@@ -37,9 +37,9 @@ namespace OpenSim.Data
     public interface IInventoryDataPlugin : IPlugin
     {
         /// <summary>
-        /// Initialises the interface
+        /// Initializes the interface
         /// </summary>
-        void Initialise(string connect);
+        void Initialize(string connect);
 
 
         /// <summary>
@@ -194,14 +194,14 @@ namespace OpenSim.Data
         List<InventoryItemBase> getItemsInFolders(IEnumerable<InventoryFolderBase> folders);
     }
 
-    public class InventoryDataInitialiser : PluginInitialiserBase
+    public class InventoryDataInitializer : PluginInitializerBase
     {
         private string connect;
-        public InventoryDataInitialiser (string s) { connect = s; }
-        public override void Initialise (IPlugin plugin)
+        public InventoryDataInitializer (string s) { connect = s; }
+        public override void Initialize (IPlugin plugin)
         {
             IInventoryDataPlugin p = plugin as IInventoryDataPlugin;
-            p.Initialise (connect);
+            p.Initialize (connect);
         }
     }
 }
