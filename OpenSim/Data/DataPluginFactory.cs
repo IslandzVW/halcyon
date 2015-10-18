@@ -39,16 +39,16 @@ namespace OpenSim.Data
     {
         /// <summary>
         /// Based on <typeparam name="T" />, returns the appropriate
-        /// PluginInitialiserBase instance in <paramref name="init" /> and
+        /// PluginInitializerBase instance in <paramref name="init" /> and
         /// extension point path in <paramref name="path" />.
         /// </summary>
         /// <param name="connect">
         /// The DB connection string used when creating a new
-        /// PluginInitialiserBase, returned in <paramref name="init" />.
+        /// PluginInitializerBase, returned in <paramref name="init" />.
         /// </param>
         /// <param name="init">
-        /// A reference to a PluginInitialiserBase object in which the proper
-        /// initialiser will be returned.
+        /// A reference to a PluginInitializerBase object in which the proper
+        /// initializer will be returned.
         /// </param>
         /// <param name="path">
         /// A string in which the proper extension point path will be returned.
@@ -60,33 +60,33 @@ namespace OpenSim.Data
         /// Thrown if <typeparamref name="T" /> is not one of the expected data
         /// interfaces.
         /// </exception>
-        private static void PluginLoaderParamFactory<T>(string connect, out PluginInitialiserBase init, out string path) where T : IPlugin
+        private static void PluginLoaderParamFactory<T>(string connect, out PluginInitializerBase init, out string path) where T : IPlugin
         {
             Type type = typeof(T);
 
             if (type == typeof(IInventoryDataPlugin))
             {
-                init = new InventoryDataInitialiser(connect);
+                init = new InventoryDataInitializer(connect);
                 path = "/OpenSim/InventoryData";
             }
             else if (type == typeof(IUserDataPlugin))
             {
-                init = new UserDataInitialiser(connect);
+                init = new UserDataInitializer(connect);
                 path = "/OpenSim/UserData";
             }
             else if (type == typeof(IGridDataPlugin))
             {
-                init = new GridDataInitialiser(connect);
+                init = new GridDataInitializer(connect);
                 path = "/OpenSim/GridData";
             }
             else if (type == typeof(ILogDataPlugin))
             {
-                init = new LogDataInitialiser(connect);
+                init = new LogDataInitializer(connect);
                 path = "/OpenSim/LogData";
             }
             else if (type == typeof(IAssetDataPlugin))
             {
-                init = new AssetDataInitialiser(connect);
+                init = new AssetDataInitializer(connect);
                 path = "/OpenSim/AssetData";
             }
             else
@@ -114,12 +114,12 @@ namespace OpenSim.Data
         /// </returns>
         public static List<T> LoadDataPlugins<T>(string provider, string connect) where T : IPlugin
         {
-            PluginInitialiserBase pluginInitialiser;
+            PluginInitializerBase pluginInitializer;
             string extensionPointPath;
 
-            PluginLoaderParamFactory<T>(connect, out pluginInitialiser, out extensionPointPath);
+            PluginLoaderParamFactory<T>(connect, out pluginInitializer, out extensionPointPath);
 
-            PluginLoader<T> loader = new PluginLoader<T>(pluginInitialiser);
+            PluginLoader<T> loader = new PluginLoader<T>(pluginInitializer);
 
             // loader will try to load all providers (MySQL, MSSQL, etc)
             // unless it is constrainted to the correct "Provider" entry in the addin.xml

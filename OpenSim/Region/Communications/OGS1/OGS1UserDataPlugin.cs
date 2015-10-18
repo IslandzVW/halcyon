@@ -76,9 +76,9 @@ namespace OpenSim.Region.Communications.OGS1
 
         public string Version { get { return "0.1"; } }
         public string Name { get { return "Open Grid Services 1 (OGS1) User Data Plugin"; } }
-        public void Initialise() {}
+        public void Initialize() {}
         
-        public void Initialise(string connect) {}
+        public void Initialize(string connect) {}
         
         public void Dispose() {}
         

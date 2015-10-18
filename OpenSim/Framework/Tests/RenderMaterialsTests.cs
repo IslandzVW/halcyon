@@ -41,19 +41,19 @@ namespace OpenSim.Framework.Tests
             Assert.That (matFromOSD.AlphaMaskCutoff, Is.EqualTo(0));
         }
 
-		[Test]
-		public void T001_ToFromBinaryTest()
-		{
-			RenderMaterial mat = new RenderMaterial ();
-			RenderMaterials mats = new RenderMaterials ();
+        [Test]
+        public void T001_ToFromBinaryTest()
+        {
+            RenderMaterial mat = new RenderMaterial ();
+            RenderMaterials mats = new RenderMaterials ();
             String key = UUID.Random().ToString();
             mats.Materials.Add(key, mat);
 
-			byte[] bytes = mats.ToBytes ();
+            byte[] bytes = mats.ToBytes ();
             RenderMaterials newmats = RenderMaterials.FromBytes(bytes, 0);
             RenderMaterial newmat = newmats.Materials[key];
-			Assert.That (mat, Is.EqualTo(newmat));
-		}
+            Assert.That (mat, Is.EqualTo(newmat));
+        }
     }
 }
 

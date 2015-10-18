@@ -44,7 +44,7 @@ namespace OpenSim.Grid.MessagingServer.Modules
         
         public UserAgentData GetUserAgentData(UUID AgentID)
         {
-			// This is the user DATABASE service, it expects a fresh read. Force a refresh.
+            // This is the user DATABASE service, it expects a fresh read. Force a refresh.
             return GetUserAgent(AgentID, true);
         }
 

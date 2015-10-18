@@ -88,7 +88,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private DateTime _rdbCacheTime;
         private List<string> _rdbHostCache = new List<string>();
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_scene = scene;
             m_landIDList.Initialize();
@@ -211,7 +211,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             client.OnParcelReclaim += new ParcelReclaim(handleParcelReclaim);
             client.OnParcelInfoRequest += new ParcelInfoRequest(handleParcelInfo);
             client.OnParcelDwellRequest += new ParcelDwellRequest(handleParcelDwell);
-			client.OnParcelFreezeUser += new FreezeUserUpdate(OnParcelFreezeUser);
+            client.OnParcelFreezeUser += new FreezeUserUpdate(OnParcelFreezeUser);
             client.OnParcelEjectUser += new EjectUserUpdate(OnParcelEjectUser);
 
             client.OnParcelDeedToGroup += new ParcelDeedToGroup(handleParcelDeedToGroup);
@@ -228,7 +228,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -526,15 +526,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                         // Either entering a new parcel from the side, or entering the restricted zone from above.
                         handleAvatarChangingParcel(avatar, parcel.landData.LocalID, m_scene.RegionInfo.RegionID);
                     }
-#if false
-// redundant parcel access check for the parcel we're already in, don't do group access lookups for every movement...
-                    else if (zpos < LandChannel.BAN_LINE_SAFETY_HEIGHT)
-                    {
-                        ParcelPropertiesStatus reason;
-                        if (parcel.DenyParcelAccess(avatar.UUID, out reason))
-                            SendNoEntryNotice(avatar,reason);
-                    }
-#endif
                 }
             }
         }
@@ -1567,7 +1558,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (!m_scene.TryGetClient(agentID, out client))
             {
                 m_log.WarnFormat("[LAND MANAGEMENT MODULE]: Unable to retrieve IClientAPI for {0}", agentID);
-                return LLSDHelpers.SerialiseLLSDReply(new LLSDEmpty());
+                return LLSDHelpers.SerializeLLSDReply(new LLSDEmpty());
             }
 
             ParcelPropertiesUpdateMessage properties = new ParcelPropertiesUpdateMessage();
@@ -1618,7 +1609,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 m_log.WarnFormat("[LAND MANAGEMENT MODULE]: Unable to find parcelID {0}", parcelID);
             }
-            return LLSDHelpers.SerialiseLLSDReply(new LLSDEmpty());
+            return LLSDHelpers.SerializeLLSDReply(new LLSDEmpty());
         }
 
 
@@ -1696,7 +1687,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             response.parcel_id = parcelID;
             m_log.DebugFormat("[LAND]: got parcelID {0}", parcelID);
 
-            return LLSDHelpers.SerialiseLLSDReply(response);
+            return LLSDHelpers.SerializeLLSDReply(response);
         }
 
         #endregion
@@ -1949,10 +1940,10 @@ namespace OpenSim.Region.CoreModules.World.Land
         }
 
         public void OnParcelEjectUser(IClientAPI client, UUID parcelowner, uint flags, UUID target)
-		{
-			// m_log.DebugFormat("OnParcelEjectUser: target {0} by {1} options {2}", target, parcelowner.ToString(), flags);
-			ScenePresence target_presence = m_scene.GetScenePresence(target); 
-			if (target_presence == null) return;
+        {
+            // m_log.DebugFormat("OnParcelEjectUser: target {0} by {1} options {2}", target, parcelowner.ToString(), flags);
+            ScenePresence target_presence = m_scene.GetScenePresence(target); 
+            if (target_presence == null) return;
 
             ILandObject land = GetLandObject(target_presence.AbsolutePosition.X, target_presence.AbsolutePosition.Y);
 
@@ -1974,7 +1965,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     targetClient.Close();
                 }
             }
-		}
+        }
 
         private LandObject FindParcelByUUID(UUID parcelID)
         {

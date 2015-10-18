@@ -50,7 +50,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
 
         #region IRegionModule
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (m_sceneList.Count == 0)
             {
@@ -69,7 +69,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
             Init(scene);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

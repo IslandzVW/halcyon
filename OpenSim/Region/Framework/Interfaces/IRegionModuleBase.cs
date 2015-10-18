@@ -61,16 +61,16 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="source">
         /// A <see cref="IConfigSource"/>
         /// </param>
-        void Initialise(IConfigSource source);
+        void Initialize(IConfigSource source);
 
         /// <summary>
-        /// This is the inverse to <see cref="Initialise"/>. After a Close(), this instance won't be usable anymore.
+        /// This is the inverse to <see cref="Initialize"/>. After a Close(), this instance won't be usable anymore.
         /// </summary>
         void Close();
 
         /// <summary>
         /// This is called whenever a <see cref="Scene"/> is added. For shared modules, this can happen several times.
-        /// For non-shared modules, this happens exactly once, after <see cref="Initialise"/> has been called.
+        /// For non-shared modules, this happens exactly once, after <see cref="Initialize"/> has been called.
         /// </summary>
         /// <param name="scene">
         /// A <see cref="Scene"/>

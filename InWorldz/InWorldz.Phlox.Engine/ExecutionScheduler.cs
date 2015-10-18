@@ -363,7 +363,7 @@ namespace InWorldz.Phlox.Engine
 
                     //no state means we need to fire state entry
                     interp.ScriptState.RunState = VM.RuntimeState.Status.Running;
-                    sysApi.OnScriptReset();	// there is no state, initialize LSL (reset) as a new script (e.g. runtime perms)
+                    sysApi.OnScriptReset();    // there is no state, initialize LSL (reset) as a new script (e.g. runtime perms)
                     this.PostEvent(interp.ItemId, new VM.PostedEvent { EventType = Types.SupportedEventList.Events.STATE_ENTRY, Args = new object[0] });
                 }
             }

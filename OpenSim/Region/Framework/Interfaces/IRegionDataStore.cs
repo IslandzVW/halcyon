@@ -36,11 +36,11 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface IRegionDataStore
     {
         /// <summary>
-        /// Initialises the data storage engine
+        /// Initializes the data storage engine
         /// </summary>
         /// <param name="filename">The file to save the database to (may not be applicable).  Alternatively,
         /// a connection string for the database</param>
-        void Initialise(string filename);
+        void Initialize(string filename);
 
         /// <summary>
         /// Dispose the database

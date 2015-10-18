@@ -42,7 +42,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private Scene m_scene;
         //private IConfigSource m_config; // not used currently
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_scene = scene;
             // m_config = config; // not used currently

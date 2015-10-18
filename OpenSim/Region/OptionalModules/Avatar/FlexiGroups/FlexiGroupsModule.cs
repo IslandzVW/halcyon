@@ -54,7 +54,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
     public class FlexiGroupsModule : ISharedRegionModule, IGroupsModule
     {
         /// <summary>
-        /// ; To use this module, you must specify the following in your OpenSim.ini
+        /// ; To use this module, you must specify the following in your Halcyon.ini
         /// [GROUPS]
         /// Enabled = true
         /// Module  = XmlRpcGroups
@@ -96,7 +96,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
         #region IRegionModuleBase Members
 
-        public void Initialise(IConfigSource config)
+        public void Initialize(IConfigSource config)
         {
             IConfig groupsConfig = config.Configs["Groups"];
 
@@ -207,7 +207,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
         #region ISharedRegionModule Members
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             // NoOp
         }
@@ -1417,9 +1417,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
         // agentID and agentName are only used if remoteClient is null.
         // agentID/agentName is the requesting user, typically owner of the script requesting it.
         public int InviteGroupRequest(IClientAPI remoteClient, UUID agentID, string agentName, UUID groupID, UUID invitedAgentID, UUID roleID)
-		{
+        {
             GroupRequestID grID = GetClientGroupRequestID(remoteClient);
-			GroupRecord groupInfo = m_groupData.GetGroupRecord(grID, groupID, null);
+            GroupRecord groupInfo = m_groupData.GetGroupRecord(grID, groupID, null);
             IScene scene = m_sceneList[0];
 
             if (remoteClient != null)
@@ -1429,13 +1429,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 scene = remoteClient.Scene;
             }
 
-			string groupName;
-			if (groupInfo != null)
-				groupName = groupInfo.GroupName;
-			else
-				groupName = "(unknown)";
+            string groupName;
+            if (groupInfo != null)
+                groupName = groupInfo.GroupName;
+            else
+                groupName = "(unknown)";
 
-			if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
             // Get the list of users who have this sender muted.
             m_muteListModule = m_sceneList[0].RequestModuleInterface<IMuteListModule>();

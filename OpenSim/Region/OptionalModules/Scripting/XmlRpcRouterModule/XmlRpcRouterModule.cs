@@ -43,7 +43,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.XmlRpcRouterModule
     {
         //private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             IConfig startupConfig = config.Configs["Startup"];
             if (startupConfig == null)
@@ -56,7 +56,7 @@ namespace OpenSim.Region.OptionalModules.Scripting.XmlRpcRouterModule
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

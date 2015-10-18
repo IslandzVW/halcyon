@@ -115,7 +115,7 @@ namespace OpenSim.Region.Framework.Scenes
             return copy;
         }
 
-        public float[] GetFloatsSerialised()
+        public float[] GetFloatsSerialized()
         {
             // Move the member variables into local variables, calling
             // member variables 256*256 times gets expensive
@@ -238,7 +238,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void ToXml(XmlWriter xmlWriter)
         {
-            float[] mapData = GetFloatsSerialised();
+            float[] mapData = GetFloatsSerialized();
             byte[] buffer = new byte[mapData.Length * 4];
             for (int i = 0; i < mapData.Length; i++)
             {
@@ -454,7 +454,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (xPos < 0 || yPos < 0 || xPos >= Constants.RegionSize || yPos >= Constants.RegionSize)
                 return new Vector3(0.00000f, 0.00000f, 1.00000f);
-			
+            
             uint x = (uint)xPos;
             uint y = (uint)yPos;
             uint xPlusOne = x + 1;
@@ -488,7 +488,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!Util.IsValidRegionXY(xPos, yPos))
                 return new Vector3(0.00000f, 0.00000f, 1.00000f);
-			
+            
             uint x = (uint)xPos;
             uint y = (uint)yPos;
             uint xPlusOne = x + 1;

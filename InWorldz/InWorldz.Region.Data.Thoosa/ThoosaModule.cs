@@ -44,7 +44,7 @@ namespace InWorldz.Region.Data.Thoosa
 
         private Engines.SerializationEngine _engine;
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -58,7 +58,7 @@ namespace InWorldz.Region.Data.Thoosa
             get { return null; }
         }
 
-        public void Initialise(Nini.Config.IConfigSource source)
+        public void Initialize(Nini.Config.IConfigSource source)
         {
             var cfg = source.Configs["InWorldz.Thoosa"];
             if (cfg == null || cfg.GetBoolean("enable_serialization_engine", true))

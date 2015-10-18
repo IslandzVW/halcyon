@@ -33,8 +33,8 @@ namespace OpenSim.Grid.Framework
     public interface IGridServiceModule
     {
         void Close();
-        void Initialise(IGridServiceCore core);
-        void PostInitialise();
+        void Initialize(IGridServiceCore core);
+        void PostInitialize();
         void RegisterHandlers(BaseHttpServer httpServer);
     }
 }

@@ -65,7 +65,7 @@ namespace OpenSim.Region.CoreModules.Grid.Interregion
         /// </summary>
         /// <typeparam name="T">The type of interface you wish to request</typeparam>
         /// <returns>A MarshalByRefObject inherited from this region inheriting the interface requested.</returns>
-        /// <remarks>All registered interfaces <b>MUST</b> inherit from MarshalByRefObject and use only serialisable types.</remarks>
+        /// <remarks>All registered interfaces <b>MUST</b> inherit from MarshalByRefObject and use only serializable types.</remarks>
         public T RequestInterface<T>()
         {
             if (m_interfaces.ContainsKey(typeof (T)))

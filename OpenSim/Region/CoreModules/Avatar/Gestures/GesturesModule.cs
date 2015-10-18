@@ -44,14 +44,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Gestures
         
         protected Scene m_scene;
         
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             m_scene = scene;
             
             m_scene.EventManager.OnNewClient += OnNewClient;
         }
         
-        public void PostInitialise() {}
+        public void PostInitialize() {}
         public void Close() {}
         public string Name { get { return "Gestures Module"; } }
         public bool IsSharedModule { get { return false; } }

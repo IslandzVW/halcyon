@@ -40,7 +40,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
         
         protected Scene m_scene;
         
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             m_scene = scene;
             
@@ -49,7 +49,7 @@ namespace OpenSim.Region.CoreModules.World.Sound
             m_scene.RegisterModuleInterface<ISoundModule>(this);
         }
         
-        public void PostInitialise() {}
+        public void PostInitialize() {}
         public void Close() {}
         public string Name { get { return "Sound Module"; } }
         public bool IsSharedModule { get { return false; } }

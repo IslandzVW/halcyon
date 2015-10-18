@@ -98,7 +98,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
         /// </summary>
         protected Dictionary<UUID, string> m_omuCapUrls = new Dictionary<UUID, string>();
 
-        public void Initialise(IConfigSource configSource)
+        public void Initialize(IConfigSource configSource)
         {
             m_isEnabled = true;
             IConfig config = configSource.Configs["MediaOnAPrim"];

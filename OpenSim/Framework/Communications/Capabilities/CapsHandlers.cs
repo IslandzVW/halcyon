@@ -100,20 +100,20 @@ namespace OpenSim.Framework.Communications.Capabilities
             set
             {
                 lock (m_capsHandlers)
-				{
-	                if (m_capsHandlers.ContainsKey(idx))
-	                {
+                {
+                    if (m_capsHandlers.ContainsKey(idx))
+                    {
                         m_httpListener.RemoveStreamHandler("POST", m_capsHandlers[idx].RequestHandler.Path);
-	                    m_capsHandlers.Remove(idx);
-	                }
-	
-	                if (null == value) 
+                        m_capsHandlers.Remove(idx);
+                    }
+    
+                    if (null == value) 
                         return;
 
                     m_capsHandlers[idx] = value;
                     if (value.RequestHandler != null)
-	                    m_httpListener.AddStreamHandler(value.RequestHandler);
-				}
+                        m_httpListener.AddStreamHandler(value.RequestHandler);
+                }
             }
         }
 

@@ -75,23 +75,23 @@ namespace OpenSim.Framework.Communications.Cache
             get { return "1.0"; }
         }
 
-        public virtual void Initialise()
+        public virtual void Initialize()
         {
-            m_log.Debug("[ASSET CACHE]: Asset cache null initialisation");
+            m_log.Debug("[ASSET CACHE]: Asset cache null initialization");
         }
 
-        public virtual void Initialise(IAssetServer assetServer)
+        public virtual void Initialize(IAssetServer assetServer)
         {
-            m_log.InfoFormat("[ASSET CACHE]: Asset cache initialisation [{0}/{1}]", Name, Version);
+            m_log.InfoFormat("[ASSET CACHE]: Asset cache initialization [{0}/{1}]", Name, Version);
          
             m_assetServer = assetServer;
             m_assetServer.SetReceiver(this);
         }
 
-        public virtual void Initialise(ConfigSettings settings, IAssetServer assetServer)
+        public virtual void Initialize(ConfigSettings settings, IAssetServer assetServer)
         {
-            m_log.Debug("[ASSET CACHE]: Asset cache configured initialisation");
-            Initialise(assetServer);
+            m_log.Debug("[ASSET CACHE]: Asset cache configured initialization");
+            Initialize(assetServer);
         }
 
         public void Dispose()
@@ -131,7 +131,7 @@ namespace OpenSim.Framework.Communications.Cache
         /// <param name="assetServer"></param>
         public AssetCache(IAssetServer assetServer)
         {
-            Initialise(assetServer);
+            Initialize(assetServer);
             _negativeCache = new LRUCache<UUID, DateTime>(NEGATIVE_CACHE_SIZE);
             ProviderRegistry.Instance.RegisterInterface<IAssetCache>(this);
         }        

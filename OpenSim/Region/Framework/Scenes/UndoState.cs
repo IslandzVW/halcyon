@@ -120,7 +120,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         part.OffsetPosition = Position;
                     }
-						
+                        
                     part.UpdateRotation(Rotation);
                     if (Scale != Vector3.Zero)
                     {

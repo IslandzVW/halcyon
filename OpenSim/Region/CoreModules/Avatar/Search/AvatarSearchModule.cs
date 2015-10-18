@@ -85,7 +85,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
 
         // status flags embedded in search replay messages of classifieds, events, groups, and places.
         // Places
-        private const uint STATUS_SEARCH_PLACES_NONE				= 0x0;
+        private const uint STATUS_SEARCH_PLACES_NONE                = 0x0;
         private const uint STATUS_SEARCH_PLACES_BANNEDWORD = 0x1 << 0;
         private const uint STATUS_SEARCH_PLACES_SHORTSTRING = 0x1 << 1;
         private const uint STATUS_SEARCH_PLACES_FOUNDNONE = 0x1 << 2;
@@ -108,7 +108,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
         private const uint STATUS_SEARCH_CLASSIFIEDS_FOUNDNONE = 0x1 << 2;
         private const uint STATUS_SEARCH_CLASSIFIEDS_SEARCHDISABLED = 0x1 << 3;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (!m_Enabled)
                 return;
@@ -359,7 +359,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
         }
         // NOTE: END OF RDB-related code copied in LandManagementModule (for now).
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (!m_Enabled)
                 return;
@@ -606,7 +606,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                 if (maturities > 0) sqlTerms += " or ";
                 sqlTerms += "regionsettings.maturity='1'";
                 maturities++;
-			}
+            }
             if (checkAdultFlag)
             {
                 if (maturities > 0) sqlTerms += " or ";
@@ -965,25 +965,25 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                     // real string value so it shows correctly
                     if (row["category"] == "18")
                         data.category = "Discussion";
-		            if (row["category"] == "19")
+                    if (row["category"] == "19")
                         data.category = "Sports";
-		            if (row["category"] == "20")
+                    if (row["category"] == "20")
                         data.category = "Live Music";
-		            if (row["category"] == "22")
+                    if (row["category"] == "22")
                         data.category = "Commercial";
-		            if (row["category"] == "23")
+                    if (row["category"] == "23")
                         data.category = "Nightlife/Entertainment";
-		            if (row["category"] == "24")
+                    if (row["category"] == "24")
                         data.category = "Games/Contests";
-		            if (row["category"] == "25")
+                    if (row["category"] == "25")
                         data.category = "Pageants";
-		            if (row["category"] == "26")
+                    if (row["category"] == "26")
                         data.category = "Education";
-		            if (row["category"] == "27")
+                    if (row["category"] == "27")
                         data.category = "Arts and Culture";
-		            if (row["category"] == "28")
+                    if (row["category"] == "28")
                         data.category = "Charity/Support Groups";
-		            if (row["category"] == "29")
+                    if (row["category"] == "29")
                         data.category = "Miscellaneous";
 
                     data.description = row["description"].ToString();

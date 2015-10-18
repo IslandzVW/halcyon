@@ -347,11 +347,11 @@ namespace OpenSim.Region.Framework.Scenes
                     perms &= part.Inventory.MaskEffectiveNextPermissions();
             }
 
-			if ((nextOwnerMask & (uint)PermissionMask.Modify) == 0)
+            if ((nextOwnerMask & (uint)PermissionMask.Modify) == 0)
                 perms &= ~(uint)PermissionMask.Modify;
-			if ((nextOwnerMask & (uint)PermissionMask.Copy) == 0)
+            if ((nextOwnerMask & (uint)PermissionMask.Copy) == 0)
                 perms &= ~(uint)PermissionMask.Copy;
-			if ((nextOwnerMask & (uint)PermissionMask.Transfer) == 0)
+            if ((nextOwnerMask & (uint)PermissionMask.Transfer) == 0)
                 perms &= ~(uint)PermissionMask.Transfer;
 
             return perms;
