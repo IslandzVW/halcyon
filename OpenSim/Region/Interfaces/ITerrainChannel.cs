@@ -52,7 +52,7 @@ namespace OpenSim.Region.Interfaces
         /// Squash the entire heightmap into a single dimensioned array
         /// </summary>
         /// <returns></returns>
-        float[] GetFloatsSerialised();
+        float[] GetFloatsSerialized();
 
         double[,] GetDoubles();
         bool Tainted(int x, int y);

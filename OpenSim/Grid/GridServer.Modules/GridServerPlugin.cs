@@ -47,8 +47,6 @@ namespace OpenSim.Grid.GridServer.Modules
 
         protected GridDBService m_gridDBService;
 
-        protected string m_version;
-
         protected GridConfig m_config;
 
         protected IGridServiceCore m_core;
@@ -57,11 +55,10 @@ namespace OpenSim.Grid.GridServer.Modules
 
         #region IGridPlugin Members
 
-        public void Initialise(GridServerBase gridServer)
+        public void Initialize(GridServerBase gridServer)
         {
             m_core = gridServer;
             m_config = gridServer.Config;
-            m_version = gridServer.Version;
             m_console = MainConsole.Instance;
 
             AddConsoleCommands();
@@ -83,7 +80,7 @@ namespace OpenSim.Grid.GridServer.Modules
             get { return "GridServerPlugin"; }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
         }
 
@@ -99,17 +96,17 @@ namespace OpenSim.Grid.GridServer.Modules
             // RegisterInterface<GridDBService>(m_gridDBService);
 
             m_gridMessageModule = new GridMessagingModule();
-            m_gridMessageModule.Initialise(m_version, m_gridDBService, m_core, m_config);
+            m_gridMessageModule.Initialize(m_gridDBService, m_core, m_config);
 
             m_gridXmlRpcModule = new GridXmlRpcModule();
-            m_gridXmlRpcModule.Initialise(m_version, m_gridDBService, m_core, m_config);
+            m_gridXmlRpcModule.Initialize(m_gridDBService, m_core, m_config);
 
             m_gridRestModule = new GridRestModule();
-            m_gridRestModule.Initialise(m_version, m_gridDBService, m_core, m_config);
+            m_gridRestModule.Initialize(m_gridDBService, m_core, m_config);
 
-            m_gridMessageModule.PostInitialise();
-            m_gridXmlRpcModule.PostInitialise();
-            m_gridRestModule.PostInitialise();
+            m_gridMessageModule.PostInitialize();
+            m_gridXmlRpcModule.PostInitialize();
+            m_gridRestModule.PostInitialize();
         }
 
         #region Console Command Handlers

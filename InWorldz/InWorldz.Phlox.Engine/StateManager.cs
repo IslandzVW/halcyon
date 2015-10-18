@@ -146,8 +146,8 @@ namespace InWorldz.Phlox.Engine
             _connection.Open();
 
             const string INITIALIZED_QUERY =    "SELECT COUNT(*) AS tbl_count " +
-										        "FROM sqlite_master " +
-										        "WHERE type = 'table' AND tbl_name='StateData';";
+                                                "FROM sqlite_master " +
+                                                "WHERE type = 'table' AND tbl_name='StateData';";
 
             using (SQLiteCommand cmd = new SQLiteCommand(INITIALIZED_QUERY, _connection))
             {

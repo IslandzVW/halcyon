@@ -35,7 +35,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FriendPermissions
             get { return null; }
         }
 
-        public void Initialise(Nini.Config.IConfigSource source)
+        public void Initialize(Nini.Config.IConfigSource source)
         {
             //read our connection string 
             IConfig userConfig = source.Configs["UserService"];

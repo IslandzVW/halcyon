@@ -32,7 +32,7 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     
     public delegate void DecodedCallback(UUID AssetId, OpenJPEG.J2KLayerInfo[] layers);
-	
+    
     public interface IJ2KDecoder
     {
         void BeginDecode(UUID assetID, byte[] j2kData, DecodedCallback callback);

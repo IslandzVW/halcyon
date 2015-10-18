@@ -61,7 +61,7 @@ namespace OpenSim.Framework.Communications.Capabilities
             msg.messageID = messageID;
             msg.regionID = regionID;
             arr.Array.Add(msg);
-            return LLSDHelpers.SerialiseLLSDReply(arr);
+            return LLSDHelpers.SerializeLLSDReply(arr);
         }
     }
 

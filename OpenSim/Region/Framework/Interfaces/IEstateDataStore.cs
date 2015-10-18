@@ -33,7 +33,7 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IEstateDataStore
     {
-        void Initialise(string connectstring);
+        void Initialize(string connectstring);
 
         EstateSettings LoadEstateSettings(UUID regionID, string regionName, UUID masterAvatarID, bool writable);  // during startup
         EstateSettings LoadEstateSettings(UUID regionID);   // only used after startup

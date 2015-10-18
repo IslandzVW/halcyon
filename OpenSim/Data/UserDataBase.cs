@@ -34,10 +34,6 @@ namespace OpenSim.Data
 {
     public abstract class UserDataBase : IUserDataPlugin
     {
-        // private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        // private Dictionary<UUID, AvatarAppearance> aplist = new Dictionary<UUID, AvatarAppearance>();
-
         public abstract UserProfileData GetUserByUUID(UUID user);
         public abstract UserProfileData GetUserByName(string fname, string lname);
         public abstract UserAgentData GetAgentByUUID(UUID user);
@@ -45,10 +41,8 @@ namespace OpenSim.Data
         public abstract UserAgentData GetAgentByName(string fname, string lname);
         public UserProfileData GetUserByUri(Uri uri) { return null; }        
         public abstract void StoreWebLoginKey(UUID agentID, UUID webLoginKey);
-        //public abstract UserAgentData GetAgentProfileURL(UUID agentID, string profileURL);
         public abstract void AddNewUserProfile(UserProfileData user);
-        //public abstract UserInterestsData GetUserInterests(UUID user);
-        
+
         public virtual void AddTemporaryUserProfile(UserProfileData userProfile)
         {
             // Temporary profiles are optional for database plugins.
@@ -59,7 +53,6 @@ namespace OpenSim.Data
         }
 
         public abstract bool UpdateUserProfile(UserProfileData user);
-        //public abstract bool UpdateUserInterests(UserInterestsData user);
         public abstract void AddNewUserAgent(UserAgentData agent);
         public abstract void AddNewUserFriend(UUID friendlistowner, UUID friend, uint perms);
         public abstract void RemoveUserFriend(UUID friendlistowner, UUID friend);
@@ -77,28 +70,14 @@ namespace OpenSim.Data
         public abstract List<string> GetBotOutfitsByOwner(UUID userID);
         public abstract List<CachedAgentArgs> GetCachedBakedTextures(List<CachedAgentArgs> args);
         public abstract void SetCachedBakedTextures(Dictionary<UUID, UUID> bakedTextures);
-        // public virtual AvatarAppearance GetUserAppearance(UUID user) {
-        //     AvatarAppearance aa = null;
-        //     try {
-        //         aa = aplist[user];
-        //         m_log.Info("[APPEARANCE] Found appearance for " + user.ToString() + aa.ToString());
-        //     } catch (System.Collections.Generic.KeyNotFoundException e) {
-        //         m_log.Info("[APPEARANCE] No appearance found for " + user.ToString());
-        //     }
-        //     return aa;
-        // }
-        // public virtual void UpdateUserAppearance(UUID user, AvatarAppearance appearance) {
-        //     aplist[user] = appearance;
-        //     m_log.Info("[APPEARANCE] Setting appearance for " + user.ToString() + appearance.ToString());
-        // }
         public abstract void ResetAttachments(UUID userID);
 
         public abstract void LogoutUsers(UUID regionID);
 
         public abstract string Version {get;}
         public abstract string Name {get;}
-        public abstract void Initialise(string connect);
-        public abstract void Initialise();
+        public abstract void Initialize(string connect);
+        public abstract void Initialize();
         public abstract void Dispose();
 
         public abstract void SaveUserPreferences(UserPreferencesData userPrefs);

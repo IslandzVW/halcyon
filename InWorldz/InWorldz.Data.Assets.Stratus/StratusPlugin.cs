@@ -38,11 +38,11 @@ namespace InWorldz.Data.Assets.Stratus
 {
     public class StratusPlugin : IApplicationPlugin
     {
-        public void Initialise(OpenSimBase openSim)
+        public void Initialize(OpenSimBase openSim)
         {
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -56,7 +56,7 @@ namespace InWorldz.Data.Assets.Stratus
             get { return "StratusPlugin"; }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
         }
 

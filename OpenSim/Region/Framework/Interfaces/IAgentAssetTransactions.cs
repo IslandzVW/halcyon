@@ -33,7 +33,7 @@ namespace OpenSim.Region.Framework.Interfaces
 {
     public interface IAgentAssetTransactions
     {
-		bool HandleItemUpdateFromTransaction(IClientAPI remoteClient, UUID transactionID,
+        bool HandleItemUpdateFromTransaction(IClientAPI remoteClient, UUID transactionID,
                                              InventoryItemBase item);
 
         void HandleItemCreationFromTransaction(IClientAPI remoteClient, UUID transactionID, UUID folderID,

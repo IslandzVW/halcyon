@@ -56,12 +56,12 @@ namespace OpenSim.Grid.UserServer
         {
         }
 
-        public void Initialise(IGridServiceCore core)
+        public void Initialize(IGridServiceCore core)
         {
             m_core = core;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             UserConfig cfg;
             if (m_core.TryGet<UserConfig>(out cfg))

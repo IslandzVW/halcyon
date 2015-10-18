@@ -61,8 +61,6 @@ namespace OpenSim.Region.CoreModules.Grid.Interregion
 
         private readonly Dictionary<Location, string[]> m_neighbourInterfaces = new Dictionary<Location, string[]>();
         private readonly Dictionary<Location, RemotingObject> m_neighbourRemote = new Dictionary<Location, RemotingObject>();
-        // private IConfigSource m_config;
-        private const bool m_enabled = false;
 
         private RemotingObject m_myRemote;
         private TcpChannel m_tcpChannel;
@@ -141,30 +139,16 @@ namespace OpenSim.Region.CoreModules.Grid.Interregion
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             m_myLocations.Add(new Location((int) scene.RegionInfo.RegionLocX,
                                            (int) scene.RegionInfo.RegionLocY));
-            // m_config = source;
 
             scene.RegisterModuleInterface<IInterregionModule>(this);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
-            // Commenting out to remove 'unreachable code' warning since m_enabled is never true
-//            if (m_enabled)
-//            {
-//                try
-//                {
-//                    m_tcpPort = m_config.Configs["Comms"].GetInt("remoting_port", m_tcpPort);
-//                }
-//                catch
-//                {
-//                }
-//
-//                internal_CreateRemotingObjects();
-//            }
         }
 
         public void Close()

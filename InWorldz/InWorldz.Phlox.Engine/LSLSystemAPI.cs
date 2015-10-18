@@ -20,7 +20,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 using Nini.Config;
-using log4net;  
+using log4net;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
@@ -28,10 +28,11 @@ using OpenSim;
 using OpenSim.Framework;
 using OpenSim.Framework.Communications.Cache;
 using OpenSim.Framework.Geom;
+using OpenSim.Framework.Servers;
 using OpenSim.Region.CoreModules;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.CoreModules.World.Land;
 using OpenSim.Region.CoreModules.World.Terrain;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Physics.Manager.Vehicle;
@@ -6085,7 +6086,7 @@ namespace InWorldz.Phlox.Engine
             }
             else
             {
-                x = rot.X / s; // normalise axis
+                x = rot.X / s; // normalize axis
                 y = rot.Y / s;
                 z = rot.Z / s;
             }
@@ -11489,7 +11490,7 @@ namespace InWorldz.Phlox.Engine
                         if (simulator == World.RegionInfo.RegionName)
                             reply = m_host.ParentGroup.Scene.GetSimulatorVersion();
                         else
-                            reply = "InWorldz";
+                            reply = VersionInfo.SoftwareName;
                         break;
                     default:
                         // ScriptSleep(1000);
@@ -12561,23 +12562,6 @@ namespace InWorldz.Phlox.Engine
             if (userAgent.IndexOf("SecondLife", StringComparison.CurrentCultureIgnoreCase) < 0 && 
                 userAgent.IndexOf("InWorldz", StringComparison.CurrentCultureIgnoreCase) < 0)
                 return; // Not the embedded browser. Is this check good enough?  
-
-#if false
-            // Use the IP address of the client and check against the request
-            // seperate logins from the same IP will allow all of them to get non-text/plain as long
-            // as the owner is in the region. Same as SL!
-            string logonFromIPAddress = agent.ControllingClient.RemoteEndPoint.Address.ToString();
-            string requestFromIPAddress = m_UrlModule.GetHttpHeader(key, "remote_addr");
-            //m_log.Debug("IP from header='" + requestFromIPAddress + "' IP from endpoint='" + logonFromIPAddress + "'");
-            if (requestFromIPAddress == null || requestFromIPAddress.Trim() == "")
-                return;
-            if (logonFromIPAddress == null || logonFromIPAddress.Trim() == "")
-                return;
-
-            // If the request isnt from the same IP address then the request cannot be from the owner
-            if (!requestFromIPAddress.Trim().Equals(logonFromIPAddress.Trim()))
-                return;
-#endif
 
             switch (type)
             {
@@ -14469,7 +14453,7 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List iwListRemoveDuplicates(LSL_List src)
         {
-			if(src.Length <= 1) return src;
+            if(src.Length <= 1) return src;
             //yarrr...
             return new LSL_List(  src.Data.Distinct().ToList()  );
         }
@@ -14513,11 +14497,11 @@ namespace InWorldz.Phlox.Engine
                 {
                     if(elements.Data.Contains<object>(src.Data[i]) == false)
                     {
-						if(count == -1 || counted < count)
-						{
-							ret.Add(src.Data[i]);
-							counted++;
-						}
+                        if(count == -1 || counted < count)
+                        {
+                            ret.Add(src.Data[i]);
+                            counted++;
+                        }
                     }
                 }
             }
@@ -15179,9 +15163,9 @@ namespace InWorldz.Phlox.Engine
                     });
             }
 
-			//Helper function for Ascii Compression
-			// Adapted from public domain code by Becky Pippen
-			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
+            //Helper function for Ascii Compression
+            // Adapted from public domain code by Becky Pippen
+            // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             private static string encode15BitsToChar(int num) {
                 if (num < 0 || num >= 0x8000) return "�";
                 num += 0x1000;
@@ -15193,19 +15177,19 @@ namespace InWorldz.Phlox.Engine
                 ));
             }
 
-			//Helper function for Ascii Compression
-			// Adapted from public domain code by Becky Pippen
-			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
+            //Helper function for Ascii Compression
+            // Adapted from public domain code by Becky Pippen
+            // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             private static int charToInt(string src, int index) {
                 if (index < 0) index = src.Length + index;
                 if (Math.Abs(index) >= src.Length) return 0;
                 char c = src[index];
                 return (int)c;
             }
-			
-			//Helper function for Ascii Compression
-			// Adapted from public domain code by Becky Pippen
-			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
+            
+            //Helper function for Ascii Compression
+            // Adapted from public domain code by Becky Pippen
+            // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             private static int decodeCharTo15Bits(string ch)
             {
                 int t = Convert.ToChar(ch);
@@ -15215,8 +15199,8 @@ namespace InWorldz.Phlox.Engine
             }
 
             //Compress an ascii string by encoding two characters into a single 15bit character.
-			// Adapted from public domain code by Becky Pippen
-			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
+            // Adapted from public domain code by Becky Pippen
+            // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             public static string AsciiCompress(string str)
             {
                 if (str == "") return str;
@@ -15244,8 +15228,8 @@ namespace InWorldz.Phlox.Engine
             }
 
             //Decompress an ascii string from 15bit encoding.
-			// Adapted from public domain code by Becky Pippen
-			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
+            // Adapted from public domain code by Becky Pippen
+            // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             public static string AsciiDecompress(string str)
             {
                 if (str == "") return str;
@@ -16134,34 +16118,34 @@ namespace InWorldz.Phlox.Engine
 
             try
             {
-				
-				if(matchType > 2)
-				{
-					if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for botSearchBotOutfits");
-					else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for botSearchBotOutfits");
-				}
-				else 
-				{
-					IBotManager manager = World.RequestModuleInterface<IBotManager>();
-					if (manager != null)
-					{
-						List<string> itms = manager.GetBotOutfitsByOwner(m_host.OwnerID);
-						int count=0;
-						foreach(string outfit in itms)
-						{
-							if(pattern == "" || iwMatchString(outfit, pattern, matchType) == 1)
-							{
-								if (count >= start && (end == -1 || count <= end))
-								{
-									retVal.Add(outfit);
-								}
-								count++;
-								if (end != -1 && count > end)
-									break;
-							}
-						}
-					}
-				}
+                
+                if(matchType > 2)
+                {
+                    if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for botSearchBotOutfits");
+                    else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for botSearchBotOutfits");
+                }
+                else 
+                {
+                    IBotManager manager = World.RequestModuleInterface<IBotManager>();
+                    if (manager != null)
+                    {
+                        List<string> itms = manager.GetBotOutfitsByOwner(m_host.OwnerID);
+                        int count=0;
+                        foreach(string outfit in itms)
+                        {
+                            if(pattern == "" || iwMatchString(outfit, pattern, matchType) == 1)
+                            {
+                                if (count >= start && (end == -1 || count <= end))
+                                {
+                                    retVal.Add(outfit);
+                                }
+                                count++;
+                                if (end != -1 && count > end)
+                                    break;
+                            }
+                        }
+                    }
+                }
             }
             finally
             {

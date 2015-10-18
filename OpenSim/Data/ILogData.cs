@@ -69,19 +69,19 @@ namespace OpenSim.Data
                      string logMessage);
 
         /// <summary>
-        /// Initialises the interface
+        /// Initializes the interface
         /// </summary>
-        void Initialise(string connect);
+        void Initialize(string connect);
     }
 
-    public class LogDataInitialiser : PluginInitialiserBase
+    public class LogDataInitializer : PluginInitializerBase
     {
         private string connect;
-        public LogDataInitialiser (string s) { connect = s; }
-        public override void Initialise (IPlugin plugin)
+        public LogDataInitializer (string s) { connect = s; }
+        public override void Initialize (IPlugin plugin)
         {
             ILogDataPlugin p = plugin as ILogDataPlugin;
-            p.Initialise (connect);
+            p.Initialize (connect);
         }
     }
 }

@@ -52,7 +52,7 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
             get { return "SimpleRandomWind"; }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
         }
 

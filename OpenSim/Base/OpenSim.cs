@@ -82,7 +82,7 @@ namespace OpenSim
             base.ReadExtraConfigSettings();
 
             IConfig startupConfig = m_config.Source.Configs["Startup"];
-			IConfig networkConfig = m_config.Source.Configs["Network"];
+            IConfig networkConfig = m_config.Source.Configs["Network"];
 
             if (startupConfig != null)
             {
@@ -120,20 +120,20 @@ namespace OpenSim
         }
 
         /// <summary>
-        /// Performs initialisation of the scene, such as loading configuration from disk.
+        /// Performs initialization of the scene, such as loading configuration from disk.
         /// </summary>
         protected override void StartupSpecific()
         {
             m_log.Info("====================================================================");
             m_log.Info("========================= STARTING HALCYON =========================");
             m_log.Info("====================================================================");
-            m_log.InfoFormat("[OPENSIM MAIN]: Running in {0} mode",
+            m_log.InfoFormat("[HALCYON MAIN]: Running in {0} mode",
                              (ConfigurationSettings.Standalone ? "sandbox" : "grid"));
             m_log.InfoFormat("GC: Server mode: {0}, {1}", GCSettings.IsServerGC.ToString(), GCSettings.LatencyMode.ToString());
-            //m_log.InfoFormat("[OPENSIM MAIN]: GC Is Server GC: {0}", GCSettings.IsServerGC.ToString());
+            //m_log.InfoFormat("[HALCYON MAIN]: GC Is Server GC: {0}", GCSettings.IsServerGC.ToString());
             // http://msdn.microsoft.com/en-us/library/bb384202.aspx
             //GCSettings.LatencyMode = GCLatencyMode.Batch;
-            //m_log.InfoFormat("[OPENSIM MAIN]: GC Latency Mode: {0}", GCSettings.LatencyMode.ToString());
+            //m_log.InfoFormat("[HALCYON MAIN]: GC Latency Mode: {0}", GCSettings.LatencyMode.ToString());
 
             if (m_gui) // Driven by external GUI
             {

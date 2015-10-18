@@ -61,12 +61,12 @@ namespace OpenSim.Grid.MessagingServer.Modules
             reconnectTimer.Start();
         }
 
-        public void Initialise()
+        public void Initialize()
         {
             m_messageCore.RegisterInterface<IInterServiceUserService>(this);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
 
         }

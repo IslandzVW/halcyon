@@ -3687,7 +3687,7 @@ namespace OpenSim.Region.Framework.Scenes
             axDiff *= Quaternion.Inverse(partRotation);
             diff = axDiff;
 
-            //			m_log.DebugFormat("UpdateRootPosition: Abs={0} Old={1} New={2} Diff={3}\n", AbsolutePosition, oldPos, newPos, diff);
+            //            m_log.DebugFormat("UpdateRootPosition: Abs={0} Old={1} New={2} Diff={3}\n", AbsolutePosition, oldPos, newPos, diff);
 
             // pos (newpos) comes in as the new root/group offset, not an absolute position
 
@@ -3702,7 +3702,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            AbsolutePosition = newPos;	// Updates GroupPosition in all parts
+            AbsolutePosition = newPos;    // Updates GroupPosition in all parts
 
             HasGroupChanged = true;
             ScheduleGroupForTerseUpdate();

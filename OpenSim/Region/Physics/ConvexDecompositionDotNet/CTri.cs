@@ -246,13 +246,13 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
         }
 
         private static float DistToPt(float3 p, float4 plane)
-	    {
-		    float x = p.x;
-		    float y = p.y;
-		    float z = p.z;
-		    float d = x*plane.x + y*plane.y + z*plane.z + plane.w;
-		    return d;
-	    }
+        {
+            float x = p.x;
+            float y = p.y;
+            float z = p.z;
+            float d = x*plane.x + y*plane.y + z*plane.z + plane.w;
+            return d;
+        }
 
         private static void intersect(float3 p1, float3 p2, ref float3 split, float4 plane)
         {

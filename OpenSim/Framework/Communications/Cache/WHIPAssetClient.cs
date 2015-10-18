@@ -68,7 +68,7 @@ namespace InWorldz.Whip.Client
             this.SetupConnections(url);
         }
 
-        public void Initialise(ConfigSettings settings)
+        public void Initialize(ConfigSettings settings)
         {
             _settings = settings;
 
@@ -378,7 +378,7 @@ namespace InWorldz.Whip.Client
             get { return "InWorldz WHIP Asset Client"; }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
             
         }

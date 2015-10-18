@@ -53,7 +53,7 @@ namespace OpenSim._32BitLaunch
                 System.Console.WriteLine("");
                 System.Console.WriteLine("Application will now terminate!");
                 System.Console.WriteLine("");
-				System.Environment.Exit(1);
+                System.Environment.Exit(1);
             }*/
         }
     }

@@ -56,7 +56,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             get { return m_commands; }
         }
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             m_commands.AddCommand("Help", false, "help", "help [<item>]",
                                   "Display help on a particular command or on a list of commands in a category", Help);
@@ -119,7 +119,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             m_commands.AddCommand(module, shared, command, help, longhelp, fn);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

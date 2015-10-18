@@ -279,7 +279,7 @@ namespace OpenSim.Framework
         {
             get
             {
-				return m_textures; 
+                return m_textures; 
             }
 
             set {

@@ -55,7 +55,7 @@ namespace OpenSim.ApplicationPlugins.ScriptEngine
             ComponentFactory.Load(".", "OpenSim.ScriptEngine.*.dll");
         }
 
-        public void Initialise(OpenSimBase openSim)
+        public void Initialize(OpenSimBase openSim)
         {
 
             // Our objective: Load component .dll's
@@ -63,7 +63,7 @@ namespace OpenSim.ApplicationPlugins.ScriptEngine
             //m_OpenSim.Shutdown();
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -88,9 +88,9 @@ namespace OpenSim.ApplicationPlugins.ScriptEngine
         }
 
         /// <summary>
-        /// Default-initialises the plugin
+        /// Default-initializes the plugin
         /// </summary>
-        public void Initialise() { }
+        public void Initialize() { }
 
         ///<summary>
         ///Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

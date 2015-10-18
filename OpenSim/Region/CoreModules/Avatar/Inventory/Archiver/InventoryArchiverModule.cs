@@ -68,7 +68,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// </value>
         protected internal CommunicationsManager CommsManager;
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {            
             if (m_scenes.Count == 0)
             {
@@ -90,7 +90,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             m_scenes[scene.RegionInfo.RegionID] = scene;            
         }
         
-        public void PostInitialise() {}
+        public void PostInitialize() {}
 
         public void Close() {}
         

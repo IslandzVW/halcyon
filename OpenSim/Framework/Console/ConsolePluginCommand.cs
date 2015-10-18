@@ -72,7 +72,7 @@ namespace OpenSim.Framework.Console
         /// At least a higher number for "show plugin status" then "show" would return
         /// This is used to have multi length command verbs
         ///
-        /// @see OopenSim.RunPluginCommands
+        /// @see OpenSim.RunPluginCommands
         /// It will only run the one with the highest number
         ///
         /// </summary>

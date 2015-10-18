@@ -168,6 +168,10 @@ namespace OpenSim.Framework
             }
         }
 
+        /// <summary>
+        ///  Gets or sets the Internet-accessible domain name or IP of the region.
+        /// </summary>
+        /// <value>The name of the external host.</value>
         public string ExternalHostName
         {
             get { return m_externalHostName; }
@@ -686,7 +690,7 @@ namespace OpenSim.Framework
         {
             string errorMessage = String.Empty;
             RegionID = new UUID(source.Configs[sectionName].GetString("Region_ID", UUID.Random().ToString()));
-            RegionName = source.Configs[sectionName].GetString("sim_name", "OpenSim Test");
+            RegionName = source.Configs[sectionName].GetString("sim_name", "Halcyon Test");
             m_regionLocX = Convert.ToUInt32(source.Configs[sectionName].GetString("sim_location_x", "1000"));
             m_regionLocY = Convert.ToUInt32(source.Configs[sectionName].GetString("sim_location_y", "1000"));
             // this.DataStore = source.Configs[sectionName].GetString("datastore", "OpenSim.db");
@@ -813,7 +817,7 @@ namespace OpenSim.Framework
                                                 "UUID of Region (Default is recommended, random UUID)",
                                                 UUID.Random().ToString(), true);
             configMember.addConfigurationOption("sim_name", ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
-                                                "Region Name", "OpenSim Test", false);
+                                                "Region Name", "Halcyon Test", false);
             configMember.addConfigurationOption("sim_location_x", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Grid Location (X Axis)", "1000", false);
             configMember.addConfigurationOption("sim_location_y", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,

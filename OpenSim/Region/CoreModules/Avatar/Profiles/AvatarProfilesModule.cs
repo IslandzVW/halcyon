@@ -49,13 +49,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Profiles
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_scene = scene;
             m_scene.EventManager.OnNewClient += NewClient;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

@@ -171,7 +171,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_scene = scene;
             m_scene.RegisterModuleInterface<IHttpRequestModule>(this);
@@ -210,7 +210,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 HttpRequestConsoleCommand);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -593,8 +593,8 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 MainConsole.Instance.OutputFormat("httprequest debug level is {0}", m_debugLevel);
                 return;
             }
-        }	
-	
+        }    
+    
         public static bool ValidateServerCertificate(
             object sender,
             X509Certificate certificate,
@@ -605,46 +605,46 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
             if (Request.Headers.Get("NoVerifyCert") != null)
                 return true;
-			
-      		// If the certificate is a valid, signed certificate, return true.
-      		if (sslPolicyErrors == System.Net.Security.SslPolicyErrors.None)
-        		return true;
+            
+              // If the certificate is a valid, signed certificate, return true.
+              if (sslPolicyErrors == System.Net.Security.SslPolicyErrors.None)
+                return true;
 
-      		// If there are errors in the certificate chain, look at each error to determine the cause.
-      		if ((sslPolicyErrors & System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors) != 0)
-      		{
-        		if (chain != null && chain.ChainStatus != null)
-        		{
-          			foreach (System.Security.Cryptography.X509Certificates.X509ChainStatus status in chain.ChainStatus)
-          			{
-            			if ((certificate.Subject == certificate.Issuer) &&
-               				(status.Status == System.Security.Cryptography.X509Certificates.X509ChainStatusFlags.UntrustedRoot))
-            			{
-              				// Self-signed certificates with an untrusted root are valid. 
-              				continue;
-            			}
-            			else
-            			{
-              				if (status.Status != System.Security.Cryptography.X509Certificates.X509ChainStatusFlags.NoError)
-              				{
-                				// If there are any other errors in the certificate chain, the certificate is invalid,
-             					// so the method returns false.
-                				return false;
-              				}
-            			}
-          			}
-        		}
+              // If there are errors in the certificate chain, look at each error to determine the cause.
+              if ((sslPolicyErrors & System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors) != 0)
+              {
+                if (chain != null && chain.ChainStatus != null)
+                {
+                      foreach (System.Security.Cryptography.X509Certificates.X509ChainStatus status in chain.ChainStatus)
+                      {
+                        if ((certificate.Subject == certificate.Issuer) &&
+                               (status.Status == System.Security.Cryptography.X509Certificates.X509ChainStatusFlags.UntrustedRoot))
+                        {
+                              // Self-signed certificates with an untrusted root are valid. 
+                              continue;
+                        }
+                        else
+                        {
+                              if (status.Status != System.Security.Cryptography.X509Certificates.X509ChainStatusFlags.NoError)
+                              {
+                                // If there are any other errors in the certificate chain, the certificate is invalid,
+                                 // so the method returns false.
+                                return false;
+                              }
+                        }
+                      }
+                }
 
-        		// When processing reaches this line, the only errors in the certificate chain are 
-    			// untrusted root errors for self-signed certificates. These certificates are valid
-    			// for default Exchange server installations, so return true.
-        		return true;
-      		}
-      		else
-      		{
-     			// In all other cases, return false.
-        		return false;
-      		}
+                // When processing reaches this line, the only errors in the certificate chain are 
+                // untrusted root errors for self-signed certificates. These certificates are valid
+                // for default Exchange server installations, so return true.
+                return true;
+              }
+              else
+              {
+                 // In all other cases, return false.
+                return false;
+              }
         }
 
         #region Blacklist Checks
@@ -695,8 +695,8 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 /*
                 Tests with config as follows
                 HostBlacklist = "10.0.0.1,20.0.0.*,google.com"
-	            PortBlacklist = "8010,8020"
-	            HostnameAndPortBlacklist = "192.168.1.*:80,yahoo.com:1234"
+                PortBlacklist = "8010,8020"
+                HostnameAndPortBlacklist = "192.168.1.*:80,yahoo.com:1234"
                 
                 bool blocked;
                 blocked = BlockedByBlacklist("http://10.0.0.1:1234"); //true
