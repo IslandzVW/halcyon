@@ -131,7 +131,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
         public void RegisterCaps(UUID agentID, Caps caps)
         {
             UUID capID = UUID.Random();
-            bool getTextureCapRegistered = false;
 
             try
             {
@@ -154,7 +153,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         () => this.PauseAperture(caps, capID), 
                         () => this.ResumeAperture(caps, capID),
                         (int bwMax) => this.SetApertureBandwidth(caps, capID, bwMax));
-                    getTextureCapRegistered = true;
                 }
             }
             catch (Exception e)
