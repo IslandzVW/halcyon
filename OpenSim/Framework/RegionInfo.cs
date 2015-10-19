@@ -315,6 +315,13 @@ namespace OpenSim.Framework
         // access the same database server. Since estate settings are lodaed
         // from there, that should be sufficient for full remote administration
 
+        /// <summary>
+        /// Load the region information from a file.
+        /// </summary>
+        /// <param name="description">Description used for logging.</param>
+        /// <param name="filename">Full path of the file to load from. Can be relative or absolute.</param>
+        /// <param name="skipConsoleConfig">If set to <c>true</c> skip interactive queries for the region parameters and use defaults instead.</param>
+        /// <param name="configSource">Unused at this time.</param>
         public RegionInfo(string description, string filename, bool skipConsoleConfig, IConfigSource configSource)
         {
             //m_configSource = configSource;
@@ -324,6 +331,13 @@ namespace OpenSim.Framework
             RegionFile = filename;
         }
 
+        /// <summary>
+        /// Load the region information from preparsed XML.
+        /// </summary>
+        /// <param name="description">Description used for logging.</param>
+        /// <param name="xmlNode">Xml node containing the region configuration entry.</param>
+        /// <param name="skipConsoleConfig">If set to <c>true</c> skip interactive queries for the region parameters and use defaults instead.</param>
+        /// <param name="configSource">Unused at this time.</param>
         public RegionInfo(string description, XmlNode xmlNode, bool skipConsoleConfig, IConfigSource configSource)
         {
             //m_configSource = configSource;
