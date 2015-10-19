@@ -1009,6 +1009,7 @@ namespace OpenSim.Framework
             }
         }
 
+        [XmlIgnore]
         public RenderMaterials RenderMaterials
         {
             get
