@@ -62,7 +62,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         private object m_syncRoot = new object();
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
         }
 
@@ -89,7 +89,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             m_scene.UnregisterModuleInterface<ICapabilitiesModule>(this);
         }
         
-        public void PostInitialise() 
+        public void PostInitialize() 
         {
         }
 

@@ -38,8 +38,8 @@ namespace OpenSim.ScriptEngine.Shared
         //string[] ComponentNames { get; }
         //Dictionary<string, IScriptEngineComponent> Components { get; }
         //void InitializeComponents();
-        void Initialise(Scene scene, IConfigSource source);
-        void PostInitialise();
+        void Initialize(Scene scene, IConfigSource source);
+        void PostInitialize();
         void Close();
         string Name { get; }
         //        string Name { get; }

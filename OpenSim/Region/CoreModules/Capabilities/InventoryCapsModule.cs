@@ -88,7 +88,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             get { return null; }
         }
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
         }
 
@@ -113,7 +113,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             m_Scene.EventManager.OnDeregisterCaps += OnDeregisterCaps;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -269,7 +269,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
                     Hashtable hash = (Hashtable)LLSD.LLSDDeserialize(Utils.StringToBytes(request));
                     LLSDTaskScriptUpdate llsdUpdateRequest = new LLSDTaskScriptUpdate();
-                    LLSDHelpers.DeserialiseOSDMap(hash, llsdUpdateRequest);
+                    LLSDHelpers.DeserializeOSDMap(hash, llsdUpdateRequest);
 
                     TaskInventoryScriptUpdater uploader =
                         new TaskInventoryScriptUpdater(
@@ -288,9 +288,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     uploadResponse.uploader = uploaderURL;
                     uploadResponse.state = "upload";
 
-                    // m_log.InfoFormat("[CAPS]: " +"ScriptTaskInventory response: {0}", LLSDHelpers.SerialiseLLSDReply(uploadResponse)));
+                    // m_log.InfoFormat("[CAPS]: " +"ScriptTaskInventory response: {0}", LLSDHelpers.SerializeLLSDReply(uploadResponse)));
 
-                    return LLSDHelpers.SerialiseLLSDReply(uploadResponse);
+                    return LLSDHelpers.SerializeLLSDReply(uploadResponse);
 
                 }
                 catch (Exception e)
@@ -329,7 +329,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 //OpenMetaverse.StructuredData.OSDMap hash = (OpenMetaverse.StructuredData.OSDMap)OpenMetaverse.StructuredData.LLSDParser.DeserializeBinary(Utils.StringToBytes(request));
                 Hashtable hash = (Hashtable)LLSD.LLSDDeserialize(Utils.StringToBytes(request));
                 LLSDItemUpdate llsdRequest = new LLSDItemUpdate();
-                LLSDHelpers.DeserialiseOSDMap(hash, llsdRequest);
+                LLSDHelpers.DeserializeOSDMap(hash, llsdRequest);
 
                 string capsBase = m_Caps.CapsBase;
                 string uploaderPath = Util.RandomClass.Next(5000, 8000).ToString("0000");
@@ -348,9 +348,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
                 //            m_log.InfoFormat("[CAPS]: " +
                 //                             "NoteCardAgentInventory response: {0}",
-                //                             LLSDHelpers.SerialiseLLSDReply(uploadResponse)));
+                //                             LLSDHelpers.SerializeLLSDReply(uploadResponse)));
 
-                return LLSDHelpers.SerialiseLLSDReply(uploadResponse);
+                return LLSDHelpers.SerializeLLSDReply(uploadResponse);
             }
 
             /// <summary>
@@ -1227,7 +1227,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     }
                 }
 
-                reply = LLSDHelpers.SerialiseLLSDReply(llsdReply);
+                reply = LLSDHelpers.SerializeLLSDReply(llsdReply);
 
                 return reply;
             }
@@ -1265,7 +1265,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     }
                 }
 
-                reply = LLSDHelpers.SerialiseLLSDReply(llsdReply);
+                reply = LLSDHelpers.SerializeLLSDReply(llsdReply);
 
                 return reply;
             }
@@ -1286,7 +1286,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 IClientAPI client = null;
                 m_Scene.TryGetClient(m_Caps.AgentID, out client); 
                 if (client == null)
-                    return LLSDHelpers.SerialiseLLSDReply(response);
+                    return LLSDHelpers.SerializeLLSDReply(response);
 
                 try
                 {        
@@ -1363,7 +1363,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                                 // m_log.InfoFormat("[CAPS]: CopyInventoryFromNotecard, ItemID:{0}, FolderID:{1}", copyItem.ID, copyItem.Folder);
                                 client.SendInventoryItemCreateUpdate(item,0);
                                 response["int_response_code"] = 200;
-                                return LLSDHelpers.SerialiseLLSDReply(response);
+                                return LLSDHelpers.SerializeLLSDReply(response);
                             }
                         }
                     }
@@ -1375,7 +1375,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
                 // Failure case
                 client.SendAlertMessage("Failed to retrieve item");
-                return LLSDHelpers.SerialiseLLSDReply(response);
+                return LLSDHelpers.SerializeLLSDReply(response);
             }
 
 
@@ -1415,7 +1415,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         "[CAPS/INVENTORY] Could not create requested folder {0} in parent {1}: {2}", folder_id, m_Caps.AgentID, e);
                 }
 
-                return LLSDHelpers.SerialiseLLSDReply(response);
+                return LLSDHelpers.SerializeLLSDReply(response);
             }
 
             /// <summary>
@@ -1501,7 +1501,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     uploadComplete.new_inventory_item = inv;
                     uploadComplete.state = "complete";
 
-                    res = LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+                    res = LLSDHelpers.SerializeLLSDReply(uploadComplete);
 
                     httpListener.RemoveStreamHandler("POST", uploaderPath);
 
@@ -1569,7 +1569,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                                 compFail.errors.Array.Add(str);
                             }
 
-                            res = LLSDHelpers.SerialiseLLSDReply(compFail);
+                            res = LLSDHelpers.SerializeLLSDReply(compFail);
                         }
                         else
                         {
@@ -1578,7 +1578,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                             compSuccess.new_inventory_item = inv;
                             compSuccess.state = "complete";
 
-                            res = LLSDHelpers.SerialiseLLSDReply(compSuccess);
+                            res = LLSDHelpers.SerializeLLSDReply(compSuccess);
                         }
                     }
                     else
@@ -1588,7 +1588,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         uploadComplete.new_inventory_item = inv;
                         uploadComplete.state = "complete";
 
-                        res = LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+                        res = LLSDHelpers.SerializeLLSDReply(uploadComplete);
                     }
 
                     httpListener.RemoveStreamHandler("POST", uploaderPath);
@@ -1666,7 +1666,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                                 compFail.errors.Array.Add(str);
                             }
 
-                            res = LLSDHelpers.SerialiseLLSDReply(compFail);
+                            res = LLSDHelpers.SerializeLLSDReply(compFail);
                         }
                         else
                         {
@@ -1674,7 +1674,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                             compSuccess.new_asset = response.AssetId.ToString();
                             compSuccess.state = "complete";
 
-                            res = LLSDHelpers.SerialiseLLSDReply(compSuccess);
+                            res = LLSDHelpers.SerializeLLSDReply(compSuccess);
                         }
                     }
                     else
@@ -1683,7 +1683,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         uploadComplete.new_asset = response.AssetId.ToString();
                         uploadComplete.state = "complete";
 
-                        res = LLSDHelpers.SerialiseLLSDReply(uploadComplete);
+                        res = LLSDHelpers.SerializeLLSDReply(uploadComplete);
                     }
 
                     httpListener.RemoveStreamHandler("POST", uploaderPath);

@@ -57,7 +57,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Groups
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             IConfig groupsConfig = config.Configs["Groups"];
 
@@ -84,7 +84,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Groups
                     if (m_SceneList.Count == 0)
                     {
                         osGroup.GroupID = opensimulatorGroupID;
-                        osGroup.GroupName = "OpenSimulator Testing";
+                        osGroup.GroupName = "Halcyon Testing";
                         osGroup.GroupPowers =
                                 (uint)(GroupPowers.AllowLandmark |
                                        GroupPowers.AllowSetHome);
@@ -99,7 +99,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Groups
             scene.EventManager.OnIncomingInstantMessage += OnGridInstantMessage;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

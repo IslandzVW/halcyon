@@ -74,7 +74,7 @@ namespace OpenSim.Data.MySQL
         private long m_lastConnectionUse;
 
         /// <summary>
-        /// Initialises and creates a new MySQL connection and maintains it.
+        /// Initializes and creates a new MySQL connection and maintains it.
         /// </summary>
         /// <param name="hostname">The MySQL server being connected to</param>
         /// <param name="database">The name of the MySQL database being used</param>
@@ -88,23 +88,23 @@ namespace OpenSim.Data.MySQL
             string s = "Server=" + hostname + ";Port=" + port + ";Database=" + database + ";User ID=" +
                 username + ";Password=" + password + ";Pooling=" + cpooling + ";";
 
-            Initialise(s);
+            Initialize(s);
         }
 
         /// <summary>
-        /// Initialises and creates a new MySQL connection and maintains it.
+        /// Initializes and creates a new MySQL connection and maintains it.
         /// </summary>
         /// <param name="connect">connectionString</param>
         public MySQLManager(String connect)
         {
-            Initialise(connect);
+            Initialize(connect);
         }
 
         /// <summary>
-        /// Initialises and creates a new MySQL connection and maintains it.
+        /// Initializes and creates a new MySQL connection and maintains it.
         /// </summary>
         /// <param name="connect">connectionString</param>
-        public void Initialise(String connect)
+        public void Initialize(String connect)
         {
             try
             {
@@ -125,7 +125,7 @@ namespace OpenSim.Data.MySQL
             }
             catch (Exception e)
             {
-                throw new Exception("Error initialising MySql Database: " + e.ToString());
+                throw new Exception("Error initializing MySql Database: " + e.ToString());
             }
         }
 
@@ -966,11 +966,6 @@ namespace OpenSim.Data.MySQL
             {
                 IDbCommand result = Query(sql, parameters);
 
-                // int x;
-                // if ((x = result.ExecuteNonQuery()) > 0)
-                // {
-                //     returnval = true;
-                // }
                 if (result.ExecuteNonQuery() > 0)
                 {
                     returnval = true;
@@ -1006,11 +1001,6 @@ namespace OpenSim.Data.MySQL
 
                 IDbCommand result = Query(sql, parameters);
 
-                // int x;
-                // if ((x = result.ExecuteNonQuery()) > 0)
-                // {
-                //     returnval = true;
-                // }
                 if (result.ExecuteNonQuery() > 0)
                 {
                     returnval = true;
@@ -1058,11 +1048,6 @@ namespace OpenSim.Data.MySQL
             {
                 IDbCommand result = Query(sql, parameters);
 
-                // int x;
-                // if ((x = result.ExecuteNonQuery()) > 0)
-                // {
-                //     returnval = true;
-                // }
                 if (result.ExecuteNonQuery() > 0)
                 {
                     returnval = true;

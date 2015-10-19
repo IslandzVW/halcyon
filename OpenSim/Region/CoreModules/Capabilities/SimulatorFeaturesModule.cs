@@ -80,7 +80,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
         private int m_shoutdistance = 100;
         #region ISharedRegionModule Members
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             IConfig config = source.Configs["SimulatorFeatures"];
             if (config != null)
@@ -129,7 +129,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
         {
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

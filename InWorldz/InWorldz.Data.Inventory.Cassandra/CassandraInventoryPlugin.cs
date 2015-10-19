@@ -88,7 +88,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             get { return "InWorldz.Data.Inventory.Cassandra";  }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
             
         }

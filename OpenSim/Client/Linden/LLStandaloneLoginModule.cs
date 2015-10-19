@@ -73,7 +73,7 @@ namespace OpenSim.Client.Linden
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             if (m_firstScene == null)
             {
@@ -123,7 +123,7 @@ namespace OpenSim.Client.Linden
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
 
         }

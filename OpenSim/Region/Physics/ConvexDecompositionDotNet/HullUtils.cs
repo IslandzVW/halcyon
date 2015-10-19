@@ -734,8 +734,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
 
                     planeside |= vertflag[edge0.v].planetest;
                     //if((vertflag[edge0.v].planetest & vertflag[edge1.v].planetest)  == COPLANAR) {
-                    //	assert(ecop==-1);
-                    //	ecop=e;
+                    //    assert(ecop==-1);
+                    //    ecop=e;
                     //}
 
                     if (vertflag[edge0.v].planetest == (2) && vertflag[edge1.v].planetest == (2))
@@ -1381,8 +1381,8 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
                 bmin = float3.VectorMin(bmin, verts[i]);
                 bmax = float3.VectorMax(bmax, verts[i]);
             }
-            //	float diameter = magnitude(bmax-bmin);
-            //	inflate *=diameter;   // RELATIVE INFLATION
+            //    float diameter = magnitude(bmax-bmin);
+            //    inflate *=diameter;   // RELATIVE INFLATION
             bmin -= new float3(inflate, inflate, inflate);
             bmax += new float3(inflate, inflate, inflate);
             for (i = 0; i < planes.Count; i++)
@@ -1606,7 +1606,7 @@ namespace OpenSim.Region.Physics.ConvexDecompositionDotNet
                 addPoint(ref vcount, vertices, x2, y2, z2);
                 addPoint(ref vcount, vertices, x1, y2, z2);
 
-                return true; // return cube	
+                return true; // return cube    
             }
             else
             {

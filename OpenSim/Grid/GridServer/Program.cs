@@ -40,15 +40,8 @@ namespace OpenSim.Grid.GridServer
 
             GridServerBase app = new GridServerBase();
 
-//            if (args.Length > 0 && args[0] == "-setuponly")
-//            {
-//                app.Config();
-//            }
-//            else
-//            {
-                app.Startup();
-                app.Work();
-//            }
+            app.Startup();
+            app.Work();
         }
     }
 }

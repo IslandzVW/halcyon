@@ -42,13 +42,13 @@ namespace OpenSim.Grid.UserServer.Modules
         {
         }
 
-        public void Initialise(IGridServiceCore core)
+        public void Initialize(IGridServiceCore core)
         {
             m_core = core;
             m_gridInfoService = new GridInfoService();
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
 
         }

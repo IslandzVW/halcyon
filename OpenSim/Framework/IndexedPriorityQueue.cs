@@ -51,7 +51,7 @@ namespace OpenSim.Framework
 
             public int CompareTo(IndexedItem other)
             {
- 	            return Value.CompareTo(other.Value);
+                 return Value.CompareTo(other.Value);
             }
 
             #endregion

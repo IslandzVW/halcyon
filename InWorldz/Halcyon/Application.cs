@@ -80,13 +80,13 @@ namespace OpenSim
             if (logConfigFile != String.Empty)
             {
                 XmlConfigurator.Configure(new System.IO.FileInfo(logConfigFile));
-                m_log.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file", 
+                m_log.InfoFormat("[HALCYON MAIN]: configured log4net using \"{0}\" as configuration file", 
                                  logConfigFile);
             } 
             else
             {
                 XmlConfigurator.Configure();
-                m_log.Info("[OPENSIM MAIN]: configured log4net using default OpenSim.exe.config");
+                m_log.Info("[HALCYON MAIN]: configured log4net using default Halcyon.exe.config");
             }
 
             m_log.Info("Performing compatibility checks... ");

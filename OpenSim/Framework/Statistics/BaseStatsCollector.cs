@@ -46,7 +46,7 @@ namespace OpenSim.Framework.Statistics
             sb.Append(Environment.NewLine);
             sb.Append(
                 string.Format(
-                    "Allocated to OpenSim : {0} MB" + Environment.NewLine,
+                    "Allocated to Halcyon: {0} MB" + Environment.NewLine,
                     Math.Round(GC.GetTotalMemory(false) / 1024.0 / 1024.0)));
 
             return sb.ToString();

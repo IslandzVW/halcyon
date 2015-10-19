@@ -50,7 +50,7 @@ namespace OpenSim.Framework.Communications
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-		private bool m_isUserServer = false;
+        private bool m_isUserServer = false;
 
         /// <value>
         /// List of plugins to search for user data
@@ -153,8 +153,8 @@ namespace OpenSim.Framework.Communications
 
                 if (profile != null)
                 {
-					// We're forcing an update above, of the profile via the plugin, 
-					// need to also force an update of the current agent data.
+                    // We're forcing an update above, of the profile via the plugin, 
+                    // need to also force an update of the current agent data.
                     profile.CurrentAgent = GetUserAgent(profile.ID, true);
                     return profile;
                 }
@@ -722,7 +722,7 @@ namespace OpenSim.Framework.Communications
         #region CreateAgent
 
         /// <summary>
-        /// Creates and initialises a new user agent - make sure to use CommitAgent when done to submit to the DB
+        /// Creates and initializes a new user agent - make sure to use CommitAgent when done to submit to the DB
         /// </summary>
         /// <param name="profile">The users profile</param>
         /// <param name="request">The users loginrequest</param>

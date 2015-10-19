@@ -256,11 +256,11 @@ namespace OpenSim.Framework
         IClientAPI remoteClient, UUID transActionID, UUID folderID, uint callbackID, string description, string name,
         sbyte invType, sbyte type, byte wearableType, uint nextOwnerMask, int creationDate);
 
-	public delegate void LinkInventoryItem(
+    public delegate void LinkInventoryItem(
         IClientAPI remoteClient, UUID transActionID, UUID folderID, uint callbackID, string description, string name,
         sbyte invType, sbyte type, UUID olditemID);
 
-	public delegate void FetchInventoryDescendents(
+    public delegate void FetchInventoryDescendents(
         IClientAPI remoteClient, UUID folderID, UUID ownerID, bool fetchFolders, bool fetchItems, int sortOrder);
 
     public delegate void PurgeInventoryDescendents(
@@ -285,7 +285,7 @@ namespace OpenSim.Framework
         IClientAPI remoteClient, UUID folderID, UUID itemID, int length, string newName);
 
     public delegate void RemoveInventoryItem(
-		IClientAPI remoteClient, UUID itemID, bool forceDelete);
+        IClientAPI remoteClient, UUID itemID, bool forceDelete);
 
     public delegate void RemoveInventoryFolder(
         IClientAPI remoteClient, UUID folderID);
@@ -740,7 +740,7 @@ namespace OpenSim.Framework
 
         event CreateNewInventoryItem OnCreateNewInventoryItem;
         event LinkInventoryItem OnLinkInventoryItem;
-		event CreateInventoryFolder OnCreateNewInventoryFolder;
+        event CreateInventoryFolder OnCreateNewInventoryFolder;
         event UpdateInventoryFolder OnUpdateInventoryFolder;
         event MoveInventoryFolder OnMoveInventoryFolder;
         event FetchInventoryDescendents OnFetchInventoryDescendents;

@@ -44,7 +44,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         List<Scene> m_scenes = new List<Scene>();
 
         #region IRegionModule Members
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             if (m_scene == null)
             {
@@ -55,7 +55,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             scene.EventManager.OnNewClient += OnNewClient;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

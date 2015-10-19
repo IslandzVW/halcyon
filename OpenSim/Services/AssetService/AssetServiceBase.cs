@@ -86,7 +86,7 @@ namespace OpenSim.Services.AssetService
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
 
-            m_Database.Initialise(connString);
+            m_Database.Initialize(connString);
 
             string loaderName = assetConfig.GetString("DefaultAssetLoader",
                     String.Empty);

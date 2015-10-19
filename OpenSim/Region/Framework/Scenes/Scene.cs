@@ -30,6 +30,8 @@ using System.Collections.Generic;
 //using System.Drawing;
 //using System.Drawing.Imaging;
 using System.IO;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Timers;
@@ -61,11 +63,13 @@ namespace OpenSim.Region.Framework.Scenes
 
     public partial class Scene : SceneBase
     {
-        [DllImport("kernel32.dll")]
-        static extern bool SetThreadPriority(IntPtr hThread, ThreadPriorityLevel nPriority);
+        #if _WIN32
+            [DllImport("kernel32.dll")]
+            static extern bool SetThreadPriority(IntPtr hThread, ThreadPriorityLevel nPriority);
 
-        [DllImport("kernel32.dll")]
-        static extern IntPtr GetCurrentThread();
+            [DllImport("kernel32.dll")]
+            static extern IntPtr GetCurrentThread();
+        #endif
 
         /// <summary>
         /// The lowest an object can fall/travel before being considered off world
@@ -199,8 +203,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         private Dictionary<UUID, ReturnInfo> m_returns = new Dictionary<UUID, ReturnInfo>();
 
-        protected string m_simulatorVersion = "InWorldz Server";
-
         protected ModuleLoader m_moduleLoader;
         protected StorageManager m_storageManager;
         public CommunicationsManager CommsManager;
@@ -236,7 +238,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected IWorldComm m_worldCommModule;
         protected IAvatarFactory m_AvatarFactory;
         protected IConfigSource m_config;
-        protected IRegionSerialiserModule m_serialiser;
+        protected IRegionSerializerModule m_serializer;
         private IInterregionCommsOut m_interregionCommsOut;
         public IInterregionCommsOut InterregionComms
         {
@@ -412,7 +414,7 @@ namespace OpenSim.Region.Framework.Scenes
                      CommunicationsManager commsMan, SceneCommunicationService sceneGridService,
                      StorageManager storeManager,
                      ModuleLoader moduleLoader, bool physicalPrim,
-                     bool SeeIntoRegionFromNeighbor, IConfigSource config, string simulatorVersion)
+                     bool SeeIntoRegionFromNeighbor, IConfigSource config)
         {
             m_config = config;
 
@@ -468,8 +470,6 @@ namespace OpenSim.Region.Framework.Scenes
             StatsReporter.OnStatsIncorrect += m_sceneGraph.RecalculateStats;
 
             StatsReporter.SetObjectCapacity(objectCapacity);
-
-            m_simulatorVersion = simulatorVersion;
 
             IConfig netConfig = m_config.Configs["Network"];
 
@@ -847,21 +847,16 @@ namespace OpenSim.Region.Framework.Scenes
                 m_eventManager.OnPermissionError += dm.SendAlertToUser;
         }
 
-        public override string GetSimulatorVersion()
-        {
-            return m_simulatorVersion;
-        }
-
         public string GetEnv(string name)
         {
             string ret = "";
             switch (name)
             {
-                case "sim_channel":     // Get the region's channel string, for example "Second Life Server".
-                    ret = "InWorldz Server";
+                case "sim_channel":     // Get the region's channel string, for example "Second Life Server". Does not change across grids as this is about the simulator software.
+                    ret = VersionInfo.SoftwareName;
                     break;
-                case "sim_version":     // Get the region's version number string, for example "10.11.30.215699".
-                    ret = m_simulatorVersion;
+                case "sim_version":     // Get the region's version number string, for example "10.11.30.215699". Does not change across grids as this is about the simulator software.
+                    ret = VersionInfo.Version;
                     break;
                 case "frame_number":    // (integer) Get the frame number of the simulator, for example "42042".
                     ret = m_frame.ToString();
@@ -1149,8 +1144,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         void DoTiming()
         {
-            IntPtr thrdHandle = GetCurrentThread();
-            SetThreadPriority(thrdHandle, ThreadPriorityLevel.TimeCritical);
+            #if _WIN32
+                IntPtr thrdHandle = GetCurrentThread();
+                SetThreadPriority(thrdHandle, ThreadPriorityLevel.TimeCritical);
+            #endif
+            // This thread is already assigned ThreadPriority.Highest, shouldn't that be enough for most people?
 
             byte tickNum = 0;
             while (true)
@@ -1194,7 +1192,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_worldCommModule = RequestModuleInterface<IWorldComm>();
             XferManager = RequestModuleInterface<IXfer>();
             m_AvatarFactory = RequestModuleInterface<IAvatarFactory>();
-            m_serialiser = RequestModuleInterface<IRegionSerialiserModule>();
+            m_serializer = RequestModuleInterface<IRegionSerializerModule>();
             m_interregionCommsOut = RequestModuleInterface<IInterregionCommsOut>();
             m_interregionCommsIn = RequestModuleInterface<IInterregionCommsIn>();
             m_dialogModule = RequestModuleInterface<IDialogModule>();
@@ -2459,7 +2457,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             foreach (SceneObjectPart part in group.Children.Values)
             {
-                if (!group.IsAttachment)	// Optimization, can't sit on something you're wearing
+                if (!group.IsAttachment)    // Optimization, can't sit on something you're wearing
                 {
                     // Unsit the avatars sitting on the parts
                     UUID AgentID = part.GetAvatarOnSitTarget();
@@ -2475,7 +2473,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            // Serialise calls to RemoveScriptInstances to avoid
+            // Serialize calls to RemoveScriptInstances to avoid
             // deadlocking on m_parts inside SceneObjectGroup
             lock (m_deleting_scene_object)
             {
@@ -2736,12 +2734,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (success)
                 {
-#if false
-                int threadId = Thread.CurrentThread.ManagedThreadId;
-                m_log.WarnFormat("[CROSSING]: Thread {0} region {1} now sleeping.", threadId.ToString(), RegionInfo.RegionName);
-                Thread.Sleep(6000);
-                m_log.WarnFormat("[CROSSING]: Thread {0} region {1} now resuming.", threadId.ToString(), RegionInfo.RegionName);w
-#endif
                     //separate kill step in case this object left the view of other avatars
                     var regionInfo = SurroundingRegions.GetKnownNeighborByHandle(newRegionHandle);
 
@@ -5183,7 +5175,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void TerrainUnAcked(IClientAPI client, int patchX, int patchY)
         {
             //m_log.Debug("Terrain packet unacked, resending patch: " + patchX + " , " + patchY);
-            client.SendLayerData(patchX, patchY, Heightmap.GetFloatsSerialised());
+            client.SendLayerData(patchX, patchY, Heightmap.GetFloatsSerialized());
         }
 
         public void SetRootAgentScene(UUID agentID)
@@ -5215,7 +5207,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (part.ParentGroup.IsDeleted)
                 return;
 
-            if (client.AgentId != part.OwnerID)	// prevent spoofing/hacking
+            if (client.AgentId != part.OwnerID)    // prevent spoofing/hacking
                 return;
 
             part = part.ParentGroup.RootPart;

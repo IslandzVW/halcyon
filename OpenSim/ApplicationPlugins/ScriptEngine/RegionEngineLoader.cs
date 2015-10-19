@@ -47,15 +47,15 @@ namespace OpenSim.ApplicationPlugins.ScriptEngine
         public IScriptEngine scriptEngine;
         public IConfigSource ConfigSource;
         public IConfig ScriptConfigSource;
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             // New region is being created
             // Create a new script engine
             // Make sure we have config
             try
             {
-				if (ConfigSource == null)
-					return;
+                if (ConfigSource == null)
+                    return;
 
                 if (ConfigSource.Configs["SECS"] == null)
                     ConfigSource.AddConfig("SECS");
@@ -66,7 +66,7 @@ namespace OpenSim.ApplicationPlugins.ScriptEngine
                 {
                     LoadEngine();
                     if (scriptEngine != null)
-                        scriptEngine.Initialise(scene, source);
+                        scriptEngine.Initialize(scene, source);
                 }
             }
             catch (NullReferenceException)
@@ -74,10 +74,10 @@ namespace OpenSim.ApplicationPlugins.ScriptEngine
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (scriptEngine != null)
-                scriptEngine.PostInitialise();
+                scriptEngine.PostInitialize();
         }
 
         public void Close()

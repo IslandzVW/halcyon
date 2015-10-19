@@ -69,12 +69,12 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                 Createj2KCacheFolder(pFolder);
             }
         }
-		
-		public static string CacheFolder 
+        
+        public static string CacheFolder 
         { 
-			get { return Util.dataDir() + "/j2kDecodeCache"; } 
-		}
-		 
+            get { return Util.dataDir() + "/j2kDecodeCache"; } 
+        }
+         
         /// <summary>
         /// Save Layers to Disk Cache
         /// </summary>
@@ -251,7 +251,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                 }
             }
 
-			return true;
+            return true;
         }
 
         /// <summary>

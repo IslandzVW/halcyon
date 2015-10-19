@@ -38,17 +38,17 @@ namespace OpenSim.Data
         void UpdateAsset(AssetBase asset);
         bool ExistsAsset(UUID uuid);
         List<AssetMetadata> FetchAssetMetadataSet(int start, int count);
-        void Initialise(string connect);
+        void Initialize(string connect);
     }
 
-    public class AssetDataInitialiser : PluginInitialiserBase
+    public class AssetDataInitializer : PluginInitializerBase
     {
         private string connect;
-        public AssetDataInitialiser (string s) { connect = s; }
-        public override void Initialise (IPlugin plugin)
+        public AssetDataInitializer (string s) { connect = s; }
+        public override void Initialize (IPlugin plugin)
         {
             IAssetDataPlugin p = plugin as IAssetDataPlugin;
-            p.Initialise (connect);
+            p.Initialize (connect);
         }
     }
 }

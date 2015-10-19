@@ -47,11 +47,11 @@ namespace OpenSim.Grid.UserServer
             m_loginService = loginService;
         }
 
-        public void Initialise(IGridServiceCore core)
+        public void Initialize(IGridServiceCore core)
         {
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             m_loginService.OnUserLoggedInAtLocation += NotifyMessageServersUserLoggedInToLocation;
             m_userManager.OnLogOffUser += NotifyMessageServersUserLoggOff;

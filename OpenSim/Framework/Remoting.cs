@@ -49,7 +49,7 @@ namespace OpenSim.Framework
         private SHA512Managed SHA512;
 
         /// <summary>
-        /// Initialises a new RemoteDigest authentication mechanism
+        /// Initializes a new RemoteDigest authentication mechanism
         /// </summary>
         /// <remarks>Needs an audit by a cryptographic professional - was not "roll your own"'d by choice but rather a serious lack of decent authentication mechanisms in .NET remoting</remarks>
         /// <param name="sharedSecret">The shared secret between systems (for inter-sim, this is provided in encrypted form during connection, for grid this is input manually in setup)</param>

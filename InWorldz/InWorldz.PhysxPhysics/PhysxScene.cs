@@ -191,7 +191,7 @@ namespace InWorldz.PhysxPhysics
 
         public override int SimulationFrameTimeAvg
         {
-	        get 
+            get 
             {
                 return _frameTimeAvg.CalculateAverage();
             }
@@ -424,7 +424,7 @@ namespace InWorldz.PhysxPhysics
 
         private void CheckForPhysicsLongFramesAndDebug()
         {
- 	        throw new NotImplementedException();
+             throw new NotImplementedException();
         }
 
         //Stopwatch sw = new Stopwatch();

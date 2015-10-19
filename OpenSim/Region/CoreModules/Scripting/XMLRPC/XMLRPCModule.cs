@@ -96,7 +96,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             // We need to create these early because the scripts might be calling
             // But since this gets called for every region, we need to make sure they
@@ -125,7 +125,7 @@ namespace OpenSim.Region.CoreModules.Scripting.XMLRPC
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (IsEnabled())
             {

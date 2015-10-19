@@ -105,10 +105,10 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Informs the SceneView that the given patch has been modified and must be resent
         /// </summary>
-        /// <param name="serialised"></param>
+        /// <param name="serialized"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        void TerrainPatchUpdated(float[] serialised, int x, int y);
+        void TerrainPatchUpdated(float[] serialized, int x, int y);
 
         /// <summary>
         /// Whether the client requires the entire scene to be sent to them once they have fully loaded

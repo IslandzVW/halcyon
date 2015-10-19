@@ -125,14 +125,14 @@ namespace OpenSim.Framework.Servers.HttpServer
         void AddStreamHandler(IRequestHandler handler);
 
         bool AddXmlRPCHandler(string method, XmlRpcMethod handler);
-        bool AddXmlRPCHandler(string method, XmlRpcMethod handler, bool keepAlive);	
-		
+        bool AddXmlRPCHandler(string method, XmlRpcMethod handler, bool keepAlive);    
+        
         /// <summary>
         /// Gets the XML RPC handler for given method name
         /// </summary>
         /// <param name="method">Name of the method</param>
         /// <returns>Returns null if not found</returns>
-		XmlRpcMethod GetXmlRPCHandler(string method);
+        XmlRpcMethod GetXmlRPCHandler(string method);
 
         /// <summary>
         /// Remove an HTTP handler

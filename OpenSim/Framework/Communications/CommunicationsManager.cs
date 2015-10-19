@@ -275,7 +275,7 @@ namespace OpenSim.Framework.Communications
         {
             if (uuid == LibraryRoot.Owner)
             {
-                remote_client.SendNameReply(uuid, "Mr", "OpenSim");
+                remote_client.SendNameReply(uuid, "Mr", "Halcyon");
             }
             else
             {
