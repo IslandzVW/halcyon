@@ -1041,7 +1041,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 Dictionary<string, object> parms = new Dictionary<string, object>();
                 parms.Add("?agentID", AgentID);
 
-                if (GroupID != null)
+				if (GroupID != UUID.Zero)
                 {
                     query += " AND osgroupmembership.GroupID = ?groupID ";
                     parms.Add("?groupID", GroupID);
