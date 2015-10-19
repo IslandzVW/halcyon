@@ -236,6 +236,9 @@ bin/Terrain/OpenSim.Region.CoreModules.World.Terrain.DefaultEffects.dll
 bin/crashes
 bin/Grid
 bin/GridLogin
+bin2
+bin3
+bin4
 
 #Other ignores
 *.oar
