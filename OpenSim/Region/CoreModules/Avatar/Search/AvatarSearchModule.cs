@@ -116,7 +116,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
             IConfig myConfig = config.Configs["Startup"];
             string connstr = myConfig.GetString("core_connection_string", String.Empty);
             _rdbConnectionTemplate = myConfig.GetString("rdb_connection_template", String.Empty);
+            if (!_rdbConnectionTemplate.Contains("Data Source"))
+            {
+                _rdbConnectionTemplate = "Data Source={0};" + _rdbConnectionTemplate;
+            }
             _rdbConnectionTemplateDebug = myConfig.GetString("rdb_connection_template_debug", String.Empty);
+            if (!_rdbConnectionTemplateDebug.Contains("Data Source"))
+            {
+                _rdbConnectionTemplateDebug = "Data Source={0};" + _rdbConnectionTemplateDebug;
+            }
             _connFactory = new ConnectionFactory("MySQL", connstr);
 
             CacheRdbHosts();
