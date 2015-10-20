@@ -86,6 +86,8 @@ namespace OpenSim.Framework
         private static string regexInvalidPathChars = "[" + new String(Path.GetInvalidPathChars()) + "]";
         private static object XferLock = new object();
 
+        public static bool IsWindows = System.Environment.OSVersion.Platform == System.PlatformID.Win32NT;
+
         /// <summary>
         /// These pools will be created for different purposes so that one does not affect the other
         /// </summary>
@@ -157,21 +159,20 @@ namespace OpenSim.Framework
         /// </value>
         public static UUID BLANK_TEXTURE_UUID = new UUID("5748decc-f629-461c-9a36-a35a221fe21f");
 
-        #if _WIN32
-            [DllImport("kernel32.dll")]
-            static extern UInt64 GetTickCount64();
-        #else
-            // TODO: Fill in implementation for linux/cross platform GetTickCount64 implementation
-        #endif
+        [DllImport("kernel32.dll")]
+        static extern UInt64 GetTickCount64();
 
         public static UInt64 GetLongTickCount()
         {
-            #if _WIN32
+            if (IsWindows)
+            {
                 return GetTickCount64();
-            #else
+            }
+            else
+            {
                 // TODO: Fill in implementation for linux/cross platform GetTickCount64 implementation
                 return (UInt64)Environment.TickCount;
-            #endif 
+            }
         }
 
 
