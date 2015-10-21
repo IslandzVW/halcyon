@@ -593,7 +593,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             c.SenderUUID = UUID.Zero;
             c.Scene = agent.Scene;
 
-            agent.ControllingClient.SendChatMessage(msg, (byte) ChatTypeEnum.Say, PosOfGod, m_whoami, UUID.Zero, 
+            agent.ControllingClient.SendChatMessage(msg, (byte) ChatTypeEnum.Say, PosOfGod, m_whoami, UUID.Zero, UUID.Zero, 
                                                     (byte)ChatSourceType.Object, (byte)ChatAudibleLevel.Fully);
         }
 

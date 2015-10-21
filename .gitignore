@@ -216,6 +216,9 @@ bin/ScriptEngines/Phlox/states/script_states.db3
 # Other files that need to be created per-installation
 bin/Halcyon.ini
 bin/aperture.cfg
+bin/GridServer_Config.xml
+bin/MessagingServer_Config.xml
+bin/UserServer_Config.xml
 bin/Regions
 
 # Other testing folder ignores 
@@ -233,6 +236,9 @@ bin/Terrain/OpenSim.Region.CoreModules.World.Terrain.DefaultEffects.dll
 bin/crashes
 bin/Grid
 bin/GridLogin
+bin2
+bin3
+bin4
 
 #Other ignores
 *.oar

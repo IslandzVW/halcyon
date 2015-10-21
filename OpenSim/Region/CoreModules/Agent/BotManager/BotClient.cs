@@ -318,7 +318,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             return prefix + Util.EscapeUriDataStringRfc3986(m_scene.RegionInfo.RegionName) + "/" + x.ToString() + "/" + y.ToString() + "/" + z.ToString();
         }
 
-        public void SendChatMessage(string message, byte type, OpenMetaverse.Vector3 fromPos, string fromName, OpenMetaverse.UUID fromAgentID, byte source, byte audible)
+        public void SendChatMessage(string message, byte type, OpenMetaverse.Vector3 fromPos, string fromName, OpenMetaverse.UUID fromAgentID, OpenMetaverse.UUID ownerID, byte source, byte audible)
         {
         }
 

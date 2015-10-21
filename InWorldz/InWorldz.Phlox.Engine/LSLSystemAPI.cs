@@ -627,7 +627,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     if (inv.Value.Name == name)
                     {
-                        if (inv.Value.Type != type || type == -1)
+                        if ((inv.Value.Type != type) && (type != -1))
                             return UUID.Zero;
 
                         return inv.Value.AssetID;
@@ -3793,14 +3793,13 @@ namespace InWorldz.Phlox.Engine
 
             // TODO: figure out values for client, fromSession, and imSessionID
             // client.SendInstantMessage(m_host.UUID, fromSession, message, user, imSessionID, m_host.Name, AgentManager.InstantMessageDialog.MessageFromAgent, (uint)Util.UnixTimeSinceEpoch());
-            UUID friendTransactionID = UUID.Random();
 
             //m_pendingFriendRequests.Add(friendTransactionID, fromAgentID);
 
             GridInstantMessage msg = new GridInstantMessage();
-            msg.fromAgentID = new Guid(m_host.OwnerID.ToString());
+			msg.fromAgentID = new Guid(m_host.OwnerID.ToString()); // fromAgentID.Guid;
             msg.toAgentID = agentId.Guid;
-            msg.imSessionID = new Guid(friendTransactionID.ToString()); // This is the item we're mucking with here
+			msg.imSessionID = new Guid(m_host.UUID.ToString()); // This is the item we're mucking with here
             msg.timestamp = (uint)Util.UnixTimeSinceEpoch();// timestamp;
             msg.fromAgentName = m_host.Name;
             // Cap the message length at 1024.
