@@ -11,6 +11,12 @@
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
+*.mdb 
+*.mdp
+
+# Nant
+*.dll.build
+*.exe.build
 
 # Build results
 [Dd]ebug/
