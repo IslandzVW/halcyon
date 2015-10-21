@@ -422,6 +422,9 @@ namespace InWorldz.Phlox.Engine
             {
                 _log.InfoFormat("[Phlox]: Starting recovered script {0} in item {1} group {2} part {3}", scriptAssetId, lrq.ItemId, lrq.Prim.ParentGroup.LocalId, lrq.Prim.LocalId);
 
+                //remove the script from the unloaded cache for good measure since it is now loaded again
+                _unloadedScriptCache.Remove(scriptAssetId);
+
                 //check the part in the load request for this script.
                 //even though we're not using the passed in script asset, 
                 //we should still do cleanup
