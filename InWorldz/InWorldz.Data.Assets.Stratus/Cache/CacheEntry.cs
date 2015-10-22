@@ -46,6 +46,11 @@ namespace InWorldz.Data.Assets.Stratus.Cache
         public int Size;
 
         /// <summary>
+        /// Record the DateTime value when this item was last accessed
+        /// </summary>
+        public DateTime LastAccess;
+
+        /// <summary>
         /// Serialized asset data. These blocks are allocated by the ByteBufferPool
         /// </summary>
         public byte[] Data;

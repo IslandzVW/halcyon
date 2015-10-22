@@ -32,6 +32,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using NUnit.Framework;
 
 
@@ -178,6 +179,23 @@ namespace InWorldz.Data.Assets.Stratus.Tests
             Cache.CacheEntry cachedAsset;
             Assert.IsTrue(cache.TryGetAsset(id, out cachedAsset));
             Assert.AreEqual(id.Guid, cachedAsset.FullAsset.Id);
+        }
+
+        [Test]
+        public void TestAgedItemRemovedFromCache()
+        {
+            Cache.Cache cache = new Cache.Cache(1000, 2000);
+
+            byte[] assetData = new byte[] { 0x1, 0x2, 0x3, 0x4 };
+            OpenMetaverse.UUID id = OpenMetaverse.UUID.Random();
+
+            cache.CacheAssetData(id, assetData);
+
+            Thread.Sleep(5000);
+
+            Cache.CacheEntry entry;
+            Assert.IsFalse(cache.TryGetAsset(id, out entry));
+            Assert.IsNull(entry);
         }
     }
 }
