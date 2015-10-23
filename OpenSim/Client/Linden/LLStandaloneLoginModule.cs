@@ -88,14 +88,14 @@ namespace OpenSim.Client.Linden
                 if (m_enabled)
                 {
                     bool authenticate = true;
-                    string welcomeMessage = "Welcome to InWorldz", mapServerURI = "", webProfileURI = "";
+                    string welcomeMessage = "Welcome to InWorldz", mapServerURI = "", profileServerURI = "";
                     IConfig standaloneConfig = source.Configs["StandAlone"];
                     if (standaloneConfig != null)
                     {
                         authenticate = standaloneConfig.GetBoolean("accounts_authenticate", true);
                         welcomeMessage = standaloneConfig.GetString("welcome_message");
                         mapServerURI = standaloneConfig.GetString("map_server_uri", "");
-                        webProfileURI = standaloneConfig.GetString("web_profile_uri", "");
+                        profileServerURI = standaloneConfig.GetString("profile_server_uri", "");
                     }
 
                     //TODO: fix casting.
@@ -105,7 +105,7 @@ namespace OpenSim.Client.Linden
                     IHttpServer httpServer = m_firstScene.CommsManager.HttpServer;
 
                     //TODO: fix the casting of the user service, maybe by registering the userManagerBase with scenes, or refactoring so we just need a IUserService reference
-                    m_loginService = new LLStandaloneLoginService((UserManagerBase)m_firstScene.CommsManager.UserAdminService, mapServerURI, webProfileURI, welcomeMessage, m_firstScene.CommsManager.NetworkServersInfo, authenticate, rootFolder, this);
+                    m_loginService = new LLStandaloneLoginService((UserManagerBase)m_firstScene.CommsManager.UserAdminService, mapServerURI, profileServerURI, welcomeMessage, m_firstScene.CommsManager.NetworkServersInfo, authenticate, rootFolder, this);
 
                     httpServer.AddXmlRPCHandler("login_to_simulator", m_loginService.XmlRpcLoginMethod);
 

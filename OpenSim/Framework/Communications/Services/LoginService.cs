@@ -51,7 +51,7 @@ namespace OpenSim.Framework.Communications.Services
 
         protected string m_welcomeMessage = "Welcome to InWorldz";
         protected string m_MapServerURI = "";
-        protected string m_WebProfileURI = "";
+        protected string m_ProfileServerURI = "";
         protected int m_minLoginLevel = 0;
         protected UserManagerBase m_userManager = null;
 
@@ -108,7 +108,7 @@ namespace OpenSim.Framework.Communications.Services
         /// <param name="libraryRootFolder"></param>
         /// <param name="welcomeMess"></param>
         public LoginService(UserManagerBase userManager, LibraryRootFolder libraryRootFolder,
-                            string welcomeMess, string mapServerURI, string webProfileURI)
+                            string welcomeMess, string mapServerURI, string profileServerURI)
         {
             m_userManager = userManager;
             m_libraryRootFolder = libraryRootFolder;
@@ -117,8 +117,8 @@ namespace OpenSim.Framework.Communications.Services
                 m_welcomeMessage = welcomeMess;
             if (mapServerURI != String.Empty)
                 m_MapServerURI = mapServerURI;
-            if (webProfileURI != String.Empty)
-                m_WebProfileURI = webProfileURI;
+            if (profileServerURI != String.Empty)
+                m_ProfileServerURI = profileServerURI;
 
             // For new users' first-time logins
             LoadDefaultLoginsFromFile(DEFAULT_LOGINS_FILE);
@@ -376,7 +376,7 @@ namespace OpenSim.Framework.Communications.Services
                         logResponse.SecureSessionID = userProfile.CurrentAgent.SecureSessionID;
                         logResponse.Message = GetMessage();
                         logResponse.MapServerURI = m_MapServerURI;
-                        logResponse.WebProfileURI = m_WebProfileURI;
+                        logResponse.ProfileServerURI = m_ProfileServerURI;
                         logResponse.BuddList = ConvertFriendListItem(m_userManager.GetUserFriendList(agentID));
                         logResponse.StartLocation = startLocationRequest;
 //                        m_log.WarnFormat("[LOGIN END]: >>> Login response for {0} SSID={1}", logResponse.AgentID, logResponse.SecureSessionID);
