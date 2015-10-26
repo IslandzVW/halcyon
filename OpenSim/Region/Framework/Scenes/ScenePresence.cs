@@ -1253,11 +1253,11 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_physicsActor != null)
                 isFlying = m_physicsActor.Flying;
 
-            Velocity = Vector3.Zero;
             Box boundingBox = GetBoundingBox(false);
             float zmin = (float)Scene.Heightmap.CalculateHeightAt(pos.X, pos.Y);
             if (pos.Z < zmin + (boundingBox.Extent.Z / 2))
                 pos.Z = zmin + (boundingBox.Extent.Z / 2);
+            Velocity = Vector3.Zero;
             AbsolutePosition = pos;
 
             SendTerseUpdateToAllClients();

@@ -2722,7 +2722,12 @@ namespace OpenSim.Region.Framework.Scenes
 
                 grp.AvatarsToExpect = grp.NumAvatarsSeated();
                 List<ScenePresence> avatars = grp.GetSittingAvatars();
-
+                List<UUID> avatarIDs = new List<UUID>();
+                foreach (var avatar in avatars)
+                {
+                    avatarIDs.Add(avatar.UUID);
+                }
+                
                 //marks the sitting avatars in transit, and waits for this group to be sent
                 //before sending the avatars over to the neighbor region
                 Task avSendTask = grp.BeginCrossSittingAvatars(newRegionHandle);
@@ -2730,7 +2735,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!grp.IsAttachment)
                     m_log.InfoFormat("{0}: Sending create for prim group {1} {2} {3} with {4} users", RegionInfo.RegionName, grp.Name, grp.UUID, grp.LocalId, grp.AvatarsToExpect);
 
-                success = m_interregionCommsOut.SendCreateObject(newRegionHandle, grp, true, posInOtherRegion, isAttachment);
+                success = m_interregionCommsOut.SendCreateObject(newRegionHandle, grp, avatarIDs, true, posInOtherRegion, isAttachment);
 
                 if (success)
                 {
@@ -2847,7 +2852,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public bool IncomingCreateObject(ISceneObject sog)
+        public bool IncomingCreateObject(ISceneObject sog, List<UUID> avatars)
         {
             SceneObjectGroup newObject;
             try
@@ -2863,7 +2868,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             string reason = "error";
             // Check this *before* calling TriggerIncomingAvatarsOnGroup
-            if (!this.AuthorizeUserObject(newObject.OwnerID, newObject, out reason))
+            if (!this.AuthorizeUserObject(newObject, avatars, out reason))
             {
                 newObject.AvatarsToExpect = 0;
                 m_log.ErrorFormat("[SCENE]: Denied adding scene object {0} in {1}: {2}", sog.UUID.ToString(), RegionInfo.RegionName, reason);
@@ -3790,7 +3795,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (isInitialLogin)
                 {
-                    if (!AuthorizeUser(agent.AgentID, agent.FirstName, agent.LastName, agent.ClientVersion, out reason))
+                    if (!AuthorizeUserInRegion(agent.AgentID, agent.FirstName, agent.LastName, agent.ClientVersion, out reason))
                     {
                         m_log.WarnFormat("[CONNECTION BEGIN]: Region {0} not authorizing incoming {1} agent {2} {3} {4}: {5}",
                                             RegionInfo.RegionName, (agent.child ? "child" : "root"),
@@ -3901,9 +3906,13 @@ namespace OpenSim.Region.Framework.Scenes
             return result;
         }
 
-        public virtual bool AuthorizeUserObject(UUID agentID, SceneObjectGroup sog, out string reason)
+        // If it helps for higher performance beyond logins, pass null for firstName, lastName and clientversion.
+        public virtual bool AuthorizeUserInRegion(UUID agentID, string firstName, string lastName, string clientVersion, out string reason)
         {
             reason = String.Empty;
+            string userName = "user";
+            if ((firstName != null) && (lastName != null))
+                userName = firstName + " " + lastName;
 
             if (!m_strictAccessControl) return true;
 
@@ -3913,87 +3922,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             catch (UserProfileException e)
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Object owned by {0} was denied access to the region due to an exception {1}", agentID, e);
-                reason = String.Format("Unable to load your user profile/inventory. Try again later.");
-                return false;
-            }
-
-            if (IsBlacklistedUser(agentID))
-            {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} is blacklisted", RegionInfo.RegionName, agentID);
-                reason = String.Format("Object owner is blacklisted on that region.");
-                return false;
-            }
-
-            if (m_regInfo.EstateSettings.IsBanned(agentID))
-            {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} is banned", RegionInfo.RegionName, agentID);
-                reason = "Object owner is banned from that region.";
-                return false;
-            }
-
-            // Avoid the profile lookup when we don't need it.
-            if (m_regInfo.ProductAccess != ProductAccessUse.Anyone)
-            {
-                bool allowed = false;
-                // Region has access restricted to certain user types, i.e. Plus
-                if (IsGodUser(agentID))
-                    allowed = true;
-                else
-                if (m_regInfo.ProductAccessAllowed(ProductAccessUse.PlusOnly))
-                {
-                    // At least this call is limited to restricted regions only,
-                    // and we'll cache this for immediate re-use.
-                    CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(agentID);
-                    if (userInfo != null)
-                        if (m_regInfo.UserHasProductAccess(userInfo.UserProfile))
-                            allowed = true;
-                }
-
-                if (!allowed)
-                {
-                    // We failed to gain access to this restricted region via product access
-                    m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because region is restricted", RegionInfo.RegionName);
-                    reason = "Object owner is not authorized for that region.";
-                    return false;
-                }
-            }
-
-            if (m_regInfo.EstateSettings.PublicAccess)
-                return true;
-
-            if (m_regInfo.EstateSettings.HasAccess(agentID))
-                return true;
-
-            IGroupsModule gm = RequestModuleInterface<IGroupsModule>();
-            if (gm == null)
-                return false;
-
-            foreach (UUID groupId in m_regInfo.EstateSettings.EstateGroups)
-            {
-                // check agent.Id in group
-                if (gm.IsAgentInGroup(agentID, groupId))
-                    return true;
-            }
-
-            m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} does not have access to the region", RegionInfo.RegionName, agentID);
-            reason = String.Format("Object owner is not on the access list for that region.");
-            return false;
-        }
-
-        public virtual bool AuthorizeUser(UUID agentID, string firstName, string lastName, string clientVersion, out string reason)
-        {
-            reason = String.Empty;
-
-            if (!m_strictAccessControl) return true;
-
-            try
-            {
-                if (Permissions.IsGod(agentID)) return true;
-            }
-            catch (UserProfileException e)
-            {
-                m_log.WarnFormat("[CONNECTION BEGIN]: User {0} ({1} {2}) was denied access to the region due to an exception {3}", agentID, firstName, lastName, e);
+                m_log.WarnFormat("[CONNECTION BEGIN]: User {0} ({1}) was denied access to the region due to an exception {2}", agentID, userName, e);
 
                 reason = String.Format("Unable to load your user profile/inventory. Try again later.");
                 return false;
@@ -4001,33 +3930,36 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (this.m_sceneGraph.GetRootAgentCount() + 1 > m_maxRootAgents)
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: User {0} ({1} {2}) was denied access to the region because it was full", agentID, firstName, lastName);
+                m_log.WarnFormat("[CONNECTION BEGIN]: User {0} ({1}) was denied access to the region because it was full", agentID, userName);
                 reason = "Region is full";
                 return false;
             }
 
             if (IsBlacklistedUser(agentID))
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because the user is blacklisted",
-                                    agentID, firstName, lastName, RegionInfo.RegionName);
-                reason = String.Format("{0} {1} is blacklisted on that region", firstName, lastName);
+                m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1}) at {2} because the user is blacklisted",
+                                    agentID, userName, RegionInfo.RegionName);
+                reason = String.Format("{0} is blacklisted on that region", userName);
                 return false;
             }
 
             if (m_regInfo.EstateSettings.IsBanned(agentID))
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because the user is on the banlist",
-                                agentID, firstName, lastName, RegionInfo.RegionName);
-                reason = String.Format("{0} {1} is banned from that region", firstName, lastName);
+                m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1}) at {2} because the user is on the banlist",
+                                agentID, userName, RegionInfo.RegionName);
+                reason = String.Format("{0} is banned from that region", userName);
                 return false;
             }
 
-            if (!EventManager.TriggerOnAuthorizeUser(agentID, firstName, lastName, clientVersion, ref reason))
+            if (clientVersion != null)  // if authorizing for login, not crossing
             {
-                //module denied entry
-                m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because of a module: {4}",
-                                agentID, firstName, lastName, RegionInfo.RegionName, reason);
-                return false;
+                if (!EventManager.TriggerOnAuthorizeUser(agentID, firstName, lastName, clientVersion, ref reason))
+                {
+                    //module denied entry
+                    m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because of a module: {4}",
+                                    agentID, firstName, lastName, RegionInfo.RegionName, reason);
+                    return false;
+                }
             }
 
             // Avoid the profile lookup when we don't need it.
@@ -4052,7 +3984,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     // We failed to gain access to this restricted region via product access
                     m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because region is restricted.",
-                            agentID, firstName, lastName, RegionInfo.RegionName, reason);
+                            agentID, userName, RegionInfo.RegionName, reason);
                     reason = String.Format("Access to {0} is restricted", RegionInfo.RegionName);
                     return false;
                 }
@@ -4084,6 +4016,81 @@ namespace OpenSim.Region.Framework.Scenes
                             agentID, firstName, lastName, RegionInfo.RegionName);
             reason = String.Format("{0} {1} does not have access to region: {2}", firstName, lastName, RegionInfo.RegionName);
             return false;
+        }
+
+        // If it helps for higher performance beyond logins, pass null for firstName and lastName.
+        // This does not check region entry access.  (Call AuthorizeUserInRegion separately.)
+        public virtual bool AuthorizeUserInParcel(UUID agentID, string firstName, string lastName, ILandObject land, Vector3 pos, out string reason)
+        {
+            reason = String.Empty;
+
+            string userName = "user";
+            if ((firstName != null) && (lastName != null))
+                userName = firstName + " " + lastName;
+
+            // Check land parcel access
+            if (land != null)
+            {
+                ParcelPropertiesStatus denyReason;
+                if ((pos.Z < LandChannel.GetBanHeight()) && (land.DenyParcelAccess(agentID, out denyReason)))
+                {
+                    reason = String.Format("object owner is banned from the destination parcel", agentID);
+                    if ((firstName != null) && (lastName != null))
+                    m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because at least one sitter {1} {2}", RegionInfo.RegionName, agentID, reason);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public virtual bool AuthorizeUserObject(SceneObjectGroup sog, List<UUID> avatars, out string reason)
+        {
+            reason = String.Empty;
+            if (!m_strictAccessControl) return true;
+
+            if (!AuthorizeUserInRegion(sog.OwnerID, "", "", null, out reason))
+            {
+                m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} does not have region access.", RegionInfo.RegionName, sog.OwnerID);
+                reason = String.Format("Object owner does not have access to {0}.", RegionInfo.RegionName);
+                return false;
+            }
+
+            Vector3 pos = sog.AbsolutePosition;
+            ILandObject land = LandChannel.GetLandObject(pos.X, pos.Y);
+            if (!AuthorizeUserInParcel(sog.OwnerID, "", "", land, pos, out reason))
+            {
+                m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} does not have parcel access.", RegionInfo.RegionName, sog.OwnerID);
+                reason = String.Format("Object owner {0} does not have access to that parcel.", sog.OwnerID);
+                return false;
+            }
+
+            if (avatars != null)
+            {
+                foreach (UUID agentID in avatars)
+                {
+                    // optimization for case where the owner is one of the sitters
+                    if (agentID == sog.OwnerID)
+                        continue;   // we already checked above
+
+                    if (!AuthorizeUserInRegion(agentID, "", "", null, out reason))
+                    {
+                        m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} does not have region access.", RegionInfo.RegionName, agentID);
+                        reason = String.Format("User {0} does not have access to {1}.", agentID, RegionInfo.RegionName);
+                        return false;
+                    }
+
+                    if (!AuthorizeUserInParcel(agentID, "", "", land, pos, out reason))
+                    {
+                        m_log.WarnFormat("[SCENE]: Object denied entry at {0} because sitter {1} {2}", RegionInfo.RegionName, agentID, reason);
+                        reason = String.Format("Object entry denied: sitter {0} does not have access to that parcel.", agentID);
+                        return false;
+                    }
+                }
+            }
+
+            // If we make it here, the object and all sitters are authorized
+            return true;
         }
 
         public void HandleLogOffUserFromGrid(UUID AvatarID, UUID RegionSecret, string message)
@@ -4223,7 +4230,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return ChildAgentUpdate2Response.Error;
                 }
 
-                if (!AuthorizeUser(data.AgentID, SP.Firstname, SP.Lastname, null, out reason))
+                if (!AuthorizeUserInRegion(data.AgentID, SP.Firstname, SP.Lastname, null, out reason))
                 {
                     SP.ControllingClient.SendAlertMessage("Could not enter region '" + RegionInfo.RegionName + "': " + reason);
                     return ChildAgentUpdate2Response.AccessDenied;

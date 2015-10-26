@@ -25,12 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Framework.Communications.Messages;
-using System.Threading.Tasks;
-using System;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
@@ -122,7 +123,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <param name="sog"></param>
         /// <param name="isLocalCall"></param>
         /// <returns></returns>
-        bool SendCreateObject(ulong regionHandle, SceneObjectGroup sog, bool isLocalCall, Vector3 posInOtherRegion, bool isAttachment);
+        bool SendCreateObject(ulong regionHandle, SceneObjectGroup sog, List<UUID> avatars, bool isLocalCall, Vector3 posInOtherRegion, bool isAttachment);
 
         /// <summary>
         /// Create an object from the user's inventory in the destination region. 
