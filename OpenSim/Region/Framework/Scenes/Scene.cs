@@ -3901,7 +3901,24 @@ namespace OpenSim.Region.Framework.Scenes
             return result;
         }
 
-        public virtual bool AuthorizeUserObject(UUID agentID, SceneObjectGroup sog, out string reason)
+        // Must pass either an LLCV client, or a groups module 'gm'.
+        public bool FastConfirmGroupMember(IClientAPI client, IGroupsModule gm, UUID agentId, UUID groupId)
+        {
+            if (client != null)
+            {
+                // use the optimized group membership test
+                return client.IsGroupMember(groupId);
+            }
+
+            // do it the slow hard way
+            if (gm != null)
+                return gm.IsAgentInGroup(agentId, groupId);
+
+            return false;   // can't both be null
+        }
+
+
+        public virtual bool AuthorizeUserObject(UUID agentId, SceneObjectGroup sog, out string reason)
         {
             reason = String.Empty;
 
@@ -3909,25 +3926,25 @@ namespace OpenSim.Region.Framework.Scenes
 
             try
             {
-                if (Permissions.IsGod(agentID)) return true;
+                if (Permissions.IsGod(agentId)) return true;
             }
             catch (UserProfileException e)
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Object owned by {0} was denied access to the region due to an exception {1}", agentID, e);
+                m_log.WarnFormat("[CONNECTION BEGIN]: Object owned by {0} was denied access to the region due to an exception {1}", agentId, e);
                 reason = String.Format("Unable to load your user profile/inventory. Try again later.");
                 return false;
             }
 
-            if (IsBlacklistedUser(agentID))
+            if (IsBlacklistedUser(agentId))
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} is blacklisted", RegionInfo.RegionName, agentID);
+                m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} is blacklisted", RegionInfo.RegionName, agentId);
                 reason = String.Format("Object owner is blacklisted on that region.");
                 return false;
             }
 
-            if (m_regInfo.EstateSettings.IsBanned(agentID))
+            if (m_regInfo.EstateSettings.IsBanned(agentId))
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} is banned", RegionInfo.RegionName, agentID);
+                m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} is banned", RegionInfo.RegionName, agentId);
                 reason = "Object owner is banned from that region.";
                 return false;
             }
@@ -3937,14 +3954,14 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 bool allowed = false;
                 // Region has access restricted to certain user types, i.e. Plus
-                if (IsGodUser(agentID))
+                if (IsGodUser(agentId))
                     allowed = true;
                 else
                 if (m_regInfo.ProductAccessAllowed(ProductAccessUse.PlusOnly))
                 {
                     // At least this call is limited to restricted regions only,
                     // and we'll cache this for immediate re-use.
-                    CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(agentID);
+                    CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(agentId);
                     if (userInfo != null)
                         if (m_regInfo.UserHasProductAccess(userInfo.UserProfile))
                             allowed = true;
@@ -3962,26 +3979,25 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_regInfo.EstateSettings.PublicAccess)
                 return true;
 
-            if (m_regInfo.EstateSettings.HasAccess(agentID))
+            if (m_regInfo.EstateSettings.HasAccess(agentId))
                 return true;
 
             IGroupsModule gm = RequestModuleInterface<IGroupsModule>();
-            if (gm == null)
-                return false;
+            ScenePresence sp = GetScenePresence(agentId);
+            IClientAPI client = (sp != null) ? sp.ControllingClient : null;
 
             foreach (UUID groupId in m_regInfo.EstateSettings.EstateGroups)
             {
-                // check agent.Id in group
-                if (gm.IsAgentInGroup(agentID, groupId))
+                if (FastConfirmGroupMember(client, gm, agentId, groupId))
                     return true;
             }
 
-            m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} does not have access to the region", RegionInfo.RegionName, agentID);
+            m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} does not have access to the region", RegionInfo.RegionName, agentId);
             reason = String.Format("Object owner is not on the access list for that region.");
             return false;
         }
 
-        public virtual bool AuthorizeUser(UUID agentID, string firstName, string lastName, string clientVersion, out string reason)
+        public virtual bool AuthorizeUser(UUID agentId, string firstName, string lastName, string clientVersion, out string reason)
         {
             reason = String.Empty;
 
@@ -3989,11 +4005,11 @@ namespace OpenSim.Region.Framework.Scenes
 
             try
             {
-                if (Permissions.IsGod(agentID)) return true;
+                if (Permissions.IsGod(agentId)) return true;
             }
             catch (UserProfileException e)
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: User {0} ({1} {2}) was denied access to the region due to an exception {3}", agentID, firstName, lastName, e);
+                m_log.WarnFormat("[CONNECTION BEGIN]: User {0} ({1} {2}) was denied access to the region due to an exception {3}", agentId, firstName, lastName, e);
 
                 reason = String.Format("Unable to load your user profile/inventory. Try again later.");
                 return false;
@@ -4001,32 +4017,32 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (this.m_sceneGraph.GetRootAgentCount() + 1 > m_maxRootAgents)
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: User {0} ({1} {2}) was denied access to the region because it was full", agentID, firstName, lastName);
+                m_log.WarnFormat("[CONNECTION BEGIN]: User {0} ({1} {2}) was denied access to the region because it was full", agentId, firstName, lastName);
                 reason = "Region is full";
                 return false;
             }
 
-            if (IsBlacklistedUser(agentID))
+            if (IsBlacklistedUser(agentId))
             {
                 m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because the user is blacklisted",
-                                    agentID, firstName, lastName, RegionInfo.RegionName);
+                                    agentId, firstName, lastName, RegionInfo.RegionName);
                 reason = String.Format("{0} {1} is blacklisted on that region", firstName, lastName);
                 return false;
             }
 
-            if (m_regInfo.EstateSettings.IsBanned(agentID))
+            if (m_regInfo.EstateSettings.IsBanned(agentId))
             {
                 m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because the user is on the banlist",
-                                agentID, firstName, lastName, RegionInfo.RegionName);
+                                agentId, firstName, lastName, RegionInfo.RegionName);
                 reason = String.Format("{0} {1} is banned from that region", firstName, lastName);
                 return false;
             }
 
-            if (!EventManager.TriggerOnAuthorizeUser(agentID, firstName, lastName, clientVersion, ref reason))
+            if (!EventManager.TriggerOnAuthorizeUser(agentId, firstName, lastName, clientVersion, ref reason))
             {
                 //module denied entry
                 m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because of a module: {4}",
-                                agentID, firstName, lastName, RegionInfo.RegionName, reason);
+                                agentId, firstName, lastName, RegionInfo.RegionName, reason);
                 return false;
             }
 
@@ -4035,14 +4051,14 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 bool allowed = false;
                 // Region has access restricted to certain user types, i.e. Plus
-                if (IsGodUser(agentID))
+                if (IsGodUser(agentId))
                     allowed = true;
                 else
                 if (m_regInfo.ProductAccessAllowed(ProductAccessUse.PlusOnly))
                 {
                     // At least this call is limited to restricted regions only,
                     // and we'll cache this for immediate re-use.
-                    CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(agentID);
+                    CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(agentId);
                     if (userInfo != null)
                         if (m_regInfo.UserHasProductAccess(userInfo.UserProfile))
                             allowed = true;
@@ -4052,7 +4068,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     // We failed to gain access to this restricted region via product access
                     m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because region is restricted.",
-                            agentID, firstName, lastName, RegionInfo.RegionName, reason);
+                            agentId, firstName, lastName, RegionInfo.RegionName, reason);
                     reason = String.Format("Access to {0} is restricted", RegionInfo.RegionName);
                     return false;
                 }
@@ -4061,7 +4077,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_regInfo.EstateSettings.PublicAccess)
                 return true;
 
-            if (m_regInfo.EstateSettings.HasAccess(agentID))
+            if (m_regInfo.EstateSettings.HasAccess(agentId))
                 return true;
 
             IGroupsModule gm = RequestModuleInterface<IGroupsModule>();
@@ -4069,19 +4085,21 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 reason = "Groups module error";
                 m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3}: {4}",
-                                agentID, firstName, lastName, RegionInfo.RegionName, reason);
+                                agentId, firstName, lastName, RegionInfo.RegionName, reason);
                 return false;
             }
 
+            ScenePresence sp = GetScenePresence(agentId);
+            IClientAPI client = (sp != null) ? sp.ControllingClient : null;
             foreach (UUID groupId in m_regInfo.EstateSettings.EstateGroups)
             {
                 // check agent.Id in group
-                if (gm.IsAgentInGroup(agentID, groupId))
+                if (FastConfirmGroupMember(client, gm, agentId, groupId))
                     return true;
             }
 
             m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because the user does not have region access",
-                            agentID, firstName, lastName, RegionInfo.RegionName);
+                            agentId, firstName, lastName, RegionInfo.RegionName);
             reason = String.Format("{0} {1} does not have access to region: {2}", firstName, lastName, RegionInfo.RegionName);
             return false;
         }
