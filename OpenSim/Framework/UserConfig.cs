@@ -107,7 +107,7 @@ namespace OpenSim.Framework
         {
             m_configMember.addConfigurationOption("default_startup_message",
                                                 ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
-                                                "Default Startup Message", "Welcome to OGS", false);
+                                                "Default Startup Message", "Welcome to an InWorldz compatible grid", false);
 
             m_configMember.addConfigurationOption("default_grid_server",
                                                 ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
@@ -126,7 +126,7 @@ namespace OpenSim.Framework
             m_configMember.addConfigurationOption("library_location",
                                                 ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
                                                 "Path to library control file",
-                                                string.Format(".{0}inventory{0}Libraries.xml", Path.DirectorySeparatorChar), false);            
+                                                string.Format(".{0}inventory{0}Libraries.xml", Path.DirectorySeparatorChar), false);
             
             m_configMember.addConfigurationOption("database_provider", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                 "DLL for database provider", "OpenSim.Data.MySQL.dll", false);
@@ -143,13 +143,14 @@ namespace OpenSim.Framework
                                                 "Known good region Y", "1000", false);
             m_configMember.addConfigurationOption("map_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                 "Map server URI?", "", false);
+            m_configMember.addConfigurationOption("profile_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "URI for the server and page responsible for handling web profiles?", "https://my.secondlife.com/[AGENT_NAME]", false); // That's what the viewer currently defaults to and makes an excellent example.
 
             m_configMember.addConfigurationOption("enable_hg_login", ConfigurationOption.ConfigurationTypes.TYPE_BOOLEAN,
-                    "Enable Hypergrid login support [Currently used by GridSurfer-proxied clients]? true/false", true.ToString(), false);
+                                                "Enable Hypergrid login support [Currently used by GridSurfer-proxied clients]? true/false", true.ToString(), false);
 
             m_configMember.addConfigurationOption("default_loginLevel", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Minimum Level a user should have to login [0 default]", "0", false);
-            
         }
 
         public bool handleIncomingConfiguration(string configuration_key, object configuration_result)
