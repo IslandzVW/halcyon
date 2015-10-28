@@ -58,6 +58,7 @@ namespace OpenSim.Framework
 
         private Dictionary<K, int> _objectSizes;
         private int _totalSize;
+        private bool _useSizing = false;
 
          /// <summary>
          /// A system timer and interval values used to age the cache;
@@ -68,35 +69,6 @@ namespace OpenSim.Framework
         private int _maxAge;
         private int _expireInterval;
 
-
-        /// <summary>
-        /// Constructs an LRUCache with the given maximum size
-        /// </summary>
-        /// <param name="capacity"></param>
-        public LRUCache(int capacity) : this(capacity, false, 0, 0, 0)
-        {
-        }
-
-        /// <summary>
-        /// Constructs an LRUCache with the given maximum size
-        /// </summary>
-        /// <param name="capacity"></param>
-        /// <param name="useSizing">Whether or not to use explicit object sizes</param>
-        public LRUCache(int capacity, bool useSizing) : this(capacity, useSizing, 0, 0, 0)
-        {
-        }
-        /// <summary>
-        /// Constructs an LRUCache with the given maximum size, maximum age and expiration interval
-        /// </summary>
-        /// <param name="capacity"></param>
-        /// <param name="useSizing">Whether or not to use explicit object sizes</param>
-        /// <param name="minSize">Minimum size in bytes in the cache. Below this level and no aging is performed.</param>
-        /// <param name="maxAge">The maximum age in milliseconds an an entry should live in cache 
-        ///     before it's a candidate to be removed.</param>
-        public LRUCache(int capacity, bool useSizing, int minSize, int maxAge) : this(capacity, useSizing, minSize, maxAge, 0)
-        {
-        }
-
         /// <summary>
         /// Constructs an LRUCache with the given maximum size, maximum age and expiration interval
         /// </summary>
@@ -106,7 +78,7 @@ namespace OpenSim.Framework
         /// <param name="maxAge">The maximum age in milliseconds an an entry should live in cache 
         ///     before it's a candidate to be removed.</param>
         /// <param name="expireInterval">Time in milliseconds between checks for expired entries.</param>
-        public LRUCache(int capacity, bool useSizing, int minSize, int maxAge, int expireInterval)
+        public LRUCache(int capacity, bool useSizing = false, int minSize = 0, int maxAge = 0, int expireInterval = 0)
         {
             _storage = new C5.HashedLinkedList<KeyValuePair<K, T>>(new KVPComparer<K, T>());
             _capacity = capacity;
@@ -115,6 +87,7 @@ namespace OpenSim.Framework
             if (useSizing)
             {
                 _objectSizes = new Dictionary<K, int>();
+                _useSizing = true;
             }
 
             _maxAge = maxAge;
@@ -125,8 +98,6 @@ namespace OpenSim.Framework
             if (_maxAge > 0)
             {
                 _lastAccessedTime = new Dictionary<K, DateTime>();
-
-                // Create a timer and set the interval to _expiry.
                 _expireTimer = new Timer(OnTimedEvent, null, _expireInterval, Timeout.Infinite);
             }
         }
@@ -135,23 +106,35 @@ namespace OpenSim.Framework
 
         private void OnTimedEvent(Object state)
         {
-            var entries = new List<KeyValuePair<K, T>> ();
-
             lock (_storage)
             {
-                foreach (var entry in _storage)
-                {
-                    if ((_storage.Count - entries.Count) <= _minSize)
-                        break;
+                var entries = new List<KeyValuePair<K, T>>();
+                int entriesSize = 0;
 
+                foreach (var entry in _storage)
+                {   
                     DateTime lastAccess;
                     if (_lastAccessedTime.TryGetValue(entry.Key, out lastAccess) == false)
                         continue;
                     var age = DateTime.Now - lastAccess;
-                    if (age.TotalMilliseconds > (double)_maxAge)
-                        entries.Add(entry);
+
+                    // Check to see if this is a candidate.  If not we move on because the cache
+                    // is in LRU order and we would have visited entries that are candidates already
+                    if (age.TotalMilliseconds <= (double)_maxAge)
+                        break;
+
+                    // See if there is a reserve we are maintaining.  If so and we are below it
+                    // we'll break out and clean up.  This and subsequent entries should be preserved.
+                    int entrySize = (_useSizing ? _objectSizes[entry.Key] : 1);
+                    if ((RequiredReserve > 0) && 
+                        ((Size - (entrySize + entriesSize)) < RequiredReserve))
+                            break;
+
+                    entriesSize += entrySize;
+                    entries.Add(entry);
                 }
 
+                // Clean up the storage we identified
                 foreach (var entry in entries)
                 {
                     _storage.Remove(entry);
@@ -320,6 +303,11 @@ namespace OpenSim.Framework
         public int RemainingCapacity
         {
             get { return _capacity - _totalSize; }
+        }
+
+        public int RequiredReserve
+        {
+            get { return _minSize; }
         }
 
         public bool IsReadOnly
