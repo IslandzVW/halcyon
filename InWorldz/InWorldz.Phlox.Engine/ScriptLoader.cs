@@ -138,6 +138,19 @@ namespace InWorldz.Phlox.Engine
         /// </summary>
         private Queue<RetrieveBytecodeRequest> _outstandingBytecodeRequests = new Queue<RetrieveBytecodeRequest>();
 
+        /// <summary>
+        /// The number of scripts that have been unloaded that we keep in the cache
+        /// </summary>
+        private const int MAX_CACHED_UNLOADED_SCRIPTS = 128;
+
+        /// <summary>
+        /// Cache that is utilized for scripts that have been unloaded to limit the 
+        /// amount of disk thrasing that can happen when scripted objects are repeatedly 
+        /// added and deleted from the scene
+        /// </summary>
+        private LRUCache<UUID, CompiledScript> _unloadedScriptCache = new LRUCache<UUID, CompiledScript>(MAX_CACHED_UNLOADED_SCRIPTS);
+
+
         public ScriptLoader(IAssetCache assetCache, ExecutionScheduler exeScheduler, 
             WorkArrivedDelegate workArrived, EngineInterface engineInterface)
         {
@@ -209,16 +222,8 @@ namespace InWorldz.Phlox.Engine
                     if (--reffedScript.RefCount == 0)
                     {
                         _loadedScripts.Remove(loadedScript.Script.AssetId);
-
-                        //_log.InfoFormat("[Phlox]: Script {0} unloaded", loadedScript.Script.AssetId);
+                        _unloadedScriptCache.Add(loadedScript.Script.AssetId, loadedScript.Script);
                     }
-
-                    /*
-                    else
-                    {
-                        _log.DebugFormat("[Phlox]: Decremented reference on script {0} {1} refs remain",
-                            loadedScript.Script.AssetId, reffedScript.RefCount);
-                    }*/
 
                     rc = true;
                 }
@@ -376,6 +381,10 @@ namespace InWorldz.Phlox.Engine
                     {
                         return true;
                     }
+                    else if (TryStartScriptFromUnloadedCache(scriptAssetId, lrq))
+                    {
+                        return true;
+                    }
                     else if (TryStartScriptFromSerializedData(scriptAssetId, lrq))
                     {
                         return true;
@@ -394,6 +403,36 @@ namespace InWorldz.Phlox.Engine
                 {
                     _log.ErrorFormat("[Phlox]: Could not load script: " + e.Message);
                 }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// This function attempts to load a script from the unloaded script cache
+        /// </summary>
+        /// <param name="scriptAssetId">The asset ID for the script to be loaded</param>
+        /// <param name="lrq">The request that is causing the load</param>
+        /// <returns></returns>
+        private bool TryStartScriptFromUnloadedCache(UUID scriptAssetId, LoadUnloadRequest lrq)
+        {
+            CompiledScript compiledScript;
+
+            if (_unloadedScriptCache.TryGetValue(scriptAssetId, out compiledScript))
+            {
+                _log.InfoFormat("[Phlox]: Starting recovered script {0} in item {1} group {2} part {3}", scriptAssetId, lrq.ItemId, lrq.Prim.ParentGroup.LocalId, lrq.Prim.LocalId);
+
+                //remove the script from the unloaded cache for good measure since it is now loaded again
+                _unloadedScriptCache.Remove(scriptAssetId);
+
+                //check the part in the load request for this script.
+                //even though we're not using the passed in script asset, 
+                //we should still do cleanup
+                ClearSerializedScriptData(lrq, scriptAssetId);
+
+                BeginScriptRun(lrq, compiledScript);
+                _loadedScripts[scriptAssetId] = new LoadedScript { Script = compiledScript, RefCount = 1 };
+                return true;
             }
 
             return false;

@@ -627,7 +627,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     if (inv.Value.Name == name)
                     {
-                        if (inv.Value.Type != type || type == -1)
+                        if ((inv.Value.Type != type) && (type != -1))
                             return UUID.Zero;
 
                         return inv.Value.AssetID;
