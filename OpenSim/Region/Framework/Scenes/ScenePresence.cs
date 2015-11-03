@@ -3261,7 +3261,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes());
         }
 
-        private void InitialAttachmentRez(CachedUserInfo userInfo)
+        private void InitialAttachmentRez()
         {
             //retrieve all attachments
             List<AvatarAttachment> attachments = m_appearance.GetAttachments();
@@ -3346,7 +3346,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         ControllingClient.RunAttachmentOperation(() =>
                         {
-                            this.InitialAttachmentRez(userInfo);
+                            this.InitialAttachmentRez();
                         });
                     }
                 }
