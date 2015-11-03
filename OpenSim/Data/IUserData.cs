@@ -103,6 +103,7 @@ namespace OpenSim.Data
         /// <param name="user">UserProfile to add</param>
         void AddNewUserProfile(UserProfileData user);
 
+#if TEMP_PROFILE_SUPPORT
         /// <summary>
         /// Adds a temporary user profile.  A temporary userprofile is one that should exist only for the lifetime of
         /// the process.
@@ -116,7 +117,7 @@ namespace OpenSim.Data
         /// Reverses the effect of AddTemporaryUserProfile
         /// <param name="uuid">The UUID of the profile to remove.</param>
         void RemoveTemporaryUserProfile(UUID userid);
-
+#endif
         /// <summary>
         /// Updates an existing user profile
         /// </summary>

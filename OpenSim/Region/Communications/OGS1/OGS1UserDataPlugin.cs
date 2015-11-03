@@ -53,13 +53,6 @@ namespace OpenSim.Region.Communications.OGS1
 
         //private UserDataBase m_userDb;
 
-        /// <summary>
-        /// Temporary profiles for local region-specific users (bots). No persistence of visibility elsewhere.
-        /// </summary>
-        private Dictionary<UUID, UserProfileData> m_tempProfilesByUUID = new Dictionary<UUID, UserProfileData>();
-        private Dictionary<string, UserProfileData> m_tempProfilesByName = new Dictionary<string, UserProfileData>();
-        private object m_tempProfilesLock = new object();   // this must be a leaf lock. do not call other functions that lock
-
         public OGS1UserDataPlugin(CommunicationsManager commsManager, ConfigSettings settings)
         {
             m_log.DebugFormat("[OGS1 USER SERVICES]: {0} initialized", Name);
@@ -94,54 +87,6 @@ namespace OpenSim.Region.Communications.OGS1
         public void ResetAttachments(UUID userID) {}
         public void LogoutUsers(UUID regionID) {}
         
-        /// <summary>
-        /// Temporary profiles are used for bot users, they have no persistence.
-        /// </summary>
-        /// <param name="userProfile">the bot user profile</param>
-        public virtual void AddTemporaryUserProfile(UserProfileData userProfile)
-        {
-            lock (m_tempProfilesLock)
-            {
-                if (m_tempProfilesByUUID.ContainsKey(userProfile.ID))
-                    m_tempProfilesByUUID.Remove(userProfile.ID);
-                if (m_tempProfilesByName.ContainsKey(userProfile.Name))
-                    m_tempProfilesByName.Remove(userProfile.Name);
-                m_tempProfilesByUUID.Add(userProfile.ID, userProfile);
-                m_tempProfilesByName.Add(userProfile.Name, userProfile);
-            }
-        }
-        public virtual void RemoveTemporaryUserProfile(UUID uuid)
-        {
-            lock (m_tempProfilesLock)
-            {
-                if (m_tempProfilesByUUID.ContainsKey(uuid))
-                {
-                    string name = m_tempProfilesByUUID[uuid].Name;
-                    if (m_tempProfilesByName.ContainsKey(name))
-                        m_tempProfilesByName.Remove(name);
-                    m_tempProfilesByUUID.Remove(uuid);
-                }
-            }
-        }
-        protected UserProfileData GetTemporaryUserProfile(UUID uuid)
-        {
-            lock (m_tempProfilesLock)
-            {
-                if (m_tempProfilesByUUID.ContainsKey(uuid))
-                    return m_tempProfilesByUUID[uuid];
-            }
-            return null;
-        }
-        protected UserProfileData GetTemporaryUserProfile(string name)
-        {
-            lock (m_tempProfilesLock)
-            {
-                if (m_tempProfilesByName.ContainsKey(name))
-                    return m_tempProfilesByName[name];
-            }
-            return null;
-        }
-        
         public UserProfileData GetUserByUri(Uri uri)
         {
             WebRequest request = WebRequest.Create(uri);
@@ -156,17 +101,8 @@ namespace OpenSim.Region.Communications.OGS1
             return ConvertXMLRPCDataToUserProfile(respData);
         }
 
-//        public Uri GetUserUri(UserProfileData userProfile)
-//        {
-//            throw new NotImplementedException();
-//        }
-        
         public virtual UserAgentData GetAgentByUUID(UUID userId)
         {
-            UserProfileData profile = GetTemporaryUserProfile(userId);
-            if (profile != null)
-                return profile.CurrentAgent;
-
             try
             {
                 Hashtable param = new Hashtable();
@@ -255,9 +191,6 @@ namespace OpenSim.Region.Communications.OGS1
         /// <returns>null if the request fails</returns>
         protected virtual UserProfileData GetUserProfile(string name)
         {
-            UserProfileData profile = GetTemporaryUserProfile(name);
-            if (profile != null)
-                return profile;
             try
             {
                 Hashtable param = new Hashtable();
@@ -307,10 +240,6 @@ namespace OpenSim.Region.Communications.OGS1
         /// <returns>null if the request fails</returns>
         public virtual UserProfileData GetUserByUUID(UUID avatarID)
         {
-            UserProfileData profile = GetTemporaryUserProfile(avatarID);
-            if (profile != null)
-                return profile;
-
             lock (_cachedProfileData)
             {
                 TimestampedItem<UserProfileData> item;
@@ -373,20 +302,8 @@ namespace OpenSim.Region.Communications.OGS1
             return null;
         }
 
-
         public virtual bool UpdateUserProfile(UserProfileData userProfile)
         {
-            lock (m_tempProfilesLock)
-            {
-                UserProfileData profile = GetTemporaryUserProfile(userProfile.ID);
-                if (profile != null)
-                {
-                    m_tempProfilesByUUID[userProfile.ID] = userProfile;
-                    m_tempProfilesByName[userProfile.Name] = userProfile;
-                    return true;
-                }
-            }
-
             m_log.Debug("[OGS1 USER SERVICES]: Asking UserServer to update profile.");
             
             Hashtable param = new Hashtable();
@@ -446,7 +363,7 @@ namespace OpenSim.Region.Communications.OGS1
 
             return true;
         }
-        
+
         /// <summary>
         /// Adds a new friend to the database for XUser
         /// </summary>
@@ -455,13 +372,6 @@ namespace OpenSim.Region.Communications.OGS1
         /// <param name="perms">A uint bit vector for set perms that the friend being added has; 0 = none, 1=This friend can see when they sign on, 2 = map, 4 edit objects </param>
         public virtual void AddNewUserFriend(UUID friendlistowner, UUID friend, uint perms)
         {
-            UserProfileData profile = GetTemporaryUserProfile(friendlistowner);
-            if (profile != null)
-            {
-                m_log.ErrorFormat("[OGS1 USER SERVICES]: Temporary profile for {0} does not support adding friends.", profile.Name);
-                return;
-            }
-
             try
             {
                 Hashtable param = new Hashtable();
@@ -515,13 +425,6 @@ namespace OpenSim.Region.Communications.OGS1
         /// <param name="friend">The Ex-friend agent</param>
         public virtual void RemoveUserFriend(UUID friendlistowner, UUID friend)
         {
-            UserProfileData profile = GetTemporaryUserProfile(friendlistowner);
-            if (profile != null)
-            {
-                m_log.ErrorFormat("[OGS1 USER SERVICES]: Temporary profile for {0} does not support removing friends.", profile.Name);
-                return;
-            }
-
             try
             {
                 Hashtable param = new Hashtable();
@@ -576,13 +479,6 @@ namespace OpenSim.Region.Communications.OGS1
         /// <param name="perms">A uint bit vector for set perms that the friend being added has; 0 = none, 1=This friend can see when they sign on, 2 = map, 4 edit objects </param>
         public virtual void UpdateUserFriendPerms(UUID friendlistowner, UUID friend, uint perms)
         {
-            UserProfileData profile = GetTemporaryUserProfile(friendlistowner);
-            if (profile != null)
-            {
-                m_log.ErrorFormat("[OGS1 USER SERVICES]: Temporary profile for {0} does not support updating friends.", profile.Name);
-                return;
-            }
-
             try
             {
                 Hashtable param = new Hashtable();
@@ -636,9 +532,6 @@ namespace OpenSim.Region.Communications.OGS1
         {
             m_log.Warn("[FRIEND]: Calling OGS1/GetUserFriendListOld for " + friendlistowner.ToString());
             List<FriendListItem> buddylist = new List<FriendListItem>();
-            UserProfileData profile = GetTemporaryUserProfile(friendlistowner);
-            if (profile != null)
-                return buddylist;
 
             try
             {
@@ -1357,7 +1250,7 @@ namespace OpenSim.Region.Communications.OGS1
             return buddylist;
         }
 
-        #region IUserDataPlugin Members
+#region IUserDataPlugin Members
 
 
         public void SaveUserPreferences(UserPreferencesData userPrefs)
@@ -1415,6 +1308,6 @@ namespace OpenSim.Region.Communications.OGS1
 
         }
 
-        #endregion
+#endregion
     }
 }

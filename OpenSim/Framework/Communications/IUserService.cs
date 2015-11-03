@@ -54,6 +54,7 @@ namespace OpenSim.Framework.Communications
         /// <param name="firstName">First name</param>
         /// <param name="lastName">Last name</param>
         /// <returns>A user profile.  Returns null if no profile is found</returns>
+        UserProfileData GetUserProfile(string firstName, string lastName, bool forceRefresh);
         UserProfileData GetUserProfile(string firstName, string lastName);
         //UserInterestsData GetUserInterests(UUID userId);
 
@@ -62,13 +63,19 @@ namespace OpenSim.Framework.Communications
         /// </summary>
         /// <param name="userId">The target UUID</param>
         /// <returns>A user profile.  Returns null if no user profile is found.</returns>
+        UserProfileData GetUserProfile(UUID userId, bool forceRefresh);
         UserProfileData GetUserProfile(UUID userId);
-        
+
         UserProfileData GetUserProfile(Uri uri);
+
+        // Just call these if all you need is the name from cache.
+        string GetUserProfileName(UUID userId, bool onlyIfCached);
+        bool GetUserProfileNames(UUID userId, bool onlyIfCached, out string firstName, out string lastName);
 
         Uri GetUserUri(UserProfileData userProfile);
 
-        UserAgentData GetAgentByUUID(UUID userId);
+        UserAgentData GetUserAgent(UUID userId, bool forceRefresh);
+        UserAgentData GetUserAgent(UUID userId);
 
         void ClearUserAgent(UUID avatarID);
         List<AvatarPickerAvatar> GenerateAgentPickerRequestResponse(UUID QueryID, string Query);

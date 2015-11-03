@@ -800,7 +800,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 for (int retry = 0; retry < 3; ++retry)
                 {
                     // wasn't sent, so ex-friend wasn't around on this region-server. Fetch info and try to send
-                    UserAgentData data = m_initialScene.CommsManager.UserService.GetAgentByUUID(exfriendID);
+                    UserAgentData data = m_initialScene.CommsManager.UserService.GetUserAgent(exfriendID);
                     
                     if (null == data)
                         break;

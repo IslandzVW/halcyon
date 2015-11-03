@@ -104,7 +104,7 @@ namespace OpenSim.Client.Linden
                     IHttpServer httpServer = m_firstScene.CommsManager.HttpServer;
 
                     //TODO: fix the casting of the user service, maybe by registering the userManagerBase with scenes, or refactoring so we just need a IUserService reference
-                    m_loginService = new LLStandaloneLoginService((UserManagerBase)m_firstScene.CommsManager.UserAdminService, mapServerURI, welcomeMessage, m_firstScene.CommsManager.NetworkServersInfo, authenticate, rootFolder, this);
+                    m_loginService = new LLStandaloneLoginService((UserProfileManager)m_firstScene.CommsManager.UserAdminService, mapServerURI, welcomeMessage, m_firstScene.CommsManager.NetworkServersInfo, authenticate, rootFolder, this);
 
                     httpServer.AddXmlRPCHandler("login_to_simulator", m_loginService.XmlRpcLoginMethod);
 

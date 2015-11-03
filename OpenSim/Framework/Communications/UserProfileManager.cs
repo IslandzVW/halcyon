@@ -25,8 +25,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//#define DUMP_STATUS
-
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -37,7 +35,6 @@ using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using OpenSim.Data;
-using OpenSim.Framework.Communications;
 using OpenSim.Framework.Communications.Cache;
 using OpenSim.Framework.Statistics;
 
@@ -46,18 +43,19 @@ namespace OpenSim.Framework.Communications
     /// <summary>
     /// Base class for user management (create, read, etc)
     /// </summary>
-    public abstract class UserManagerBase : IUserService, IUserAdminService, IAvatarService, IMessagingService, IAuthentication
+    public abstract class UserProfileManager : IUserService, IUserAdminService, IAvatarService, IMessagingService, IAuthentication
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private bool m_isUserServer = false;
 
-        /// <value>
-        /// List of plugins to search for user data
-        /// </value>
-        private List<IUserDataPlugin> m_plugins = new List<IUserDataPlugin>();
-
         protected CommunicationsManager m_commsManager;
+
+        /// <summary>
+        /// Implements all costly operations such as XMLRPC calls or database lookups/writes.
+        /// This is the interface to network/disk operations, a clear separation of responsibility.
+        /// </summary>
+        private UserProfileManagerData m_storage = new UserProfileManagerData();
 
         /// <summary>
         /// Maximum size for the profile and agent caches
@@ -69,44 +67,74 @@ namespace OpenSim.Framework.Communications
         /// </summary>
         private const int CACHE_ITEM_EXPIRY = 300;  // seconds, 5 minutes
 
-        /// <summary>
-        /// LRU cache for agent data
-        /// </summary>
-        private LRUCache<UUID, TimestampedItem<UserAgentData>> _cachedAgentData
-            = new LRUCache<UUID, TimestampedItem<UserAgentData>>(MAX_CACHE_SIZE);
+        ///////////// Caches for UserAgentData //////////////
 
         /// <summary>
-        /// LRU cache for profile data
+        /// LRU cache for UserAgentData
         /// </summary>
-        private LRUCache<UUID, TimestampedItem<CachedUserInfo>> _cachedProfileData
-            = new LRUCache<UUID, TimestampedItem<CachedUserInfo>>(MAX_CACHE_SIZE);
+        private LRUCache<UUID, TimestampedItem<UserAgentData>> m_agentDataByUUID
+            = new LRUCache<UUID, TimestampedItem<UserAgentData>>(MAX_CACHE_SIZE);
+
+        ///////////// Caches for UserProfileData //////////////
+
+        /// <summary>
+        /// Controls access to UserProfileData structures
+        /// </summary>
+        protected internal object m_userDataLock = new object();
+
+        /// <summary>
+        /// LRU cache for UserProfileData
+        /// </summary>
+        private LRUCache<UUID, TimestampedItem<UserProfileData>> m_userDataByUUID
+            = new LRUCache<UUID, TimestampedItem<UserProfileData>>(MAX_CACHE_SIZE);
 
         /// <summary>
         /// User profiles indexed by name
-        /// This will be kept in sync with either _cachedLocalProfiles or _cachedProfileData
+        /// This MUST be kept in sync with either m_cachedLocalProfiles or m_cachedProfileData
         /// </summary>
-        private readonly Dictionary<string, CachedUserInfo> m_userProfilesByName
-            = new Dictionary<string, CachedUserInfo>();
+        private readonly Dictionary<string, UserProfileData> m_userDataByName
+            = new Dictionary<string, UserProfileData>();
 
         /// <summary>
         /// Special cache for profile data for local users in the region
         /// </summary>
-        private Dictionary<UUID, CachedUserInfo> _cachedLocalProfiles
-            = new Dictionary<UUID, CachedUserInfo>();
+        private Dictionary<UUID, UserProfileData> m_localUser
+            = new Dictionary<UUID, UserProfileData>();
 
         /// <summary>
-        /// Controls access to _cachedProfileData, _cachedLocalProfiles and m_userProfilesByName
+        /// Temporary profiles for local region-specific users (bots). No persistence of visibility elsewhere.
         /// </summary>
-        protected internal object _userProfilesLock = new object();
+        private Dictionary<UUID, UserProfileData> m_tempDataByUUID = new Dictionary<UUID, UserProfileData>();
+        private Dictionary<string, UserProfileData> m_tempDataByName = new Dictionary<string, UserProfileData>();
+
+        ///////////// Caches for CachedUserInfo //////////////
+
+        /// <summary>
+        /// Controls access to CachedUserInfo structures
+        /// </summary>
+        protected internal object m_userInfoLock = new object();
+
+        /// <summary>
+        /// LRU cache for profile data
+        /// </summary>
+        private LRUCache<UUID, TimestampedItem<CachedUserInfo>> m_userInfoByUUID
+            = new LRUCache<UUID, TimestampedItem<CachedUserInfo>>(MAX_CACHE_SIZE);
+
+        /// <summary>
+        /// User profiles indexed by name
+        /// This will be kept in sync with either mCachedUserInfo or mCachedProfileData
+        /// </summary>
+        private readonly Dictionary<string, CachedUserInfo> m_userInfoByName
+            = new Dictionary<string, CachedUserInfo>();
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="commsManager"></param>
-        public UserManagerBase(CommunicationsManager commsManager)
+        public UserProfileManager(CommunicationsManager commsManager)
         {
             m_commsManager = commsManager;
-            _cachedProfileData.OnItemPurged += _cachedProfileData_OnItemPurged;
+            m_userInfoByUUID.OnItemPurged += _cachedUserInfo_OnItemPurged;
 
             m_isUserServer = System.Diagnostics.Process.GetCurrentProcess().ProcessName.Contains("OpenSim.Grid.UserServer");
         }
@@ -117,7 +145,7 @@ namespace OpenSim.Framework.Communications
         /// <param name="plugin">The plugin that will provide user data</param>
         public void AddPlugin(IUserDataPlugin plugin)
         {
-            m_plugins.Add(plugin);
+            m_storage.AddPlugin(plugin);
         }
 
         /// <summary>
@@ -132,76 +160,252 @@ namespace OpenSim.Framework.Communications
         /// </param>
         public void AddPlugin(string provider, string connect)
         {
-            m_plugins.AddRange(DataPluginFactory.LoadDataPlugins<IUserDataPlugin>(provider, connect));
+            m_storage.AddPlugin(provider, connect);
         }
 
-        #region UserProfile
+        #region GetUserProfileData
 
-        private void DumpStatus(string context)
+        private void RemoveUserData(UUID uuid)
         {
-#if DUMP_STATUS
-            m_log.WarnFormat("[USER CACHE]: {0}: names={1} normal={2} local={3}", context, m_userProfilesByName.Count, _cachedProfileData.Count, _cachedLocalProfiles.Count);
-#endif
-        }
-
-        // Fetches a profile from the db via XMLRPC
-        private UserProfileData _GetUserProfile(string fname, string lname)
-        {
-            foreach (IUserDataPlugin plugin in m_plugins)
+            lock (m_userDataLock)
             {
-                UserProfileData profile = plugin.GetUserByName(fname, lname);
-
-                if (profile != null)
+                TimestampedItem<UserProfileData> item;
+                if (m_userDataByUUID.TryGetValue(uuid, out item))
                 {
-                    // We're forcing an update above, of the profile via the plugin, 
-                    // need to also force an update of the current agent data.
-                    profile.CurrentAgent = GetUserAgent(profile.ID, true);
+                    m_userDataByName.Remove(item.Item.Name);
+                    m_userDataByUUID.Remove(uuid);
+                }
+            }
+        }
+
+        private void ReplaceUserData(UserProfileData profile)
+        {
+            lock (m_userDataLock)
+            {
+                TimestampedItem<UserProfileData> item;
+                if (m_userDataByUUID.TryGetValue(profile.ID, out item))
+                {
+                    m_userDataByName.Remove(item.Item.Name);
+                    m_userDataByUUID.Remove(profile.ID);
+                }
+                m_userDataByName.Add(profile.Name, profile);
+                m_userDataByUUID.Add(profile.ID, new TimestampedItem<UserProfileData>(profile));
+            }
+        }
+
+        public UserProfileData GetUserProfile(UUID uuid, bool forceRefresh)
+        {
+            if (uuid == UUID.Zero)
+                return null;    // fast exit for no user specified
+
+            UserProfileData profile = null;
+
+            lock (m_userDataLock)
+            {
+                if (m_localUser.ContainsKey(uuid))
+                    return m_localUser[uuid];
+
+                profile = GetTemporaryUserProfile(uuid);
+                if (profile != null)
                     return profile;
+
+                TimestampedItem<UserProfileData> item;
+                if (m_userDataByUUID.TryGetValue(uuid, out item))
+                {
+                    if (item.ElapsedSeconds < CACHE_ITEM_EXPIRY)
+                        if (!forceRefresh)
+                            return item.Item;
+
+                    // Else cache expired, or forcing a refresh.
+                    // Leave it in here for now in case someone does a name lookup or something fairly static
                 }
             }
 
-            return null;
+            // Need to refresh via storage/XMLRPC.
+            profile = m_storage.GetUserProfileData(uuid);
+            if (profile != null)
+                ReplaceUserData(profile);
+            else
+                RemoveUserData(uuid);
+
+            return profile;
         }
-        public virtual UserProfileData GetUserProfile(string fname, string lname)
+        public UserProfileData GetUserProfile(UUID uuid)
         {
-            return _GetUserProfile(fname, lname);
+            return GetUserProfile(uuid, false);
         }
 
+        public UserProfileData GetUserProfile(string firstName, string lastName, bool forceRefresh)
+        {
+            string name = firstName.Trim() + " " + lastName.Trim();
+            UUID uuid = UUID.Zero;
+
+            if (name == " ")
+                return null;    // fast exit for no user specified
+
+            UserProfileData testProfile;
+            lock (m_userDataLock)
+            {
+                // m_userDataByName includes both regular and local UserProfileData entries.
+                if (m_userDataByName.TryGetValue(name, out testProfile))
+                {
+                    // We know the UUID, just use the function above.
+                    uuid = testProfile.ID;
+                    return GetUserProfile(uuid, forceRefresh);
+                }
+                // next check temp profiles
+                if (m_tempDataByName.ContainsKey(name))
+                    return m_tempDataByName[name];
+            }
+
+            // Not cached, fetch from storage/XMLRPC.
+            UserProfileData profile = m_storage.GetUserProfileData(firstName, lastName);
+            lock (m_userDataLock)
+            {
+                // Now that it's locked again, ensure the lists have the correct data.
+                if (profile == null)
+                {
+                    if (m_userDataByName.ContainsKey(name))
+                        m_userDataByName.Remove(name);
+                    if ((uuid != UUID.Zero) && m_userDataByUUID.Contains(uuid))
+                        m_userDataByUUID.Remove(uuid);
+                    return null;
+                }
+
+                // We fetched a profile above, just use the function above.
+                ReplaceUserData(profile);
+            }
+
+            return profile;
+        }
+        public UserProfileData GetUserProfile(string firstName, string lastName)
+        {
+            return GetUserProfile(firstName, lastName, false);
+        }
+
+        // Just call these if all you need is the name from cache.
+        public bool GetUserProfileNames(UUID uuid, bool onlyIfCached, out string firstName, out string lastName)
+        {
+            lock (m_userDataLock)
+            {
+                TimestampedItem<UserProfileData> item;
+                if (m_userDataByUUID.TryGetValue(uuid, out item))
+                {
+                    firstName = item.Item.FirstName;
+                    lastName = item.Item.SurName;
+                    return true;
+                }
+            }
+
+            firstName = "";
+            lastName = "";
+
+            if (onlyIfCached)
+                return false;
+
+            UserProfileData profile = GetUserProfile(uuid, false);   // also adds to cache
+            if (profile == null)
+                return false;
+
+            firstName = profile.FirstName;
+            lastName = profile.SurName;
+            return true;
+        }
+
+        public string GetUserProfileName(UUID uuid, bool onlyIfCached)
+        {
+            string firstName = "";
+            string lastName = "";
+            if (!GetUserProfileNames(uuid, onlyIfCached, out firstName, out lastName))
+                return "";
+
+            return firstName + " " + lastName;
+        }
+
+        // This one always just invokes the XMLRPC call.
         public UserProfileData GetUserProfile(Uri uri)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                UserProfileData profile = plugin.GetUserByUri(uri);
+            UserProfileData profile = m_storage.GetUserProfileData(uri);
 
-                if (null != profile)
-                    return profile;
-            }
+            if (profile != null)
+                ReplaceUserData(profile);   // this has the latest data
 
-            return null;
+            return profile;
         }
 
-        public virtual UserAgentData GetAgentByUUID(UUID userId)
-        {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                UserAgentData agent = plugin.GetAgentByUUID(userId);
+        #endregion
 
-                if (agent != null)
+        #region GetUserAgentData
+
+        private void RemoveAgentData(UUID uuid)
+        {
+            lock (m_agentDataByUUID)
+            {
+                TimestampedItem<UserAgentData> item;
+                if (m_agentDataByUUID.TryGetValue(uuid, out item))
                 {
-                    return agent;
+                    m_agentDataByUUID.Remove(uuid);
+                }
+            }
+        }
+
+        private void ReplaceAgentData(UserAgentData agent)
+        {
+            lock (m_agentDataByUUID)
+            {
+                TimestampedItem<UserAgentData> item;
+                if (m_agentDataByUUID.TryGetValue(agent.ProfileID, out item))
+                {
+                    m_agentDataByUUID.Remove(agent.ProfileID);
+                }
+                m_agentDataByUUID.Add(agent.ProfileID, new TimestampedItem<UserAgentData>(agent));
+            }
+        }
+
+        /// <summary>
+        /// Loads a user agent by uuid (not called directly)
+        /// </summary>
+        /// <param name="uuid">The agent's UUID</param>
+        /// <returns>Agent profiles</returns>
+        public UserAgentData GetUserAgent(UUID uuid, bool forceRefresh)
+        {
+            lock (m_agentDataByUUID)
+            {
+                TimestampedItem<UserAgentData> item;
+                if (m_agentDataByUUID.TryGetValue(uuid, out item))
+                {
+                    if (item.ElapsedSeconds < CACHE_ITEM_EXPIRY)
+                        if (!forceRefresh)
+                            return item.Item;
+
+                    // Else cache expired, or forcing a refresh.
                 }
             }
 
-            return null;
+            UserAgentData agent = m_storage.GetAgentData(uuid);
+            if (agent != null)
+                ReplaceAgentData(agent);
+            else
+                RemoveAgentData(uuid);
+
+            return agent;
         }
+        public UserAgentData GetUserAgent(UUID uuid)
+        {
+            return GetUserAgent(uuid, false);
+        }
+
+        #endregion
 
         public Uri GetUserUri(UserProfileData userProfile)
         {
             throw new NotImplementedException();
         }
 
+        #region CachedUserInfo
+
         /// <summary>
-        /// Upgrade a UserProfileData to a CachedUserInfo for common cache storage.
+        /// Upgrade a UserProfileData to a CachedUserInfo.
         /// </summary>
         /// <param name="userProfile"></param>
         /// <param name="friends">friends can be null when called from the User grid server itself.</param>
@@ -213,62 +417,89 @@ namespace OpenSim.Framework.Communications
             return new CachedUserInfo(m_commsManager, userProfile, friends);
         }
 
+        public void FlushCachedInfo(UUID uuid)
+        {
+            lock (m_userDataLock)
+            {
+                UserProfileData profile;
+                if (m_localUser.TryGetValue(uuid, out profile))
+                {
+                    if (m_userInfoByName.ContainsKey(profile.Name))
+                        m_userInfoByName.Remove(profile.Name);
+                    m_localUser.Remove(uuid);
+                }
+            }
+            lock (m_userInfoLock)
+            {
+                TimestampedItem<CachedUserInfo> item;
+                if (m_userInfoByUUID.TryGetValue(uuid, out item))
+                {
+                    if (m_userInfoByName.ContainsKey(item.Item.UserProfile.Name))
+                        m_userInfoByName.Remove(item.Item.UserProfile.Name);
+                    m_userInfoByUUID.Remove(uuid);
+                }
+            }
+        }
+
+        private void ReplaceUserInfo(CachedUserInfo userInfo)
+        {
+            UUID uuid = userInfo.UserProfile.ID;
+
+            lock (m_userInfoLock)
+            {
+                // Let's handle the UUID caches first, then name cache is common between them.
+                if (m_userInfoByUUID.Contains(uuid))
+                    m_userInfoByUUID.Remove(uuid);
+                m_userInfoByUUID.Add(uuid, new TimestampedItem<CachedUserInfo>(userInfo));
+
+                // Now do the name cache.
+                if (m_userInfoByName.ContainsKey(userInfo.UserProfile.Name))
+                    m_userInfoByName.Remove(userInfo.UserProfile.Name);
+                m_userInfoByName.Add(userInfo.UserProfile.Name, userInfo);
+            }
+        }
+
         /// <summary>
         /// Populate caches with the given cached user profile
         /// </summary>
-        /// <param name="userProfile"></param>
-        protected void AddToProfileCache(CachedUserInfo userInfo)
+        /// <param name="userInfo"></param>
+        protected void AddToUserInfoCache(CachedUserInfo userInfo)
         {
-            DumpStatus("AddToProfileCache(entry)");
-            lock (_userProfilesLock)
+            lock (m_userInfoLock)
             {
                 UUID uuid = userInfo.UserProfile.ID;
-                if (_cachedLocalProfiles.ContainsKey(uuid))
-                {
-                    // Already cached as a local profile, force an update
-                    _cachedLocalProfiles[uuid] = userInfo;
-                    m_userProfilesByName[userInfo.UserProfile.Name] = userInfo;
-                }
-                else
-                {
-                    // Add or update the regular profiles data.
-                    if (_cachedProfileData.Contains(uuid))
-                        _cachedProfileData.Remove(uuid);
-                    _cachedProfileData.Add(uuid, new TimestampedItem<CachedUserInfo>(userInfo));
-                    m_userProfilesByName[userInfo.UserProfile.Name] = userInfo;
-                }
+                // Add or update the regular profiles data.
+                if (m_userInfoByUUID.Contains(uuid))
+                    m_userInfoByUUID.Remove(uuid);
+                m_userInfoByUUID.Add(uuid, new TimestampedItem<CachedUserInfo>(userInfo));
+                m_userInfoByName[userInfo.UserProfile.Name] = userInfo;
             }
-            DumpStatus("AddToProfileCache(exit)");
         }
 
         /// <summary>
         /// Populate caches with the given user profile (allocate userInfo).
         /// </summary>
-        /// <param name="userProfile"></param>
-        protected CachedUserInfo AddToProfileCache(UserProfileData userProfile)
+        /// <param name="profile"></param>
+        protected CachedUserInfo AddToUserInfoCache(UserProfileData profile)
         {
-            CachedUserInfo userInfo = NewCachedUserInfo(userProfile, null);
+            CachedUserInfo userInfo = NewCachedUserInfo(profile, null);
 
-            AddToProfileCache(userInfo);
+            AddToUserInfoCache(userInfo);
             return userInfo;
         }
 
         // This is called when a call to ADD a profile to _cachedProfileData caused
         // an automatic purge (e.g. when at capacity limit). Use this to keep the
         // parallel data structures (in this case m_userProfilesByName) in sync.
-        void _cachedProfileData_OnItemPurged(TimestampedItem<CachedUserInfo> item)
+        void _cachedUserInfo_OnItemPurged(TimestampedItem<CachedUserInfo> item)
         {
             // this is called when it's removed from _cachedProfileData, 
             // so we just need to clean up the parallel name dictionary.
-            lock (_userProfilesLock)
+            lock (m_userInfoLock)
             {
-                // Don't remove it from the names cache if it's cached as a LOCAL profile.
-                if (!_cachedLocalProfiles.ContainsKey(item.Item.UserProfile.ID))
-                {
-                    // normal name cleanup of a regular cached profile that expired.
-                    if (m_userProfilesByName.ContainsKey(item.Item.UserProfile.Name))
-                        m_userProfilesByName.Remove(item.Item.UserProfile.Name);
-                }
+                // normal name cleanup of a regular cached profile that expired.
+                if (m_userInfoByName.ContainsKey(item.Item.UserProfile.Name))
+                    m_userInfoByName.Remove(item.Item.UserProfile.Name);
             }
         }
 
@@ -276,19 +507,17 @@ namespace OpenSim.Framework.Communications
         /// Remove profile belong to the given uuid from the user profile caches.
         /// Does not remove from the user agent cache (_cachedAgentData).
         /// </summary>
-        /// <param name="userUuid"></param>
+        /// <param name="uuid"></param>
         /// <returns>true if there was a profile to remove, false otherwise</returns>
-        protected bool RemoveFromProfileCache(UUID userId)
+        protected bool RemoveFromUserInfoCache(UUID uuid)
         {
-            lock (_userProfilesLock)
+            lock (m_userInfoLock)
             {
                 TimestampedItem<CachedUserInfo> timedItem = null;
-                if (_cachedProfileData.TryGetValue(userId, out timedItem))
+                if (m_userInfoByUUID.TryGetValue(uuid, out timedItem))
                 {
-                    _cachedProfileData.Remove(userId);
-                    // Shouldn't be here but don't remove it from the names cache if it's cached as a LOCAL profile.
-                    if (!_cachedLocalProfiles.ContainsKey(userId))
-                        m_userProfilesByName.Remove(timedItem.Item.UserProfile.Name);
+                    m_userInfoByUUID.Remove(uuid);
+                    m_userInfoByName.Remove(timedItem.Item.UserProfile.Name);
                     return true;
                 }
             }
@@ -296,22 +525,14 @@ namespace OpenSim.Framework.Communications
             return false;
         }
 
-        // This purges from BOTH the profile and agent caches.
-        public void PurgeUserFromCaches(UUID userID)
+        public virtual bool UpdateUserProfile(UserProfileData profile)
         {
-            // remove from _cachedProfileData and m_userProfilesByName
-            RemoveFromProfileCache(userID);
-
-            // Now remove from _cachedAgentData too
-            lock (_cachedAgentData)
+            lock (m_userInfoLock)
             {
-                TimestampedItem<UserAgentData> timedItem;
-                if (_cachedAgentData.TryGetValue(userID, out timedItem))
-                {
-//                    if (m_isUserServer) m_log.WarnFormat("[USER CACHE]: PurgeUserFromCaches: Purging agent data for {0} SSID={1}", userID, timedItem.Item.SecureSessionID);
-                    _cachedAgentData.Remove(userID);
-                }
+                m_userInfoByUUID.Remove(profile.ID);
             }
+
+            return m_storage.UpdateUserProfileData(profile);
         }
 
         public virtual CachedUserInfo GetUserInfo(UUID uuid)
@@ -319,86 +540,96 @@ namespace OpenSim.Framework.Communications
             if (uuid == UUID.Zero)
                 return null;
 
-            lock (_userProfilesLock)
+            lock (m_userInfoLock)
             {
-                // Check local users first
-                if (_cachedLocalProfiles.ContainsKey(uuid))
-                    return _cachedLocalProfiles[uuid];
-
                 TimestampedItem<CachedUserInfo> timedItem;
-                if (_cachedProfileData.TryGetValue(uuid, out timedItem))
+                if (m_userInfoByUUID.TryGetValue(uuid, out timedItem))
                 {
                     if (timedItem.ElapsedSeconds < CACHE_ITEM_EXPIRY)
-                    {
                         return timedItem.Item;
-                    }
-                    else
-                    {
-                        _cachedProfileData.Remove(uuid);
-                    }
                 }
             }
 
-            foreach (IUserDataPlugin plugin in m_plugins)
+            UserProfileData profile = m_storage.GetUserProfileData(uuid);
+            if (profile == null)
             {
-                UserProfileData profile = plugin.GetUserByUUID(uuid);
-
-                if (null != profile)
-                {
-                    profile.CurrentAgent = GetUserAgent(uuid, false);
-                    return AddToProfileCache(profile);
-                }
+                FlushCachedInfo(uuid);
+                return null;
             }
 
+            profile.CurrentAgent = GetUserAgent(uuid, false);
+            return AddToUserInfoCache(profile);
+        }
+
+        #endregion
+
+        #region TempUserProfiles
+
+        /// <summary>
+        /// Temporary profiles are used for bot users, they have no persistence.
+        /// </summary>
+        /// <param name="userProfile">the bot user profile</param>
+        public virtual void AddTemporaryUserProfile(UserProfileData userProfile)
+        {
+            AddToUserInfoCache(userProfile);
+
+            lock (m_userDataLock)
+            {
+                if (m_tempDataByUUID.ContainsKey(userProfile.ID))
+                    m_tempDataByUUID.Remove(userProfile.ID);
+                if (m_tempDataByName.ContainsKey(userProfile.Name))
+                    m_tempDataByName.Remove(userProfile.Name);
+                m_tempDataByUUID.Add(userProfile.ID, userProfile);
+                m_tempDataByName.Add(userProfile.Name, userProfile);
+            }
+        }
+
+        public virtual void RemoveTemporaryUserProfile(UUID uuid)
+        {
+            RemoveFromUserInfoCache(uuid);
+
+            lock (m_userDataLock)
+            {
+                if (m_tempDataByUUID.ContainsKey(uuid))
+                {
+                    string name = m_tempDataByUUID[uuid].Name;
+                    if (m_tempDataByName.ContainsKey(name))
+                        m_tempDataByName.Remove(name);
+                    m_tempDataByUUID.Remove(uuid);
+                }
+            }
+        }
+        private UserProfileData GetTemporaryUserProfile(UUID uuid)
+        {
+            lock (m_userDataLock)
+            {
+                if (m_tempDataByUUID.ContainsKey(uuid))
+                    return m_tempDataByUUID[uuid];
+            }
+            return null;
+        }
+        private UserProfileData GetTemporaryUserProfile(string name)
+        {
+            lock (m_userDataLock)
+            {
+                if (m_tempDataByName.ContainsKey(name))
+                    return m_tempDataByName[name];
+            }
             return null;
         }
 
-        // see IUserService
-        public virtual UserProfileData GetUserProfile(UUID uuid)
-        {
-            CachedUserInfo userInfo = GetUserInfo(uuid);
+        #endregion
 
-            return (userInfo != null) ? userInfo.UserProfile : null;
-        }
-
-        public virtual void AddTemporaryUserProfile(UserProfileData userProfile)
-        {
-            DumpStatus("AddTemporaryUserProfile(entry)"); 
-
-            AddToProfileCache(userProfile);
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                plugin.AddTemporaryUserProfile(userProfile);
-            }
-            DumpStatus("AddTemporaryUserProfile(exit)");
-        }
-
-        public virtual void RemoveTemporaryUserProfile(UUID userid)
-        {
-            DumpStatus("RemoveTemporaryUserProfile(entry)");
-            RemoveFromProfileCache(userid);
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                plugin.RemoveTemporaryUserProfile(userid);
-            }
-
-            DumpStatus("RemoveTemporaryUserProfile(exit)");
-        }
+        #region MiscInterfaces
 
         public void LogoutUsers(UUID regionID)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                plugin.LogoutUsers(regionID);
-            }
+            m_storage.LogoutUsers(regionID);
         }
 
-        public void ResetAttachments(UUID userID)
+        public void ResetAttachments(UUID uuid)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                plugin.ResetAttachments(userID);
-            }
+            m_storage.ResetAttachments(uuid);
         }
 
         /*
@@ -416,287 +647,45 @@ namespace OpenSim.Framework.Communications
 
         public virtual List<AvatarPickerAvatar> GenerateAgentPickerRequestResponse(UUID queryID, string query)
         {
-            List<AvatarPickerAvatar> allPickerList = new List<AvatarPickerAvatar>();
-            
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    List<AvatarPickerAvatar> pickerList = plugin.GeneratePickerResults(queryID, query);
-                    if (pickerList != null)
-                        allPickerList.AddRange(pickerList);
-                }
-                catch (Exception)
-                {
-                    m_log.Error(
-                        "[USERSTORAGE]: Unable to generate AgentPickerData via  " + plugin.Name + "(" + query + ")");
-                }
-            }
-
-            return allPickerList;
+            return m_storage.GenerateAgentPickerRequestResponse(queryID, query);
         }
         
-        public virtual bool UpdateUserProfile(UserProfileData profile)
-        {
-            bool result = false;
-
-            lock (_userProfilesLock)
-            {
-                _cachedProfileData.Remove(profile.ID);
-            }
-            
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.UpdateUserProfile(profile);
-                    result = true;
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat(
-                        "[USERSTORAGE]: Unable to set user {0} {1} via {2}: {3}", 
-                        profile.FirstName, profile.SurName, plugin.Name, e.ToString());
-                }
-            }
-            
-            return result;
-        }
-
         /*
         public virtual bool UpdateUserInterests(UserInterestsData data)
         {
-            bool result = false;
-
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.UpdateUserInterests(data);
-                    result = true;
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat(
-                        "[USERSTORAGE]: Unable to set user {0} {1} via {2}: {3}",
-                        data.ID, e.ToString());
-                }
-            }
-            return result;
+            return plugin.UpdateUserInterests(data);
         }
         */
         #endregion
 
-        #region Get UserAgent
-
-        /// <summary>
-        /// Loads a user agent by uuid (not called directly)
-        /// </summary>
-        /// <param name="uuid">The agent's UUID</param>
-        /// <returns>Agent profiles</returns>
-        public UserAgentData GetUserAgent(UUID uuid, bool forceRefresh)
-        {
-            lock (_cachedAgentData)
-            {
-                TimestampedItem<UserAgentData> item;
-                if (_cachedAgentData.TryGetValue(uuid, out item))
-                {
-                    if ((!forceRefresh) && (item.ElapsedSeconds < CACHE_ITEM_EXPIRY))
-                    {
-//                        if (m_isUserServer) m_log.WarnFormat("[USER CACHE]: Returning cached agent data for {0} SSID={1}", uuid, item.Item.SecureSessionID);
-                        return item.Item;
-                    }
-                    else
-                    {
-//                        if (m_isUserServer) m_log.WarnFormat("[USER CACHE]: Removing (refreshing) agent data for {0} SSID={1}", uuid, item.Item.SecureSessionID);
-                        _cachedAgentData.Remove(uuid);
-                    }
-                }
-            }
-
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    UserAgentData result = plugin.GetAgentByUUID(uuid);
-
-                    if (result != null)
-                    {
-                        lock (_cachedAgentData)
-                        {
-                            // Now that it's locked again, ensure it's not back in the list.
-                            if (_cachedAgentData.Contains(uuid))
-                                _cachedAgentData.Remove(uuid);
-//                            if (m_isUserServer) m_log.WarnFormat("[USER CACHE]: Setting agent data for {0} SSID={1}", uuid, result.SecureSessionID); 
-                            _cachedAgentData.Add(uuid, new TimestampedItem<UserAgentData>(result));
-                            return result;
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[USERSTORAGE]: Unable to find user via " + plugin.Name + "(" + e.ToString() + ")");
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Loads a user agent by name (not called directly)
-        /// </summary>
-        /// <param name="name">The agent's name</param>
-        /// <returns>A user agent</returns>
-        public UserAgentData GetUserAgent(string name)
-        {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    UserAgentData result = plugin.GetAgentByName(name);
-                    
-                    if (result != null)
-                        return result;
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[USERSTORAGE]: Unable to find user via " + plugin.Name + "(" + e.ToString() + ")");
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Loads a user agent by name (not called directly)
-        /// </summary>
-        /// <param name="fname">The agent's firstname</param>
-        /// <param name="lname">The agent's lastname</param>
-        /// <returns>A user agent</returns>
-        public UserAgentData GetUserAgent(string fname, string lname)
-        {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    UserAgentData result = plugin.GetAgentByName(fname, lname);
-                    
-                    if (result != null)
-                        return result;
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[USERSTORAGE]: Unable to find user via " + plugin.Name + "(" + e.ToString() + ")");
-                }
-            }
-
-            return null;
-        }
-
         public virtual List<FriendListItem> GetUserFriendList(UUID ownerID)
         {
-            List<FriendListItem> allFriends = new List<FriendListItem>();
-            
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    List<FriendListItem> friends = plugin.GetUserFriendList(ownerID);
-
-                    if (friends != null)
-                        allFriends.AddRange(friends);
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[USERSTORAGE]: Unable to GetUserFriendList via " + plugin.Name + "(" + e.ToString() + ")");
-                }
-            }
-
-            return allFriends;
+            return m_storage.GetUserFriendList(ownerID);
         }
 
         public virtual Dictionary<UUID, FriendRegionInfo> GetFriendRegionInfos (List<UUID> uuids)
         {
-            //Dictionary<UUID, FriendRegionInfo> allFriendRegions = new Dictionary<UUID, FriendRegionInfo>();
-            
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    Dictionary<UUID, FriendRegionInfo> friendRegions = plugin.GetFriendRegionInfos(uuids);
-
-                    if (friendRegions != null)
-                        return friendRegions;
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[USERSTORAGE]: Unable to GetFriendRegionInfos via " + plugin.Name + "(" + e.ToString() + ")");
-                }
-            }
-            
-            return new Dictionary<UUID, FriendRegionInfo>();
+            return m_storage.GetFriendRegionInfos(uuids);
         }
-
         
         public void StoreWebLoginKey(UUID agentID, UUID webLoginKey)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.StoreWebLoginKey(agentID, webLoginKey);
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[USERSTORAGE]: Unable to Store WebLoginKey via " + plugin.Name + "(" + e.ToString() + ")");
-                }
-            }
+            m_storage.StoreWebLoginKey(agentID, webLoginKey);
         }
-        
 
         public virtual void AddNewUserFriend(UUID friendlistowner, UUID friend, uint perms)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.AddNewUserFriend(friendlistowner, friend, perms);
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[USERSTORAGE]: Unable to AddNewUserFriend via " + plugin.Name + "(" + e.ToString() + ")");
-                }
-            }
+            m_storage.AddNewUserFriend(friendlistowner, friend, perms);
         }
 
         public virtual void RemoveUserFriend(UUID friendlistowner, UUID friend)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.RemoveUserFriend(friendlistowner, friend);
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[USERSTORAGE]: Unable to RemoveUserFriend via " + plugin.Name + "(" + e.ToString() + ")");
-                }
-            }
+            m_storage.RemoveUserFriend(friendlistowner, friend);
         }
 
         public virtual void UpdateUserFriendPerms(UUID friendlistowner, UUID friend, uint perms)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.UpdateUserFriendPerms(friendlistowner, friend, perms);
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[USERSTORAGE]: Unable to UpdateUserFriendPerms via " + plugin.Name + "(" + e.ToString() + ")");
-                }
-            }
+            m_storage.UpdateUserFriendPerms(friendlistowner, friend, perms);
         }
 
         /// <summary>
@@ -705,19 +694,13 @@ namespace OpenSim.Framework.Communications
         /// <param name="agentID">The agent's ID</param>
         public virtual void ClearUserAgent(UUID agentID)
         {
-            UserProfileData profile = GetUserProfile(agentID);
-
+            UserProfileData profile = GetUserProfile(agentID, false);
             if (profile == null)
-            {
                 return;
-            }
 
             profile.CurrentAgent = null;
-
             UpdateUserProfile(profile);
         }
-
-        #endregion
 
         #region CreateAgent
 
@@ -854,17 +837,17 @@ namespace OpenSim.Framework.Communications
         /// <summary>
         /// Process a user logoff from OpenSim.
         /// </summary>
-        /// <param name="userid"></param>
+        /// <param name="uuid"></param>
         /// <param name="regionid"></param>
         /// <param name="regionhandle"></param>
         /// <param name="position"></param>
         /// <param name="lookat"></param>
-        public virtual void LogOffUser(UUID userid, UUID regionid, ulong regionhandle, Vector3 position, Vector3 lookat)
+        public virtual void LogOffUser(UUID uuid, UUID regionid, ulong regionhandle, Vector3 position, Vector3 lookat)
         {
             if (StatsManager.UserStats != null)
                 StatsManager.UserStats.AddLogout();
 
-            UserProfileData userProfile = GetUserProfile(userid);
+            UserProfileData userProfile = GetUserProfile(uuid, true);
 
             if (userProfile != null)
             {
@@ -889,7 +872,7 @@ namespace OpenSim.Framework.Communications
                 else
                 {
                     // If currentagent is null, we can't reference it here or the UserServer crashes!
-                    m_log.Info("[LOGOUT]: didn't save logout position: " + userid.ToString());
+                    m_log.Info("[LOGOUT]: didn't save logout position: " + uuid.ToString());
                 }
             }
             else
@@ -898,9 +881,9 @@ namespace OpenSim.Framework.Communications
             }
         }
 
-        public void LogOffUser(UUID userid, UUID regionid, ulong regionhandle, float posx, float posy, float posz)
+        public void LogOffUser(UUID uuid, UUID regionid, ulong regionhandle, float posx, float posy, float posz)
         {
-            LogOffUser(userid, regionid, regionhandle, new Vector3(posx, posy, posz), new Vector3());
+            LogOffUser(uuid, regionid, regionhandle, new Vector3(posx, posy, posz), new Vector3());
         }
 
         #endregion
@@ -929,10 +912,10 @@ namespace OpenSim.Framework.Communications
         /// <param name="email">email</param>
         /// <param name="regX">location X</param>
         /// <param name="regY">location Y</param>
-        /// <param name="SetUUID">UUID of avatar.</param>
+        /// <param name="uuid">UUID of avatar.</param>
         /// <returns>The UUID of the created user profile.  On failure, returns UUID.Zero</returns>
         public virtual UUID AddUser(
-            string firstName, string lastName, string password, string email, uint regX, uint regY, UUID SetUUID)
+            string firstName, string lastName, string password, string email, uint regX, uint regY, UUID uuid)
         {
             string md5PasswdHash = Util.Md5Hash(Util.Md5Hash(password) + ":" + String.Empty);
 
@@ -945,7 +928,7 @@ namespace OpenSim.Framework.Communications
 
             UserProfileData user = new UserProfileData();
             user.HomeLocation = new Vector3(128, 128, 100);
-            user.ID = SetUUID;
+            user.ID = uuid;
             user.FirstName = firstName;
             user.SurName = lastName;
             user.PasswordHash = md5PasswdHash;
@@ -956,19 +939,9 @@ namespace OpenSim.Framework.Communications
             user.HomeRegionY = regY;
             user.Email = email;
 
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.AddNewUserProfile(user);
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[USERSTORAGE]: Unable to add user via " + plugin.Name + "(" + e.ToString() + ")");
-                }
-            }
+            m_storage.AddUser(user);
 
-            userProf = GetUserProfile(firstName, lastName);
+            userProf = GetUserProfile(uuid);
             if (userProf == null)
             {
                 return UUID.Zero;
@@ -1160,72 +1133,37 @@ namespace OpenSim.Framework.Communications
         /// <summary>
         /// Add an agent using data plugins.
         /// </summary>
-        /// <param name="agentdata">The agent data to be added</param>
+        /// <param name="agent">The agent data to be added</param>
         /// <returns>
         /// true if at least one plugin added the user agent.  false if no plugin successfully added the agent
         /// </returns>
-        public virtual bool AddUserAgent(UserAgentData agentdata)
+        public virtual bool AddUserAgent(UserAgentData agent)
         {
-            bool result = false;
-
-            lock (_cachedAgentData)
+            lock (m_agentDataByUUID)
             {
-                UUID userId = agentdata.ProfileID;
+                UUID uuid = agent.ProfileID;
 
                 TimestampedItem<UserAgentData> timedItem = null;
-                if (_cachedAgentData.TryGetValue(userId, out timedItem))
-                {
-//                    if (m_isUserServer && (timedItem.Item.SecureSessionID != agentdata.SecureSessionID))
-//                        m_log.WarnFormat("[USER CACHE]: AddUserAgent: Removing old agent data for {0} SSID={1}", userId, timedItem.Item.SecureSessionID);
-                    _cachedAgentData.Remove(userId);
-                }
+                if (m_agentDataByUUID.TryGetValue(uuid, out timedItem))
+                    m_agentDataByUUID.Remove(uuid);
 
                 // Must also add the updated record to the cache, inside the lock, or risk
                 // a race condition with other threads refreshing the cache from the database 
                 // before plugin.AddNewUserAgent below has finished committing the change.
-                _cachedAgentData.Add(userId, new TimestampedItem<UserAgentData>(agentdata));
+                m_agentDataByUUID.Add(uuid, new TimestampedItem<UserAgentData>(agent));
             }
 
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-//                    if (m_isUserServer) m_log.WarnFormat("[USER CACHE]: AddUserAgent: Adding agent data for {0} SSID={1}", agentdata.ProfileID, agentdata.SecureSessionID);
-                    plugin.AddNewUserAgent(agentdata);
-                    result = true;
-                }
-                catch (Exception e)
-                {
-                    m_log.Error("[USERSTORAGE]: Unable to add agent via " + plugin.Name + "(" + e.ToString() + ")");
-                }
-            }
-            
-            return result;
+            return m_storage.AddNewUserAgent(agent);
         }
 
         /// <summary>
         /// Get avatar appearance information
         /// </summary>
-        /// <param name="user"></param>
+        /// <param name="uuid"></param>
         /// <returns></returns>
-        public virtual AvatarAppearance GetUserAppearance(UUID user)
+        public virtual AvatarAppearance GetUserAppearance(UUID uuid)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    AvatarAppearance appearance = plugin.GetUserAppearance(user);
-                    
-                    if (appearance != null)
-                        return appearance;
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[USERSTORAGE]: Unable to find user appearance {0} via {1} ({2})", user.ToString(), plugin.Name, e.ToString());
-                }
-            }
-            
-            return null;
+            return m_storage.GetUserAppearance(uuid);
         }
 
         /// <summary>
@@ -1233,87 +1171,29 @@ namespace OpenSim.Framework.Communications
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public virtual AvatarAppearance GetBotOutfit(UUID user, string outfitName)
+        public virtual AvatarAppearance GetBotOutfit(UUID uuid, string outfitName)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    AvatarAppearance appearance = plugin.GetBotOutfit(user, outfitName);
-
-                    if (appearance != null)
-                        return appearance;
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[USERSTORAGE]: Unable to find user appearance {0} via {1} ({2})", user.ToString(), plugin.Name, e.ToString());
-                }
-            }
-
-            return null;
+            return m_storage.GetBotOutfit(uuid, outfitName);
         }
 
-        public virtual void UpdateUserAppearance(UUID user, AvatarAppearance appearance)
+        public virtual void UpdateUserAppearance(UUID uuid, AvatarAppearance appearance)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.UpdateUserAppearance(user, appearance);
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[USERSTORAGE]: Unable to update user appearance {0} via {1} ({2})", user.ToString(), plugin.Name, e.ToString());
-                }
-            }
+            m_storage.UpdateUserAppearance(uuid, appearance);
         }
 
-        public virtual void AddOrUpdateBotOutfit(UUID userID, string outfitName, AvatarAppearance appearance)
+        public virtual void AddOrUpdateBotOutfit(UUID uuid, string outfitName, AvatarAppearance appearance)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.AddOrUpdateBotOutfit(userID, outfitName, appearance);
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[USERSTORAGE]: Unable to add bot outfit {0} via {1} ({2})", userID.ToString(), plugin.Name, e.ToString());
-                }
-            }
+            m_storage.AddOrUpdateBotOutfit(uuid, outfitName, appearance);
         }
 
-        public virtual void RemoveBotOutfit(UUID userID, string outfitName)
+        public virtual void RemoveBotOutfit(UUID uuid, string outfitName)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.RemoveBotOutfit(userID, outfitName);
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[USERSTORAGE]: Unable to remove bot outfit {0} via {1} ({2})", userID.ToString(), plugin.Name, e.ToString());
-                }
-            }
+            m_storage.RemoveBotOutfit(uuid, outfitName);
         }
 
-        public virtual List<string> GetBotOutfitsByOwner(UUID userID)
+        public virtual List<string> GetBotOutfitsByOwner(UUID uuid)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    var outfits = plugin.GetBotOutfitsByOwner(userID);
-                    if (outfits != null)
-                        return outfits;
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[USERSTORAGE]: Unable to get bot outfits {0} via {1} ({2})", userID.ToString(), plugin.Name, e.ToString());
-                }
-            }
-            return null;
+            return m_storage.GetBotOutfitsByOwner(uuid);
         }
 
         #region IAuthentication
@@ -1422,39 +1302,12 @@ namespace OpenSim.Framework.Communications
 
         public void SaveUserPreferences(UserPreferencesData userPrefs)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.SaveUserPreferences(userPrefs);
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[USERSTORAGE]: Unable to save user preferences {0} via {1} ({2})", userPrefs.UserId, plugin.Name, e.ToString());
-                }
-            }
+            m_storage.SaveUserPreferences(userPrefs);
         }
 
-        public UserPreferencesData RetrieveUserPreferences(UUID userId)
+        public UserPreferencesData RetrieveUserPreferences(UUID uuid)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    UserPreferencesData userPrefs = plugin.RetrieveUserPreferences(userId);
-
-                    if (userPrefs != null)
-                    {
-                        return userPrefs;
-                    }
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[USERSTORAGE]: Unable to retrieve user preferences {0} via {1} ({2})", userId, plugin.Name, e.ToString());
-                }
-            }
-
-            return null;
+            return m_storage.RetrieveUserPreferences(uuid);
         }
 
         #endregion
@@ -1463,62 +1316,34 @@ namespace OpenSim.Framework.Communications
 
         public virtual List<CachedAgentArgs> GetCachedBakedTextures(List<CachedAgentArgs> request)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    List<CachedAgentArgs> resp = plugin.GetCachedBakedTextures(request);
-                    if (resp != null && resp.Count > 0)
-                        return resp;
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[USERSTORAGE]: Unable to get baked textures via {0} ({1})", plugin.Name, e.ToString());
-                }
-            }
-            return null;
+            return m_storage.GetCachedBakedTextures(request);
         }
 
         public virtual void SetCachedBakedTextures(Dictionary<UUID, UUID> request)
         {
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                try
-                {
-                    plugin.SetCachedBakedTextures(request);
-                }
-                catch (Exception e)
-                {
-                    m_log.ErrorFormat("[USERSTORAGE]: Unable to set baked textures via {0} ({1})", plugin.Name, e.ToString());
-                }
-            }
+            m_storage.SetCachedBakedTextures(request);
         }
 
         #endregion
 
         #region - Level 2 user profile cache
 
-        /// <value>
-        /// Standard format for names.
-        /// </value>
-        public const string NAME_FORMAT = "{0} {1}";
-        
         public CachedUserInfo GetUserDetails(string fname, string lname)
         {
-            string name = string.Format(NAME_FORMAT, fname, lname);
+            string name = fname.Trim() + " " + lname.Trim();
 
-            lock (_userProfilesLock)
+            lock (m_userInfoLock)
             {
-                if (m_userProfilesByName.ContainsKey(name))
+                if (m_userInfoByName.ContainsKey(name))
                 {
-                    return m_userProfilesByName[name];
+                    return m_userInfoByName[name];
                 }
             }
 
             UserProfileData userProfile = GetUserProfile(fname, lname);
             if (userProfile != null)
             {
-                return AddToProfileCache(userProfile);
+                return AddToUserInfoCache(userProfile);
             }
             else
             {
@@ -1532,9 +1357,9 @@ namespace OpenSim.Framework.Communications
         /// If the user isn't in cache then the user is requested from the profile service.  
         /// <param name="userID"></param>
         /// <returns>null if no user details are found</returns>
-        public CachedUserInfo GetUserDetails(UUID userID)
+        public CachedUserInfo GetUserDetails(UUID uuid)
         {
-            return GetUserInfo(userID);
+            return GetUserInfo(uuid);
         }
 
         /// <summary>
@@ -1543,16 +1368,16 @@ namespace OpenSim.Framework.Communications
         /// <param name="userData"></param>
         public void PreloadUserCache(UserProfileData userData)
         {
-            AddToProfileCache(userData);
+            AddToUserInfoCache(userData);
         }
 
-        public void UpdateFriendPerms(UUID ownerID, UUID friendID, uint perms)
+        public void UpdateFriendPerms(UUID uuid, UUID friendID, uint perms)
         {
             //if the friend is here we need to change their permissions for the given user
             CachedUserInfo cachedUserDetails = this.GetUserDetails(friendID);
             if (cachedUserDetails != null)
             {
-                cachedUserDetails.AdjustPermissionsFromFriend(ownerID, perms);
+                cachedUserDetails.AdjustPermissionsFromFriend(uuid, perms);
             }
         }
 
@@ -1563,24 +1388,24 @@ namespace OpenSim.Framework.Communications
         /// It isn't strictly necessary to make this call since user data can be lazily requested later on.  However, 
         /// it might be helpful in order to avoid an initial response delay later on
         /// 
-        /// <param name="userID"></param>
-        public void AddCachedUser(UUID userID)
+        /// <param name="uuid"></param>
+        public void AddCachedUser(UUID uuid)
         {
-            if (userID == UUID.Zero)
+            if (uuid == UUID.Zero)
                 return;
 
             //m_log.DebugFormat("[USER CACHE]: Adding user profile for {0}", userID);
-            GetUserDetails(userID);
+            GetUserDetails(uuid);
         }
 
         /// <summary>
         /// Remove this user's profile cache.
         /// </summary>
-        /// <param name="userID"></param>
+        /// <param name="uuid"></param>
         /// <returns>true if the user was successfully removed, false otherwise</returns>
-        public bool RemoveCachedUser(UUID userId)
+        public bool RemoveCachedUser(UUID uuid)
         {
-            if (!RemoveFromProfileCache(userId))
+            if (!RemoveFromUserInfoCache(uuid))
             { 
                 // With the replacment of normal user profile caching with local user profile caching, this is a normal now.
                 // It wasn't in the normal user profile cache because it was in the local user profile cache.
@@ -1592,53 +1417,56 @@ namespace OpenSim.Framework.Communications
             return true;
         }
 
-        public void AddLocalUser(UUID userID)
+        public void AddLocalUser(UUID uuid)
         {
-            DumpStatus("AddLocalUser(entry)");
             // Because profile changes can be made outside of the region the user is in (e.g. partnering), 
             // we'll provide a way for users to force a profile refetch to the current region.
             // We'll for an refresh of the user's profile when they enter or leave a region.
-            PurgeUserFromCaches(userID);
-            CachedUserInfo userInfo = GetUserInfo(userID);
+
+            // remove from both UserProfileData and CachedUserInfo caches
+            RemoveUserData(uuid);
+            RemoveAgentData(uuid);
+            UserProfileData profile = GetUserProfile(uuid, false);
 
             // Now deal with the cached local profile storage.
-            lock (_userProfilesLock)
+            lock (m_userInfoLock)
             {
-                if (userInfo == null)
+                if (profile == null)
                 {
-                    m_log.WarnFormat("[USER CACHE]: Could not fetch profile for: {0}", userID);
+                    m_log.WarnFormat("[USER CACHE]: Could not fetch profile for: {0}", uuid);
                     return;
                 }
 
                 // Remove it from the LRU now that it's cached as a local profile
-                if (_cachedProfileData.Contains(userID))
-                    _cachedProfileData.Remove(userID);
+                if (m_userInfoByUUID.Contains(uuid))
+                    m_userInfoByUUID.Remove(uuid);
 
-                m_log.InfoFormat("[USER CACHE]: Added profile to local user cache for: {0} {1}", userID, userInfo.UserProfile.Name);
-                _cachedLocalProfiles[userID] = userInfo;
-                m_userProfilesByName[userInfo.UserProfile.Name] = userInfo;
+                m_log.InfoFormat("[USER CACHE]: Added profile to local user cache for: {0} {1}", uuid, profile.Name);
+                m_localUser[uuid] = profile;
+                m_userDataByName[profile.Name] = profile;
             }
-            DumpStatus("AddLocalUser(exit)");
         }
 
-        public void RemoveLocalUser(UUID userID)
+        public void RemoveLocalUser(UUID uuid)
         {
             // Because profile changes can be made outside of the region the user is in (e.g. partnering), 
             // we'll provide a way for users to force a profile refetch to the current region.
             // We'll for an refresh of the user's profile when they enter or leave a region.
 
-            lock (_userProfilesLock)
+            lock (m_userDataLock)
             {
                 // First deal with the cached local profile storage.
-                if (_cachedLocalProfiles.ContainsKey(userID))
+                if (m_localUser.ContainsKey(uuid))
                 {
-                    CachedUserInfo profile = _cachedLocalProfiles[userID];
-                    m_log.InfoFormat("[USER CACHE]: Removed profile from local user cache for: {0} {1}", userID, profile.UserProfile.Name);
-                    _cachedLocalProfiles.Remove(userID);
+                    UserProfileData profile = m_localUser[uuid];
+                    m_log.InfoFormat("[USER CACHE]: Removed profile from local user cache for: {0} {1}", uuid, profile.Name);
+                    m_localUser.Remove(uuid);
 
                 }
                 // Now still inside the same lock, purge from the other caches too, if they are there.
-                PurgeUserFromCaches(userID);
+                // remove from both UserProfileData and CachedUserInfo caches
+                RemoveUserData(uuid);
+                RemoveAgentData(uuid);
             }
         }
 
