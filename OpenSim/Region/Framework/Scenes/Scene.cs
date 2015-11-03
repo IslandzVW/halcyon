@@ -3564,7 +3564,7 @@ namespace OpenSim.Region.Framework.Scenes
                         CommsManager.UserProfileCacheService.RemoveUser(agentID);
                     }
 
-                    CommsManager.UserService.RemoveLocalUser(agentID);
+                    CommsManager.UserService.UnmakeLocalUser(agentID);
 
                     if (!avatar.IsChildAgent)
                     {

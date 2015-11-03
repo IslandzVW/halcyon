@@ -1016,7 +1016,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SwapToRootAgent();
                     m_isChildAgent = false;
                     if (!IsBot)
-                        m_scene.CommsManager.UserService.AddLocalUser(m_uuid);
+                        m_scene.CommsManager.UserService.MakeLocalUser(m_uuid);
 
                     if (m_appearance != null)
                     {
@@ -1211,7 +1211,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.SwapRootAgentCount(true);
                 currentParcelUUID = UUID.Zero;  // so that if the agent reenters this region, it recognizes it as a parcel change.
                 if (!IsBot)
-                    m_scene.CommsManager.UserService.RemoveLocalUser(m_uuid);
+                    m_scene.CommsManager.UserService.UnmakeLocalUser(m_uuid);
             }
             m_scene.EventManager.TriggerOnMakeChildAgent(this);
 
@@ -4313,7 +4313,7 @@ namespace OpenSim.Region.Framework.Scenes
             RemoveFromPhysicalScene();
 
             if (!IsBot)
-                m_scene.CommsManager.UserService.RemoveLocalUser(m_uuid); 
+                m_scene.CommsManager.UserService.UnmakeLocalUser(m_uuid); 
             
             m_closed = true;
 

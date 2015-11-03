@@ -164,15 +164,53 @@ namespace OpenSim.Framework.Communications
 
         #region GetUserProfileData
 
+        private UserProfileData TryGetUserProfile(UUID uuid, bool ignoreTimeout)
+        {
+            lock (m_userDataLock)
+            {
+                if (m_localUser.ContainsKey(uuid))
+                    return m_localUser[uuid];
+
+                if (m_tempDataByUUID.ContainsKey(uuid))
+                    return m_tempDataByUUID[uuid];
+
+                TimestampedItem<UserProfileData> item;
+                if (m_userDataByUUID.TryGetValue(uuid, out item))
+                {
+                    if (ignoreTimeout || (item.ElapsedSeconds < CACHE_ITEM_EXPIRY))
+                        return item.Item;
+
+                    // Else cache expired, or forcing a refresh.
+                    // Leave it in here for now in case someone does a name lookup or something fairly static
+                }
+            }
+
+            return null;    // not in cache
+        }
+
         private void RemoveUserData(UUID uuid)
         {
             lock (m_userDataLock)
             {
+                UserProfileData profile;
+                if (m_localUser.TryGetValue(uuid, out profile))
+                {
+                    m_localUser.Remove(uuid);
+                    if (m_userDataByName.ContainsKey(profile.Name))
+                        m_userDataByName.Remove(profile.Name);
+                }
+                if (m_tempDataByUUID.TryGetValue(uuid, out profile))
+                {
+                    m_tempDataByUUID.Remove(uuid);
+                    if (m_userDataByName.ContainsKey(profile.Name))
+                        m_userDataByName.Remove(profile.Name);
+                }
                 TimestampedItem<UserProfileData> item;
                 if (m_userDataByUUID.TryGetValue(uuid, out item))
                 {
-                    m_userDataByName.Remove(item.Item.Name);
                     m_userDataByUUID.Remove(uuid);
+                    if (m_userDataByName.ContainsKey(item.Item.Name))
+                        m_userDataByName.Remove(item.Item.Name);
                 }
             }
         }
@@ -197,29 +235,12 @@ namespace OpenSim.Framework.Communications
             if (uuid == UUID.Zero)
                 return null;    // fast exit for no user specified
 
-            UserProfileData profile = null;
+            UserProfileData profile = TryGetUserProfile(uuid, false);
 
-            lock (m_userDataLock)
-            {
-                if (m_localUser.ContainsKey(uuid))
-                    return m_localUser[uuid];
+            if ((profile != null) && !forceRefresh)
+                return profile;
 
-                if (m_tempDataByUUID.ContainsKey(uuid))
-                    return m_tempDataByUUID[uuid];
-
-                TimestampedItem<UserProfileData> item;
-                if (m_userDataByUUID.TryGetValue(uuid, out item))
-                {
-                    if (item.ElapsedSeconds < CACHE_ITEM_EXPIRY)
-                        if (!forceRefresh)
-                            return item.Item;
-
-                    // Else cache expired, or forcing a refresh.
-                    // Leave it in here for now in case someone does a name lookup or something fairly static
-                }
-            }
-
-            // Need to refresh via storage/XMLRPC.
+            // Else cache expired, or forcing a refresh.
             profile = m_storage.GetUserProfileData(uuid);
             if (profile != null)
                 ReplaceUserData(profile);
@@ -753,7 +774,7 @@ namespace OpenSim.Framework.Communications
         /// <param name="request">The users loginrequest</param>
         public void CreateAgent(UserProfileData profile, XmlRpcRequest request)
         {
-            //m_log.DebugFormat("[USER MANAGER]: Creating agent {0} {1}", profile.Name, profile.ID);
+            //m_log.DebugFormat("[USER CACHE]: Creating agent {0} {1}", profile.Name, profile.ID);
             
             UserAgentData agent = new UserAgentData();
 
@@ -809,7 +830,7 @@ namespace OpenSim.Framework.Communications
 
         public void CreateAgent(UserProfileData profile, OSD request)
         {
-            //m_log.DebugFormat("[USER MANAGER]: Creating agent {0} {1}", profile.Name, profile.ID);
+            //m_log.DebugFormat("[USER CACHE]: Creating agent {0} {1}", profile.Name, profile.ID);
             
             UserAgentData agent = new UserAgentData();
 
@@ -866,7 +887,7 @@ namespace OpenSim.Framework.Communications
         /// <returns>Successful?</returns>
         public bool CommitAgent(ref UserProfileData profile)
         {
-//            if (m_isUserServer) m_log.WarnFormat("[USER MANAGER]: CommitAgent: {0} {1}", profile.ID, profile.CurrentAgent.SecureSessionID);
+//            if (m_isUserServer) m_log.WarnFormat("[USER CACHE]: CommitAgent: {0} {1}", profile.ID, profile.CurrentAgent.SecureSessionID);
 
             // TODO: how is this function different from setUserProfile?  -> Add AddUserAgent() here and commit both tables "users" and "agents"
             // TODO: what is the logic should be?
@@ -1156,7 +1177,7 @@ namespace OpenSim.Framework.Communications
 
             if (null == profile)
             {
-                m_log.ErrorFormat("[USERSTORAGE]: Could not find user {0} {1}", firstName, lastName);
+                m_log.ErrorFormat("[USER CACHE]: Could not find user {0} {1}", firstName, lastName);
                 return false;
             }
 
@@ -1280,14 +1301,14 @@ namespace OpenSim.Framework.Communications
                         }
                         keys.Add(newKey);
                     }
-                    m_log.InfoFormat("[USERAUTH]: Successfully generated new auth key for user {0}", userID);
+                    m_log.InfoFormat("[USER AUTH]: Successfully generated new auth key for user {0}", userID);
                 }
                 else
-                    m_log.Warn("[USERAUTH]: Unauthorized key generation request. Denying new key.");
+                    m_log.Warn("[USER AUTH]: Unauthorized key generation request. Denying new key.");
                  
             }
             else
-                m_log.Warn("[USERAUTH]: User not found.");
+                m_log.Warn("[USER AUTH]: User not found.");
 
             return url + newKey;
         }
@@ -1459,16 +1480,40 @@ namespace OpenSim.Framework.Communications
             return true;
         }
 
-        public void AddLocalUser(UUID uuid)
+        // Add and remove of local user profiles is more a migration from one list to the other, if already available.
+        public void MakeLocalUser(UUID uuid)
         {
             // Because profile changes can be made outside of the region the user is in (e.g. partnering), 
             // we'll provide a way for users to force a profile refetch to the current region.
             // We'll for an refresh of the user's profile when they enter or leave a region.
 
-            // remove from both UserProfileData and CachedUserInfo caches
-            RemoveUserData(uuid);
-            RemoveAgentData(uuid);
-            UserProfileData profile = GetUserProfile(uuid, false);
+            UserProfileData profile = null;
+
+            lock (m_userDataLock)
+            {
+                if (m_localUser.ContainsKey(uuid))
+                    return; // nothing to do
+
+                profile = TryGetUserProfile(uuid, true);
+
+                // This is the same code as below but is included here so that it's inside one atomic run with the lock.
+                if (profile != null)
+                {
+                    RemoveUserData(uuid);
+
+                    m_localUser[uuid] = profile;
+                    m_userDataByName[profile.Name] = profile;
+                }
+            }
+            if (profile != null)
+            {
+                // we're all done here
+                m_log.DebugFormat("[USER CACHE]: Converted cache profile to local user for: {0} {1}", uuid, profile.Name);
+                return;
+            }
+
+            // Wasn't already in the cache somewhere, fetch and add it.
+            profile = GetUserProfile(uuid, false);
 
             // Now deal with the cached local profile storage.
             lock (m_userInfoLock)
@@ -1479,37 +1524,39 @@ namespace OpenSim.Framework.Communications
                     return;
                 }
 
-                // Remove it from the LRU now that it's cached as a local profile
-                if (m_userInfoByUUID.Contains(uuid))
-                    m_userInfoByUUID.Remove(uuid);
+                RemoveUserData(uuid);
 
-                m_log.InfoFormat("[USER CACHE]: Added profile to local user cache for: {0} {1}", uuid, profile.Name);
                 m_localUser[uuid] = profile;
                 m_userDataByName[profile.Name] = profile;
+
             }
+
+            m_log.DebugFormat("[USER CACHE]: Added profile to local user cache for: {0} {1}", uuid, profile.Name);
         }
 
-        public void RemoveLocalUser(UUID uuid)
+        public void UnmakeLocalUser(UUID uuid)
         {
             // Because profile changes can be made outside of the region the user is in (e.g. partnering), 
             // we'll provide a way for users to force a profile refetch to the current region.
             // We'll for an refresh of the user's profile when they enter or leave a region.
 
+            UserProfileData profile = null;
+
             lock (m_userDataLock)
             {
-                // First deal with the cached local profile storage.
-                if (m_localUser.ContainsKey(uuid))
-                {
-                    UserProfileData profile = m_localUser[uuid];
-                    m_log.InfoFormat("[USER CACHE]: Removed profile from local user cache for: {0} {1}", uuid, profile.Name);
-                    m_localUser.Remove(uuid);
+                if (!m_localUser.ContainsKey(uuid))
+                    return; // nothing to do
 
+                profile = TryGetUserProfile(uuid, true);
+                if (profile != null)
+                {
+                    RemoveUserData(uuid);
+                    ReplaceUserData(profile);
                 }
-                // Now still inside the same lock, purge from the other caches too, if they are there.
-                // remove from both UserProfileData and CachedUserInfo caches
-                RemoveUserData(uuid);
-                RemoveAgentData(uuid);
             }
+
+            if (profile != null)
+                m_log.DebugFormat("[USER CACHE]: Converted cache profile from local user to normal user for: {0} {1}", uuid, profile.Name);
         }
 
         #endregion

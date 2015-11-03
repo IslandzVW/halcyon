@@ -188,10 +188,11 @@ namespace OpenSim.Framework.Communications
 
         /// <summary>
         /// This function keeps the user profile in memory for the duration of an agent being in a region.
+        /// These two functions are more of a migrate from/to one cache to/from the local user cache, than add/remove.
         /// </summary>
         /// <param name="userID"></param>
-        void AddLocalUser(UUID uuid);
-        void RemoveLocalUser(UUID uuid);
+        void MakeLocalUser(UUID uuid);
+        void UnmakeLocalUser(UUID uuid);
 
         /// <summary>
         /// Get details of the given user.
