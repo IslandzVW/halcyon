@@ -80,7 +80,7 @@ namespace OpenSim.Region.Framework.Scenes
         public bool AddInventoryItemReturned(UUID AgentId, InventoryItemBase item)
         {
             CachedUserInfo userInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(AgentId);
+                = CommsManager.UserService.GetUserDetails(AgentId);
             if (userInfo != null)
             {
                 userInfo.AddItem(item);
@@ -98,7 +98,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void AddInventoryItem(UUID AgentID, InventoryItemBase item)
         {
             CachedUserInfo userInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(AgentID);
+                = CommsManager.UserService.GetUserDetails(AgentID);
 
             if (userInfo != null)
             {
@@ -123,7 +123,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item)
         {
             CachedUserInfo userInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (userInfo != null)
             {
@@ -147,7 +147,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public virtual UpdateItemResponse CapsUpdateInventoryItemAsset(IClientAPI remoteClient, UUID itemID, byte[] data)
         {
-            CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
             if (userInfo != null)
             {
                 InventoryItemBase item = userInfo.FindItem(itemID);
@@ -465,7 +465,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void UpdateInventoryItemAsset(IClientAPI remoteClient, UUID transactionID,
                                              UUID itemID, InventoryItemBase itemUpd)
         {
-            CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
             if (userInfo == null)
             {
                 m_log.Error("[AGENT INVENTORY]: Agent ID " + remoteClient.AgentId + " inventory not found for item update.");
@@ -608,7 +608,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // delivery from group notice to user - always apply next owner perms
                 applyNextPerms = true;
-                recipientUserInfo = CommsManager.UserProfileCacheService.GetUserDetails(recipientId);
+                recipientUserInfo = CommsManager.UserService.GetUserDetails(recipientId);
                 if (recipientUserInfo == null)
                 {
                     m_log.ErrorFormat("[GROUPS]: Group notice attachment could not be delivered - unknown user {0}", recipientId);
@@ -665,7 +665,7 @@ namespace OpenSim.Region.Framework.Scenes
             InventoryItemBase item = null;
 
             // Retrieve the item from the sender
-            senderUserInfo = CommsManager.UserProfileCacheService.GetUserDetails(senderId);
+            senderUserInfo = CommsManager.UserService.GetUserDetails(senderId);
             if (senderUserInfo == null)
             {
                 m_log.ErrorFormat(
@@ -786,7 +786,7 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual InventoryItemBase DeliverItem(InventoryItemBase item, UUID recipientId, UUID recipientFolderId, UUID senderId, CachedUserInfo senderUserInfo)
         {
             CachedUserInfo recipientUserInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(recipientId);
+                = CommsManager.UserService.GetUserDetails(recipientId);
 
             if (recipientUserInfo != null)
             {
@@ -859,7 +859,7 @@ namespace OpenSim.Region.Framework.Scenes
             InventoryItemBase item = null;
 
             // Retrieve the item from the sender
-            senderUserInfo = CommsManager.UserProfileCacheService.GetUserDetails(senderId);
+            senderUserInfo = CommsManager.UserService.GetUserDetails(senderId);
             if (senderUserInfo == null)
             {
                 m_log.ErrorFormat(
@@ -907,7 +907,7 @@ namespace OpenSim.Region.Framework.Scenes
             UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId)
         {
             // Retrieve the folder from the sender
-            CachedUserInfo senderUserInfo = CommsManager.UserProfileCacheService.GetUserDetails(senderId);
+            CachedUserInfo senderUserInfo = CommsManager.UserService.GetUserDetails(senderId);
 
             if (null == senderUserInfo)
             {
@@ -937,7 +937,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             CachedUserInfo recipientUserInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(recipientId);
+                = CommsManager.UserService.GetUserDetails(recipientId);
 
             if (null == recipientUserInfo)
             {
@@ -991,11 +991,11 @@ namespace OpenSim.Region.Framework.Scenes
         public void CopyInventoryItem(IClientAPI remoteClient, uint callbackID, UUID oldAgentID, UUID oldItemID,
                                       UUID newFolderID, string newName)
         {
-            InventoryItemBase item = CommsManager.UserProfileCacheService.LibraryRoot.FindItem(oldItemID);
+            InventoryItemBase item = CommsManager.LibraryRoot.FindItem(oldItemID);
 
             if (item == null)
             {
-                CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(oldAgentID);
+                CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(oldAgentID);
                 if (userInfo == null)
                 {
                     m_log.Error("[AGENT INVENTORY]: Failed to find user " + oldAgentID.ToString());
@@ -1081,7 +1081,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.DebugFormat(
                     "[AGENT INVENTORY]: Moving item {0} to {1} for {2}", itemID, folderID, remoteClient.AgentId);
 
-                CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
                 if (userInfo == null)
                 {
@@ -1153,7 +1153,7 @@ namespace OpenSim.Region.Framework.Scenes
             sbyte invType, uint baseMask, uint currentMask, uint everyoneMask, uint nextOwnerMask, uint groupMask, int creationDate, string creatorID)
         {
             CachedUserInfo userInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (userInfo != null)
             {
@@ -1444,7 +1444,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void RemoveInventoryItem(IClientAPI remoteClient, UUID itemID, bool forceDelete)
         {
             CachedUserInfo userInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (userInfo == null)
             {
@@ -1794,7 +1794,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             ScenePresence avatar;
             IClientAPI remoteClient = null;
-            CachedUserInfo profile = CommsManager.UserProfileCacheService.GetUserDetails(AgentID);
+            CachedUserInfo profile = CommsManager.UserService.GetUserDetails(AgentID);
             if (profile == null)
             {
                 m_log.ErrorFormat(
@@ -1882,7 +1882,7 @@ namespace OpenSim.Region.Framework.Scenes
                     UUID copyID = UUID.Random();
                     if (itemID != UUID.Zero)
                     {
-                        CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                        CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
                         if (userInfo != null)
                         {
@@ -1892,7 +1892,7 @@ namespace OpenSim.Region.Framework.Scenes
                             // XXX clumsy, possibly should be one call
                             if (null == item)
                             {
-                                item = CommsManager.UserProfileCacheService.LibraryRoot.FindItem(itemID);
+                                item = CommsManager.LibraryRoot.FindItem(itemID);
                             }
 
                             if (item != null)
@@ -1963,7 +1963,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (itemID != UUID.Zero)  // transferred from an avatar inventory to the prim's inventory
             {
-                CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
                 if (userInfo != null)
                 {
@@ -1973,7 +1973,7 @@ namespace OpenSim.Region.Framework.Scenes
                     bool fromLibrary = false;
                     if (null == item)
                     {
-                        item = CommsManager.UserProfileCacheService.LibraryRoot.FindItem(itemID);
+                        item = CommsManager.LibraryRoot.FindItem(itemID);
                         fromLibrary = true;
                     }
 
@@ -2704,7 +2704,7 @@ namespace OpenSim.Region.Framework.Scenes
             //for each owner, determine the correct folder for the item and serialize
             foreach (KeyValuePair<UUID, List<SceneObjectGroup>> ownerObjects in owners)
             {
-                CachedUserInfo uInfo = CommsManager.UserProfileCacheService.GetUserDetails(ownerObjects.Key);
+                CachedUserInfo uInfo = CommsManager.UserService.GetUserDetails(ownerObjects.Key);
 
                 InventoryFolderBase destinationFolder;
 
@@ -2736,12 +2736,12 @@ namespace OpenSim.Region.Framework.Scenes
                 foreach (SceneObjectGroup SOG in ownerObjects.Value)
                 {
                     // Find the calculated owner based on the dictionary key value
-                    CachedUserInfo uInfo = CommsManager.UserProfileCacheService.GetUserDetails(ownerObjects.Key);
+                    CachedUserInfo uInfo = CommsManager.UserService.GetUserDetails(ownerObjects.Key);
                     if (uInfo == null)
                     {
                         // The problem here is this is an async function with no failure case, so we need to do something with the object.
                         // We can't fail it, skip/ignore it, unless the desired behavior is to lose the items.  Return it to the user doing the return.
-                        uInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                        uInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
                         if (uInfo != null)
                             m_log.WarnFormat("Return patched: Owner {0} not found for object '{1}' {2}, returning to {3} instead.", SOG.RootPart.LastOwnerID, SOG.Name, SOG.UUID, remoteClient.Name);
                     }
@@ -2773,7 +2773,7 @@ namespace OpenSim.Region.Framework.Scenes
             //for each owner, all items go to the object folder for this client who has been authenticated as a god
             foreach (KeyValuePair<UUID, List<SceneObjectGroup>> ownerObjects in owners)
             {
-                CachedUserInfo uInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                CachedUserInfo uInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
                 InventoryFolderBase destinationFolder = uInfo.FindFolderForType((int)AssetType.Object);
 
                 this.CopyItemsToFolder(uInfo, destinationFolder.ID, ownerObjects.Value, remoteClient, false);
@@ -2783,7 +2783,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void PerformSaveToExistingUserInventoryItem(UUID folderId, IEnumerable<SceneObjectGroup> objectGroups,
             IClientAPI remoteClient)
         {
-            CachedUserInfo uInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo uInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             //there should only be one item
             foreach (SceneObjectGroup group in objectGroups)
@@ -2869,7 +2869,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void PerformTake(UUID clientPreferredFolderId, IEnumerable<SceneObjectGroup> objectGroups,
             IClientAPI remoteClient, bool stopScripts)
         {
-            CachedUserInfo uInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo uInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             //creating this objectGroups list sucks, but no way to fix it as everything else
             //comes in enumerable
@@ -3038,7 +3038,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             byte[] sceneObjectXml = this.DoSerializeSingleGroup(objectGroup, SerializationFlags.StopScripts);
 
-            CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(agentID);
+            CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(agentID);
 
             if (userInfo != null)
             {
@@ -3096,7 +3096,7 @@ namespace OpenSim.Region.Framework.Scenes
                 byte[] sceneObjectData = this.DoSerializeSingleGroup(grp, SerializationFlags.None);
 
                 CachedUserInfo userInfo =
-                    CommsManager.UserProfileCacheService.GetUserDetails(AgentId);
+                    CommsManager.UserService.GetUserDetails(AgentId);
                 
                 if (userInfo != null)
                 {
@@ -3482,7 +3482,7 @@ namespace OpenSim.Region.Framework.Scenes
                                     int startParam)
         {
             // Rez object
-            CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
             if (userInfo != null)
             {
                 InventoryItemBase item = userInfo.FindItem(itemID);
@@ -4225,7 +4225,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         part.ParentGroup.DetachToGround();
                         CachedUserInfo userInfo =
-                            CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                            CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
                         if (userInfo != null)
                         {
                             userInfo.CheckedDeleteItem(remoteClient.AgentId, inventoryID);

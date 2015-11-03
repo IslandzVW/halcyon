@@ -177,14 +177,14 @@ namespace OpenSim.Framework.Communications
         /// it might be helpful in order to avoid an initial response delay later on
         /// 
         /// <param name="userID"></param>
-        void AddCachedUser(UUID uuid);
+        void CacheUser(UUID uuid);
 
         /// <summary>
         /// Remove this user's profile cache.
         /// </summary>
         /// <param name="userID"></param>
         /// <returns>true if the user was successfully removed, false otherwise</returns>
-        bool RemoveCachedUser(UUID uuid);
+        bool UncacheUser(UUID uuid);
 
         /// <summary>
         /// This function keeps the user profile in memory for the duration of an agent being in a region.

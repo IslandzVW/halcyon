@@ -99,7 +99,7 @@ namespace OpenSim.Client.Linden
 
                     //TODO: fix casting.
                     LibraryRootFolder rootFolder 
-                        = m_firstScene.CommsManager.UserProfileCacheService.LibraryRoot as LibraryRootFolder;
+                        = m_firstScene.CommsManager.LibraryRoot as LibraryRootFolder;
                    
                     IHttpServer httpServer = m_firstScene.CommsManager.HttpServer;
 

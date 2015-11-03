@@ -183,7 +183,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureDownload
                 {
                     Scene scene = (Scene)client.Scene;
 
-                    CachedUserInfo profile = scene.CommsManager.UserProfileCacheService.GetUserDetails(client.AgentId);
+                    CachedUserInfo profile = scene.CommsManager.UserService.GetUserDetails(client.AgentId);
                     if (profile == null) // Deny unknown user
                         return;
 

@@ -523,7 +523,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         public bool FriendHasEditPermission(UUID owner, UUID friend)
         {
             //the friend in this case will always be the active user in the scene
-            CachedUserInfo user = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(friend);
+            CachedUserInfo user = m_scene.CommsManager.UserService.GetUserDetails(friend);
             if (user != null)
             {
                 if (user.HasPermissionFromFriend(owner, (uint)OpenMetaverse.FriendRights.CanModifyObjects))
@@ -1234,7 +1234,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (objectID == UUID.Zero) // User inventory
             {
                 CachedUserInfo userInfo =
-                        scene.CommsManager.UserProfileCacheService.GetUserDetails(user);
+                        scene.CommsManager.UserService.GetUserDetails(user);
             
                 if (userInfo == null)
                 {
@@ -1245,7 +1245,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 InventoryItemBase assetRequestItem = userInfo.FindItem(notecard);
                 if (assetRequestItem == null) // Library item
                 {
-                    assetRequestItem = scene.CommsManager.UserProfileCacheService.LibraryRoot.FindItem(notecard);
+                    assetRequestItem = scene.CommsManager.LibraryRoot.FindItem(notecard);
 
                     if (assetRequestItem != null) // Implicitly readable
                         return true;
@@ -1827,7 +1827,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (objectID == UUID.Zero) // User inventory
             {
                 CachedUserInfo userInfo =
-                        scene.CommsManager.UserProfileCacheService.GetUserDetails(user);
+                        scene.CommsManager.UserService.GetUserDetails(user);
             
                 if (userInfo == null)
                 {
@@ -1838,7 +1838,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 InventoryItemBase assetRequestItem = userInfo.FindItem(script);
                 if (assetRequestItem == null) // Library item
                 {
-                    assetRequestItem = m_scene.CommsManager.UserProfileCacheService.LibraryRoot.FindItem(script);
+                    assetRequestItem = m_scene.CommsManager.LibraryRoot.FindItem(script);
 
                     if (assetRequestItem != null) // Implicitly readable
                         return true;
@@ -1929,7 +1929,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (objectID == UUID.Zero) // User inventory
             {
                 CachedUserInfo userInfo =
-                        scene.CommsManager.UserProfileCacheService.GetUserDetails(user);
+                        scene.CommsManager.UserService.GetUserDetails(user);
             
                 if (userInfo == null)
                 {
@@ -1940,7 +1940,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 InventoryItemBase assetRequestItem = userInfo.FindItem(notecard);
                 if (assetRequestItem == null) // Library item
                 {
-                    assetRequestItem = m_scene.CommsManager.UserProfileCacheService.LibraryRoot.FindItem(notecard);
+                    assetRequestItem = m_scene.CommsManager.LibraryRoot.FindItem(notecard);
 
                     if (assetRequestItem != null) // Implicitly readable
                         return true;

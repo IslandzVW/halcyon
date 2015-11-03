@@ -748,6 +748,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual void UpdateUserFriendPerms(UUID friendlistowner, UUID friend, uint perms)
         {
+            if (friendlistowner == UUID.Zero) return;
             m_storage.UpdateUserFriendPerms(friendlistowner, friend, perms);
         }
 
@@ -1452,7 +1453,7 @@ namespace OpenSim.Framework.Communications
         /// it might be helpful in order to avoid an initial response delay later on
         /// 
         /// <param name="uuid"></param>
-        public void AddCachedUser(UUID uuid)
+        public void CacheUser(UUID uuid)
         {
             if (uuid == UUID.Zero)
                 return;
@@ -1466,18 +1467,9 @@ namespace OpenSim.Framework.Communications
         /// </summary>
         /// <param name="uuid"></param>
         /// <returns>true if the user was successfully removed, false otherwise</returns>
-        public bool RemoveCachedUser(UUID uuid)
+        public bool UncacheUser(UUID uuid)
         {
-            if (!RemoveFromUserInfoCache(uuid))
-            { 
-                // With the replacment of normal user profile caching with local user profile caching, this is a normal now.
-                // It wasn't in the normal user profile cache because it was in the local user profile cache.
-                // We can't remove the call entirely because a late lookup may have added it again, so we need to remove if there.
-                // m_log.WarnFormat( "[USER CACHE]: Tried to remove the profile of user {0}, but this was not in the scene", userId);
-                return false;
-            }
-
-            return true;
+            return RemoveFromUserInfoCache(uuid);
         }
 
         // Add and remove of local user profiles is more a migration from one list to the other, if already available.

@@ -3336,7 +3336,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (Interlocked.CompareExchange(ref _attachmentRezCalled, 1, 0) == 0)
             {
                 //retrieve all attachments
-                CachedUserInfo userInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(m_uuid);
+                CachedUserInfo userInfo = m_scene.CommsManager.UserService.GetUserDetails(m_uuid);
                 if (userInfo == null)
                     return;
                 // If this is after a login in this region and not done yet, add the initial attachments

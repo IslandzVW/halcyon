@@ -684,7 +684,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             // find the folder for the friend...
             InventoryFolderBase folder =
-                initiator.Scene.CommsManager.UserProfileCacheService.GetUserDetails(toAgentID).FindFolderForType((int)InventoryType.CallingCard);
+                initiator.Scene.CommsManager.UserService.GetUserDetails(toAgentID).FindFolderForType((int)InventoryType.CallingCard);
             if (folder != null)
             {
                 // ... and add the calling card

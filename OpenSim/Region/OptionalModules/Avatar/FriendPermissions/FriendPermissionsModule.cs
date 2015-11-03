@@ -109,7 +109,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FriendPermissions
 
             }
 
-            m_scene.CommsManager.UserProfileCacheService.UpdateUserFriendPerms(grantor, grantee, (uint)rights);
+            m_scene.CommsManager.UserService.UpdateUserFriendPerms(grantor, grantee, (uint)rights);
             sender.SendChangeUserRights(grantor, grantee, rights);
         }
     }

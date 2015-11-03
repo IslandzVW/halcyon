@@ -67,12 +67,6 @@ namespace OpenSim.Framework.Communications
         }
         protected IGridServices m_gridService;
 
-        public UserProfileCacheService UserProfileCacheService
-        {
-            get { return m_userProfileCacheService; }
-        }
-        protected UserProfileCacheService m_userProfileCacheService;
-
         // protected AgentAssetTransactionsManager m_transactionsManager;
 
         // public AgentAssetTransactionsManager TransactionsManager
@@ -132,7 +126,6 @@ namespace OpenSim.Framework.Communications
         {
             m_networkServersInfo = serversInfo;
             m_assetCache = assetCache;
-            m_userProfileCacheService = new UserProfileCacheService(this);
             m_httpServer = httpServer;
             LibraryRoot = libraryRootFolder;
 
