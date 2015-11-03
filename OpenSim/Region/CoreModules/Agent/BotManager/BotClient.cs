@@ -332,7 +332,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 return;
 
             // check if destination is an avatar
-            if (m_scene.CommsManager.UserProfileCacheService.GetUserDetails(destId) != null)
+            if (m_scene.CommsManager.UserService.Key2Name(destId, false) != String.Empty)
             {
                 if (m_scene.GetScenePresence(destId) == null || m_scene.GetScenePresence(destId).IsChildAgent)
                     return;//Only allow giving items to users in the sim

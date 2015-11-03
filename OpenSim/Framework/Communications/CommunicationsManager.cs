@@ -336,16 +336,14 @@ namespace OpenSim.Framework.Communications
         {
             string[] returnstring = new string[0];
 
-            //first see if by chance we have this is the profile cache
-            CachedUserInfo uInfo = m_userProfileCacheService.GetUserDetails(uuid);
-            UserProfileData profileData = (uInfo != null) ? uInfo.UserProfile : null;
-
-            if (profileData != null)
+            string firstName;
+            string lastName;
+            if (m_userService.Key2Names(uuid, false, out firstName, out lastName))
             {
                 returnstring = new string[2];
                 // UUID profileId = profileData.ID;
-                returnstring[0] = profileData.FirstName;
-                returnstring[1] = profileData.SurName;
+                returnstring[0] = firstName;
+                returnstring[1] = lastName;
                 lock (m_nameRequestCache)
                 {
                     if (!m_nameRequestCache.ContainsKey(uuid))

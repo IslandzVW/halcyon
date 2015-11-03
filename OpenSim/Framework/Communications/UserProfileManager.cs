@@ -89,13 +89,6 @@ namespace OpenSim.Framework.Communications
             = new LRUCache<UUID, TimestampedItem<UserProfileData>>(MAX_CACHE_SIZE);
 
         /// <summary>
-        /// User profiles indexed by name
-        /// This MUST be kept in sync with either m_cachedLocalProfiles or m_cachedProfileData
-        /// </summary>
-        private readonly Dictionary<string, UserProfileData> m_userDataByName
-            = new Dictionary<string, UserProfileData>();
-
-        /// <summary>
         /// Special cache for profile data for local users in the region
         /// </summary>
         private Dictionary<UUID, UserProfileData> m_localUser
@@ -105,7 +98,13 @@ namespace OpenSim.Framework.Communications
         /// Temporary profiles for local region-specific users (bots). No persistence of visibility elsewhere.
         /// </summary>
         private Dictionary<UUID, UserProfileData> m_tempDataByUUID = new Dictionary<UUID, UserProfileData>();
-        private Dictionary<string, UserProfileData> m_tempDataByName = new Dictionary<string, UserProfileData>();
+
+        /// <summary>
+        /// User profiles indexed by name
+        /// This MUST be kept in sync with all UserProfileData lists
+        /// </summary>
+        private readonly Dictionary<string, UserProfileData> m_userDataByName
+            = new Dictionary<string, UserProfileData>();
 
         ///////////// Caches for CachedUserInfo //////////////
 
@@ -205,9 +204,8 @@ namespace OpenSim.Framework.Communications
                 if (m_localUser.ContainsKey(uuid))
                     return m_localUser[uuid];
 
-                profile = GetTemporaryUserProfile(uuid);
-                if (profile != null)
-                    return profile;
+                if (m_tempDataByUUID.ContainsKey(uuid))
+                    return m_tempDataByUUID[uuid];
 
                 TimestampedItem<UserProfileData> item;
                 if (m_userDataByUUID.TryGetValue(uuid, out item))
@@ -251,11 +249,8 @@ namespace OpenSim.Framework.Communications
                 {
                     // We know the UUID, just use the function above.
                     uuid = testProfile.ID;
-                    return GetUserProfile(uuid, forceRefresh);
+                    return GetUserProfile(uuid, forceRefresh);  // in case it has expired
                 }
-                // next check temp profiles
-                if (m_tempDataByName.ContainsKey(name))
-                    return m_tempDataByName[name];
             }
 
             // Not cached, fetch from storage/XMLRPC.
@@ -282,12 +277,55 @@ namespace OpenSim.Framework.Communications
         {
             return GetUserProfile(firstName, lastName, false);
         }
+        public UserProfileData GetUserProfile(string name)
+        {
+            string[] names = name.Split(' ');
+            return GetUserProfile(names[0], names[1], false);
+        }
 
         // Just call these if all you need is the name from cache.
-        public bool GetUserProfileNames(UUID uuid, bool onlyIfCached, out string firstName, out string lastName)
+        public UUID Name2Key(string firstName, string lastName)
         {
+            string name = firstName.Trim() + " " + lastName.Trim();
+            UserProfileData profile;
+
             lock (m_userDataLock)
             {
+                if (m_userDataByName.TryGetValue(name, out profile))
+                    return profile.ID;
+            }
+
+            profile = GetUserProfile(firstName, lastName, false);   // also adds to cache
+            if (profile != null)
+                return profile.ID;
+
+            return UUID.Zero;
+        }
+        public UUID Name2Key(string name)
+        {
+            string[] names = name.Split(' ');
+            return Name2Key(names[0], names[1]);
+        }
+
+        public bool Key2Names(UUID uuid, bool onlyIfCached, out string firstName, out string lastName)
+        {
+            UserProfileData profile;
+            lock (m_userDataLock)
+            {
+                if (m_tempDataByUUID.TryGetValue(uuid, out profile))
+                {
+                    firstName = profile.FirstName;
+                    lastName = profile.SurName;
+                    return true;
+                }
+
+                if (m_localUser.TryGetValue(uuid, out profile))
+                {
+                    firstName = profile.FirstName;
+                    lastName = profile.SurName;
+                    return true;
+                }
+
                 TimestampedItem<UserProfileData> item;
                 if (m_userDataByUUID.TryGetValue(uuid, out item))
                 {
@@ -303,23 +341,45 @@ namespace OpenSim.Framework.Communications
             if (onlyIfCached)
                 return false;
 
-            UserProfileData profile = GetUserProfile(uuid, false);   // also adds to cache
-            if (profile == null)
-                return false;
+            profile = GetUserProfile(uuid, false);   // also adds to cache
+            if (profile != null)
+            {
+                firstName = profile.FirstName;
+                lastName = profile.SurName;
+                return true;
+            }
 
-            firstName = profile.FirstName;
-            lastName = profile.SurName;
-            return true;
+            return false;
         }
 
-        public string GetUserProfileName(UUID uuid, bool onlyIfCached)
+        public string Key2Name(UUID uuid, bool onlyIfCached)
         {
             string firstName = "";
             string lastName = "";
-            if (!GetUserProfileNames(uuid, onlyIfCached, out firstName, out lastName))
+            if (!Key2Names(uuid, onlyIfCached, out firstName, out lastName))
                 return "";
 
             return firstName + " " + lastName;
+        }
+
+        public string GetLastName(UUID uuid, bool onlyIfCached)
+        {
+            string firstName = "";
+            string lastName = "";
+            if (!Key2Names(uuid, onlyIfCached, out firstName, out lastName))
+                return "";
+
+            return lastName;
+        }
+
+        public string GetFirstName(UUID uuid, bool onlyIfCached)
+        {
+            string firstName = "";
+            string lastName = "";
+            if (!Key2Names(uuid, onlyIfCached, out firstName, out lastName))
+                return "";
+
+            return firstName;
         }
 
         // This one always just invokes the XMLRPC call.
@@ -577,10 +637,11 @@ namespace OpenSim.Framework.Communications
             {
                 if (m_tempDataByUUID.ContainsKey(userProfile.ID))
                     m_tempDataByUUID.Remove(userProfile.ID);
-                if (m_tempDataByName.ContainsKey(userProfile.Name))
-                    m_tempDataByName.Remove(userProfile.Name);
                 m_tempDataByUUID.Add(userProfile.ID, userProfile);
-                m_tempDataByName.Add(userProfile.Name, userProfile);
+
+                if (m_userDataByName.ContainsKey(userProfile.Name))
+                    m_userDataByName.Remove(userProfile.Name);
+                m_userDataByName.Add(userProfile.Name, userProfile);
             }
         }
 
@@ -593,31 +654,12 @@ namespace OpenSim.Framework.Communications
                 if (m_tempDataByUUID.ContainsKey(uuid))
                 {
                     string name = m_tempDataByUUID[uuid].Name;
-                    if (m_tempDataByName.ContainsKey(name))
-                        m_tempDataByName.Remove(name);
+                    if (m_userDataByName.ContainsKey(name))
+                        m_userDataByName.Remove(name);
                     m_tempDataByUUID.Remove(uuid);
                 }
             }
         }
-        private UserProfileData GetTemporaryUserProfile(UUID uuid)
-        {
-            lock (m_userDataLock)
-            {
-                if (m_tempDataByUUID.ContainsKey(uuid))
-                    return m_tempDataByUUID[uuid];
-            }
-            return null;
-        }
-        private UserProfileData GetTemporaryUserProfile(string name)
-        {
-            lock (m_userDataLock)
-            {
-                if (m_tempDataByName.ContainsKey(name))
-                    return m_tempDataByName[name];
-            }
-            return null;
-        }
-
         #endregion
 
         #region MiscInterfaces

@@ -124,11 +124,8 @@ namespace InWorldz.ApplicationPlugins.GuestModule
             if (!m_enabled) return;
             if (chat.Message == "" || chat.SenderUUID == chat.DestinationUUID) return;
 
-            CachedUserInfo info = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(chat.SenderUUID);
-            if (info == null) return;
-
-
-            if (info.UserProfile.SurName == "Guest")
+            string lastName = m_scene.CommsManager.UserService.GetLastName(chat.SenderUUID, false);
+            if (lastName == "Guest")
             {
                 //scan for and remove hyperlinks
                 //v2 recognizes .com, .org, and .net links with or without HTTP/S in them..

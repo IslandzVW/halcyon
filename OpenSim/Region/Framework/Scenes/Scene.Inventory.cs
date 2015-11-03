@@ -1312,10 +1312,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (transactionID == UUID.Zero)
             {
-                CachedUserInfo userInfo
-                    = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                UserProfileData profile = CommsManager.UserService.GetUserProfile(remoteClient.AgentId);
 
-                if (userInfo != null)
+                if (profile != null)
                 {
                     ScenePresence presence;
                     TryGetAvatar(remoteClient.AgentId, out presence);
@@ -1351,7 +1350,7 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                 {
                     m_log.ErrorFormat(
-                        "userInfo for agent uuid {0} unexpectedly null in CreateNewInventoryItem",
+                        "CreateNewInventoryItem could not load profile for agent {0}",
                         remoteClient.AgentId);
                 }
             }
@@ -1594,7 +1593,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (remoteClient == null)
             {
-                CachedUserInfo profile = CommsManager.UserProfileCacheService.GetUserDetails(AgentId);
+                UserProfileData profile = CommsManager.UserService.GetUserProfile(AgentId);
                 if (profile == null)
                 {
                     m_log.ErrorFormat(

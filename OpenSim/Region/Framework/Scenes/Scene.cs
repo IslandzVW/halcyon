@@ -1633,10 +1633,10 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (RegionInfo.AllowPartnerRez)
                         {
-                            CachedUserInfo parcelOwnerInfo = CommsManager.UserProfileCacheService.GetUserDetails(parcel.landData.OwnerID);
-                            if ((parcelOwnerInfo == null) || (ret.Group.OwnerID == parcelOwnerInfo.UserProfile.Partner))
+                            UserProfileData parcelOwner = CommsManager.UserService.GetUserProfile(parcel.landData.OwnerID);
+                            if ((parcelOwner == null) || (ret.Group.OwnerID == parcelOwner.Partner))
                             {
-                                if (parcelOwnerInfo == null)
+                                if (parcelOwner == null)
                                     m_log.WarnFormat("[LAND]: Could not fetch user profile for parcel {0}:'{1}', owner [{2}], auto-return incomplete.",
                                                                 parcel.landData.LocalID, parcel.landData.Name, parcel.landData.OwnerID);
                                 returnedGroups.Add(currNode);
@@ -2958,9 +2958,9 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         // At least this call is limited to restricted regions only,
                         // and we'll cache this for immediate re-use.
-                        CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(sceneObject.OwnerID);
-                        if (userInfo != null)
-                            if (m_regInfo.UserHasProductAccess(userInfo.UserProfile))
+                        UserProfileData profile = CommsManager.UserService.GetUserProfile(sceneObject.OwnerID);
+                        if (profile != null)
+                            if (m_regInfo.UserHasProductAccess(profile))
                                 allowed = true;
                     }
 
@@ -3412,10 +3412,10 @@ namespace OpenSim.Region.Framework.Scenes
             UUID EstateOwner = RegionInfo.EstateSettings.EstateOwner;
             if (EstateOwner == UUID.Zero)
                 EstateOwner = RegionInfo.MasterAvatarAssignedUUID;
-            CachedUserInfo profile = CommsManager.UserProfileCacheService.GetUserDetails(EstateOwner);
+            UserProfileData profile = CommsManager.UserService.GetUserProfile(EstateOwner);
             if (profile == null)
                 return false;   // error
-            return userId == profile.UserProfile.Partner;
+            return userId == profile.Partner;
         }
 
         public bool IsEstateManager(UUID user)
@@ -3856,7 +3856,6 @@ namespace OpenSim.Region.Framework.Scenes
                     m_connectionManager.NewConnection(agent, by);
                 }
 
-
                 // rewrite session_id
                 CachedUserInfo userinfo = CommsManager.UserProfileCacheService.GetUserDetails(agent.AgentID);
                 if (userinfo != null)
@@ -3961,9 +3960,9 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     // At least this call is limited to restricted regions only,
                     // and we'll cache this for immediate re-use.
-                    CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(agentId);
-                    if (userInfo != null)
-                        if (m_regInfo.UserHasProductAccess(userInfo.UserProfile))
+                    UserProfileData profile = CommsManager.UserService.GetUserProfile(agentId);
+                    if (profile != null)
+                        if (m_regInfo.UserHasProductAccess(profile))
                             allowed = true;
                 }
 
@@ -4058,9 +4057,9 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     // At least this call is limited to restricted regions only,
                     // and we'll cache this for immediate re-use.
-                    CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(agentId);
-                    if (userInfo != null)
-                        if (m_regInfo.UserHasProductAccess(userInfo.UserProfile))
+                    UserProfileData profile = CommsManager.UserService.GetUserProfile(agentId);
+                    if (profile != null)
+                        if (m_regInfo.UserHasProductAccess(profile))
                             allowed = true;
                 }
 

@@ -492,12 +492,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             
             if (m_allowGridGods)
             {
-                CachedUserInfo profile = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(user);
-                if (profile != null && profile.UserProfile != null)
-                {
-                    if (profile.UserProfile.GodLevel >= 200)
-                        return true;
-                }
+                UserProfileData profile = m_scene.CommsManager.UserService.GetUserProfile(user);
+                return (profile != null) && (profile.GodLevel >= 200);
             }
 
             return false;
@@ -1565,13 +1561,13 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 // Else only the Plus user (and possibly partner) can rez in a Plus parcel.
                 if (owner == parcel.landData.OwnerID)
                     return true;
-                // Otherwise, only the Plus user' partner can rez in a Plus parcel.
+                // Otherwise, only the Plus user's partner can rez in a Plus parcel.
                 if (scene.RegionInfo.AllowPartnerRez)
                 {
-                    CachedUserInfo parcelOwnerInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(parcel.landData.OwnerID);
-                    if (parcelOwnerInfo != null)
-                        if (parcelOwnerInfo.UserProfile.Partner != UUID.Zero)
-                            if (parcelOwnerInfo.UserProfile.Partner == owner)
+                    UserProfileData parcelOwner = m_scene.CommsManager.UserService.GetUserProfile(parcel.landData.OwnerID);
+                    if (parcelOwner != null)
+                        if (parcelOwner.Partner != UUID.Zero)
+                            if (parcelOwner.Partner == owner)
                                 return true;
                 }
                 return false;
@@ -1593,10 +1589,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 // Owner doesn't match the land parcel, check partner perms.
                 if (scene.RegionInfo.AllowPartnerRez)
                 {   // this one is will not be called based on current products (Scenic, Plus) but completes the rule set for objects.
-                    CachedUserInfo parcelOwnerInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(parcel.landData.OwnerID);
-                    if (parcelOwnerInfo != null)
-                        if (parcelOwnerInfo.UserProfile.Partner != UUID.Zero)
-                            if (parcelOwnerInfo.UserProfile.Partner == group.OwnerID)
+                    UserProfileData parcelOwner = m_scene.CommsManager.UserService.GetUserProfile(parcel.landData.OwnerID);
+                    if (parcelOwner != null)
+                        if (parcelOwner.Partner != UUID.Zero)
+                            if (parcelOwner.Partner == group.OwnerID)
                                 return true;
                 }
 
@@ -1638,10 +1634,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (scene.RegionInfo.AllowPartnerRez)
             {
                 // this one is will not be called based on current products (Scenic, Plus) but completes the rule set for the remaining cases.
-                CachedUserInfo parcelOwnerInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(parcel.landData.OwnerID);
-                if (parcelOwnerInfo != null)
-                    if (parcelOwnerInfo.UserProfile.Partner != UUID.Zero)
-                        if (parcelOwnerInfo.UserProfile.Partner == owner)
+                UserProfileData parcelOwner = m_scene.CommsManager.UserService.GetUserProfile(parcel.landData.OwnerID);
+                if (parcelOwner != null)
+                    if (parcelOwner.Partner != UUID.Zero)
+                        if (parcelOwner.Partner == owner)
                             return true;
             } 
             

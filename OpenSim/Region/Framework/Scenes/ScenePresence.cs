@@ -3764,9 +3764,9 @@ namespace OpenSim.Region.Framework.Scenes
                 // For now, assign god level 200 to anyone
                 // who is granted god powers, but has no god level set.
                 //
-                CachedUserInfo profile = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(agentID);
-                if (profile.UserProfile.GodLevel > 0)
-                    m_godlevel = profile.UserProfile.GodLevel;
+                UserProfileData profile = m_scene.CommsManager.UserService.GetUserProfile(agentID);
+                if (profile.GodLevel > 0)
+                    m_godlevel = profile.GodLevel;
                 else
                     m_godlevel = 200;
             }

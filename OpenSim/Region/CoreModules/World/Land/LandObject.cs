@@ -196,11 +196,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (m_scene.RegionInfo.Product == ProductRulesUse.ScenicUse)
             {
                 // the current AgentId should already be cached, with presence, etc.
-                CachedUserInfo profile = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(remote_client.AgentId);
+                UserProfileData profile = m_scene.CommsManager.UserService.GetUserProfile(remote_client.AgentId);
                 if (profile != null)
                 {
                     // If it's the parnter of the owner of the scenic region...
-                    if (profile.UserProfile.Partner == landData.OwnerID)
+                    if (profile.Partner == landData.OwnerID)
                     {
                         // enable Create at the viewer end, checked at the server end
                         parcel.Flags |= (uint)ParcelFlags.CreateObjects;

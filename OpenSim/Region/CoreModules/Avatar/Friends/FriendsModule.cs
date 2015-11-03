@@ -503,12 +503,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         
         public void OfferFriendship(UUID fromUserId, IClientAPI toUserClient, string offerMessage)
         {
-            CachedUserInfo userInfo = m_initialScene.CommsManager.UserProfileCacheService.GetUserDetails(fromUserId);
-                
-            if (userInfo != null)
+            string name = m_initialScene.CommsManager.UserService.Key2Name(fromUserId,false);
+            if (name != String.Empty)
             {
                 GridInstantMessage msg = new GridInstantMessage(
-                    toUserClient.Scene, fromUserId, userInfo.UserProfile.Name, toUserClient.AgentId,
+                    toUserClient.Scene, fromUserId, name, toUserClient.AgentId,
                     (byte)InstantMessageDialog.FriendshipOffered, offerMessage, false, Vector3.Zero); 
             
                 FriendshipOffered(msg);
@@ -731,11 +730,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 m_log.Debug("[FRIEND]: Remote agent detected.");
 
                 // fetch the friend's name for the calling card.
-                CachedUserInfo info = m_initialScene.CommsManager.UserProfileCacheService.GetUserDetails(friendID);
+                string name = m_initialScene.CommsManager.UserService.Key2Name(friendID,false);
 
                 // create calling card
-                CreateCallingCard(client, friendID, callingCardFolders[0],
-                                  info.UserProfile.FirstName + " " + info.UserProfile.SurName);
+                if (name != String.Empty)
+                    CreateCallingCard(client, friendID, callingCardFolders[0], name);
 
                 // Compose (remote) response to friend.
                 GridInstantMessage msg = new GridInstantMessage(client.Scene, agentID, client.Name, friendID,
