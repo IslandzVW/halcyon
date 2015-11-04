@@ -493,8 +493,6 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     avatar.Invulnerable = true;
                 }
-
-                m_scene.EventManager.TriggerAvatarEnteringNewParcel(avatar, parcel.landData.LocalID, m_scene.RegionInfo.RegionID);
             }
         }
 
@@ -524,7 +522,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     if (newParcel || ((zpos < LandChannel.BAN_LINE_SAFETY_HEIGHT) && (prevzpos >= LandChannel.BAN_LINE_SAFETY_HEIGHT)))
                     {
                         // Either entering a new parcel from the side, or entering the restricted zone from above.
-                        handleAvatarChangingParcel(avatar, parcel.landData.LocalID, m_scene.RegionInfo.RegionID);
+                        m_scene.EventManager.TriggerAvatarEnteringNewParcel(avatar, parcel.landData.LocalID, m_scene.RegionInfo.RegionID);
                     }
                 }
             }
