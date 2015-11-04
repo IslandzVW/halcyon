@@ -507,7 +507,6 @@ namespace OpenSim.Framework.Communications
                 {
                     if (m_userInfoByName.ContainsKey(profile.Name))
                         m_userInfoByName.Remove(profile.Name);
-                    m_localUser.Remove(uuid);
                 }
             }
             lock (m_userInfoLock)
@@ -608,11 +607,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual bool UpdateUserProfile(UserProfileData profile)
         {
-            lock (m_userInfoLock)
-            {
-                m_userInfoByUUID.Remove(profile.ID);
-            }
-
+            ReplaceUserData(profile);
             return m_storage.UpdateUserProfileData(profile);
         }
 
@@ -638,7 +633,7 @@ namespace OpenSim.Framework.Communications
                 return null;
             }
 
-            profile.CurrentAgent = GetUserAgent(uuid, false);
+            profile.CurrentAgent = GetUserAgent(uuid, true);
             return AddToUserInfoCache(profile);
         }
 
