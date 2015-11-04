@@ -478,15 +478,21 @@ namespace OpenSim.Region.CoreModules.World.Land
                 // If NOT group-owned, then the land group gets in if that option is enabled.
                 if ((landData.IsGroupOwned) || ((landData.Flags & (uint)ParcelFlags.UseAccessGroup) > 0))
                 {
-                    // Try to get group membership info for the avatar, for the land group.
-                    // If found, then they are group members and allow entry.
-                    IGroupsModule gm = m_scene.RequestModuleInterface<IGroupsModule>();
-                    if (gm != null)
+                    ScenePresence sp = m_scene.GetScenePresence(avatar);
+                    if (sp == null)
                     {
-                        if (gm.GetMembershipData(landData.GroupID, avatar) != null)
+                        // Try to get group membership info for the avatar, for the land group.
+                        // If found, then they are group members and allow entry.
+                        IGroupsModule gm = m_scene.RequestModuleInterface<IGroupsModule>();
+                        if (gm != null)
                         {
-                            return false;
+                            if (gm.GetMembershipData(landData.GroupID, avatar) != null)
+                                return false;
                         }
+                    } else
+                    {
+                        if (sp.ControllingClient.IsGroupMember(landData.GroupID))
+                            return false;
                     }
                 }
             }
