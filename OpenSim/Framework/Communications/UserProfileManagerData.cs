@@ -83,7 +83,7 @@ namespace OpenSim.Framework.Communications
         // Fetches a profile from the db via XMLRPC
         public UserProfileData GetUserProfileData(string fname, string lname)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetUserProfileData plugin request for {0} {1}", fname, lname);
+            m_log.DebugFormat("[USERSTORAGE]: GetUserProfileData plugin request for {0} {1}", fname, lname);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 UserProfileData profile = plugin.GetUserByName(fname, lname);
@@ -95,7 +95,7 @@ namespace OpenSim.Framework.Communications
         }
         public UserProfileData GetUserProfileData(UUID uuid)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetUserProfileData plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: GetUserProfileData plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 UserProfileData profile = plugin.GetUserByUUID(uuid);
@@ -108,7 +108,7 @@ namespace OpenSim.Framework.Communications
 
         public UserProfileData GetUserProfileData(Uri uri)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetUserProfileData plugin request for {0}", uri.ToString());
+            m_log.DebugFormat("[USERSTORAGE]: GetUserProfileData plugin request for {0}", uri.ToString());
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 UserProfileData profile = plugin.GetUserByUri(uri);
@@ -121,7 +121,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual UserAgentData GetAgentData(UUID uuid)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetAgentData plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: GetAgentData plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 UserAgentData agent = plugin.GetAgentByUUID(uuid);
@@ -134,7 +134,7 @@ namespace OpenSim.Framework.Communications
 
         public void LogoutUsers(UUID regionID)
         {
-            m_log.WarnFormat("[PROFILE]: LogoutUsers plugin request for {0}", regionID);
+            m_log.DebugFormat("[PROFILE]: LogoutUsers plugin request for {0}", regionID);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 plugin.LogoutUsers(regionID);
@@ -143,7 +143,7 @@ namespace OpenSim.Framework.Communications
 
         public void AddUser(UserProfileData profile)
         {
-            m_log.WarnFormat("[USERSTORAGE]: AddUser plugin request for {0} {1}", profile.ID, profile.Name);
+            m_log.DebugFormat("[USERSTORAGE]: AddUser plugin request for {0} {1}", profile.ID, profile.Name);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -159,7 +159,7 @@ namespace OpenSim.Framework.Communications
 
         public bool AddNewUserAgent(UserAgentData agent)
         {
-            m_log.WarnFormat("[USERSTORAGE]: AddNewUserAgent plugin request for {0}", agent.ProfileID);
+            m_log.DebugFormat("[USERSTORAGE]: AddNewUserAgent plugin request for {0}", agent.ProfileID);
             bool result = false;
             foreach (IUserDataPlugin plugin in m_plugins)
             {
@@ -178,7 +178,7 @@ namespace OpenSim.Framework.Communications
 
         public void ResetAttachments(UUID uuid)
         {
-            m_log.WarnFormat("[USERSTORAGE]: ResetAttachments plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: ResetAttachments plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 plugin.ResetAttachments(uuid);
@@ -200,7 +200,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual List<AvatarPickerAvatar> GenerateAgentPickerRequestResponse(UUID queryID, string query)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GenerateAgentPickerRequestResponse plugin request: {0}", queryID);
+            m_log.DebugFormat("[USERSTORAGE]: GenerateAgentPickerRequestResponse plugin request: {0}", queryID);
             List<AvatarPickerAvatar> allPickerList = new List<AvatarPickerAvatar>();
             
             foreach (IUserDataPlugin plugin in m_plugins)
@@ -223,7 +223,7 @@ namespace OpenSim.Framework.Communications
         
         public virtual bool UpdateUserProfileData(UserProfileData profile)
         {
-            m_log.WarnFormat("[USERSTORAGE]: UpdateUserProfileData plugin request for {0} {1}", profile.ID, profile.Name);
+            m_log.DebugFormat("[USERSTORAGE]: UpdateUserProfileData plugin request for {0} {1}", profile.ID, profile.Name);
             bool result = false;
 
             foreach (IUserDataPlugin plugin in m_plugins)
@@ -277,7 +277,7 @@ namespace OpenSim.Framework.Communications
         /// <returns>Agent profiles</returns>
         public UserAgentData GetUserAgentData(UUID uuid)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetUserAgentData plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: GetUserAgentData plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -302,7 +302,7 @@ namespace OpenSim.Framework.Communications
         /// <returns>A user agent</returns>
         public UserAgentData GetUserAgentData(string name)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetUserAgentData plugin request for {0}", name);
+            m_log.DebugFormat("[USERSTORAGE]: GetUserAgentData plugin request for {0}", name);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -328,7 +328,7 @@ namespace OpenSim.Framework.Communications
         /// <returns>A user agent</returns>
         public UserAgentData GetUserAgentData(string fname, string lname)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetUserAgentData plugin request for {0} {1}", fname, lname);
+            m_log.DebugFormat("[USERSTORAGE]: GetUserAgentData plugin request for {0} {1}", fname, lname);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -348,7 +348,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual List<FriendListItem> GetUserFriendList(UUID ownerID)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetUserFriendList plugin request for {0}", ownerID);
+            m_log.DebugFormat("[USERSTORAGE]: GetUserFriendList plugin request for {0}", ownerID);
             List<FriendListItem> allFriends = new List<FriendListItem>();
             
             foreach (IUserDataPlugin plugin in m_plugins)
@@ -370,7 +370,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual Dictionary<UUID, FriendRegionInfo> GetFriendRegionInfos (List<UUID> uuids)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetFriendRegionInfos plugin request");
+            m_log.DebugFormat("[USERSTORAGE]: GetFriendRegionInfos plugin request");
             //Dictionary<UUID, FriendRegionInfo> allFriendRegions = new Dictionary<UUID, FriendRegionInfo>();
 
             foreach (IUserDataPlugin plugin in m_plugins)
@@ -392,7 +392,7 @@ namespace OpenSim.Framework.Communications
 
         public void StoreWebLoginKey(UUID uuid, UUID webLoginKey)
         {
-            m_log.WarnFormat("[USERSTORAGE]: StoreWebLoginKey plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: StoreWebLoginKey plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -408,7 +408,7 @@ namespace OpenSim.Framework.Communications
         
         public virtual void AddNewUserFriend(UUID friendlistowner, UUID friend, uint perms)
         {
-            m_log.WarnFormat("[USERSTORAGE]: AddNewUserFriend plugin request for {0}", friendlistowner);
+            m_log.DebugFormat("[USERSTORAGE]: AddNewUserFriend plugin request for {0}", friendlistowner);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -424,7 +424,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual void RemoveUserFriend(UUID friendlistowner, UUID friend)
         {
-            m_log.WarnFormat("[USERSTORAGE]: RemoveUserFriend plugin request for {0}", friendlistowner);
+            m_log.DebugFormat("[USERSTORAGE]: RemoveUserFriend plugin request for {0}", friendlistowner);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -440,7 +440,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual void UpdateUserFriendPerms(UUID friendlistowner, UUID friend, uint perms)
         {
-            m_log.WarnFormat("[USERSTORAGE]: UpdateUserFriendPerms plugin request for {0}", friendlistowner);
+            m_log.DebugFormat("[USERSTORAGE]: UpdateUserFriendPerms plugin request for {0}", friendlistowner);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -463,7 +463,7 @@ namespace OpenSim.Framework.Communications
         /// <returns></returns>
         public virtual AvatarAppearance GetUserAppearance(UUID uuid)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetUserAppearance plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: GetUserAppearance plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -489,7 +489,7 @@ namespace OpenSim.Framework.Communications
         /// <returns></returns>
         public virtual AvatarAppearance GetBotOutfit(UUID uuid, string outfitName)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetBotOutfit plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: GetBotOutfit plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -509,7 +509,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual void UpdateUserAppearance(UUID uuid, AvatarAppearance appearance)
         {
-            m_log.WarnFormat("[USERSTORAGE]: UpdateUserAppearance plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: UpdateUserAppearance plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -525,7 +525,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual void AddOrUpdateBotOutfit(UUID uuid, string outfitName, AvatarAppearance appearance)
         {
-            m_log.WarnFormat("[USERSTORAGE]: AddOrUpdateBotOutfit plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: AddOrUpdateBotOutfit plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -541,7 +541,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual void RemoveBotOutfit(UUID uuid, string outfitName)
         {
-            m_log.WarnFormat("[USERSTORAGE]: RemoveBotOutfit plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: RemoveBotOutfit plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -557,7 +557,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual List<string> GetBotOutfitsByOwner(UUID uuid)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetBotOutfitsByOwner plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: GetBotOutfitsByOwner plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -578,7 +578,7 @@ namespace OpenSim.Framework.Communications
 
         public void SaveUserPreferences(UserPreferencesData userPrefs)
         {
-            m_log.WarnFormat("[USERSTORAGE]: SaveUserPreferences plugin request for {0}", userPrefs.UserId);
+            m_log.DebugFormat("[USERSTORAGE]: SaveUserPreferences plugin request for {0}", userPrefs.UserId);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -594,7 +594,7 @@ namespace OpenSim.Framework.Communications
 
         public UserPreferencesData RetrieveUserPreferences(UUID uuid)
         {
-            m_log.WarnFormat("[USERSTORAGE]: RetrieveUserPreferences plugin request for {0}", uuid);
+            m_log.DebugFormat("[USERSTORAGE]: RetrieveUserPreferences plugin request for {0}", uuid);
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -618,7 +618,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual List<CachedAgentArgs> GetCachedBakedTextures(List<CachedAgentArgs> request)
         {
-            m_log.WarnFormat("[USERSTORAGE]: GetCachedBakedTextures plugin request");
+            m_log.DebugFormat("[USERSTORAGE]: GetCachedBakedTextures plugin request");
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
@@ -637,7 +637,7 @@ namespace OpenSim.Framework.Communications
 
         public virtual void SetCachedBakedTextures(Dictionary<UUID, UUID> request)
         {
-            m_log.WarnFormat("[USERSTORAGE]: SetCachedBakedTextures plugin request");
+            m_log.DebugFormat("[USERSTORAGE]: SetCachedBakedTextures plugin request");
             foreach (IUserDataPlugin plugin in m_plugins)
             {
                 try
