@@ -1364,6 +1364,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     try
                     {
+                        Scene.CommsManager.UserService.GetUserProfile(this.UUID, true);  // force a cache refresh
                         IsFullyInRegion = true;
                         SendInitialData();
                         Scene.EventManager.TriggerOnCompletedMovementToNewRegion(this);
