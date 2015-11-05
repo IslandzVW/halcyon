@@ -241,7 +241,10 @@ namespace OpenSim.Framework.Communications
             // Else cache expired, or forcing a refresh.
             profile = m_storage.GetUserProfileData(uuid);
             if (profile != null)
+            {
+                profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
                 ReplaceUserData(profile);
+            }
             else
                 RemoveUserData(uuid);
 
