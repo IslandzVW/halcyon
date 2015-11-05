@@ -219,12 +219,10 @@ namespace OpenSim.Framework.Communications
         {
             lock (m_userDataLock)
             {
-                TimestampedItem<UserProfileData> item;
-                if (m_userDataByUUID.TryGetValue(profile.ID, out item))
-                {
-                    m_userDataByName.Remove(item.Item.Name);
+                if (m_userDataByUUID.Contains(profile.ID))
                     m_userDataByUUID.Remove(profile.ID);
-                }
+                if (m_userDataByName.ContainsKey(profile.Name))
+                    m_userDataByName.Remove(profile.Name);
                 m_userDataByName.Add(profile.Name, profile);
                 m_userDataByUUID.Add(profile.ID, new TimestampedItem<UserProfileData>(profile));
             }
