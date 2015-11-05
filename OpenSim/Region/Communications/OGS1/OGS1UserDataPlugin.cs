@@ -217,45 +217,12 @@ namespace OpenSim.Region.Communications.OGS1
         }
 
         /// <summary>
-        /// Maximum size for the profile cache
-        /// </summary>
-        private const int MAX_CACHE_SIZE = 50;
-
-        /// <summary>
-        /// Number of seconds before an item in the cache is no longer considered viable
-        /// </summary>
-        private const int CACHE_ITEM_EXPIRY = 15;
-
-        /// <summary>
-        /// LRU cache for profile data
-        /// </summary>
-        private LRUCache<UUID, TimestampedItem<UserProfileData>> _cachedProfileData
-            = new LRUCache<UUID, TimestampedItem<UserProfileData>>(MAX_CACHE_SIZE);
-        
-
-        /// <summary>
         /// Get a user profile from the user server
         /// </summary>
         /// <param name="avatarID"></param>
         /// <returns>null if the request fails</returns>
         public virtual UserProfileData GetUserByUUID(UUID avatarID)
         {
-            lock (_cachedProfileData)
-            {
-                TimestampedItem<UserProfileData> item;
-                if (_cachedProfileData.TryGetValue(avatarID, out item))
-                {
-                    if (item.ElapsedSeconds < CACHE_ITEM_EXPIRY)
-                    {
-                        return item.Item;
-                    }
-                    else
-                    {
-                        _cachedProfileData.Remove(avatarID);
-                    }
-                }
-            }
-
             try
             {
                 Hashtable param = new Hashtable();
@@ -269,14 +236,7 @@ namespace OpenSim.Region.Communications.OGS1
 
                 Hashtable respData = (Hashtable)resp.Value;
 
-                UserProfileData data = ConvertXMLRPCDataToUserProfile(respData);
-
-                lock (_cachedProfileData)
-                {
-                    _cachedProfileData.Add(avatarID, new TimestampedItem<UserProfileData>(data));
-                }
-
-                return data;
+                return ConvertXMLRPCDataToUserProfile(respData);
             }
             catch (Exception e)
             {
@@ -285,18 +245,6 @@ namespace OpenSim.Region.Communications.OGS1
                 m_log.ErrorFormat(
                     "[OGS1 USER SERVICES]: Error when trying to fetch profile data by uuid from remote user server: {0} {1}",
                     e.Message, trace);
-
-                //cache the null result
-                lock (_cachedProfileData)
-                {
-                    _cachedProfileData.Add(avatarID, new TimestampedItem<UserProfileData>(null));
-                }
-
-                //cache the null result
-                lock (_cachedProfileData)
-                {
-                    _cachedProfileData.Add(avatarID, new TimestampedItem<UserProfileData>(null));
-                }
             }
 
             return null;
