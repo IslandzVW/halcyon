@@ -849,7 +849,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             IConfig config = null;
             string ret = "";
-            switch (name)
+
+            // NOTE: All case values in must be lowercase for case-insensitive compare.
+            switch (name.ToLower())
             {
                 case "sim_channel":     // Get the region's channel string, for example "Halcyon Server" or "Second Life Server". Does not change across grids as this is about the simulator software.
                     ret = VersionInfo.SoftwareChannel;
@@ -872,11 +874,11 @@ namespace OpenSim.Region.Framework.Scenes
                 case "dynamic_pathfinding": // (integer) Get the region's dynamic_pathfinding status, "1" or "0".
                     ret = "disabled";
                     break;
-                case "InWorldz": // (integer) Is this an InWorldz server? "1" or "".
+                case "inworldz": // (integer) Is this an InWorldz server? "1" or "".
                     config = m_config.Configs["GridInfo"];
                     ret = (config.GetString("gridmanagement", VersionInfo.DefaultGrid).Trim() == "InWorldz") ? "1" : "";
                     break;
-                case "Halcyon": // (integer) Is this a Halcyon server? "1" or "".
+                case "halcyon": // (integer) Is this a Halcyon server? "1" or "".
                     ret = (VersionInfo.SoftwareName == "Halcyon") ? "1" : "";
                     break;
                 case "script_engine":
@@ -885,8 +887,11 @@ namespace OpenSim.Region.Framework.Scenes
                 case "iw_physics_fps":
                     ret = PhysicsScene.SimulationFPS.ToString();
                     break;
-                case "simulator_hostname":
+                case "simulator_netname":
                     ret = System.Environment.MachineName;
+                    break;
+                case "simulator_hostname":
+                    ret = RegionInfo.ExternalHostName;
                     break;
                 case "agent_limit":
                     ret = m_regInfo.RegionSettings.AgentLimit.ToString();
