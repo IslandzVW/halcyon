@@ -851,7 +851,7 @@ namespace OpenSim.Region.Framework.Scenes
             switch (name)
             {
                 case "sim_channel":     // Get the region's channel string, for example "Second Life Server". Does not change across grids as this is about the simulator software.
-                    ret = VersionInfo.SoftwareName;
+                    ret = VersionInfo.SoftwareChannel;
                     break;
                 case "sim_version":     // Get the region's version number string, for example "10.11.30.215699". Does not change across grids as this is about the simulator software.
                     ret = VersionInfo.Version;
