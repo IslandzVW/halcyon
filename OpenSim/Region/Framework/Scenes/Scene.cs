@@ -847,14 +847,21 @@ namespace OpenSim.Region.Framework.Scenes
 
         public string GetEnv(string name)
         {
+            IConfig config = null;
             string ret = "";
             switch (name)
             {
-                case "sim_channel":     // Get the region's channel string, for example "Second Life Server". Does not change across grids as this is about the simulator software.
+                case "sim_channel":     // Get the region's channel string, for example "Halcyon Server" or "Second Life Server". Does not change across grids as this is about the simulator software.
                     ret = VersionInfo.SoftwareChannel;
                     break;
-                case "sim_version":     // Get the region's version number string, for example "10.11.30.215699". Does not change across grids as this is about the simulator software.
+                case "sim_version":     // Get the region's version.revision number string, for example "0.9.18.9999". Does not change across grids as this is about the simulator software.
                     ret = VersionInfo.Version;
+                    break;
+                case "short_version":     // Get the region's version text, such as "Halcyon 1.2.3", without revision info.
+                    ret = VersionInfo.ShortVersion;
+                    break;
+                case "long_version":     // Get the region's full version text, with revision info, such as "Halcyon 1.2.3 R9999".
+                    ret = VersionInfo.FullVersion;
                     break;
                 case "frame_number":    // (integer) Get the frame number of the simulator, for example "42042".
                     ret = m_frame.ToString();
@@ -865,8 +872,15 @@ namespace OpenSim.Region.Framework.Scenes
                 case "dynamic_pathfinding": // (integer) Get the region's dynamic_pathfinding status, "1" or "0".
                     ret = "disabled";
                     break;
-                case "InWorldz": // (integer) Is this an InWorldz server? "1" or "0".
-                    ret = "1";  // always true in InWorldz
+                case "InWorldz": // (integer) Is this an InWorldz server? "1" or "".
+                    config = m_config.Configs["GridInfo"];
+                    ret = (config.GetString("gridmanagement", VersionInfo.DefaultGrid).Trim() == "InWorldz") ? "1" : "";
+                    break;
+                case "Halcyon": // (integer) Is this a Halcyon server? "1" or "".
+                    ret = (VersionInfo.SoftwareName == "Halcyon") ? "1" : "";
+                    break;
+                case "script_engine":
+                    ret = "Phlox";  // always Phlox in Halcyon
                     break;
                 case "iw_physics_fps":
                     ret = PhysicsScene.SimulationFPS.ToString();
@@ -932,6 +946,21 @@ namespace OpenSim.Region.Framework.Scenes
                 case "region_start_time":
                     ret = m_regionStartTime.ToString();
                     break;
+                case "platform":
+                    config = m_config.Configs["GridInfo"];    // Halcyon, OpenSim, SecondLife
+                    return (config == null) ? "" : config.GetString("platform", VersionInfo.SoftwareName).Trim();
+                case "grid_management":
+                    config = m_config.Configs["GridInfo"];    // InWorldz, ARL, LindenLab, etc.
+                    return (config == null) ? "" : config.GetString("gridmanagement", VersionInfo.DefaultGrid).Trim();
+                case "grid_nick":
+                    config = m_config.Configs["GridInfo"];    // InWorldz, InWorldzBeta, SecondLife, etc.
+                    return (config == null) ? "" : config.GetString("gridnick", VersionInfo.DefaultGrid).Trim();
+                case "grid_name":
+                    config = m_config.Configs["GridInfo"];    // InWorldz, InWorldz Beta, Second Life, etc.
+                    return (config == null) ? "" : config.GetString("gridname", VersionInfo.DefaultGrid).Trim();
+                case "shard":
+                    config = m_config.Configs["Network"];    // "InWorldz", "Beta", "Some Other Grid", "Testing", etc.
+                    return (config == null) ? "" : config.GetString("shard", VersionInfo.DefaultGrid).Trim();
             }
             return ret;
         }
