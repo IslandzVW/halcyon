@@ -2267,7 +2267,6 @@ namespace OpenSim.Data.MySQL
                 s.Media = PrimitiveBaseShape.PrimMedia.FromXml(UTF8Encoding.UTF8.GetString(media, 0, media.Length));
             }
 
-            s.RenderMaterials = null;
             if (!(row["Materials"] is System.DBNull))
             {
                 byte[] materials = (byte[])row["Materials"];

@@ -55,9 +55,25 @@ namespace OpenSim.Region.CoreModules.Capabilities
     public class RenderMaterialsModule : INonSharedRegionModule
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         private Scene m_scene;
-        public Dictionary<UUID, RenderMaterial> m_knownMaterials = new Dictionary<UUID, RenderMaterial>();
+
+        /// <summary>
+        /// RenderMaterialEntry - A node in our lookup cache. Records the material and the # of references.
+        /// We use the reference count to decide when and entry and material can be removed from the cache.
+        /// </summary>
+        private struct RenderMaterialEntry
+        {
+            public RenderMaterial material;
+            public int refcount;
+
+            public RenderMaterialEntry(RenderMaterial mat)
+            {
+                material = mat;
+                refcount = 1;
+            }
+        }
+
+        private Dictionary<UUID, RenderMaterialEntry> m_knownMaterials = new Dictionary<UUID, RenderMaterialEntry>();
 
         /// <summary>
         /// Is this module enabled?
@@ -163,9 +179,17 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 {
                     foreach (var mat in materials)
                     {
-                        if (m_knownMaterials.ContainsKey(mat.MaterialID))
-                            continue;
-                        m_knownMaterials.Add(mat.MaterialID, mat);
+                        UUID key = mat.MaterialID;
+
+                        if (m_knownMaterials.ContainsKey(key))
+                        {
+                            var entry = m_knownMaterials[key];
+                            entry.refcount++;
+                        }
+                        else
+                        {
+                            m_knownMaterials.Add(key, new RenderMaterialEntry(mat));
+                        }
                     }
                 }
             }
@@ -173,7 +197,32 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         private void OnObjectRemoved(SceneObjectGroup obj)
         {
-            m_log.Debug("[MaterialsModule]: OnObjectRemoved - decrease ref and cleanup if <= 0");
+            List<RenderMaterial> materials = new List<RenderMaterial>();
+
+            foreach (SceneObjectPart part in obj.GetParts())
+            {
+                if (part.Shape.RenderMaterials != null)
+                    materials.AddRange(part.Shape.RenderMaterials.GetMaterials());
+            }
+
+            if (materials.Count > 0)
+            {
+                lock (m_knownMaterials)
+                {
+                    foreach (var mat in materials)
+                    {
+                        UUID key = mat.MaterialID;
+
+                        if (m_knownMaterials.ContainsKey(key))
+                        {
+                            var entry = m_knownMaterials[key];
+                            entry.refcount--;
+                            if ((entry.refcount) <= 0)
+                                m_knownMaterials.Remove(key);
+                        }
+                    }
+                }
+            }
         }
 
         public byte[] RenderMaterialsPostCap(
@@ -212,9 +261,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
             resp["Zipped"] = ZCompressOSD(respArr, false);
             string response = OSDParser.SerializeLLSDXmlString(resp);
 
-            m_log.Debug("[MaterialsDemoModule]: cap request: " + request);
-            m_log.Debug("[MaterialsDemoModule]: cap request (zipped portion): " + ZippedOsdBytesToString(req["Zipped"].AsBinary()));
-            m_log.Debug("[MaterialsDemoModule]: cap response: " + response);
+            // m_log.Debug("[MaterialsDemoModule]: cap request: " + request);
+            // m_log.Debug("[MaterialsDemoModule]: cap request (zipped portion): " + ZippedOsdBytesToString(req["Zipped"].AsBinary()));
+            // m_log.Debug("[MaterialsDemoModule]: cap response: " + response);
 
             return OSDParser.SerializeLLSDBinary(resp);
         }
@@ -296,7 +345,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     material = RenderMaterial.FromOSD(matData);
                     id = material.MaterialID;
                     if (m_knownMaterials.ContainsKey(id))
-                        material = m_knownMaterials[id];
+                        material = m_knownMaterials[id].material;
                 }
             
                 // If we are doing a replace this will get set with the old value.
@@ -333,7 +382,14 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 if (material != null)
                 {
                     if (m_knownMaterials.ContainsKey(id) == false)
-                        m_knownMaterials[id] = material;
+                    {
+                        m_knownMaterials[id] = new RenderMaterialEntry(material);
+                    }
+                    else
+                    {
+                        var entry = m_knownMaterials[id];
+                        entry.refcount++;
+                    }
 
                     sop.Shape.RenderMaterials.AddMaterial(material);
                 }
@@ -364,7 +420,13 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     foreach (var orphanKey in keys)
                     {
                         sop.Shape.RenderMaterials.RemoveMaterial(orphanKey);
-                        // m_knownMaterials.Remove(orphanKey);
+                        if (m_knownMaterials.ContainsKey(orphanKey))
+                        {
+                            var entry = m_knownMaterials[orphanKey];
+                            entry.refcount--;
+                            if ((entry.refcount) <= 0)
+                                m_knownMaterials.Remove(orphanKey);
+                        }
                     }
                 }
             }
@@ -390,9 +452,10 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     {
                         m_log.Debug("[MaterialsDemoModule]: request for known material ID: " + id.ToString());
 
+                        var matEntry = m_knownMaterials[id];
                         OSDMap matMap = new OSDMap();
                         matMap["ID"] = elem.AsBinary();
-                        matMap["Material"] = m_knownMaterials[id].GetOSD();
+                        matMap["Material"] = matEntry.material.GetOSD();
                         respArr.Add(matMap);
                     }
                     else
@@ -422,11 +485,12 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
             lock (m_knownMaterials)
             {
-                foreach (KeyValuePair<UUID, RenderMaterial> kvp in m_knownMaterials)
+                foreach (KeyValuePair<UUID, RenderMaterialEntry> kvp in m_knownMaterials)
                 {
+                    var material = kvp.Value.material;
                     OSDMap matMap = new OSDMap();
                     matMap["ID"] = OSD.FromBinary(kvp.Key.GetBytes());
-                    matMap["Material"] = kvp.Value.GetOSD() as OSDMap;
+                    matMap["Material"] = material.GetOSD() as OSDMap;
                     allOsd.Add(matMap);
                     matsCount++;
                 }

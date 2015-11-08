@@ -56,7 +56,14 @@ namespace OpenSim.Framework
 
         public static Color4 DEFAULT_SPECULAR_LIGHT_COLOR = new Color4 (255, 255, 255, 255);
 
-#region Properties
+        #region Properties
+
+        /// <summary>
+        /// MaterialID - A calculated value computed from the contents of the class. 
+        /// Basically a hash value that given 2 classes are the same should produce the same value.
+        /// XXX This could be further optimized by locking around sets and storing the value so it
+        /// can be quickly fetched, forcing a recalculation when the contents have changed.
+        /// </summary>
 
         public UUID MaterialID
         {
@@ -439,19 +446,20 @@ namespace OpenSim.Framework
                 return keys;
             }
         }
+
         public static RenderMaterials FromBytes(byte[] bytes, int pos)
         {
-            using (MemoryStream ms = new MemoryStream(bytes, pos, bytes.Length - pos))
-            {
-                return ProtoBuf.Serializer.Deserialize<RenderMaterials>(ms);
-            }
+            return (FromBytes(bytes, pos, bytes.Length - pos));
         }
 
         public static RenderMaterials FromBytes(byte[] bytes, int start, int length)
         {
             using (MemoryStream ms = new MemoryStream(bytes, start, length))
             {
-                return ProtoBuf.Serializer.Deserialize<RenderMaterials>(ms);
+                var materials = ProtoBuf.Serializer.Deserialize<RenderMaterials>(ms);
+                if (materials == null)
+                    materials = new RenderMaterials();
+                return materials;
             }
         }
 
