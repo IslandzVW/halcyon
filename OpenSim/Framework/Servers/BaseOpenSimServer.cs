@@ -300,7 +300,7 @@ namespace OpenSim.Framework.Servers
             StartupSpecific();
 
             // Report the version number near the end so you can still see it after startup.
-            m_log.Info("[STARTUP]: Version: " + VersionInfo.FullVersion + "\n");
+            m_log.Info("[STARTUP]: Version: " + VersionInfo.Version + "\n");
 
             TimeSpan timeTaken = DateTime.Now - m_startuptime;
             m_log.InfoFormat("[STARTUP]: Startup took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
@@ -389,7 +389,7 @@ namespace OpenSim.Framework.Servers
             switch (showParams[0])
             {                       
                 case "info":
-                    Notice("Version: " + VersionInfo.FullVersion);
+                    Notice("Version: " + VersionInfo.Version);
                     Notice("Startup directory: " + m_startupDirectory);
                     break;
 
@@ -409,7 +409,7 @@ namespace OpenSim.Framework.Servers
                 case "version":
                     Notice(
                         String.Format(
-                            "Version: {0} (interface version {1})", VersionInfo.FullVersion, VersionInfo.MajorInterfaceVersion));
+                            "Version: {0}", VersionInfo.Version));
                     break;
             }
         }

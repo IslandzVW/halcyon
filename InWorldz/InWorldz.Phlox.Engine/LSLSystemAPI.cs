@@ -11070,8 +11070,7 @@ namespace InWorldz.Phlox.Engine
 
         public string llGetSimulatorHostname()
         {
-            
-            return System.Environment.MachineName;
+            return llGetEnv("simulator_hostname");
         }
 
         //  <summary>
