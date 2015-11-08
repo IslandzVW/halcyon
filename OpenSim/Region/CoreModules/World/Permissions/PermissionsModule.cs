@@ -911,10 +911,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     Success = false
                 };
             }
-
-            // Object owners should be able to edit their own content
-            if (currentUser == objectOwner)
+            else if (currentUser == objectOwner)
             {
+                // Object owners should be able to edit their own content
                 permission = new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.Owner,
