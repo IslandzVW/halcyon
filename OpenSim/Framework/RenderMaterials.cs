@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 using System.Text;
 using System.Collections.Generic;
 using System.IO;
@@ -56,6 +57,15 @@ namespace OpenSim.Framework
         public static Color4 DEFAULT_SPECULAR_LIGHT_COLOR = new Color4 (255, 255, 255, 255);
 
 #region Properties
+
+        public UUID MaterialID
+        {
+            get
+            {
+                using (var md5 = MD5.Create())
+                    return new UUID(md5.ComputeHash(ToBytes()), 0);
+            }
+        }
 
         public UUID NormalID {
             get;
@@ -255,6 +265,15 @@ namespace OpenSim.Framework
                 NormalID, NormalOffsetX, NormalOffsetY, NormalRepeatX, NormalRepeatY, NormalRotation, SpecularID, SpecularOffsetX, SpecularOffsetY, SpecularRepeatX, SpecularRepeatY, SpecularRotation, SpecularLightColor, SpecularLightExponent, EnvironmentIntensity, DiffuseAlphaMode, AlphaMaskCutoff);
         }
 
+        public byte[] ToBytes()
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                ProtoBuf.Serializer.Serialize<RenderMaterial>(ms, this);
+                return ms.ToArray();
+            }
+        }
+
         public object Clone ()
         {
             RenderMaterial ret = (RenderMaterial)this.MemberwiseClone ();
@@ -336,9 +355,9 @@ namespace OpenSim.Framework
 #region Properties
 
         [ProtoMember(1)]
-        public Dictionary<String, RenderMaterial> Materials {
+        private Dictionary<String, RenderMaterial> Materials {
             get;
-            private set;
+            set;
         }
 #endregion
 
@@ -347,6 +366,79 @@ namespace OpenSim.Framework
             Materials = new Dictionary<String, RenderMaterial> ();
         }
 
+        public bool RemoveMaterial(UUID id)
+        {
+            lock (Materials)
+            {
+                string key = id.ToString();
+
+                if (Materials.ContainsKey(key))
+                {
+                    Materials.Remove(key);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        public RenderMaterial AddMaterial(RenderMaterial mat)
+        {
+            lock (Materials)
+            {
+                string key = mat.MaterialID.ToString();
+
+                if (Materials.ContainsKey(key))
+                {
+                    return Materials[key];
+                }
+                else
+                {
+                    Materials[key] = mat;
+                    return mat;
+                }
+            }
+        }
+
+        public bool ContainsMaterial(UUID id)
+        {
+            lock (Materials)
+            {
+                return (Materials.ContainsKey(id.ToString()));
+            }
+        }
+
+        public RenderMaterial FindMaterial(UUID id)
+        {
+            lock (Materials)
+            {
+                if (Materials.ContainsKey(id.ToString()))
+                    return Materials[id.ToString()];
+                else
+                    return null;
+            }
+        }
+        public List<RenderMaterial> GetMaterials()
+        {
+            lock (Materials)
+            {
+                return new List<RenderMaterial>(Materials.Values);
+            }
+        }
+
+        public List<UUID> GetMaterialIDs()
+        {
+            lock (Materials)
+            {
+                var keys = new List<UUID>();
+                foreach (var key in Materials.Keys)
+                    keys.Add(new UUID(key));
+
+                return keys;
+            }
+        }
         public static RenderMaterials FromBytes(byte[] bytes, int pos)
         {
             using (MemoryStream ms = new MemoryStream(bytes, pos, bytes.Length - pos))
@@ -365,16 +457,20 @@ namespace OpenSim.Framework
 
         public byte[] ToBytes()
         {
-            using (MemoryStream ms = new MemoryStream())
+            lock (Materials)
             {
-                ProtoBuf.Serializer.Serialize<RenderMaterials>(ms, this);
-                return ms.ToArray();
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    ProtoBuf.Serializer.Serialize<RenderMaterials>(ms, this);
+                    return ms.ToArray();
+                }
             }
         }
 
         public override int GetHashCode ()
         {
-            lock (Materials) {
+            lock (Materials)
+            {
                 int hashcode = 0;
                 foreach (var mat in Materials.Values)
                     hashcode ^= mat.GetHashCode ();

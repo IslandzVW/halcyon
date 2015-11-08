@@ -29,9 +29,6 @@ using System;
 using System.Reflection;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
-using System.Security.Cryptography;
-using System.Text;
 using zlib;
 
 using Nini.Config;
@@ -46,9 +43,11 @@ using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
+
 using CapsUtil = OpenSim.Framework.CapsUtil;
 using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 using OSDArray = OpenMetaverse.StructuredData.OSDArray;
+
 
 namespace OpenSim.Region.CoreModules.Capabilities
 {
@@ -86,6 +85,8 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
             m_scene = scene;
             m_scene.EventManager.OnRegisterCaps += OnRegisterCaps;
+            m_scene.EventManager.OnObjectAddedToScene += OnObjectAdded;
+            m_scene.EventManager.OnObjectBeingRemovedFromScene += OnObjectRemoved;
         }
 
         public void RemoveRegion(Scene scene)
@@ -94,6 +95,8 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 return;
 
             m_scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
+            m_scene.EventManager.OnObjectAddedToScene -= OnObjectAdded;
+            m_scene.EventManager.OnObjectBeingRemovedFromScene -= OnObjectRemoved;
         }
 
         public void RegionLoaded(Scene scene)
@@ -143,6 +146,35 @@ namespace OpenSim.Region.CoreModules.Capabilities
             MainServer.Instance.AddStreamHandler(renderMaterialsPutHandler);
         }
 
+        private void OnObjectAdded(SceneObjectGroup obj)
+        {
+            List<RenderMaterial> materials = new List<RenderMaterial>();
+
+            foreach (SceneObjectPart part in obj.GetParts())
+            {
+                // scan through the rendermaterials of this part for any textures used as materials
+                if (part.Shape.RenderMaterials != null)
+                    materials.AddRange(part.Shape.RenderMaterials.GetMaterials());
+            }
+
+            if (materials.Count > 0)
+            {
+                lock (m_knownMaterials)
+                {
+                    foreach (var mat in materials)
+                    {
+                        if (m_knownMaterials.ContainsKey(mat.MaterialID))
+                            continue;
+                        m_knownMaterials.Add(mat.MaterialID, mat);
+                    }
+                }
+            }
+        }
+
+        private void OnObjectRemoved(SceneObjectGroup obj)
+        {
+            m_log.Debug("[MaterialsModule]: OnObjectRemoved - decrease ref and cleanup if <= 0");
+        }
 
         public byte[] RenderMaterialsPostCap(
             string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse, UUID agentID)
@@ -206,8 +238,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             {
                 uint matLocalID = 0;
                 int face = -1;
-                UUID id = UUID.Zero;
-                RenderMaterial material = null;
+                OSDMap matData = null;
 
                 try
                 {
@@ -218,10 +249,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         face = matsMap["Face"].AsInteger();
 
                     if (matsMap.ContainsKey("Material"))
-                    {
-                        material = RenderMaterial.FromOSD(matsMap["Material"] as OSDMap);
-                        id = UUID.Random();
-                    }
+                        matData = matsMap["Material"] as OSDMap;
                 }
                 catch (Exception e)
                 {
@@ -237,7 +265,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     continue;
                 }
 
-                AssignSingleMaterial(sop, face, id, material);
+                AssignSingleMaterial(sop, face, matData);
             }
         }
 
@@ -248,7 +276,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
         /// <param name="face">The face to assign, or -1 if the default texture is being set.</param>
         /// <param name="id">The ID assigned to this material.  Setting a Zero UUID clears it.</param>
         /// <param name="material">If not null, the material to set.  Otherwise we are clearing.</param>
-        private void AssignSingleMaterial(SceneObjectPart sop, int face, UUID id, RenderMaterial material)
+        private void AssignSingleMaterial(SceneObjectPart sop, int face, OSDMap matData)
         {
             /// Get a copy of the texture entry so we can make changes.
             var te = new Primitive.TextureEntry(sop.Shape.TextureEntry, 0, sop.Shape.TextureEntry.Length);
@@ -258,52 +286,90 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 return;
             }
 
-            // If we are doing a replace this will get set with the old valie.
-            UUID currentMatId = UUID.Zero;
+            lock (m_knownMaterials)
+            {
+                UUID id = UUID.Zero;
+                RenderMaterial material = null;
 
-            if (face < 0)
-            {
-                if (te.DefaultTexture != null)
+                if (matData != null)
                 {
-                    currentMatId = te.DefaultTexture.MaterialID;
-                    te.DefaultTexture.MaterialID = id;
+                    material = RenderMaterial.FromOSD(matData);
+                    id = material.MaterialID;
+                    if (m_knownMaterials.ContainsKey(id))
+                        material = m_knownMaterials[id];
                 }
-            }
-            else
-            {
-                if (te.FaceTextures.Length >= face - 1)
+            
+                // If we are doing a replace this will get set with the old value.
+                UUID currentMatId = UUID.Zero;
+
+                if (face < 0)
                 {
-                    if (te.FaceTextures[face] == null)
+                    if (te.DefaultTexture != null)
                     {
                         currentMatId = te.DefaultTexture.MaterialID;
                         te.DefaultTexture.MaterialID = id;
                     }
-                    else
+                }
+                else
+                {
+                    if (te.FaceTextures.Length >= face - 1)
                     {
-                        currentMatId = te.FaceTextures[face].MaterialID;
-                        te.FaceTextures[face].MaterialID = id;
+                        if (te.FaceTextures[face] == null)
+                        {
+                            currentMatId = te.DefaultTexture.MaterialID;
+                            te.DefaultTexture.MaterialID = id;
+                        }
+                        else
+                        {
+                            currentMatId = te.FaceTextures[face].MaterialID;
+                            te.FaceTextures[face].MaterialID = id;
+                        }
                     }
                 }
-            }
 
-            lock (m_knownMaterials)
-            {
-                if (currentMatId != UUID.Zero)
-                {
-                    m_knownMaterials.Remove(currentMatId);
-                    sop.Shape.RenderMaterials.Materials.Remove(currentMatId.ToString());
-                }
 
                 // If material is null we're just clearing nothing to set. 
                 // Otherwise set the new value in the Shape and in known materials.
                 if (material != null)
                 {
-                    m_knownMaterials[id] = material;
-                    sop.Shape.RenderMaterials.Materials[id.ToString()] = material;
+                    if (m_knownMaterials.ContainsKey(id) == false)
+                        m_knownMaterials[id] = material;
+
+                    sop.Shape.RenderMaterials.AddMaterial(material);
+                }
+
+                /*
+                // If there was an update and the material id has changed, clean up the old value.  
+                // Have to be careful here. It might still be in use in another slot.  So we build 
+                // a list of keys and walk the texture entries subtracting keys in use.  Whatever
+                // is left are candidates to clean up.
+                */
+                if ((currentMatId != UUID.Zero) && (currentMatId != id))
+                {
+                    List<UUID> keys = sop.Shape.RenderMaterials.GetMaterialIDs();
+
+                    if ((te.DefaultTexture != null) && (te.DefaultTexture.MaterialID != null))
+                        keys.Remove(te.DefaultTexture.MaterialID);
+
+                    foreach (var entry in te.FaceTextures)
+                    {
+                        if ((entry != null) && (entry.MaterialID != null))
+                            keys.Remove(entry.MaterialID);
+                    }
+
+                    /*
+                    // Process the list of orphans.  Remove it from the mats in the shape
+                    // And decrease a reference in our known materials list as well.
+                    */
+                    foreach (var orphanKey in keys)
+                    {
+                        sop.Shape.RenderMaterials.RemoveMaterial(orphanKey);
+                        // m_knownMaterials.Remove(orphanKey);
+                    }
                 }
             }
 
-            // U[pdate the texture entry which will force an update to connected clients
+            // Update the texture entry which will force an update to connected clients
             sop.UpdateTextureEntry(te.GetBytes());
         }
 
@@ -360,7 +426,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 {
                     OSDMap matMap = new OSDMap();
                     matMap["ID"] = OSD.FromBinary(kvp.Key.GetBytes());
-                    matMap["Material"] = kvp.Value.GetOSD();
+                    matMap["Material"] = kvp.Value.GetOSD() as OSDMap;
                     allOsd.Add(matMap);
                     matsCount++;
                 }
@@ -371,7 +437,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
             resp["Zipped"] = ZCompressOSD(allOsd, false);
             return OSDParser.SerializeLLSDBinary(resp);
         }
-
 
         private static string ZippedOsdBytesToString(byte[] bytes)
         {

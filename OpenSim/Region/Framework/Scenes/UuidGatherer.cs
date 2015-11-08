@@ -147,12 +147,13 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         lock (part.Shape.RenderMaterials)
                         {
-                            foreach(KeyValuePair<string, RenderMaterial> entry in part.Shape.RenderMaterials.Materials)
+                            List<RenderMaterial> mats = part.Shape.RenderMaterials.GetMaterials();
+                            foreach(var entry in mats)
                             {
-                                if (entry.Value.NormalID != UUID.Zero)
-                                    assetUuids[entry.Value.NormalID] = 1;
-                                if (entry.Value.SpecularID != UUID.Zero)
-                                    assetUuids[entry.Value.SpecularID] = 1;
+                                if (entry.NormalID != UUID.Zero)
+                                    assetUuids[entry.NormalID] = 1;
+                                if (entry.SpecularID != UUID.Zero)
+                                    assetUuids[entry.SpecularID] = 1;
                             }
 
                         }
