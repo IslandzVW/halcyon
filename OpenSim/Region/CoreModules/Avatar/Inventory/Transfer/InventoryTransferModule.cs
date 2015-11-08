@@ -233,7 +233,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             // Also stuff the destination ID into the session ID field for retrieval in accept/decline
             im.imSessionID = copyID.Guid;
 
-            CachedUserInfo recipientInfo = scene.CommsManager.UserProfileCacheService.GetUserDetails(toAgentID);
+            CachedUserInfo recipientInfo = scene.CommsManager.UserService.GetUserDetails(toAgentID);
             if (recipientInfo != null && recipient != null)
             {
                 if ((!isFolder) && (item != null))
@@ -301,7 +301,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
             // Here, the recipient is local and we can assume that the inventory is loaded.
             // Courtesy of the above bulk update, it will have been pushed to the client, too.
-            CachedUserInfo userInfo = scene.CommsManager.UserProfileCacheService.GetUserDetails(client.AgentId);
+            CachedUserInfo userInfo = scene.CommsManager.UserService.GetUserDetails(client.AgentId);
             if (userInfo != null)
             {
                 // Is it a folder or an item?
@@ -337,7 +337,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
 
             // Here, the recipient is local and we can assume that the inventory is loaded.
             // Courtesy of the above bulk update, it will have been pushed to the client, too.
-            CachedUserInfo userInfo = scene.CommsManager.UserProfileCacheService.GetUserDetails(client.AgentId);
+            CachedUserInfo userInfo = scene.CommsManager.UserService.GetUserDetails(client.AgentId);
             if (userInfo != null)
             {
                 InventoryFolderBase trashFolder = userInfo.FindFolderForType((int)AssetType.TrashFolder);
@@ -428,7 +428,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             }
 
             CachedUserInfo userInfo =
-                    scene.CommsManager.UserProfileCacheService.
+                    scene.CommsManager.UserService.
                     GetUserDetails(user.ControllingClient.AgentId);
 
             if (userInfo == null)

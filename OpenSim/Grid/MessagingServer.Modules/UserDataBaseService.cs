@@ -31,7 +31,7 @@ using OpenSim.Framework.Communications;
 
 namespace OpenSim.Grid.MessagingServer.Modules
 {
-    public class UserDataBaseService : UserManagerBase
+    public class UserDataBaseService : UserProfileManager
     {
         /// <summary>
         /// Constructor.

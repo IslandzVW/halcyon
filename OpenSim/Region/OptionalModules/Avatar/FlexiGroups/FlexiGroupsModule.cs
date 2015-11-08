@@ -606,7 +606,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                         return;
                     }
 
-                    CachedUserInfo ownerUserInfo = m_sceneList[0].CommsManager.UserProfileCacheService.GetUserDetails(ownerID);
+                    CachedUserInfo ownerUserInfo = m_sceneList[0].CommsManager.UserService.GetUserDetails(ownerID);
                     if (ownerUserInfo == null)
                     {
                         m_log.ErrorFormat("[GROUPS]: Failed to find notice sender {0} for item {1}", ownerID, itemId);
@@ -701,7 +701,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 UUID itemId = notice.noticeData.ItemID;
 
                 // we need a userInfo structure to get the sessionID to use in case the inventory service needs a secure service connection
-                CachedUserInfo userInfo = m_sceneList[0].CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                CachedUserInfo userInfo = m_sceneList[0].CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
                 if (userInfo == null)
                 {
                     m_log.ErrorFormat("[GROUPS]: Failed to find notice recipient {0} for item {1}", remoteClient.AgentId, itemId);

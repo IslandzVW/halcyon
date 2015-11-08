@@ -1016,7 +1016,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SwapToRootAgent();
                     m_isChildAgent = false;
                     if (!IsBot)
-                        m_scene.CommsManager.UserService.AddLocalUser(m_uuid);
+                        m_scene.CommsManager.UserService.MakeLocalUser(m_uuid);
 
                     if (m_appearance != null)
                     {
@@ -1211,7 +1211,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.SwapRootAgentCount(true);
                 currentParcelUUID = UUID.Zero;  // so that if the agent reenters this region, it recognizes it as a parcel change.
                 if (!IsBot)
-                    m_scene.CommsManager.UserService.RemoveLocalUser(m_uuid);
+                    m_scene.CommsManager.UserService.UnmakeLocalUser(m_uuid);
             }
             m_scene.EventManager.TriggerOnMakeChildAgent(this);
 
@@ -1364,6 +1364,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     try
                     {
+                        Scene.CommsManager.UserService.GetUserProfile(this.UUID, true);  // force a cache refresh
                         IsFullyInRegion = true;
                         SendInitialData();
                         Scene.EventManager.TriggerOnCompletedMovementToNewRegion(this);
@@ -3261,7 +3262,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes());
         }
 
-        private void InitialAttachmentRez(CachedUserInfo userInfo)
+        private void InitialAttachmentRez()
         {
             //retrieve all attachments
             List<AvatarAttachment> attachments = m_appearance.GetAttachments();
@@ -3336,7 +3337,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (Interlocked.CompareExchange(ref _attachmentRezCalled, 1, 0) == 0)
             {
                 //retrieve all attachments
-                CachedUserInfo userInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(m_uuid);
+                CachedUserInfo userInfo = m_scene.CommsManager.UserService.GetUserDetails(m_uuid);
                 if (userInfo == null)
                     return;
                 // If this is after a login in this region and not done yet, add the initial attachments
@@ -3346,7 +3347,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         ControllingClient.RunAttachmentOperation(() =>
                         {
-                            this.InitialAttachmentRez(userInfo);
+                            this.InitialAttachmentRez();
                         });
                     }
                 }
@@ -3764,9 +3765,9 @@ namespace OpenSim.Region.Framework.Scenes
                 // For now, assign god level 200 to anyone
                 // who is granted god powers, but has no god level set.
                 //
-                CachedUserInfo profile = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(agentID);
-                if (profile.UserProfile.GodLevel > 0)
-                    m_godlevel = profile.UserProfile.GodLevel;
+                UserProfileData profile = m_scene.CommsManager.UserService.GetUserProfile(agentID);
+                if (profile.GodLevel > 0)
+                    m_godlevel = profile.GodLevel;
                 else
                     m_godlevel = 200;
             }
@@ -4313,7 +4314,7 @@ namespace OpenSim.Region.Framework.Scenes
             RemoveFromPhysicalScene();
 
             if (!IsBot)
-                m_scene.CommsManager.UserService.RemoveLocalUser(m_uuid); 
+                m_scene.CommsManager.UserService.UnmakeLocalUser(m_uuid); 
             
             m_closed = true;
 

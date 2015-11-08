@@ -11988,12 +11988,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 else // Agent
                 {
-                    CachedUserInfo userInfo = ((Scene)m_scene).CommsManager.UserProfileCacheService.GetUserDetails(AgentId);
+                    CachedUserInfo userInfo = ((Scene)m_scene).CommsManager.UserService.GetUserDetails(AgentId);
 
                     InventoryItemBase assetRequestItem = userInfo.FindItem(itemID);
                     if (assetRequestItem == null)
                     {
-                        assetRequestItem = ((Scene)m_scene).CommsManager.UserProfileCacheService.LibraryRoot.FindItem(itemID);
+                        assetRequestItem = ((Scene)m_scene).CommsManager.LibraryRoot.FindItem(itemID);
                         if (assetRequestItem == null)
                         {
                             return true;

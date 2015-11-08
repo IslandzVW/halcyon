@@ -52,7 +52,7 @@ namespace OpenSim.Framework.Communications.Services
         protected string m_welcomeMessage = "Welcome to InWorldz";
         protected string m_MapServerURI = "";
         protected int m_minLoginLevel = 0;
-        protected UserManagerBase m_userManager = null;
+        protected UserProfileManager m_userManager = null;
 
         /// <summary>
         /// Used during login to send the skeleton of the OpenSim Library to the client.
@@ -106,7 +106,7 @@ namespace OpenSim.Framework.Communications.Services
         /// <param name="userManager"></param>
         /// <param name="libraryRootFolder"></param>
         /// <param name="welcomeMess"></param>
-        public LoginService(UserManagerBase userManager, LibraryRootFolder libraryRootFolder,
+        public LoginService(UserProfileManager userManager, LibraryRootFolder libraryRootFolder,
                             string welcomeMess, string mapServerURI)
         {
             m_userManager = userManager;
@@ -284,8 +284,7 @@ namespace OpenSim.Framework.Communications.Services
                     {
                         // Force a refresh for this due to Commit below
                         UUID userID = userProfile.ID;
-                        m_userManager.PurgeUserFromCaches(userID);
-                        userProfile = m_userManager.GetUserProfile(userID);
+                        userProfile = m_userManager.GetUserProfile(userID,true);
                         // on an error, return the former error we returned before recovery was supported.
                         if (userProfile == null) 
                             return logResponse.CreateAlreadyLoggedInResponse();
@@ -761,7 +760,7 @@ namespace OpenSim.Framework.Communications.Services
         /// <returns></returns>
         public virtual UserProfileData GetTheUser(string firstname, string lastname)
         {
-            return m_userManager.GetUserProfile(firstname, lastname);
+            return m_userManager.GetUserProfile(firstname, lastname, false);
         }
 
         /// <summary>
@@ -1270,8 +1269,8 @@ namespace OpenSim.Framework.Communications.Services
             string authed = "FALSE";
             if (requestData.Contains("avatar_uuid") && requestData.Contains("session_id"))
             {
-                UUID guess_aid;
-                UUID guess_sid;
+                UUID guess_aid; // avatar ID
+                UUID guess_sid; // session ID
 
                 try
                 {
@@ -1294,7 +1293,7 @@ namespace OpenSim.Framework.Communications.Services
                     {
                         m_log.InfoFormat("[UserManager]: CheckAuthSession FALSE for user {0}, refreshing caches", guess_aid);
                         //purge the cache and retry
-                        m_userManager.PurgeUserFromCaches(guess_aid);
+                        m_userManager.FlushCachedInfo(guess_aid);
 
                         if (m_userManager.VerifySession(guess_aid, guess_sid))
                         {
