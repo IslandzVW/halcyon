@@ -855,15 +855,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         /// <returns></returns>
         protected GenericPermissionResult GenericObjectPermission(UUID currentUser, UUID objId, bool denyOnLocked, uint requiredPermissionMask)
         {
-            // Default: deny
-            GenericPermissionResult permission = new GenericPermissionResult
-            {
-                Reason = GenericPermissionResult.ResultReason.Other,
-                Success = false
-            };
-
-            bool locked = false;
-
             SceneObjectGroup group = FindGroup(objId);
             if (group == null)
             {
@@ -874,8 +865,15 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 };
             }
 
-            UUID objectOwner = group.OwnerID;
-            locked = ((group.RootPart.OwnerMask & PERM_LOCKED) == 0);   // only locked when neither bit is on
+            // Admin should be able to edit anything in the sim (including admin objects)
+            if (IsGodUser(currentUser))
+            {
+                return new GenericPermissionResult
+                {
+                    Reason = GenericPermissionResult.ResultReason.Admin,
+                    Success = true
+                };
+            }
 
             // People shouldn't be able to do anything with locked objects, except the Administrator
             // The 'set permissions' runs through a different permission check, so when an object owner
@@ -883,17 +881,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             //
             // Nobody but the object owner can set permissions on an object
             //
-
-            // Admin should be able to edit anything in the sim (including admin objects)
-            if (IsGodUser(currentUser))
-            {
-                permission = new GenericPermissionResult
-                {
-                    Reason = GenericPermissionResult.ResultReason.Admin,
-                    Success = true
-                };
-            }
-
+            bool locked = ((group.RootPart.OwnerMask & PERM_LOCKED) == 0);   // only locked when neither bit is on
             if (locked && denyOnLocked)
             {
                 return new GenericPermissionResult
@@ -905,54 +893,58 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             if ((group.RootPart.OwnerMask & requiredPermissionMask) != requiredPermissionMask)
             {
-                permission = new GenericPermissionResult
+                return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.NoPerm,
                     Success = false
                 };
             }
-            else if (currentUser == objectOwner)
+
+            UUID objectOwner = group.OwnerID;
+            if (currentUser == objectOwner)
             {
                 // Object owners should be able to edit their own content
-                permission = new GenericPermissionResult
+                return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.Owner,
                     Success = true
                 };
             }
-            else if (group.IsAttachment)
+
+            if (group.IsAttachment)
             {
-                permission = new GenericPermissionResult
+                return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.Attachment,
                     Success = false
                 };
             }
-            else 
-            {
-                bool friendEdit = FriendHasEditPermission(objectOwner, currentUser);
 
-                permission = new GenericPermissionResult
+            if (FriendHasEditPermission(objectOwner, currentUser))
+            {
+                return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.FriendEdit,
-                    Success = friendEdit
+                    Success = true
                 };
             }
-            if (permission.Success)
-                return permission;
 
             // Group members should be able to edit group objects
-            if ((permission.Success != true) && (group.GroupID != UUID.Zero) && ((group.RootPart.GroupMask & (uint)PermissionMask.Modify) == (uint)PermissionMask.Modify) && IsAgentInGroupRole(group.GroupID, currentUser, 0))
+            if ((group.GroupID != UUID.Zero) && ((group.RootPart.GroupMask & (uint)PermissionMask.Modify) == (uint)PermissionMask.Modify) && IsAgentInGroupRole(group.GroupID, currentUser, 0))
             {
                 // Return immediately, so that the administrator can shares group objects
-                permission = new GenericPermissionResult
+                return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.Group,
                     Success = true
                 };
             }
 
-            return permission;
+            return new GenericPermissionResult
+            {
+                Reason = GenericPermissionResult.ResultReason.NoPerm,
+                Success = false
+            };
         }
 
         #endregion
