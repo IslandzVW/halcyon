@@ -5256,29 +5256,29 @@ namespace OpenSim.Region.Framework.Scenes
             if (client.AgentId != part.OwnerID)    // prevent spoofing/hacking
                 return;
 
-            part = part.ParentGroup.RootPart;
+            SceneObjectGroup group = part.ParentGroup;
+            part = group.RootPart;  // force the part to refer to the root part
+            uint eperms = group.GetEffectivePermissions(true);
 
-            //check to make sure the sale type is valid
-
-            if ((int)SaleType.Copy == saleType)
+            // Check to make sure the sale type is valid. Since some viewers 
+            // (including SL and IW3 viewers) don't have an Apply button, we can't
+            // just outright reject the change, we need to allow it 
+            // so that they can change the sale type, but we can warn them.
+            switch (saleType)
             {
-                //make sure the person can actually copy and transfer this object
-                if ((part.OwnerMask & (int)PermissionMask.Copy) == 0 ||
-                    (part.OwnerMask & (int)PermissionMask.Transfer) == 0)
-                {
-                    part.GetProperties(client);
-                    return;
-                }
-            }
+                case (byte)SaleType.Copy:
+                    //make sure the person can actually copy and transfer this object
+                    if ((eperms & (uint)PermissionMask.Copy) == 0)
+                        client.SendAlertMessage("Warning: Cannot sell a copy of this object which is no-copy or has no-copy Contents.");
+                    if ((eperms & (uint)PermissionMask.Transfer) == 0)
+                        client.SendAlertMessage("Warning: Cannot transfer this object which is no-transfer or has no-transfer Contents.");
+                    break;
 
-            if ((int)SaleType.Original == saleType)
-            {
-                //make sure the person can actually transfer this object
-                if ((part.OwnerMask & (int)PermissionMask.Transfer) == 0)
-                {
-                    part.GetProperties(client);
-                    return;
-                }
+                case (byte)SaleType.Original:
+                    //make sure the person can actually transfer this object
+                    if ((eperms & (uint)PermissionMask.Transfer) == 0)
+                        client.SendAlertMessage("Warning: Cannot transfer this object which is no-transfer or has no-transfer Contents.");
+                    break;
             }
 
             part.ObjectSaleType = saleType;
