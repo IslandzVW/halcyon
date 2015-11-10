@@ -4280,18 +4280,31 @@ namespace OpenSim.Region.Framework.Scenes
                     return ChildAgentUpdate2Response.Error;
                 }
 
+                if (!SP.IsChildAgent)
+                {
+                    // Just ignore it (but no error)
+                    reason = "authorized";
+                    return ChildAgentUpdate2Response.Ok;
+                }
+
                 if (!AuthorizeUserInRegion(data.AgentID, SP.Firstname, SP.Lastname, null, out reason))
                 {
                     SP.ControllingClient.SendAlertMessage("Could not enter region '" + RegionInfo.RegionName + "': " + reason);
                     return ChildAgentUpdate2Response.AccessDenied;
                 }
 
-                ILandObject land = LandChannel.GetLandObject(data.Position.X, data.Position.Y);
-                if (!AuthorizeUserInParcel(data.AgentID, SP.Firstname, SP.Lastname, land, data.Position, out reason))
+                if (data.SatOnGroup == null)
                 {
-                    SP.ControllingClient.SendAlertMessage("Could not enter region '" + RegionInfo.RegionName + "': " + reason);
-                    return ChildAgentUpdate2Response.AccessDenied;
+                    // In this case, data.Position is good.
+                    ILandObject land = LandChannel.GetLandObject(data.Position.X, data.Position.Y);
+                    if (!AuthorizeUserInParcel(data.AgentID, SP.Firstname, SP.Lastname, land, data.Position, out reason))
+                    {
+                        SP.ControllingClient.SendAlertMessage("Could not enter region '" + RegionInfo.RegionName + "': " + reason);
+                        return ChildAgentUpdate2Response.AccessDenied;
+                    }
                 }
+                // else data.Position is no good when seated, would use this:
+                // Vector3 pos = GetSceneObjectPart(data.SatOnPrim).AbsolutePosition + data.SatOnPrimOffset;
 
                 reason = "authorized";
                 SP.ChildAgentDataUpdate2(data);
