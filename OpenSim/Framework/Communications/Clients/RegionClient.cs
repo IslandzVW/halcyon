@@ -640,7 +640,7 @@ namespace OpenSim.Framework.Communications.Clients
         }
 
         public CreateObject2Ret DoCreateObject2Call(RegionInfo region, UUID sogId, byte[] sogBytes, bool allowScriptCrossing,
-            Vector3 pos, bool isAttachment, int numAvatarsToExpect, long nonceID)
+            Vector3 pos, bool isAttachment, long nonceID, List<UUID> avatars)
         {
             ulong regionHandle = GetRegionHandle(region.RegionHandle);
             string uri = "http://" + region.ExternalHostName + ":" + region.HttpPort + "/object2/" + sogId + "/" + regionHandle.ToString() + "/";
@@ -653,7 +653,18 @@ namespace OpenSim.Framework.Communications.Clients
             objectCreateRequest.Headers["authorization"] = GenerateAuthorization();
             objectCreateRequest.Headers["x-nonce-id"] = nonceID.ToString();
 
-            ObjectPostMessage message = new ObjectPostMessage { NumAvatars = numAvatarsToExpect, Pos = pos, Sog = sogBytes };
+            Guid[] avatarsArray;
+            if (avatars == null)
+                avatarsArray = null;
+            else
+            {
+                int count = 0;
+                avatarsArray = new Guid[avatars.Count];
+                foreach (UUID id in avatars)
+                    avatarsArray[count++] = id.Guid;
+            }
+
+            ObjectPostMessage message = new ObjectPostMessage { NumAvatars = avatarsArray.Length, Pos = pos, Sog = sogBytes, Avatars = avatarsArray };
 
             try
             { 
