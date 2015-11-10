@@ -4703,18 +4703,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (!IsDeleted)
             {
+                Vector3 pos = AbsolutePosition;
+                pos.Z = height;
+                AbsolutePosition = pos;
+#if false   // This is done indirectly by AbsolutePosition...
                 PhysicsActor physActor = RootPart.PhysActor;
                 if (physActor != null)
-                {
                     physActor.ForceAboveParcel(height);
-                }
-                else
-                {
-                    //object is phantom. brute force
-                    Vector3 pos = AbsolutePosition;
-                    pos.Z = height;
-                    AbsolutePosition = pos;
-                }
+#endif
             }
         }
 
