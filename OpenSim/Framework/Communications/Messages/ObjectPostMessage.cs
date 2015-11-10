@@ -60,6 +60,12 @@ namespace OpenSim.Framework.Communications.Messages
         [ProtoMember(3)]
         public int NumAvatars;
 
+        /// <summary>
+        /// Number of avatars to expect that are coming in riding on this prim
+        /// </summary>
+        [ProtoMember(4)]
+        public Guid[] Avatars;
+
         static ObjectPostMessage()
         {
             ProtoBuf.Serializer.PrepareSerializer<ObjectPostMessage>();

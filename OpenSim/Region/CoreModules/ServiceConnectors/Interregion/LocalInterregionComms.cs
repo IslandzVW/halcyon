@@ -120,7 +120,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
                 if (s.RegionInfo.RegionHandle == regionHandle)
                 {
                     // If this is intended as a root agent entry into the region, check whether it's authorized (e.g. not banned).
-                    if (authorize && !s.AuthorizeUser(aCircuit.AgentID, aCircuit.FirstName, aCircuit.LastName, aCircuit.ClientVersion, out reason))
+                    if (authorize && !s.AuthorizeUserInRegion(aCircuit.AgentID, aCircuit.FirstName, aCircuit.LastName, aCircuit.ClientVersion, out reason))
                         return false;
 
                     //                    m_log.DebugFormat("[LOCAL COMMS]: Found region {0} to send SendCreateChildAgent", regionHandle);
@@ -224,7 +224,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
          * Object-related communications 
          */
 
-        public bool SendCreateObject(ulong regionHandle, SceneObjectGroup sog, bool isLocalCall, Vector3 posInOtherRegion,
+        public bool SendCreateObject(ulong regionHandle, SceneObjectGroup sog, List<UUID> avatars, bool isLocalCall, Vector3 posInOtherRegion,
             bool isAttachment)
         {
             foreach (Scene s in m_sceneList)
@@ -242,12 +242,12 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
                         // We need to make a local copy of the object
                         ISceneObject sogClone = sog.CloneForNewScene();
                         sogClone.SetState(sog.GetStateSnapshot(true), s.RegionInfo.RegionID);
-                        return s.IncomingCreateObject(sogClone);
+                        return s.IncomingCreateObject(sogClone, avatars);
                     }
                     else
                     {
                         // Use the object as it came through the wire
-                        return s.IncomingCreateObject(sog);
+                        return s.IncomingCreateObject(sog, avatars);
                     }
                 }
             }
