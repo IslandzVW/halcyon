@@ -4699,6 +4699,26 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void ForceAboveParcel(float height)
+        {
+            if (!IsDeleted)
+            {
+                PhysicsActor physActor = RootPart.PhysActor;
+                if (physActor != null)
+                {
+                    physActor.ForceAboveParcel(height);
+                }
+                else
+                {
+                    //object is phantom. brute force
+                    Vector3 pos = AbsolutePosition;
+                    pos.Z = height;
+                    AbsolutePosition = pos;
+                }
+            }
+        }
+
+
         /// <summary>
         /// Prepares an attachment for rezzing by setting the appropriate attachment points
         /// as well as the group position and restoring appropriate parameters

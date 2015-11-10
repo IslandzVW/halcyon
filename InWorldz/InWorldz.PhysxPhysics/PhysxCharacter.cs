@@ -398,6 +398,11 @@ namespace InWorldz.PhysxPhysics
             
         }
 
+        public override void ForceAboveParcel(float height)
+        {
+
+        }
+
         public override void DelinkFromParent(OpenMetaverse.Vector3 newWorldPos, OpenMetaverse.Quaternion newWorldRot)
         {
             

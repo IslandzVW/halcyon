@@ -351,13 +351,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             return parcelsNear;
         }
 
-        public bool SendNoEntryNotice(ScenePresence avatar, ParcelPropertiesStatus reason)
+        public void SendNoEntryNotice(ScenePresence avatar, ParcelPropertiesStatus reason)
         {
             if (!AllowedForcefulBans)
             {
                 avatar.ControllingClient.SendAlertMessage(
                     "You are not allowed on this parcel, however the grid administrator has disabled ban lines globally. Please respect the land owner's privacy, or you could be banned from the full region.");
-                return false;
+                return;
             }
 
             if (reason == ParcelPropertiesStatus.CollisionBanned)
@@ -366,19 +366,45 @@ namespace OpenSim.Region.CoreModules.World.Land
             else
                 avatar.ControllingClient.SendAlertMessage(
                     "You are not permitted to enter this parcel due to parcel restrictions.");
+        }
+
+        // Bounce constants are how far above a no-entry parcel we'll place an object or avatar.
+        private readonly float OBJECT_BOUNCE = 2.0f;
+        private readonly float AVATAR_BOUNCE = 10.0f;
+        internal void RemoveAvatarFromParcel(ScenePresence avatar)
+        {
+            EntityBase.PositionInfo posInfo = avatar.GetPosInfo();
+
+            if (posInfo.Parent != null)
+            {
+                // Avatar is seated on a prim.
+                SceneObjectPart part = posInfo.m_parent;
+                SceneObjectGroup group = (part == null) ? null : part.ParentGroup;
+                // Check if the avatar is seated and unsit before reposition/teleport in SendNoEntryNotice.
+                if (group != null)
+                {
+                    group.ForceAboveParcel(LandChannel.BAN_LINE_SAFETY_HEIGHT + OBJECT_BOUNCE);
+                    return;
+                }
+                // can't find the prim seated on, stand up
+                avatar.StandUp(null, false, true);
+
+                // fall through to unseated avatar code.
+            }
 
             // If they are moving, stop them.  This updates the physics object as well.
             avatar.Velocity = Vector3.Zero;
-            Vector3 pos;
+
+            Vector3 pos = avatar.AbsolutePosition;  // may have changed from posInfo by StandUp above.
+
             ParcelPropertiesStatus reason2;
             if (!avatar.lastKnownAllowedPosition.Equals(Vector3.Zero))
             {
-                pos = new Vector3(avatar.lastKnownAllowedPosition.X, avatar.lastKnownAllowedPosition.Y, avatar.lastKnownAllowedPosition.Z);
+                pos = avatar.lastKnownAllowedPosition;
             }
             else
             {
                 // Still a forbidden parcel, they must have been above the limit or entering region for the first time.
-                pos = new Vector3(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y, avatar.AbsolutePosition.Z);
                 // Let's put them up higher, over the restricted parcel.
                 // We could add 50m to avatar.Scene.Heightmap[x,y] but then we need subscript checks, etc.
                 // For now, this is simple and safer than TPing them home.
@@ -388,17 +414,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             ILandObject parcel = landChannel.GetLandObject(pos.X, pos.Y);
             if (parcel.DenyParcelAccess(avatar.UUID, out reason2))
             {
-                // Havent found anywhere safe to put the avatar, TP them home.
-//              avatar.ControllingClient.SendTeleportLocationStart();
-//              avatar.Scene.TeleportClientHome(avatar.UUID, avatar.ControllingClient);
-//              return true;
-
-                if (pos.Z < 150.0f)
-                    pos.Z = 150.0f;
+                float minZ = LandChannel.BAN_LINE_SAFETY_HEIGHT + AVATAR_BOUNCE;
+                if (pos.Z < minZ)
+                    pos.Z = minZ;
             }
 
-            avatar.Teleport(pos);
-            return true;
+            // Now force the non-sitting avatar to a position above the parcel
+            avatar.Teleport(pos);   // this is really just a move
         }
 
         public void handleAvatarChangingParcel(ScenePresence avatar, int localLandID, UUID regionID)
@@ -419,21 +441,12 @@ namespace OpenSim.Region.CoreModules.World.Land
                         ParcelPropertiesStatus reason;
                         if (parcelAvatarIsEntering.DenyParcelAccess(avatar.UUID, out reason))
                         {
-                            // Check if the avatar is seated and unsit before reposition/teleport in SendNoEntryNotice.
-                            EntityBase.PositionInfo posInfo = avatar.GetPosInfo();
-                            if (posInfo.Parent != null)
-                                avatar.StandUp(null, false, true);
+                            RemoveAvatarFromParcel(avatar);
                             SendNoEntryNotice(avatar, reason);
-                        }
-                        else
-                        {
-                            avatar.lastKnownAllowedPosition = new Vector3(pos);
+                            return;
                         }
                     }
-                    else
-                    {
-                        avatar.lastKnownAllowedPosition = new Vector3(pos);
-                    }
+                    avatar.lastKnownAllowedPosition = pos;
                 }
             }
         }
@@ -510,21 +523,23 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             if (avatar != null)
             {
-                float zpos = avatar.AbsolutePosition.Z;
-                float prevzpos = avatar.lastKnownAllowedPosition.Z;
+                EntityBase.PositionInfo posInfo = avatar.GetPosInfo();
+                Vector3 pos = posInfo.Position;
                 ILandObject parcel = GetAvatarParcel(avatar);
                 if (parcel != null)
                 {
                     bool newParcel = (avatar.currentParcelUUID != parcel.landData.GlobalID);
                     if (newParcel)
                         SendAvatarLandUpdate(avatar, parcel, force);
-//                    SendOutNearestBanLine(remote_client);
-                    if (newParcel || ((zpos < LandChannel.BAN_LINE_SAFETY_HEIGHT) && (prevzpos >= LandChannel.BAN_LINE_SAFETY_HEIGHT)))
+                    //                    SendOutNearestBanLine(remote_client);
+                    if (newParcel || ((pos.Z < LandChannel.BAN_LINE_SAFETY_HEIGHT) && (avatar.lastKnownAllowedPosition.Z >= LandChannel.BAN_LINE_SAFETY_HEIGHT)))
                     {
                         // Either entering a new parcel from the side, or entering the restricted zone from above.
                         m_scene.EventManager.TriggerAvatarEnteringNewParcel(avatar, parcel.landData.LocalID, m_scene.RegionInfo.RegionID);
+                        return;
                     }
                 }
+                avatar.lastKnownAllowedPosition = pos;
             }
         }
 
