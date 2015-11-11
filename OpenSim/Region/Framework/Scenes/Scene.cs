@@ -3989,8 +3989,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (!AuthorizeUserInParcel(agentID, "", "", land, pos, out reason))
                     {
-                        m_log.WarnFormat("[SCENE]: Object denied entry at {0} because sitter {1} {2}", RegionInfo.RegionName, agentID, reason);
-                        reason = String.Format("Object entry denied: sitter {0} does not have access to that parcel.", agentID);
+                        m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} {2}", RegionInfo.RegionName, agentID, reason);
+                        reason = String.Format("Object entry denied: user {0} {1}", agentID, reason);
                         return false;
                     }
                 }
