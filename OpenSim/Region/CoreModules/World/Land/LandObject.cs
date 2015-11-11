@@ -447,6 +447,21 @@ namespace OpenSim.Region.CoreModules.World.Land
             return false;
         }
 
+        // Returns false and reason == ParcelPropertiesStatus.ParcelSelected if access is allowed, otherwise reason enum.
+        public bool DenyParcelAccess(SceneObjectGroup group, out ParcelPropertiesStatus reason)
+        {
+            List<ScenePresence> sitters = group.GetSittingAvatars();
+            foreach (ScenePresence sp in sitters)
+            {
+                if (sp.UUID == group.OwnerID)
+                    continue;   // checked separately below
+                if (DenyParcelAccess(sp.UUID, out reason))
+                    return false;
+            }
+
+            return DenyParcelAccess(group.OwnerID, out reason);
+        }
+
         public bool isBannedFromLand(UUID avatar)
         {
             if (m_scene.Permissions.BypassPermissions())
