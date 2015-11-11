@@ -626,8 +626,19 @@ namespace OpenSim.Region.Framework.Scenes
                     ParcelPropertiesStatus reason;
                     if (NewParcel.DenyParcelAccess(this, out reason))
                     {
-                        val = currentPos;           // undo the position change
-                        physicsTriggered = false;   // forced update
+                        if (physicsTriggered)
+                        {
+                            bool wasSelected = this.IsSelected;
+                            this.IsSelected = true; // force kinematic
+
+                            this.SetVelocity(Vector3.Zero, false);
+                            m_rootPart.SetGroupPosition(val, false, false); // not physicsTriggered
+
+                            if (!wasSelected) this.IsSelected = false;  // restore kinematic state
+                            return; // it was a physical move, we're done.
+                        }
+
+                        val = currentPos;           // force undo the position change and continue
                     }
                 }
 
