@@ -612,9 +612,24 @@ namespace OpenSim.Region.Framework.Scenes
             else
             {
                 // Find the current parcel before we update the position.
-                Vector3 currentPos = AbsolutePosition;
+                Vector3 currentPos = RootPart.GroupPositionNoUpdate;
                 if (CurrentParcel == null)
                     CurrentParcel = m_scene.LandChannel.GetLandObject(currentPos.X, currentPos.Y);
+
+                ILandObject NewParcel = m_scene.LandChannel.GetLandObject(val.X, val.Y);
+                if (NewParcel == null)
+                    return; // Just don't allow it to change to something invalid
+
+                if ((NewParcel != null) && (val.Z < m_scene.LandChannel.GetBanHeight()))
+                {
+                    // Possibly entering a restricted parcel.
+                    ParcelPropertiesStatus reason;
+                    if (NewParcel.DenyParcelAccess(this, out reason))
+                    {
+                        val = currentPos;           // undo the position change
+                        physicsTriggered = false;   // forced update
+                    }
+                }
 
                 // Update the position.
                 m_rootPart.SetGroupPosition(val, false, physicsTriggered);
@@ -623,16 +638,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if ((m_scene != null) && !IsAttachment)
                 {
                     //check for changing of parcel
-                    ILandObject NewParcel = m_scene.LandChannel.GetLandObject(val.X, val.Y);
-                    if (NewParcel != null)
+                    if ((CurrentParcel != null) && (val != currentPos))
                     {
-                        if ((CurrentParcel != null) && (val != currentPos))
+                        if (NewParcel.landData.LocalID != CurrentParcel.landData.LocalID)
                         {
-                            if (NewParcel.landData.LocalID != CurrentParcel.landData.LocalID)
-                            {
-                                m_scene.EventManager.TriggerGroupCrossedToNewParcel(this, CurrentParcel, NewParcel);
-                                CurrentParcel = NewParcel;
-                            }
+                            m_scene.EventManager.TriggerGroupCrossedToNewParcel(this, CurrentParcel, NewParcel);
+                            CurrentParcel = NewParcel;
                         }
                     }
                 }
@@ -914,9 +925,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         //public UUID FromAssetId { get; set; }
 
-        #endregion
+#endregion
 
-        #region Constructors
+#region Constructors
 
         /// <summary>
         /// Constructor
@@ -1278,7 +1289,7 @@ namespace OpenSim.Region.Framework.Scenes
             return returnresult;
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// Used to set absolute positioning without crossing the prim into a new scene in case of negative values
@@ -1827,7 +1838,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #region Events
+#region Events
 
         private static SceneObjectGroup CopyObjectForBackup(SceneObjectGroup group)
         {
@@ -1925,9 +1936,9 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        #endregion
+#endregion
 
-        #region Client Updating
+#region Client Updating
 
         public void SendFullUpdateToClient(IClientAPI remoteClient)
         {
@@ -2019,9 +2030,9 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
 
-        #endregion
+#endregion
 
-        #region Copying
+#region Copying
 
 
         public SceneObjectGroup Copy(UUID cAgentID, UUID cGroupID, bool userExposed, bool serializePhysicsState)
@@ -2478,9 +2489,9 @@ namespace OpenSim.Region.Framework.Scenes
             part.GroupID = cGroupID;
         }
 
-        #endregion
+#endregion
 
-        #region Scheduling
+#region Scheduling
 
         public override void Update()
         {
@@ -2611,9 +2622,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region SceneGroupPart Methods
+#region SceneGroupPart Methods
 
         /// <summary>
         /// Get the child part by LinkNum
@@ -2706,9 +2717,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Packet Handlers
+#region Packet Handlers
 
         /// <summary>
         /// Link the prims in otherGroup to this group
@@ -3365,9 +3376,9 @@ namespace OpenSim.Region.Framework.Scenes
             return rc;
         }
 
-        #endregion
+#endregion
 
-        #region Shape
+#region Shape
 
         /// <summary>
         ///
@@ -3382,9 +3393,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Resize
+#region Resize
 
         /// <summary>
         /// Resize the given part
@@ -3577,9 +3588,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Position
+#region Position
 
         /// <summary>
         /// Move this scene object
@@ -3589,6 +3600,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (InTransit)
                 return; // discard the update while in transit
+
+            if (pos == AbsolutePosition)
+                return; // nothing to do
 
             if (SaveUpdate)
             {
@@ -3712,9 +3726,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_rootPart.SetGroupPosition(offset, true, false);
         }
 
-        #endregion
+#endregion
 
-        #region Rotation
+#region Rotation
 
         /// <summary>
         ///
@@ -3863,7 +3877,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_rootPart.ScheduleTerseUpdate();
         }
 
-        #endregion
+#endregion
 
         public int RegisterTargetWaypoint(Vector3 target, float tolerance)
         {
@@ -4219,7 +4233,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #region ISceneObject
+#region ISceneObject
 
         public virtual ISceneObject CloneForNewScene()
         {
@@ -4275,7 +4289,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             SetFromItemID(uuid);
         }
-        #endregion
+#endregion
 
         private void TrackLocalId(SceneObjectPart part, uint localId)
         {
@@ -4705,15 +4719,9 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 Vector3 pos = AbsolutePosition;
                 pos.Z = height;
-                AbsolutePosition = pos;
-#if false   // This is done indirectly by AbsolutePosition...
-                PhysicsActor physActor = RootPart.PhysActor;
-                if (physActor != null)
-                    physActor.ForceAboveParcel(height);
-#endif
+                AbsolutePosition = pos; // AbsolutePosition setter takes care of all cases
             }
         }
-
 
         /// <summary>
         /// Prepares an attachment for rezzing by setting the appropriate attachment points
