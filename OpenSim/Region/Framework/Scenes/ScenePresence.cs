@@ -523,13 +523,26 @@ namespace OpenSim.Region.Framework.Scenes
                 if ((!forced) && (IsInTransit) && (parent != m_posInfo.Parent))
                     return;
 
+                if (parent == null)
+                {
+                    // not seated
+                    ILandObject parcel = Scene.LandChannel.GetLandObject(agentPos.X, agentPos.Y);
+                    if (parcel != null)
+                    {
+                        ParcelPropertiesStatus reason;
+                        if (agentPos.Z < Scene.LandChannel.GetBanHeight() && parcel.DenyParcelAccess(this.UUID, out reason))
+                        {
+                            if (!forced)
+                                return; // illegal position
+                        } else
+                            lastKnownAllowedPosition = agentPos;
+                    }
+                }
+
                 m_posInfo.Set(agentPos, parent, parentPos);
                 oldVelocity = m_velocity;
                 m_velocity = velocity;
                 ForceAgentPositionInRegion();
-                if (m_posInfo.Parent != null)
-                    if ((m_posInfo.Position.X >= 6.0f) || (m_posInfo.Position.Y >= 6.0f))
-                        m_log.Error("[SCENE PRESENCE]: SetAgentPositionInfo - unexpected position " + m_posInfo.Position.ToString());
                 pos = m_posInfo.Position;
             }
 
@@ -564,13 +577,40 @@ namespace OpenSim.Region.Framework.Scenes
                         if (IsBot && !Util.IsValidRegionXY(ppos))
                         {
                             Util.ForceValidRegionXY(ref ppos);
+                            m_physicsActor.Velocity = Vector3.Zero;
                             posForced = true;
                         }
+                        if (m_posInfo.Parent == null)   // not seated
+                        {
+                            ILandObject parcel = Scene.LandChannel.GetLandObject(ppos.X, ppos.Y);
+                            if (parcel != null)
+                            {
+                                ParcelPropertiesStatus reason;
+                                if ((ppos.Z < Scene.LandChannel.GetBanHeight()) && (parcel.DenyParcelAccess(this.UUID, out reason)))
+                                {
+                                    Vector3 newpos = this.lastKnownAllowedPosition;   // force back into valid location
+                                    Vector3 newvel = m_physicsActor.Velocity;
+                                    // If not retreating from the parcel, bounce them on top of it.
+                                    ILandObject parcel2 = Scene.LandChannel.GetLandObject(newpos.X, newpos.Y);
+                                    if ((parcel2 != null) && (parcel2.landData.LocalID == parcel.landData.LocalID))
+                                    {
+                                        // New parcel is the same parcel, still illegal
+                                        newpos.Z = Scene.LandChannel.GetBanHeight() + 20.0f;    // bounce
+                                        newvel.Z = -newvel.Z;
+                                    }
+                                    ppos = newpos;
+                                    m_physicsActor.Velocity = newvel;
+                                    posForced = true;
+                                }
+                                else
+                                    this.lastKnownAllowedPosition = ppos;
+                            }
+                        }
+
                         m_posInfo.SetPosition(ppos.X, ppos.Y, ppos.Z);
                         pos = m_posInfo.Position;
                         if (posForced)
                         {
-                            m_physicsActor.Velocity = Vector3.Zero;
                             m_physicsActor.Position = pos;
                         }
                     }
@@ -779,9 +819,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Constructor(s)
+#region Constructor(s)
 
         private ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo)
         {
@@ -941,14 +981,14 @@ namespace OpenSim.Region.Framework.Scenes
             return vector;
         }
 
-        #endregion
+#endregion
 
         public uint GenerateClientFlags(UUID ObjectID)
         {
             return m_scene.Permissions.GenerateClientFlags(m_uuid, ObjectID);
         }
 
-        #region Status Methods
+#region Status Methods
 
         /// <summary>
         /// This turns a child agent, into a root agent
@@ -1292,9 +1332,9 @@ namespace OpenSim.Region.Framework.Scenes
             SceneView.SendFullUpdateToAllClients();
         }
 
-        #endregion
+#endregion
 
-        #region Event Handlers
+#region Event Handlers
 
         /// <summary>
         /// Sets avatar height in the phyiscs plugin
@@ -1517,7 +1557,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {   // sitting on a prim
                     if (part.ParentGroup.InTransit)
                     {
-                        m_log.Warn("[CROSSING]: AgentUpdate called during prim transit! Ignored.");
+                        // m_log.Warn("[CROSSING]: AgentUpdate called during prim transit! Ignored.");
                         return;
                     }
                 }
@@ -3021,9 +3061,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene.StatsReporter.AddAgentTime(Environment.TickCount - m_perfMonMS);
         }
 
-        #endregion
+#endregion
 
-        #region Overridden Methods
+#region Overridden Methods
 
         public override void Update()
         {
@@ -3049,9 +3089,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Update Client(s)
+#region Update Client(s)
 
         /// <summary>
         /// Sends a location update to the client connected to this scenePresence
@@ -3412,9 +3452,9 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
 
-        #endregion
+#endregion
 
-        #region Significant Movement Method
+#region Significant Movement Method
 
         /// <summary>
         /// This checks for a significant movement and sends a courselocationchange update
@@ -3490,8 +3530,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
-        #region Border Crossing Methods
+#endregion
+#region Border Crossing Methods
 
         /// <summary>
         /// Checks to see if the avatar is in range of a border and calls CrossToNewRegion
@@ -3722,7 +3762,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Disabling the draw distance based visibility until the algorithm handles proper tiling path rules for region visibility.
             // e.g. Diagonal regions (i.e. checkerboard region layouts) are not supposed to be visible without a horizontal/vertical connection region.
-#if false   
+#if false
             // region offset, e.g. (1002, 999) viewing (1000,1000) would be diffX=-2, diffY=1 (left 2, up 1)
             int diffX = (int)regionX - (int)fromX;
             int diffY = (int)regionY - (int)fromY;
@@ -3752,7 +3792,7 @@ namespace OpenSim.Region.Framework.Scenes
 #endif
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// This allows the Sim owner the abiility to kick users from their sim currently.
@@ -3779,7 +3819,7 @@ namespace OpenSim.Region.Framework.Scenes
             ControllingClient.SendAdminResponse(token, (uint)m_godlevel);
         }
 
-        #region Child Agent Updates
+#region Child Agent Updates
 
         public void ChildAgentDataUpdate(AgentData cAgentData)
         {
@@ -4027,7 +4067,7 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        #endregion Child Agent Updates
+#endregion Child Agent Updates
 
         /// <summary>
         /// Handles part of the PID controller function for moving an avatar.
