@@ -441,7 +441,9 @@ namespace OpenSim.Region.CoreModules.World.Land
                         ParcelPropertiesStatus reason;
                         if (parcelAvatarIsEntering.DenyParcelAccess(avatar.UUID, out reason))
                         {
-                            RemoveAvatarFromParcel(avatar);
+                            EntityBase.PositionInfo avatarPos = avatar.GetPosInfo();
+                            if (avatarPos.Parent == null)   // not seated
+                                RemoveAvatarFromParcel(avatar);
                             SendNoEntryNotice(avatar, reason);
                             return;
                         }
@@ -528,18 +530,22 @@ namespace OpenSim.Region.CoreModules.World.Land
                 ILandObject parcel = GetAvatarParcel(avatar);
                 if (parcel != null)
                 {
+                    SendOutNearestBanLine(remote_client);
+
+                    // Possibly entering the restricted zone of the parcel.
+                    ParcelPropertiesStatus reason;
+                    if ((pos.Z >= LandChannel.BAN_LINE_SAFETY_HEIGHT) || !parcel.DenyParcelAccess(avatar.UUID, out reason))
+                    {
+                        avatar.lastKnownAllowedPosition = pos;
+                    }
+
                     bool newParcel = (avatar.currentParcelUUID != parcel.landData.GlobalID);
                     if (newParcel)
-                        SendAvatarLandUpdate(avatar, parcel, force);
-                    //                    SendOutNearestBanLine(remote_client);
-                    if (newParcel || ((pos.Z < LandChannel.BAN_LINE_SAFETY_HEIGHT) && (avatar.lastKnownAllowedPosition.Z >= LandChannel.BAN_LINE_SAFETY_HEIGHT)))
                     {
-                        // Either entering a new parcel from the side, or entering the restricted zone from above.
+                        SendAvatarLandUpdate(avatar, parcel, force);
                         m_scene.EventManager.TriggerAvatarEnteringNewParcel(avatar, parcel.landData.LocalID, m_scene.RegionInfo.RegionID);
-                        return;
                     }
                 }
-                avatar.lastKnownAllowedPosition = pos;
             }
         }
 
@@ -777,9 +783,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             return GetLandObject(x, y);
         }
 
-        #endregion
+#endregion
 
-        #region Parcel Modification
+#region Parcel Modification
 
         public void ResetAllLandPrimCounts()
         {
@@ -1074,9 +1080,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             masterLandObject.sendLandUpdateToAvatarsOverParcel();
         }
 
-        #endregion
+#endregion
 
-        #region Parcel Updating
+#region Parcel Updating
 
         /// <summary>
         /// Where we send the ParcelOverlay packet to the client
@@ -1375,7 +1381,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
         }
-        #endregion
+#endregion
 
         // After receiving a land buy packet, first the data needs to
         // be validated. This method validates the right to buy the parcel.
@@ -1475,7 +1481,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         }
 
-        #region Land Object From Storage Functions
+#region Land Object From Storage Functions
 
         public void IncomingLandObjectsFromStorage(List<LandData> data)
         {
@@ -1521,7 +1527,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             ResetSimLandObjects();
         }
 
-        #endregion
+#endregion
 
         public void setParcelObjectMaxOverride(overrideParcelMaxPrimCountDelegate overrideDel)
         {
@@ -1538,7 +1544,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
         }
 
-        #region CAPS handler
+#region CAPS handler
 
         private void OnRegisterCaps(UUID agentID, Caps caps)
         {
@@ -1703,7 +1709,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             return LLSDHelpers.SerializeLLSDReply(response);
         }
 
-        #endregion
+#endregion
 
         private void handleParcelDwell(int localID, IClientAPI remoteClient)
         {
