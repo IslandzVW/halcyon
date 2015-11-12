@@ -369,23 +369,13 @@ namespace OpenSim.Region.CoreModules.World.Land
         }
 
         // Bounce constants are how far above a no-entry parcel we'll place an object or avatar.
-        private readonly float OBJECT_BOUNCE = 2.0f;
         private readonly float AVATAR_BOUNCE = 10.0f;
-        internal void RemoveAvatarFromParcel(ScenePresence avatar)
+        public void RemoveAvatarFromParcel(ScenePresence avatar)
         {
             EntityBase.PositionInfo posInfo = avatar.GetPosInfo();
 
             if (posInfo.Parent != null)
             {
-                // Avatar is seated on a prim.
-                SceneObjectPart part = posInfo.m_parent;
-                SceneObjectGroup group = (part == null) ? null : part.ParentGroup;
-                // Check if the avatar is seated and unsit before reposition/teleport in SendNoEntryNotice.
-                if (group != null)
-                {
-                    group.ForceAboveParcel(LandChannel.BAN_LINE_SAFETY_HEIGHT + OBJECT_BOUNCE);
-                    return;
-                }
                 // can't find the prim seated on, stand up
                 avatar.StandUp(null, false, true);
 
@@ -421,6 +411,11 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             // Now force the non-sitting avatar to a position above the parcel
             avatar.Teleport(pos);   // this is really just a move
+        }
+        public void RemoveAvatarFromParcel(UUID userID)
+        {
+            ScenePresence sp = m_scene.GetScenePresence(userID);
+            RemoveAvatarFromParcel(sp);
         }
 
         public void handleAvatarChangingParcel(ScenePresence avatar, int localLandID, UUID regionID)
@@ -511,23 +506,25 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public ILandObject GetAvatarParcel(ScenePresence avatar)
+        public ILandObject GetNearestParcel(Vector3 pos)
         {
-            Vector3 pos = avatar.AbsolutePosition;
             pos.X = Util.Clamp<int>((int)pos.X, 0, 255);
             pos.Y = Util.Clamp<int>((int)pos.Y, 0, 255);
             return GetLandObject(pos.X, pos.Y);
         }
 
+        public ILandObject GetAvatarParcel(ScenePresence avatar)
+        {
+            return GetNearestParcel(avatar.AbsolutePosition);
+        }
+
         public void RefreshParcelInfo(IClientAPI remote_client, bool force)
         {
             ScenePresence avatar = m_scene.GetScenePresence(remote_client.AgentId);
-
             if (avatar != null)
             {
-                EntityBase.PositionInfo posInfo = avatar.GetPosInfo();
-                Vector3 pos = posInfo.Position;
-                ILandObject parcel = GetAvatarParcel(avatar);
+                Vector3 pos = avatar.AbsolutePosition;
+                ILandObject parcel = GetLandObject(pos.X, pos.Y);   // use the real values, ignore parcel not found
                 if (parcel != null)
                 {
                     SendOutNearestBanLine(remote_client);

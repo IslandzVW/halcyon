@@ -580,13 +580,25 @@ namespace OpenSim.Region.Framework.Scenes
                             m_physicsActor.Velocity = Vector3.Zero;
                             posForced = true;
                         }
-                        if (m_posInfo.Parent == null)   // not seated
+
+                        ILandObject parcel = Scene.LandChannel.GetLandObject(ppos.X, ppos.Y);
+                        if (parcel != null)
                         {
-                            ILandObject parcel = Scene.LandChannel.GetLandObject(ppos.X, ppos.Y);
-                            if (parcel != null)
+                            ParcelPropertiesStatus reason;
+                            if ((ppos.Z < Scene.LandChannel.GetBanHeight()) && (parcel.DenyParcelAccess(this.UUID, out reason)))
                             {
-                                ParcelPropertiesStatus reason;
-                                if ((ppos.Z < Scene.LandChannel.GetBanHeight()) && (parcel.DenyParcelAccess(this.UUID, out reason)))
+                                bool enforce = false;
+                                if (m_posInfo.Parent == null)   // not seated
+                                    enforce = true;
+                                else
+                                if (m_posInfo.Parent != null)   // seated
+                                {
+                                    if (m_posInfo.Parent.PhysActor != null)
+                                        if (m_posInfo.Parent.PhysActor.IsPhysical)
+                                            enforce = true;
+                                }
+
+                                if (enforce)
                                 {
                                     Vector3 newpos = this.lastKnownAllowedPosition;   // force back into valid location
                                     Vector3 newvel = m_physicsActor.Velocity;
@@ -602,9 +614,9 @@ namespace OpenSim.Region.Framework.Scenes
                                     m_physicsActor.Velocity = newvel;
                                     posForced = true;
                                 }
-                                else
-                                    this.lastKnownAllowedPosition = ppos;
                             }
+                            else
+                                this.lastKnownAllowedPosition = ppos;
                         }
 
                         m_posInfo.SetPosition(ppos.X, ppos.Y, ppos.Z);

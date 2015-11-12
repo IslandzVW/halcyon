@@ -624,21 +624,43 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     // Possibly entering a restricted parcel.
                     ParcelPropertiesStatus reason;
-                    if (NewParcel.DenyParcelAccess(this, out reason))
+                    if (physicsTriggered)
                     {
-                        if (physicsTriggered)
+                        // If the sat-upon object is physical, we can't stop it.
+                        // First, let's check each rider to see if we need to eject them.
+                        List<ScenePresence> sitters = GetSittingAvatars();
+                        foreach(ScenePresence sitter in sitters)
                         {
-                            bool wasSelected = this.IsSelected;
-                            this.IsSelected = true; // force kinematic
-
-                            this.SetVelocity(Vector3.Zero, false);
-                            m_rootPart.SetGroupPosition(val, false, false); // not physicsTriggered
-
-                            if (!wasSelected) this.IsSelected = false;  // restore kinematic state
-                            return; // it was a physical move, we're done.
+                            if (NewParcel.DenyParcelAccess(sitter.UUID, out reason))
+                            {
+                                Util.FireAndForget((o) =>
+                                {
+                                    Scene.LandChannel.RemoveAvatarFromParcel(sitter.UUID);
+                                    if (reason == ParcelPropertiesStatus.CollisionBanned)
+                                        sitter.ControllingClient.SendAlertMessage("You are not permitted to enter this parcel because you are banned.");
+                                    else
+                                        sitter.ControllingClient.SendAlertMessage("You are not permitted to enter this parcel due to parcel restrictions.");
+                                });
+                            }
                         }
+                        // Then, if the owner of the object itself is banned, let's return it.
+                        if (NewParcel.DenyParcelAccess(this, false, out reason))
+                        {
+                            this.IsSelected = true; // force kinematic to stop further pos updates/returns
 
-                        val = currentPos;           // force undo the position change and continue
+                            Util.FireAndForget((o) =>
+                            {
+                                Thread.Sleep(500);  // Give the avatars a chance to stand above (not really needed, but may help)
+                                m_scene.returnObjects(new SceneObjectGroup[] { this }, "physical object entry not permitted");
+                            });
+                        }
+                        return; // it was a physical move, we've done all we can.
+                    }
+
+                    // If we reach here, the object is non-physical. Check entry and fix if denied.
+                    if (NewParcel.DenyParcelAccess(this, true, out reason))
+                    {
+                        val = currentPos; // force undo the position change and continue
                     }
                 }
 

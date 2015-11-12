@@ -448,15 +448,18 @@ namespace OpenSim.Region.CoreModules.World.Land
         }
 
         // Returns false and reason == ParcelPropertiesStatus.ParcelSelected if access is allowed, otherwise reason enum.
-        public bool DenyParcelAccess(SceneObjectGroup group, out ParcelPropertiesStatus reason)
+        public bool DenyParcelAccess(SceneObjectGroup group, bool checkSitters, out ParcelPropertiesStatus reason)
         {
-            List<ScenePresence> sitters = group.GetSittingAvatars();
-            foreach (ScenePresence sp in sitters)
+            if (checkSitters)
             {
-                if (sp.UUID == group.OwnerID)
-                    continue;   // checked separately below
-                if (DenyParcelAccess(sp.UUID, out reason))
-                    return false;
+                List<ScenePresence> sitters = group.GetSittingAvatars();
+                foreach (ScenePresence sp in sitters)
+                {
+                    if (sp.UUID == group.OwnerID)
+                        continue;   // checked separately below
+                    if (DenyParcelAccess(sp.UUID, out reason))
+                        return false;
+                }
             }
 
             return DenyParcelAccess(group.OwnerID, out reason);
@@ -533,6 +536,51 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             // no other land restrictions
             return false;
+        }
+
+        private readonly float AVATAR_BOUNCE = 10.0f;
+        public void RemoveAvatarFromParcel(UUID userID)
+        {
+            ScenePresence sp = m_scene.GetScenePresence(userID);
+            EntityBase.PositionInfo posInfo = sp.GetPosInfo();
+
+            if (posInfo.Parent != null)
+            {
+                // can't find the prim seated on, stand up
+                sp.StandUp(null, false, true);
+
+                // fall through to unseated avatar code.
+            }
+
+            // If they are moving, stop them.  This updates the physics object as well.
+            sp.Velocity = Vector3.Zero;
+
+            Vector3 pos = sp.AbsolutePosition;  // may have changed from posInfo by StandUp above.
+
+            ParcelPropertiesStatus reason2;
+            if (!sp.lastKnownAllowedPosition.Equals(Vector3.Zero))
+            {
+                pos = sp.lastKnownAllowedPosition;
+            }
+            else
+            {
+                // Still a forbidden parcel, they must have been above the limit or entering region for the first time.
+                // Let's put them up higher, over the restricted parcel.
+                // We could add 50m to avatar.Scene.Heightmap[x,y] but then we need subscript checks, etc.
+                // For now, this is simple and safer than TPing them home.
+                pos.Z += 50.0f;
+            }
+
+            ILandObject parcel = m_scene.LandChannel.GetLandObject(pos.X, pos.Y);
+            if (parcel.DenyParcelAccess(sp.UUID, out reason2))
+            {
+                float minZ = LandChannel.BAN_LINE_SAFETY_HEIGHT + AVATAR_BOUNCE;
+                if (pos.Z < minZ)
+                    pos.Z = minZ;
+            }
+
+            // Now force the non-sitting avatar to a position above the parcel
+            sp.Teleport(pos);   // this is really just a move
         }
 
         public void sendLandUpdateToClient(IClientAPI remote_client, int sequence_id, bool snap_selection)
