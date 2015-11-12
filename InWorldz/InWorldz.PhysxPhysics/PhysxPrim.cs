@@ -855,6 +855,24 @@ namespace InWorldz.PhysxPhysics
             ));
         }
 
+        public override void ForceAboveParcel(float height)
+        {
+            _scene.QueueCommand(
+                new Commands.GenericSyncCmd(this,
+                    (PhysxScene scene) =>
+                    {
+                        OpenMetaverse.Vector3 newPos = _position;
+                        //place this object back above the parcel
+                        newPos.Z = height;
+
+                        if (_dynActor != null)
+                        {
+                            _dynActor.GlobalPose = PhysUtil.PositionToMatrix(newPos, _rotation);
+                        }
+                    }
+             ));
+        }
+
         public override IMaterial GetMaterial()
         {
             lock (_properties)
