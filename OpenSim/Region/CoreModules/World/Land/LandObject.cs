@@ -469,25 +469,31 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
             if (m_scene.Permissions.BypassPermissions())
                 return false;
+
             if (landData.OwnerID == avatar)
-                return false;
-            if (AllowAccessEstatewide(avatar))
                 return false;
 
             ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
             entry.AgentID = avatar;
             entry.Flags = AccessList.Ban;
             entry.Time = new DateTime();
-            return landData.ParcelAccessList.Contains(entry);
+            if (landData.ParcelAccessList.Contains(entry))
+            {
+                // Banned, but ignore if EO etc?  Delay this call to here because
+                // this call is potentially slightly expensive due to partner check profile lookup.
+                if (!AllowAccessEstatewide(avatar))
+                    return true;
+            }
+
+            return false;
         }
 
         public bool isRestrictedFromLand(UUID avatar)
         {
             if (m_scene.Permissions.BypassPermissions())
-                return true;
-            if (landData.OwnerID == avatar)
                 return false;
-            if (AllowAccessEstatewide(avatar))
+
+            if (landData.OwnerID == avatar)
                 return false;
 
             if (landData.GroupID != UUID.Zero)
@@ -517,20 +523,24 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             if ((landData.Flags & (uint)ParcelFlags.UseAccessList) > 0)
             {
-                if (landData.ParcelAccessList.Count == 0)
+                // Delay AllowAccessEstatewide is potentially slightly expensive due to partner check profile lookup
+                if (!AllowAccessEstatewide(avatar))
                 {
-                    m_log.WarnFormat("User {0} restricted from land parcel due to empty access list.", avatar.ToString());
-                    return true;
-                }
+                    if (landData.ParcelAccessList.Count == 0)
+                    {
+                        m_log.WarnFormat("User {0} restricted from land parcel due to empty access list.", avatar.ToString());
+                        return true;
+                    }
 
-                ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
-                entry.AgentID = avatar;
-                entry.Flags = AccessList.Access;
-                entry.Time = new DateTime();
-                if (!landData.ParcelAccessList.Contains(entry))
-                {
-                    //They are not allowed in this parcel, but not banned, so lets send them a notice about this parcel
-                    return true;
+                    ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
+                    entry.AgentID = avatar;
+                    entry.Flags = AccessList.Access;
+                    entry.Time = new DateTime();
+                    if (!landData.ParcelAccessList.Contains(entry))
+                    {
+                        //They are not allowed in this parcel, but not banned, so lets send them a notice about this parcel
+                        return true;
+                    }
                 }
             }
 
