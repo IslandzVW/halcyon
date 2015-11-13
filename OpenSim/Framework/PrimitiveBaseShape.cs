@@ -1862,6 +1862,13 @@ namespace OpenSim.Framework
 
             public void ReadXml(string rawXml)
             {
+                if (rawXml.StartsWith("&lt;"))
+                {
+                    rawXml = rawXml.Replace("&lt;", "<").Replace("&gt;", ">");
+                    ReadXml(rawXml);
+                    return;
+                }
+
                 using (StringReader sr = new StringReader(rawXml))
                 {
                     using (XmlTextReader xtr = new XmlTextReader(sr))
