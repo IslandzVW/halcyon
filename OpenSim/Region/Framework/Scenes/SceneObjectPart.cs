@@ -849,6 +849,14 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public Vector3 GroupPositionNoUpdate
+        {
+            get
+            {
+                return m_groupPosition;
+            }
+        }
+
         /// <summary>
         /// The local position of this group according to the parent coordinate system
         /// Like GroupPosition except never based on the attached avatar position.

@@ -77,6 +77,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void SetParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime);
         void RefreshParcelInfo(IClientAPI remoteClient, bool force);
         float GetBanHeight();
+        void RemoveAvatarFromParcel(UUID userID);
 
         // Region support for Plus parcel web updates
         LandData ClaimPlusParcel(UUID parcelID, UUID userID);

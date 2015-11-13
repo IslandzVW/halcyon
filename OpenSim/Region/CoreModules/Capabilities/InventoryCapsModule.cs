@@ -180,7 +180,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 m_assetCache = m_Scene.CommsManager.AssetCache;
                 m_inventoryProviderSelector = ProviderRegistry.Instance.Get<IInventoryProviderSelector>();
                 m_checkedStorageProvider = m_inventoryProviderSelector.GetCheckedProvider(m_Caps.AgentID);
-                m_libraryFolder = m_Scene.CommsManager.UserProfileCacheService.LibraryRoot;
+                m_libraryFolder = m_Scene.CommsManager.LibraryRoot;
 
                 m_inventoryPool.Name = "Inventory Caps " + agentID; 
             }

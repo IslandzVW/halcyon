@@ -40,7 +40,7 @@ using OpenSim.Grid.Framework;
 
 namespace OpenSim.Grid.UserServer.Modules
 {
-    public class UserDataBaseService : UserManagerBase
+    public class UserDataBaseService : OpenSim.Framework.Communications.UserProfileManager
     {
         protected IGridServiceCore m_core;
 

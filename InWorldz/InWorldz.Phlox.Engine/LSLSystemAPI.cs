@@ -1142,12 +1142,12 @@ namespace InWorldz.Phlox.Engine
         public string resolveName(UUID objecUUID)
         {
             // try avatar username surname
-            CachedUserInfo profile = World.CommsManager.UserProfileCacheService.GetUserDetails(objecUUID);
-            if (profile != null && profile.UserProfile != null)
+            string name = World.CommsManager.UserService.Key2Name(objecUUID, false);
+            if (name != String.Empty)
             {
-                string avatarname = profile.UserProfile.FirstName + " " + profile.UserProfile.SurName;
-                return avatarname;
+                return name;
             }
+
             // try an scene object
             SceneObjectPart SOP = World.GetSceneObjectPart(objecUUID);
             if (SOP != null)
@@ -11070,8 +11070,7 @@ namespace InWorldz.Phlox.Engine
 
         public string llGetSimulatorHostname()
         {
-            
-            return System.Environment.MachineName;
+            return llGetEnv("simulator_hostname");
         }
 
         //  <summary>
@@ -13377,12 +13376,9 @@ namespace InWorldz.Phlox.Engine
 
             try
             {
-                UUID agentID = UUID.Zero;
-
-                CachedUserInfo userInfo = World.CommsManager.UserProfileCacheService.GetUserDetails(firstname, lastname);
-                if (null != userInfo)
+                UUID agentID = World.CommsManager.UserService.Name2Key(firstname, lastname);
+                if (agentID != UUID.Zero)
                 {
-                    agentID = userInfo.UserProfile.ID;
                     // local avatars are cached lookups, so don't penalize if local
                     ScenePresence avatar = World.GetScenePresence(agentID);
                     if (avatar != null) 
@@ -13801,13 +13797,13 @@ namespace InWorldz.Phlox.Engine
             return rc;
         }
 
-        public string UserNameToReport(UUID agentId)
+        public string UserNameToReport(UUID agentId, bool onlyIfCached)
         {
-            CachedUserInfo profile = World.CommsManager.UserProfileCacheService.GetUserDetails(agentId);
-            if (profile == null)
-                return agentId.ToString();
+            string name = World.CommsManager.UserService.Key2Name(agentId, onlyIfCached);
+            if (name != String.Empty)
+                return name;
 
-            return profile.UserProfile.Name;
+            return agentId.ToString();
         }
 
         public string GroupNameToReport(UUID groupId)
@@ -13838,10 +13834,10 @@ namespace InWorldz.Phlox.Engine
                         string msg = null;
                         switch (action) {
                         case ScriptBaseClass.ESTATE_ACCESS_ALLOWED_AGENT_ADD:
-                                msg = UserNameToReport(targetId) + " has been added to the allowed user list for " + regionName;
+                                msg = UserNameToReport(targetId, false) + " has been added to the allowed user list for " + regionName;
                             break;
                         case ScriptBaseClass.ESTATE_ACCESS_ALLOWED_AGENT_REMOVE:
-                            msg = UserNameToReport(targetId) + " has been removed from the allowed user list for " + regionName;
+                            msg = UserNameToReport(targetId, false) + " has been removed from the allowed user list for " + regionName;
                             break;
                         case ScriptBaseClass.ESTATE_ACCESS_ALLOWED_GROUP_ADD:
                             msg = GroupNameToReport(targetId) + " has been added to the allowed group list for " + regionName;
@@ -13850,10 +13846,10 @@ namespace InWorldz.Phlox.Engine
                             msg = GroupNameToReport(targetId) + " has been removed from the allowed group list for " + regionName;
                             break;
                         case ScriptBaseClass.ESTATE_ACCESS_BANNED_AGENT_ADD:
-                            msg = UserNameToReport(targetId) + " has been banned from " + regionName;
+                            msg = UserNameToReport(targetId, false) + " has been banned from " + regionName;
                             break;
                         case ScriptBaseClass.ESTATE_ACCESS_BANNED_AGENT_REMOVE:
-                            msg = UserNameToReport(targetId) + " has been removed from the banned list for " + regionName;
+                            msg = UserNameToReport(targetId, false) + " has been removed from the banned list for " + regionName;
                             break;
                         default:
                             break;
@@ -16015,8 +16011,8 @@ namespace InWorldz.Phlox.Engine
             if (!UUID.TryParse(botID, out botUUID) || (botUUID == UUID.Zero))
                 return new LSL_List();
 
-            CachedUserInfo userInfo = World.CommsManager.UserProfileCacheService.GetUserDetails(botUUID);
-            if (userInfo == null)
+            UserProfileData profile = World.CommsManager.UserService.GetUserProfile(botUUID);
+            if (profile == null)
                 return new LSL_List();
 
             List<object> list = new List<object>();
@@ -16027,16 +16023,16 @@ namespace InWorldz.Phlox.Engine
                 switch (param)
                 {
                     case ScriptBaseClass.BOT_ABOUT_TEXT:
-                        list.Add((string)userInfo.UserProfile.AboutText);
+                        list.Add((string)profile.AboutText);
                         break;
                     case ScriptBaseClass.BOT_EMAIL:
-                        list.Add((string)userInfo.UserProfile.Email);
+                        list.Add((string)profile.Email);
                         break;
                     case ScriptBaseClass.BOT_IMAGE_UUID:
-                        list.Add((string)userInfo.UserProfile.Image.ToString());
+                        list.Add((string)profile.Image.ToString());
                         break;
                     case ScriptBaseClass.BOT_PROFILE_URL:
-                        list.Add((string)userInfo.UserProfile.ProfileURL);
+                        list.Add((string)profile.ProfileURL);
                         break;
                 }
             }
@@ -16318,8 +16314,7 @@ namespace InWorldz.Phlox.Engine
                 UUID userID;
                 if (!UUID.TryParse(avatar, out userID))
                 {
-                    CachedUserInfo userInfo = World.CommsManager.UserProfileCacheService.GetUserDetails(avatar.Split(' ')[0], avatar.Split(' ')[1]);
-                    if (userInfo == null)
+                    if (World.CommsManager.UserService.Name2Key(avatar) == null)
                         return ScriptBaseClass.BOT_USER_NOT_FOUND;
                 }
 
