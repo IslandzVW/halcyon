@@ -281,6 +281,14 @@ namespace OpenSim.Framework
             }
         }
 
+        public static RenderMaterial FromBytes(byte[] bytes, int start, int length)
+        {
+            using (MemoryStream ms = new MemoryStream(bytes, start, length))
+            {
+                return ProtoBuf.Serializer.Deserialize<RenderMaterial>(ms);
+            }
+        }
+
         public object Clone ()
         {
             RenderMaterial ret = (RenderMaterial)this.MemberwiseClone ();
@@ -456,10 +464,7 @@ namespace OpenSim.Framework
         {
             using (MemoryStream ms = new MemoryStream(bytes, start, length))
             {
-                var materials = ProtoBuf.Serializer.Deserialize<RenderMaterials>(ms);
-                if (materials == null)
-                    materials = new RenderMaterials();
-                return materials;
+                return ProtoBuf.Serializer.Deserialize<RenderMaterials>(ms);
             }
         }
 

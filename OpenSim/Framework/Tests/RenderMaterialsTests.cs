@@ -72,7 +72,38 @@ namespace OpenSim.Framework.Tests
             RenderMaterial mat2 = new RenderMaterial();
 
             Assert.That(mat, Is.EqualTo(mat2));
+            Assert.That(mat.MaterialID, Is.EqualTo(mat.MaterialID));
             Assert.That(mat.MaterialID, Is.EqualTo(mat2.MaterialID));
+        }
+
+        [Test]
+        public void RenderMaterial_SerializedMaterialGeneratesTheSameMaterialID()
+        {
+            RenderMaterial mat = new RenderMaterial();
+            UUID key = mat.MaterialID;
+            byte[] matData = mat.ToBytes();
+            RenderMaterial newmat = RenderMaterial.FromBytes(matData, 0, matData.Length);
+            Assert.That(mat, Is.EqualTo(newmat));
+            Assert.That(key, Is.EqualTo(mat.MaterialID));
+            Assert.That(mat.MaterialID, Is.EqualTo(newmat.MaterialID));
+        }
+
+        [Test]
+        public void RenderMaterial_SerializedMaterialsDataGeneratesTheSameMaterialID()
+        {
+            RenderMaterials materials = new RenderMaterials();
+            RenderMaterial mat = new RenderMaterial();
+            UUID key = mat.MaterialID;
+
+            materials.AddMaterial(mat);
+            byte[] matData = materials.ToBytes();
+            RenderMaterials newMaterials = RenderMaterials.FromBytes(matData, 0, matData.Length);
+            RenderMaterial newmat = newMaterials.FindMaterial(key);
+
+            Assert.That(mat, Is.EqualTo(newMaterials.FindMaterial(key)));
+            Assert.That(mat.MaterialID, Is.EqualTo(newmat.MaterialID));
+            Assert.That(key, Is.EqualTo(mat.MaterialID));
+            Assert.That(key, Is.EqualTo(newmat.MaterialID));
         }
 
         [Test]
