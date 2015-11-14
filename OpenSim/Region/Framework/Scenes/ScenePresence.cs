@@ -518,6 +518,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             Vector3 pos;
             Vector3 oldVelocity;
+
+            ILandObject parcel = Scene.LandChannel.GetLandObject(agentPos.X, agentPos.Y);   // outside the lock
+
             lock (m_posInfo)
             {
                 if ((!forced) && (IsInTransit) && (parent != m_posInfo.Parent))
@@ -526,7 +529,6 @@ namespace OpenSim.Region.Framework.Scenes
                 if (parent == null)
                 {
                     // not seated
-                    ILandObject parcel = Scene.LandChannel.GetLandObject(agentPos.X, agentPos.Y);
                     if (parcel != null)
                     {
                         ParcelPropertiesStatus reason;
