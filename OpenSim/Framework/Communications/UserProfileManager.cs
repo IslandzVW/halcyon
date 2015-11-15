@@ -233,12 +233,23 @@ namespace OpenSim.Framework.Communications
             if (uuid == UUID.Zero)
                 return null;    // fast exit for no user specified
 
-            UserProfileData profile = TryGetUserProfile(uuid, false);
+            UserProfileData profile;
 
-            if ((profile != null) && !forceRefresh)
-                return profile;
+            lock (m_userDataLock)
+            {
+                profile = TryGetUserProfile(uuid, false);
+                if (profile != null)
+                {
+                    // Check if we should force a refresh.
+                    if (!forceRefresh)
+                        return profile;
+                    // Never force refresh of local profiles or temp profiles.
+                    if (m_localUser.ContainsKey(uuid) || m_tempDataByUUID.ContainsKey(uuid))
+                        return profile;
+                }
+            }
 
-            // Else cache expired, or forcing a refresh.
+            // Else cache expired, or forcing a refresh of a normal cached profile.
             profile = m_storage.GetUserProfileData(uuid);
             if (profile != null)
             {
