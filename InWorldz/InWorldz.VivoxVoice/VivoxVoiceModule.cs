@@ -656,18 +656,19 @@ namespace InWorldz.VivoxVoice
                 // settings allow voice, then whether parcel allows
                 // voice, if all do retrieve or obtain the parcel
                 // voice channel
-                LandData land = scene.GetLandData(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y);
+                Vector3 pos = avatar.AbsolutePosition;  // take a copy to avoid double recalc
+                LandData land = scene.GetLandData(pos.X, pos.Y);
                 if (land == null)
                 {
                     // m_log.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": avatar\"{1}\" at ({2}): Land parcel not found.",
-                    //                scene.RegionInfo.RegionName, avatarName, avatar.AbsolutePosition.ToString());
+                    //                scene.RegionInfo.RegionName, avatarName, pos.ToString());
                     return EMPTY_RESPONSE;
                 }
 
                 // m_log.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": request: {4}, path: {5}, param: {6}",
                 //                  scene.RegionInfo.RegionName, land.Name, land.LocalID, avatarName, request, path, param);
                 // m_log.DebugFormat("[VivoxVoice][PARCELVOICE]: avatar \"{0}\": location: {1} {2} {3}",
-                //                   avatarName, avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y, avatar.AbsolutePosition.Z);
+                //                   avatarName, pos.X, pos.Y, avatar.AbsolutePosition.Z);
 
                 // TODO: EstateSettings don't seem to get propagated...
                 if (!scene.RegionInfo.EstateSettings.AllowVoice)

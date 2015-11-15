@@ -283,10 +283,14 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         private void EventManager_OnClientMovement()
         {
+            ScenePresence presence = m_controller.Scene.GetScenePresence(m_description.FollowUUID);
+            if (presence == null)
+                return;
+
+            Vector3 pos = presence.AbsolutePosition;
             lock (m_significantAvatarPositions)
             {
-                ScenePresence presence = m_controller.Scene.GetScenePresence(m_description.FollowUUID);
-                m_significantAvatarPositions.Add(presence.AbsolutePosition);
+                m_significantAvatarPositions.Add(pos);
             }
         }
 
