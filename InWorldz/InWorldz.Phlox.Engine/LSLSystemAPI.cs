@@ -7714,22 +7714,23 @@ namespace InWorldz.Phlox.Engine
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
             {
+                Vector3 pos;    // take a copy to avoid double calc
                 ScenePresence presence = World.GetScenePresence(key);
                 if (presence != null) // object is an avatar
                 {
-                    if (m_host.OwnerID
-                        == World.LandChannel.GetLandObject(
-                            presence.AbsolutePosition.X, presence.AbsolutePosition.Y).landData.OwnerID)
+                    pos = presence.AbsolutePosition;
+                    if (m_host.OwnerID == World.LandChannel.GetLandObject(pos.X, pos.Y).landData.OwnerID)
                         return 1;
                 }
                 else // object is not an avatar
                 {
                     SceneObjectPart obj = World.GetSceneObjectPart(key);
                     if (obj != null)
-                        if (m_host.OwnerID
-                            == World.LandChannel.GetLandObject(
-                                obj.AbsolutePosition.X, obj.AbsolutePosition.Y).landData.OwnerID)
+                    {
+                        pos = obj.AbsolutePosition;
+                        if (m_host.OwnerID == World.LandChannel.GetLandObject(pos.X, pos.Y).landData.OwnerID)
                             return 1;
+                    }
                 }
             }
 
@@ -7825,8 +7826,8 @@ namespace InWorldz.Phlox.Engine
                         // if the land is group owned and the object is group owned by the same group
                         // or
                         // if the object is owned by a person with estate access.
-
-                        ILandObject parcel = World.LandChannel.GetLandObject(av.AbsolutePosition.X, av.AbsolutePosition.Y);
+                        Vector3 pos = av.AbsolutePosition;  // take a copy to avoid double calc
+                        ILandObject parcel = World.LandChannel.GetLandObject(pos.X, pos.Y);
                         if (parcel != null)
                         {
                             Scene scene = m_host.ParentGroup.Scene;
