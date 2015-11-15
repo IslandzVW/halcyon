@@ -560,6 +560,121 @@ namespace OpenSim.Region.Framework.Scenes
             SetAgentPositionInfo(forced, agentPos, parent, parentPos, m_velocity);
         }
 
+        private Vector3 _GetPosition(bool checkParcelChange, bool updateFromPhysics)
+        {
+            bool inTransit;
+            EntityBase.PositionInfo posinfo;
+            SceneObjectPart parent = null;
+            PhysicsActor physActor = null;
+            Vector3 pos;
+            Vector3 ppos;
+            // Grab copies of self-referentially consistent data inside the lock.
+            lock (m_posInfo)
+            {
+                inTransit = IsInTransit; //IsInTransit takes a lock really far down so do this here for good measure
+                posinfo = GetPosInfo();
+                pos = posinfo.Position;
+                parent = posinfo.Parent;
+                physActor = m_physicsActor;
+                if (updateFromPhysics && (physActor != null))
+                    ppos = physActor.Position;   // this seems to be safe to call inside the posInfo lock
+                else
+                    ppos = pos;
+            }
+
+            if ((physActor != null) && !inTransit)
+            {
+                bool posForced = false;
+                if (IsBot && !Util.IsValidRegionXY(ppos))
+                {
+                    Util.ForceValidRegionXY(ref ppos);
+                    physActor.Velocity = Vector3.Zero;
+                    posForced = true;
+                }
+
+                if (checkParcelChange)
+                {
+                    ILandObject parcel = Scene.LandChannel.GetLandObject(ppos.X, ppos.Y);
+                    if (parcel != null)
+                    {
+                        ParcelPropertiesStatus reason;
+                        if ((ppos.Z < Scene.LandChannel.GetBanHeight()) && (parcel.DenyParcelAccess(this.UUID, out reason)))
+                        {
+                            bool enforce = false;
+                            if (parent == null)   // not seated
+                                enforce = true;
+                            else
+                            if (parent != null)   // seated
+                            {
+                                if (parent.PhysActor != null)
+                                    if (parent.PhysActor.IsPhysical)
+                                        enforce = true;
+                            }
+
+                            if (enforce)
+                            {
+                                Vector3 newpos = this.lastKnownAllowedPosition;   // force back into valid location
+                                Vector3 newvel = physActor.Velocity;
+                                // If not retreating from the parcel, bounce them on top of it.
+                                ILandObject parcel2 = Scene.LandChannel.GetLandObject(newpos.X, newpos.Y);
+                                if ((parcel2 != null) && (parcel2.landData.LocalID == parcel.landData.LocalID))
+                                {
+                                    // New parcel is the same parcel, still illegal
+                                    newpos.Z = Scene.LandChannel.GetBanHeight() + 20.0f;    // bounce
+                                    newvel.Z = -newvel.Z;
+                                }
+                                ppos = newpos;
+                                physActor.Velocity = newvel;
+                                posForced = true;
+                            }
+                        }
+                        else
+                            this.lastKnownAllowedPosition = ppos;
+                    }
+                }
+
+                if (updateFromPhysics)
+                {
+                    lock (m_posInfo)
+                    {
+                        m_posInfo.SetPosition(ppos.X, ppos.Y, ppos.Z);
+                        pos = m_posInfo.Position;
+                        if (posForced && m_physicsActor != null) // in case it changed
+                        {
+                            m_physicsActor.Position = pos;
+                        }
+                    }
+                }
+            }
+
+            lock (m_posInfo)
+            {
+                SceneObjectPart part = parent;
+                if (part != null)
+                {
+                    SceneObjectPart rootPart = part.ParentGroup.RootPart;
+
+                    pos *= part.RotationOffset;
+                    if (part != rootPart)
+                    {
+                        pos += part.OffsetPosition;   // already included in pos?
+                        pos *= rootPart.RotationOffset;
+                    }
+                    pos += rootPart.GetWorldPosition();
+                }
+
+                // Sanity "bear trap" test for debugging
+                if (!m_isChildAgent)
+                {
+                    float lower = -100.0f;
+                    float upper = 356.0f;
+                    if ((pos.X < lower) || (pos.Y < lower) || (pos.Y > upper) || (pos.X > upper))
+                        m_log.Error("[SCENE PRESENCE]: AbsolutePosition - Unexpected position " + pos.ToString());
+                }
+            }
+            return pos;
+        }
+
         /// <summary>
         /// Absolute position of this avatar in 'region cordinates'
         /// </summary>
@@ -567,92 +682,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                Vector3 pos = m_posInfo.Position;
-                bool inTransit = IsInTransit; //IsInTransit takes a lock really far down so do this here for good measure
-
-                lock (m_posInfo)
-                {
-                    if ((m_physicsActor != null) && !inTransit)
-                    {
-                        bool posForced = false;
-                        OpenMetaverse.Vector3 ppos = m_physicsActor.Position;   // this seems to be safe to call inside the posInfo lock
-                        if (IsBot && !Util.IsValidRegionXY(ppos))
-                        {
-                            Util.ForceValidRegionXY(ref ppos);
-                            m_physicsActor.Velocity = Vector3.Zero;
-                            posForced = true;
-                        }
-
-                        ILandObject parcel = Scene.LandChannel.GetLandObject(ppos.X, ppos.Y);
-                        if (parcel != null)
-                        {
-                            ParcelPropertiesStatus reason;
-                            if ((ppos.Z < Scene.LandChannel.GetBanHeight()) && (parcel.DenyParcelAccess(this.UUID, out reason)))
-                            {
-                                bool enforce = false;
-                                if (m_posInfo.Parent == null)   // not seated
-                                    enforce = true;
-                                else
-                                if (m_posInfo.Parent != null)   // seated
-                                {
-                                    if (m_posInfo.Parent.PhysActor != null)
-                                        if (m_posInfo.Parent.PhysActor.IsPhysical)
-                                            enforce = true;
-                                }
-
-                                if (enforce)
-                                {
-                                    Vector3 newpos = this.lastKnownAllowedPosition;   // force back into valid location
-                                    Vector3 newvel = m_physicsActor.Velocity;
-                                    // If not retreating from the parcel, bounce them on top of it.
-                                    ILandObject parcel2 = Scene.LandChannel.GetLandObject(newpos.X, newpos.Y);
-                                    if ((parcel2 != null) && (parcel2.landData.LocalID == parcel.landData.LocalID))
-                                    {
-                                        // New parcel is the same parcel, still illegal
-                                        newpos.Z = Scene.LandChannel.GetBanHeight() + 20.0f;    // bounce
-                                        newvel.Z = -newvel.Z;
-                                    }
-                                    ppos = newpos;
-                                    m_physicsActor.Velocity = newvel;
-                                    posForced = true;
-                                }
-                            }
-                            else
-                                this.lastKnownAllowedPosition = ppos;
-                        }
-
-                        m_posInfo.SetPosition(ppos.X, ppos.Y, ppos.Z);
-                        pos = m_posInfo.Position;
-                        if (posForced)
-                        {
-                            m_physicsActor.Position = pos;
-                        }
-                    }
-
-                    SceneObjectPart part = m_posInfo.Parent;
-                    if (part != null)
-                    {
-                        SceneObjectPart rootPart = part.ParentGroup.RootPart;
-
-                        pos *= part.RotationOffset;
-                        if (part != rootPart)
-                        {
-                            pos += part.OffsetPosition;   // already included in pos?
-                            pos *= rootPart.RotationOffset;
-                        }
-                        pos += rootPart.GetWorldPosition();
-                    }
-
-                    // Sanity "bear trap" test for debugging
-                    if (!m_isChildAgent)
-                    {
-                        float lower = -100.0f;
-                        float upper = 356.0f;
-                        if ((pos.X < lower) || (pos.Y < lower) || (pos.Y > upper) || (pos.X > upper))
-                            m_log.Error("[SCENE PRESENCE]: AbsolutePosition - Unexpected position " + pos.ToString());
-                    }
-                    return pos;
-                }
+                return _GetPosition(false, false);  // quick position
             }
             set
             {
@@ -673,6 +703,7 @@ namespace OpenSim.Region.Framework.Scenes
             bool isSafe = false;
             lock (m_posInfo)
             {
+                Vector3 pos = _GetPosition(false, false);
                 isSafe = (!IsDeleted) && (!IsInTransit);
                 if (isSafe)
                     avpos = AbsolutePosition;
@@ -3475,7 +3506,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         protected void CheckForSignificantMovement()
         {
-            Vector3 pos = AbsolutePosition;
+            Vector3 pos = _GetPosition(true, true); // check for parcel changes and updates from physics
+
             if (Util.GetDistanceTo(pos, posLastSignificantMove) > 0.5)
             {
                 posLastSignificantMove = pos;
