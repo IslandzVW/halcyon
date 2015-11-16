@@ -459,19 +459,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
         private string LocationURL(Scene scene, SceneObjectPart part)
         {
-            int x = (int)part.AbsolutePosition.X;
-            int y = (int)part.AbsolutePosition.Y;
-            int z = (int)part.AbsolutePosition.Z;
-            string region;
-            try
-            {
-                region = Util.EscapeUriDataStringRfc3986(scene.RegionInfo.RegionName);
-            }
-            catch (Exception)
-            {
-                region = scene.RegionInfo.RegionName;
-            }
-            return "http://places.inworldz.com/" + region + "/" + x.ToString() + "/" + y.ToString() + "/" + z.ToString();
+            Vector3 pos = part.AbsolutePosition;
+            return Util.LocationURL(scene.RegionInfo.RegionName, pos, "/");
         }
 
         private void DumpPart(IClientAPI client, Scene scene, SceneObjectPart part)

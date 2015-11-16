@@ -208,8 +208,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public virtual Vector3 AbsolutePosition
         {
-            get { return m_posInfo.Position; }
-            set { m_posInfo.Position = value; }
+            get { lock (m_posInfo) { return m_posInfo.Position; } }
+
+            set { lock (m_posInfo) { m_posInfo.Position = value; } }
         }
 
         protected Vector3 m_rotationalvelocity;

@@ -1961,7 +1961,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             ScenePresence target_presence = m_scene.GetScenePresence(target); 
             if (target_presence == null) return;
 
-            ILandObject land = GetLandObject(target_presence.AbsolutePosition.X, target_presence.AbsolutePosition.Y);
+            Vector3 pos = target_presence.AbsolutePosition;
+            ILandObject land = GetLandObject(pos.X, pos.Y);
 
             if (m_scene.Permissions.CanEditParcel(client.AgentId, land, GroupPowers.LandEjectAndFreeze))
             {
