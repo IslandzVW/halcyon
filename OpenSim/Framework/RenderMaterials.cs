@@ -56,27 +56,54 @@ namespace OpenSim.Framework
 
         public static Color4 DEFAULT_SPECULAR_LIGHT_COLOR = new Color4 (255, 255, 255, 255);
 
+        public const float  MATERIALS_MULTIPLIER = 10000.0f;
+
         #region Properties
 
         /// <summary>
         /// MaterialID - A calculated value computed from the contents of the class. 
         /// Basically a hash value that given 2 classes are the same should produce the same value.
-        /// XXX This could be further optimized by locking around sets and storing the value so it
-        /// can be quickly fetched, forcing a recalculation when the contents have changed.
         /// </summary>
+        private Object m_lock = new object();
+
+
+        private UUID m_materialID = UUID.Zero;
 
         public UUID MaterialID
         {
             get
             {
-                using (var md5 = MD5.Create())
-                    return new UUID(md5.ComputeHash(ToBytes()), 0);
+                lock (m_lock)
+                {
+                    if (m_materialID == UUID.Zero)
+                    {
+                        using (var md5 = MD5.Create())
+                            m_materialID = new UUID(md5.ComputeHash(ToBytes()), 0);
+                    }
+
+                    return m_materialID;
+                }
             }
         }
 
+        private UUID m_normalID = UUID.Zero;
+
         public UUID NormalID {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_normalID;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_normalID = value;
+                }
+            }
         }
 
         [ProtoMember(1)]
@@ -85,39 +112,129 @@ namespace OpenSim.Framework
             set { NormalID = new UUID(value); }
         }
 
+        private float m_NormalOffsetX;
+
         [ProtoMember(2)]
         public float NormalOffsetX {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_NormalOffsetX;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_NormalOffsetX = value;
+                }
+            }
         }
+
+        private float m_NormalOffsetY;
 
         [ProtoMember(3)]
         public float NormalOffsetY {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_NormalOffsetY;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_NormalOffsetY = value;
+                }
+            }
         }
+
+        private float m_NormalRepeatX;
 
         [ProtoMember(4)]
         public float NormalRepeatX {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_NormalRepeatX;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_NormalRepeatX = value;
+                }
+            }
         }
+
+        private float m_NormalRepeatY;
 
         [ProtoMember(5)]
         public float NormalRepeatY {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_NormalRepeatY;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_NormalRepeatY = value;
+                }
+            }
         }
+
+        private float m_NormalRotation;
 
         [ProtoMember(6)]
         public float NormalRotation {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_NormalRotation;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_NormalRotation = value;
+                }
+            }
         }
 
+        private UUID m_SpecularID;
+
         public UUID SpecularID {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_SpecularID;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_SpecularID = value;
+                }
+            }
         }
 
         [ProtoMember(7)]
@@ -126,39 +243,129 @@ namespace OpenSim.Framework
             set { SpecularID = new UUID(value); }
         }
 
+        private float m_SpecularOffsetX;
+
         [ProtoMember(8)]
         public float SpecularOffsetX {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_SpecularOffsetX;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_SpecularOffsetX = value;
+                }
+            }
         }
+
+        private float m_SpecularOffsetY;
 
         [ProtoMember(9)]
         public float SpecularOffsetY {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_SpecularOffsetY;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_SpecularOffsetY = value;
+                }
+            }
         }
+
+        private float m_SpecularRepeatX;
 
         [ProtoMember(10)]
         public float SpecularRepeatX {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_SpecularRepeatX;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_SpecularRepeatX = value;
+                }
+            }
         }
+
+        private float m_SpecularRepeatY;
 
         [ProtoMember(11)]
         public float SpecularRepeatY {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_SpecularRepeatY;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_SpecularRepeatY = value;
+                }
+            }
         }
+
+        private float m_SpecularRotation;
 
         [ProtoMember(12)]
         public float SpecularRotation {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_SpecularRotation;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_SpecularRotation = value;
+                }
+            }
         }
-            
+
+        private Color4 m_SpecularLightColor;
+
         public Color4 SpecularLightColor {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_SpecularLightColor;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_SpecularLightColor = value;
+                }
+            }
         }
 
         [ProtoMember(13)]
@@ -168,28 +375,88 @@ namespace OpenSim.Framework
             set { SpecularLightColor.FromBytes(value, 0, false); }
         }
 
+        private byte m_SpecularLightExponent;
+
         [ProtoMember(14)]
         public byte SpecularLightExponent {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_SpecularLightExponent;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_SpecularLightExponent = value;
+                }
+            }
         }
+
+        private byte m_EnvironmentIntensity;
 
         [ProtoMember(15)]
         public byte EnvironmentIntensity {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_EnvironmentIntensity;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_EnvironmentIntensity = value;
+                }
+            }
         }
+
+        private byte m_DiffuseAlphaMode;
 
         [ProtoMember(16)]
         public byte DiffuseAlphaMode {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_DiffuseAlphaMode;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_DiffuseAlphaMode = value;
+                }
+            }
         }
+
+        private byte m_AlphaMaskCutoff;
 
         [ProtoMember(17)]
         public byte AlphaMaskCutoff {
-            get;
-            set;
+            get
+            {
+                lock (m_lock)
+                {
+                    return m_AlphaMaskCutoff;
+                }
+            }
+            set
+            {
+                lock (m_lock)
+                {
+                    m_materialID = UUID.Zero;
+                    m_AlphaMaskCutoff = value;
+                }
+            }
         }
 
 #endregion Properties
@@ -298,23 +565,29 @@ namespace OpenSim.Framework
             return ret;
         }
 
+        private int llRound(float f)
+        {
+            return (int)Math.Round(f, MidpointRounding.AwayFromZero);
+        }
+
         public OSD GetOSD ()
         {
             OSDMap material_data = new OSDMap (17);
 
             material_data [MATERIALS_CAP_NORMAL_MAP_FIELD] = OSD.FromUUID(NormalID);
-            material_data [MATERIALS_CAP_NORMAL_MAP_OFFSET_X_FIELD] = OSD.FromReal (NormalOffsetX);
-            material_data [MATERIALS_CAP_NORMAL_MAP_OFFSET_Y_FIELD] = OSD.FromReal (NormalOffsetY);
-            material_data [MATERIALS_CAP_NORMAL_MAP_REPEAT_X_FIELD] = OSD.FromReal (NormalRepeatX);
-            material_data [MATERIALS_CAP_NORMAL_MAP_REPEAT_Y_FIELD] = OSD.FromReal (NormalRepeatY);
-            material_data [MATERIALS_CAP_NORMAL_MAP_ROTATION_FIELD] = OSD.FromReal (NormalRotation);
+
+            material_data [MATERIALS_CAP_NORMAL_MAP_OFFSET_X_FIELD] = OSD.FromInteger(llRound(NormalOffsetX * MATERIALS_MULTIPLIER));
+            material_data [MATERIALS_CAP_NORMAL_MAP_OFFSET_Y_FIELD] = OSD.FromInteger(llRound(NormalOffsetY * MATERIALS_MULTIPLIER));
+            material_data [MATERIALS_CAP_NORMAL_MAP_REPEAT_X_FIELD] = OSD.FromInteger(llRound(NormalRepeatX * MATERIALS_MULTIPLIER));
+            material_data [MATERIALS_CAP_NORMAL_MAP_REPEAT_Y_FIELD] = OSD.FromInteger(llRound(NormalRepeatY * MATERIALS_MULTIPLIER));
+            material_data [MATERIALS_CAP_NORMAL_MAP_ROTATION_FIELD] = OSD.FromInteger(llRound(NormalRotation * MATERIALS_MULTIPLIER));
 
             material_data [MATERIALS_CAP_SPECULAR_MAP_FIELD] = OSD.FromUUID (SpecularID);
-            material_data [MATERIALS_CAP_SPECULAR_MAP_OFFSET_X_FIELD] = OSD.FromReal (SpecularOffsetX);
-            material_data [MATERIALS_CAP_SPECULAR_MAP_OFFSET_Y_FIELD] = OSD.FromReal (SpecularOffsetY);
-            material_data [MATERIALS_CAP_SPECULAR_MAP_REPEAT_X_FIELD] = OSD.FromReal (SpecularRepeatX);
-            material_data [MATERIALS_CAP_SPECULAR_MAP_REPEAT_Y_FIELD] = OSD.FromReal (SpecularRepeatY);
-            material_data [MATERIALS_CAP_SPECULAR_MAP_ROTATION_FIELD] = OSD.FromReal (SpecularRotation);
+            material_data [MATERIALS_CAP_SPECULAR_MAP_OFFSET_X_FIELD] = OSD.FromInteger(llRound(SpecularOffsetX * MATERIALS_MULTIPLIER));
+            material_data [MATERIALS_CAP_SPECULAR_MAP_OFFSET_Y_FIELD] = OSD.FromInteger(llRound(SpecularOffsetY * MATERIALS_MULTIPLIER));
+            material_data [MATERIALS_CAP_SPECULAR_MAP_REPEAT_X_FIELD] = OSD.FromInteger(llRound(SpecularRepeatX * MATERIALS_MULTIPLIER));
+            material_data [MATERIALS_CAP_SPECULAR_MAP_REPEAT_Y_FIELD] = OSD.FromInteger(llRound(SpecularRepeatY * MATERIALS_MULTIPLIER));
+            material_data [MATERIALS_CAP_SPECULAR_MAP_ROTATION_FIELD] = OSD.FromInteger(llRound(SpecularRotation * MATERIALS_MULTIPLIER));
 
             material_data [MATERIALS_CAP_SPECULAR_COLOR_FIELD] = OSD.FromColor4 (SpecularLightColor);
             material_data [MATERIALS_CAP_SPECULAR_EXP_FIELD] = OSD.FromInteger ((int)SpecularLightExponent);
@@ -331,18 +604,18 @@ namespace OpenSim.Framework
             RenderMaterial material = new RenderMaterial ();
 
             material.NormalID = map [MATERIALS_CAP_NORMAL_MAP_FIELD].AsUUID ();
-            material.NormalOffsetX = (float)map [MATERIALS_CAP_NORMAL_MAP_OFFSET_X_FIELD].AsReal ();
-            material.NormalOffsetY = (float)map [MATERIALS_CAP_NORMAL_MAP_OFFSET_Y_FIELD].AsReal ();
-            material.NormalRepeatX = (float)map [MATERIALS_CAP_NORMAL_MAP_REPEAT_X_FIELD].AsReal ();
-            material.NormalRepeatY = (float)map [MATERIALS_CAP_NORMAL_MAP_REPEAT_Y_FIELD].AsReal ();
-            material.NormalRotation = (float)map [MATERIALS_CAP_NORMAL_MAP_ROTATION_FIELD].AsReal ();
+            material.NormalOffsetX = (float)map [MATERIALS_CAP_NORMAL_MAP_OFFSET_X_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
+            material.NormalOffsetY = (float)map [MATERIALS_CAP_NORMAL_MAP_OFFSET_Y_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
+            material.NormalRepeatX = (float)map [MATERIALS_CAP_NORMAL_MAP_REPEAT_X_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
+            material.NormalRepeatY = (float)map [MATERIALS_CAP_NORMAL_MAP_REPEAT_Y_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
+            material.NormalRotation = (float)map [MATERIALS_CAP_NORMAL_MAP_ROTATION_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
 
             material.SpecularID = map [MATERIALS_CAP_SPECULAR_MAP_FIELD].AsUUID ();
-            material.SpecularOffsetX = (float)map [MATERIALS_CAP_SPECULAR_MAP_OFFSET_X_FIELD].AsReal ();
-            material.SpecularOffsetY = (float)map [MATERIALS_CAP_SPECULAR_MAP_OFFSET_Y_FIELD].AsReal ();
-            material.SpecularRepeatX = (float)map [MATERIALS_CAP_SPECULAR_MAP_REPEAT_X_FIELD].AsReal ();
-            material.SpecularRepeatY = (float)map [MATERIALS_CAP_SPECULAR_MAP_REPEAT_Y_FIELD].AsReal ();
-            material.SpecularRotation = (float)map [MATERIALS_CAP_SPECULAR_MAP_ROTATION_FIELD].AsReal ();
+            material.SpecularOffsetX = (float)map [MATERIALS_CAP_SPECULAR_MAP_OFFSET_X_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
+            material.SpecularOffsetY = (float)map [MATERIALS_CAP_SPECULAR_MAP_OFFSET_Y_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
+            material.SpecularRepeatX = (float)map [MATERIALS_CAP_SPECULAR_MAP_REPEAT_X_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
+            material.SpecularRepeatY = (float)map [MATERIALS_CAP_SPECULAR_MAP_REPEAT_Y_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
+            material.SpecularRotation = (float)map [MATERIALS_CAP_SPECULAR_MAP_ROTATION_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
 
             material.SpecularLightColor = map [MATERIALS_CAP_SPECULAR_COLOR_FIELD].AsColor4 ();
             material.SpecularLightExponent = (byte)map [MATERIALS_CAP_SPECULAR_EXP_FIELD].AsInteger ();
@@ -435,6 +708,7 @@ namespace OpenSim.Framework
                     return null;
             }
         }
+
         public List<RenderMaterial> GetMaterials()
         {
             lock (Materials)
@@ -443,6 +717,18 @@ namespace OpenSim.Framework
             }
         }
 
+        public void SetMaterials(List<RenderMaterial> mats)
+        {
+            lock (Materials)
+            {
+                Materials.Clear();
+                foreach (var material in mats)
+                {
+                    string key = material.MaterialID.ToString();
+                    Materials[key] = material;
+                }
+            }
+        }
         public List<UUID> GetMaterialIDs()
         {
             lock (Materials)
