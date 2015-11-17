@@ -100,6 +100,7 @@ namespace OpenSim.Framework.Tests
             RenderMaterials newMaterials = RenderMaterials.FromBytes(matData, 0, matData.Length);
             RenderMaterial newmat = newMaterials.FindMaterial(key);
 
+            Assert.That(materials.ToString(), Is.EqualTo (newMaterials.ToString()));
             Assert.That(mat, Is.EqualTo(newMaterials.FindMaterial(key)));
             Assert.That(mat.MaterialID, Is.EqualTo(newmat.MaterialID));
             Assert.That(key, Is.EqualTo(mat.MaterialID));

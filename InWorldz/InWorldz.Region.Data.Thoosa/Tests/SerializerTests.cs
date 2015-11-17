@@ -209,6 +209,51 @@ namespace InWorldz.Region.Data.Thoosa.Tests
         }
 
         [Test]
+        public void TestRenderMaterialsSerialization()
+        {
+            var sop1 = Util.RandomSOP("Root", 1);
+            var sop2 = Util.RandomSOP("Child1", 2);
+            var sop3 = Util.RandomSOP("Child2", 3);
+
+            var mat1 = new RenderMaterial();
+            mat1.NormalID = UUID.Random();
+            mat1.SpecularID = UUID.Random();
+
+            var mat2 = new RenderMaterial();
+            mat2.NormalID = UUID.Random();
+            mat2.SpecularID = UUID.Random();
+
+            sop1.Shape.RenderMaterials.AddMaterial(mat1);
+            sop2.Shape.RenderMaterials.AddMaterial(mat2);
+
+            SceneObjectGroup group = new SceneObjectGroup(sop1);
+            group.AddPart(sop2);
+            group.AddPart(sop3);
+
+            byte[] serBytes = null;
+            Assert.DoesNotThrow(() =>
+            {
+                serBytes = serEngine.SceneObjectSerializer.SerializeGroupToBytes(group, SerializationFlags.None);
+            });
+
+            Assert.NotNull(serBytes);
+
+            SceneObjectGroup deserObj = null;
+            Assert.DoesNotThrow(() =>
+            {
+                deserObj = serEngine.SceneObjectSerializer.DeserializeGroupFromBytes(serBytes);
+            });
+
+            var newsop1 = deserObj.GetChildPart(1);
+            var newsop2 = deserObj.GetChildPart(2);
+            var newsop3 = deserObj.GetChildPart(3);
+
+            Assert.That(sop1.Shape.RenderMaterials.ToString(), Is.EqualTo(newsop1.Shape.RenderMaterials.ToString()));
+            Assert.That(sop2.Shape.RenderMaterials.ToString(), Is.EqualTo(newsop2.Shape.RenderMaterials.ToString()));
+            Assert.That(sop3.Shape.RenderMaterials.ToString(), Is.EqualTo(newsop3.Shape.RenderMaterials.ToString()));
+        }
+
+        [Test]
         public void TestKeyframeAnimationSerialization()
         {
             KeyframeAnimation anim = new KeyframeAnimation()
