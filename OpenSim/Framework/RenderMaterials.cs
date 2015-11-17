@@ -643,7 +643,7 @@ namespace OpenSim.Framework
 #region Properties
 
         [ProtoMember(1)]
-        private Dictionary<String, RenderMaterial> Materials {
+        protected Dictionary<String, RenderMaterial> Materials {
             get;
             set;
         }
@@ -764,6 +764,32 @@ namespace OpenSim.Framework
                     return ms.ToArray();
                 }
             }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            if (obj.GetType() != typeof(RenderMaterials))
+                return false;
+
+            RenderMaterials other = (RenderMaterials)obj;
+            if (this.Materials.Count != other.Materials.Count)
+                return false;
+
+            foreach (var kvp in this.Materials)
+            {
+                RenderMaterial thisValue = kvp.Value;
+                RenderMaterial otherValue ;
+                if (!other.Materials.TryGetValue(kvp.Key, out otherValue))
+                    return false;
+                if (thisValue.Equals(otherValue) == false)
+                    return false;
+            }
+
+            return true;
         }
 
         public override int GetHashCode ()

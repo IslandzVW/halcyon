@@ -248,9 +248,9 @@ namespace InWorldz.Region.Data.Thoosa.Tests
             var newsop2 = deserObj.GetChildPart(2);
             var newsop3 = deserObj.GetChildPart(3);
 
-            Assert.That(sop1.Shape.RenderMaterials.ToString(), Is.EqualTo(newsop1.Shape.RenderMaterials.ToString()));
-            Assert.That(sop2.Shape.RenderMaterials.ToString(), Is.EqualTo(newsop2.Shape.RenderMaterials.ToString()));
-            Assert.That(sop3.Shape.RenderMaterials.ToString(), Is.EqualTo(newsop3.Shape.RenderMaterials.ToString()));
+            Assert.That(sop1.Shape.RenderMaterials, Is.EqualTo(newsop1.Shape.RenderMaterials));
+            Assert.That(sop2.Shape.RenderMaterials, Is.EqualTo(newsop2.Shape.RenderMaterials));
+            Assert.That(sop3.Shape.RenderMaterials, Is.EqualTo(newsop3.Shape.RenderMaterials));
         }
 
         [Test]
