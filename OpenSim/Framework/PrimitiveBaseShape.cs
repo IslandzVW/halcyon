@@ -1865,8 +1865,6 @@ namespace OpenSim.Framework
                 if (rawXml.StartsWith("&lt;"))
                 {
                     rawXml = rawXml.Replace("&lt;", "<").Replace("&gt;", ">");
-                    ReadXml(rawXml);
-                    return;
                 }
 
                 using (StringReader sr = new StringReader(rawXml))
