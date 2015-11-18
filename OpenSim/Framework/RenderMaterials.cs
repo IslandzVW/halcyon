@@ -54,8 +54,7 @@ namespace OpenSim.Framework
         public const byte    DEFAULT_SPECULAR_LIGHT_EXPONENT = ((byte)(0.2f * 255));
         public const byte    DEFAULT_ENV_INTENSITY = 0;
 
-        public static Color4 DEFAULT_SPECULAR_LIGHT_COLOR = new Color4 (255, 255, 255, 255);
-
+        public static readonly Color4 DEFAULT_SPECULAR_LIGHT_COLOR = new Color4 (255, 255, 255, 255);
         public const float  MATERIALS_MULTIPLIER = 10000.0f;
 
         #region Properties
@@ -66,9 +65,7 @@ namespace OpenSim.Framework
         /// </summary>
         private Object m_lock = new object();
 
-
         private UUID m_materialID = UUID.Zero;
-
         public UUID MaterialID
         {
             get
@@ -87,7 +84,6 @@ namespace OpenSim.Framework
         }
 
         private UUID m_normalID = UUID.Zero;
-
         public UUID NormalID {
             get
             {
@@ -112,9 +108,8 @@ namespace OpenSim.Framework
             set { NormalID = new UUID(value); }
         }
 
-        private float m_NormalOffsetX;
-
         [ProtoMember(2)]
+        private float m_NormalOffsetX;
         public float NormalOffsetX {
             get
             {
@@ -133,9 +128,8 @@ namespace OpenSim.Framework
             }
         }
 
-        private float m_NormalOffsetY;
-
         [ProtoMember(3)]
+        private float m_NormalOffsetY;
         public float NormalOffsetY {
             get
             {
@@ -154,9 +148,8 @@ namespace OpenSim.Framework
             }
         }
 
-        private float m_NormalRepeatX;
-
         [ProtoMember(4)]
+        private float m_NormalRepeatX;
         public float NormalRepeatX {
             get
             {
@@ -175,9 +168,8 @@ namespace OpenSim.Framework
             }
         }
 
-        private float m_NormalRepeatY;
-
         [ProtoMember(5)]
+        private float m_NormalRepeatY;
         public float NormalRepeatY {
             get
             {
@@ -196,9 +188,8 @@ namespace OpenSim.Framework
             }
         }
 
-        private float m_NormalRotation;
-
         [ProtoMember(6)]
+        private float m_NormalRotation;
         public float NormalRotation {
             get
             {
@@ -218,7 +209,6 @@ namespace OpenSim.Framework
         }
 
         private UUID m_SpecularID;
-
         public UUID SpecularID {
             get
             {
@@ -243,9 +233,8 @@ namespace OpenSim.Framework
             set { SpecularID = new UUID(value); }
         }
 
-        private float m_SpecularOffsetX;
-
         [ProtoMember(8)]
+        private float m_SpecularOffsetX;
         public float SpecularOffsetX {
             get
             {
@@ -264,9 +253,8 @@ namespace OpenSim.Framework
             }
         }
 
-        private float m_SpecularOffsetY;
-
         [ProtoMember(9)]
+        private float m_SpecularOffsetY;
         public float SpecularOffsetY {
             get
             {
@@ -285,9 +273,8 @@ namespace OpenSim.Framework
             }
         }
 
-        private float m_SpecularRepeatX;
-
         [ProtoMember(10)]
+        private float m_SpecularRepeatX;
         public float SpecularRepeatX {
             get
             {
@@ -306,9 +293,8 @@ namespace OpenSim.Framework
             }
         }
 
-        private float m_SpecularRepeatY;
-
         [ProtoMember(11)]
+        private float m_SpecularRepeatY;
         public float SpecularRepeatY {
             get
             {
@@ -327,9 +313,8 @@ namespace OpenSim.Framework
             }
         }
 
-        private float m_SpecularRotation;
-
         [ProtoMember(12)]
+        private float m_SpecularRotation;
         public float SpecularRotation {
             get
             {
@@ -349,7 +334,6 @@ namespace OpenSim.Framework
         }
 
         private Color4 m_SpecularLightColor;
-
         public Color4 SpecularLightColor {
             get
             {
@@ -371,13 +355,18 @@ namespace OpenSim.Framework
         [ProtoMember(13)]
         public byte[] SerializableSpecularLightColor
         {
-            get { return SpecularLightColor.GetBytes(); }
-            set { SpecularLightColor.FromBytes(value, 0, false); }
+            get
+            {
+                return SpecularLightColor.GetBytes();
+            }
+            set
+            {
+                SpecularLightColor = new Color4(value, 0, false);
+            }
         }
 
-        private byte m_SpecularLightExponent;
-
         [ProtoMember(14)]
+        private byte m_SpecularLightExponent;
         public byte SpecularLightExponent {
             get
             {
@@ -396,9 +385,8 @@ namespace OpenSim.Framework
             }
         }
 
-        private byte m_EnvironmentIntensity;
-
         [ProtoMember(15)]
+        private byte m_EnvironmentIntensity;
         public byte EnvironmentIntensity {
             get
             {
@@ -417,9 +405,8 @@ namespace OpenSim.Framework
             }
         }
 
-        private byte m_DiffuseAlphaMode;
-
         [ProtoMember(16)]
+        private byte m_DiffuseAlphaMode;
         public byte DiffuseAlphaMode {
             get
             {
@@ -438,9 +425,8 @@ namespace OpenSim.Framework
             }
         }
 
-        private byte m_AlphaMaskCutoff;
-
         [ProtoMember(17)]
+        private byte m_AlphaMaskCutoff;
         public byte AlphaMaskCutoff {
             get
             {
@@ -459,9 +445,9 @@ namespace OpenSim.Framework
             }
         }
 
-#endregion Properties
+        #endregion Properties
 
-        public RenderMaterial ()
+        public RenderMaterial()
         {
             NormalOffsetX = 0.0f;
             NormalOffsetY = 0.0f;
@@ -473,7 +459,7 @@ namespace OpenSim.Framework
             SpecularRepeatX = 1.0f;
             SpecularRepeatY = 1.0f;
             SpecularRotation = 0.0f;
-            SpecularLightColor = DEFAULT_SPECULAR_LIGHT_COLOR;
+            SpecularLightColor =  DEFAULT_SPECULAR_LIGHT_COLOR;
             SpecularLightExponent = (byte)DEFAULT_SPECULAR_LIGHT_EXPONENT;
             EnvironmentIntensity = (byte)DEFAULT_ENV_INTENSITY;
             DiffuseAlphaMode = (byte)eDiffuseAlphaMode.DIFFUSE_ALPHA_MODE_BLEND;
