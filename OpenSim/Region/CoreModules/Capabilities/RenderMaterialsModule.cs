@@ -176,19 +176,24 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 foreach (SceneObjectPart part in obj.GetParts())
                 {
                     // scan through the rendermaterials of this part for any textures used as materials
-                    if (part.Shape.RenderMaterials == null)
+                    if ((part.Shape.TextureEntry == null) || (part.Shape.RenderMaterials == null))
                         continue;
 
-                    var materials = part.Shape.RenderMaterials.GetMaterials();
-
-                    if (materials.Count <= 0)
+                    var te = new Primitive.TextureEntry(part.Shape.TextureEntry, 0, part.Shape.TextureEntry.Length);
+                    if (te == null)
                         continue;
 
-                    m_log.DebugFormat("[MaterialsModule]: OnObjectAdd for SOP {0}:  {1}", part.LocalId, part.Shape.RenderMaterials);
+                    var matIds = getMaterialIDsForPartFromTextureEntry(te);
 
-                    foreach (var mat in materials)
+                    m_log.DebugFormat("[MaterialsModule]: OnObjectAdd for SOP {0}:  {1}", part.LocalId, matIds);
+
+                    foreach (var key in matIds)
                     {
-                        UUID key = mat.MaterialID;
+                        if (part.Shape.RenderMaterials.ContainsMaterial(key) == false)
+                        {
+                            m_log.DebugFormat("[MaterialsModule]: Materials data for SOP {0}: {1} not found in object!", part.LocalId, key);
+                            continue;
+                        }
 
                         if (m_knownMaterials.ContainsKey(key))
                         {
@@ -198,6 +203,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         }
                         else
                         {
+                            RenderMaterial mat = part.Shape.RenderMaterials.FindMaterial(key);
                             m_knownMaterials.Add(key, new RenderMaterialEntry(mat, part.LocalId));
                             m_log.DebugFormat("[MaterialsModule]: NEW Material {0} for SOP {1} ", key, part.LocalId);
                         }
@@ -206,32 +212,54 @@ namespace OpenSim.Region.CoreModules.Capabilities
             }
         }
 
+        private List<UUID> getMaterialIDsForPartFromTextureEntry(Primitive.TextureEntry te)
+        {
+            List<UUID> matIds = new List<UUID>();
+
+            if (te != null)
+            { 
+                if ((te.DefaultTexture != null) && (te.DefaultTexture.MaterialID != UUID.Zero))
+                    matIds.Add(te.DefaultTexture.MaterialID);
+
+                foreach (var face in te.FaceTextures)
+                {
+                    if ((face != null) && (face.MaterialID != UUID.Zero))
+                        matIds.Add(face.MaterialID);
+                }
+            }
+
+            return matIds;
+        }
+
         private void OnObjectRemoved(SceneObjectGroup obj)
         {
             lock (m_knownMaterials)
             {
                 foreach (SceneObjectPart part in obj.GetParts())
                 {
-                    if (part.Shape.RenderMaterials == null)
+                    // scan through the rendermaterials of this part for any textures used as materials
+                    if ((part.Shape.TextureEntry == null) || (part.Shape.RenderMaterials == null))
                         continue;
 
-                    var materials = part.Shape.RenderMaterials.GetMaterials();
-
-                    if (materials.Count <= 0)
+                    var te = new Primitive.TextureEntry(part.Shape.TextureEntry, 0, part.Shape.TextureEntry.Length);
+                    if (te == null)
                         continue;
 
-                    foreach (var mat in materials)
+                    var matIds = getMaterialIDsForPartFromTextureEntry(te);
+
+                    m_log.DebugFormat("[MaterialsModule]: OnObjectRemoved for SOP {0}:  {1}", part.LocalId, matIds);
+
+                    foreach (var key in matIds)
                     {
-                        UUID key = mat.MaterialID;
-
                         if (m_knownMaterials.ContainsKey(key))
                         {
-                            m_log.DebugFormat("[MaterialsModule]: REMOVE Material {0} for SOP {1} ", key, part.LocalId);
-
                             var entry = m_knownMaterials[key];
                             entry.partIds.Remove(part.LocalId);
                             if (entry.partIds.Count <= 0)
+                            {
                                 m_knownMaterials.Remove(key);
+                                m_log.DebugFormat("[MaterialsModule]: OnObjectRemoved Material {0} not referenced. Removed from cache.", key);
+                            }
                         }
                     }
                 }
@@ -261,7 +289,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     }
                     else if (osd is OSDMap) // request to assign a material
                     {
-                        AssignRequestedMaterials(osd as OSDMap);
+                        AssignRequestedMaterials(osd as OSDMap, agentID);
                     }
                 }
                 catch (Exception e)
@@ -278,7 +306,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
         /// Assign The requested materials to the specified part(s).
         /// </summary>
         /// <param name="materialsFromViewer"></param>
-        private void AssignRequestedMaterials(OSDMap materialsFromViewer)
+        private void AssignRequestedMaterials(OSDMap materialsFromViewer, UUID agentID)
         {
             if (!(materialsFromViewer.ContainsKey("FullMaterialsPerFace") &&
                   (materialsFromViewer["FullMaterialsPerFace"] is OSDArray)))
@@ -317,6 +345,13 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 if (sop == null)
                 {
                     m_log.Warn("[RenderMaterials]: null SOP for localId: " + matLocalID.ToString());
+                    continue;
+                }
+
+                // Make sure we can modify it
+                if (m_scene.Permissions.CanEditObject(sop.UUID, agentID, (uint)PermissionMask.Modify) == false)
+                {
+                    m_log.WarnFormat("[RenderMaterials]: User {0} can't edit object {1} {2}", agentID, sop.Name, sop.UUID);
                     continue;
                 }
 
