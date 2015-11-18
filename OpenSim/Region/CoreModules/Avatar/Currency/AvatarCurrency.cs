@@ -1035,20 +1035,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
         {
             // try avatar username surname
             Scene scene = GetRandomScene();
-            CachedUserInfo profile = scene.CommsManager.UserProfileCacheService.GetUserDetails(agentID);
-            if (profile != null && profile.UserProfile != null)
-            {
-                string avatarname = profile.UserProfile.FirstName + " " + profile.UserProfile.SurName;
-                return avatarname;
-            }
-            else
-            {
-                m_log.ErrorFormat(
-                    "[MONEY]: Could not resolve user {0}",
-                    agentID);
-            }
+            string name = scene.CommsManager.UserService.Key2Name(agentID,false);
+            if (name == String.Empty)
+                m_log.ErrorFormat("[MONEY]: Could not resolve user {0}", agentID);
 
-            return String.Empty;
+            return name;
         }
 
         public Scene GetRandomScene()

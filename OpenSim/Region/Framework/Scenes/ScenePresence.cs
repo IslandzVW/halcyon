@@ -518,18 +518,33 @@ namespace OpenSim.Region.Framework.Scenes
         {
             Vector3 pos;
             Vector3 oldVelocity;
+
+            ILandObject parcel = Scene.LandChannel.GetLandObject(agentPos.X, agentPos.Y);   // outside the lock
+
             lock (m_posInfo)
             {
                 if ((!forced) && (IsInTransit) && (parent != m_posInfo.Parent))
                     return;
 
+                if (parent == null)
+                {
+                    // not seated
+                    if (parcel != null)
+                    {
+                        ParcelPropertiesStatus reason;
+                        if (agentPos.Z < Scene.LandChannel.GetBanHeight() && parcel.DenyParcelAccess(this.UUID, out reason))
+                        {
+                            if (!forced)
+                                return; // illegal position
+                        } else
+                            lastKnownAllowedPosition = agentPos;
+                    }
+                }
+
                 m_posInfo.Set(agentPos, parent, parentPos);
                 oldVelocity = m_velocity;
                 m_velocity = velocity;
                 ForceAgentPositionInRegion();
-                if (m_posInfo.Parent != null)
-                    if ((m_posInfo.Position.X >= 6.0f) || (m_posInfo.Position.Y >= 6.0f))
-                        m_log.Error("[SCENE PRESENCE]: SetAgentPositionInfo - unexpected position " + m_posInfo.Position.ToString());
                 pos = m_posInfo.Position;
             }
 
@@ -545,6 +560,121 @@ namespace OpenSim.Region.Framework.Scenes
             SetAgentPositionInfo(forced, agentPos, parent, parentPos, m_velocity);
         }
 
+        private Vector3 _GetPosition(bool checkParcelChange, bool updateFromPhysics)
+        {
+            bool inTransit;
+            EntityBase.PositionInfo posinfo;
+            SceneObjectPart parent = null;
+            PhysicsActor physActor = null;
+            Vector3 pos;
+            Vector3 ppos;
+            // Grab copies of self-referentially consistent data inside the lock.
+            lock (m_posInfo)
+            {
+                inTransit = IsInTransit; //IsInTransit takes a lock really far down so do this here for good measure
+                posinfo = GetPosInfo();
+                pos = posinfo.Position;
+                parent = posinfo.Parent;
+                physActor = m_physicsActor;
+                if (updateFromPhysics && (physActor != null))
+                    ppos = physActor.Position;   // this seems to be safe to call inside the posInfo lock
+                else
+                    ppos = pos;
+            }
+
+            if ((physActor != null) && !inTransit)
+            {
+                bool posForced = false;
+                if (IsBot && !Util.IsValidRegionXY(ppos))
+                {
+                    Util.ForceValidRegionXY(ref ppos);
+                    physActor.Velocity = Vector3.Zero;
+                    posForced = true;
+                }
+
+                if (checkParcelChange)
+                {
+                    ILandObject parcel = Scene.LandChannel.GetLandObject(ppos.X, ppos.Y);
+                    if (parcel != null)
+                    {
+                        ParcelPropertiesStatus reason;
+                        if ((ppos.Z < Scene.LandChannel.GetBanHeight()) && (parcel.DenyParcelAccess(this.UUID, out reason)))
+                        {
+                            bool enforce = false;
+                            if (parent == null)   // not seated
+                                enforce = true;
+                            else
+                            if (parent != null)   // seated
+                            {
+                                if (parent.PhysActor != null)
+                                    if (parent.PhysActor.IsPhysical)
+                                        enforce = true;
+                            }
+
+                            if (enforce)
+                            {
+                                Vector3 newpos = this.lastKnownAllowedPosition;   // force back into valid location
+                                Vector3 newvel = physActor.Velocity;
+                                // If not retreating from the parcel, bounce them on top of it.
+                                ILandObject parcel2 = Scene.LandChannel.GetLandObject(newpos.X, newpos.Y);
+                                if ((parcel2 != null) && (parcel2.landData.LocalID == parcel.landData.LocalID))
+                                {
+                                    // New parcel is the same parcel, still illegal
+                                    newpos.Z = Scene.LandChannel.GetBanHeight() + 20.0f;    // bounce
+                                    newvel.Z = -newvel.Z;
+                                }
+                                ppos = newpos;
+                                physActor.Velocity = newvel;
+                                posForced = true;
+                            }
+                        }
+                        else
+                            this.lastKnownAllowedPosition = ppos;
+                    }
+                }
+
+                if (updateFromPhysics)
+                {
+                    lock (m_posInfo)
+                    {
+                        m_posInfo.SetPosition(ppos.X, ppos.Y, ppos.Z);
+                        pos = m_posInfo.Position;
+                        if (posForced && m_physicsActor != null) // in case it changed
+                        {
+                            m_physicsActor.Position = pos;
+                        }
+                    }
+                }
+            }
+
+            lock (m_posInfo)
+            {
+                SceneObjectPart part = parent;
+                if (part != null)
+                {
+                    SceneObjectPart rootPart = part.ParentGroup.RootPart;
+
+                    pos *= part.RotationOffset;
+                    if (part != rootPart)
+                    {
+                        pos += part.OffsetPosition;   // already included in pos?
+                        pos *= rootPart.RotationOffset;
+                    }
+                    pos += rootPart.GetWorldPosition();
+                }
+
+                // Sanity "bear trap" test for debugging
+                if (!m_isChildAgent)
+                {
+                    float lower = -100.0f;
+                    float upper = 356.0f;
+                    if ((pos.X < lower) || (pos.Y < lower) || (pos.Y > upper) || (pos.X > upper))
+                        m_log.Error("[SCENE PRESENCE]: AbsolutePosition - Unexpected position " + pos.ToString());
+                }
+            }
+            return pos;
+        }
+
         /// <summary>
         /// Absolute position of this avatar in 'region cordinates'
         /// </summary>
@@ -552,53 +682,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                Vector3 pos = m_posInfo.Position;
-                bool inTransit = IsInTransit; //IsInTransit takes a lock really far down so do this here for good measure
-
-                lock (m_posInfo)
-                {
-                    if ((m_physicsActor != null) && !inTransit)
-                    {
-                        bool posForced = false;
-                        OpenMetaverse.Vector3 ppos = m_physicsActor.Position;   // this seems to be safe to call inside the posInfo lock
-                        if (IsBot && !Util.IsValidRegionXY(ppos))
-                        {
-                            Util.ForceValidRegionXY(ref ppos);
-                            posForced = true;
-                        }
-                        m_posInfo.SetPosition(ppos.X, ppos.Y, ppos.Z);
-                        pos = m_posInfo.Position;
-                        if (posForced)
-                        {
-                            m_physicsActor.Velocity = Vector3.Zero;
-                            m_physicsActor.Position = pos;
-                        }
-                    }
-
-                    SceneObjectPart part = m_posInfo.Parent;
-                    if (part != null)
-                    {
-                        SceneObjectPart rootPart = part.ParentGroup.RootPart;
-
-                        pos *= part.RotationOffset;
-                        if (part != rootPart)
-                        {
-                            pos += part.OffsetPosition;   // already included in pos?
-                            pos *= rootPart.RotationOffset;
-                        }
-                        pos += rootPart.GetWorldPosition();
-                    }
-
-                    // Sanity "bear trap" test for debugging
-                    if (!m_isChildAgent)
-                    {
-                        float lower = -100.0f;
-                        float upper = 356.0f;
-                        if ((pos.X < lower) || (pos.Y < lower) || (pos.Y > upper) || (pos.X > upper))
-                            m_log.Error("[SCENE PRESENCE]: AbsolutePosition - Unexpected position " + pos.ToString());
-                    }
-                    return pos;
-                }
+                return _GetPosition(false, false);  // quick position
             }
             set
             {
@@ -619,6 +703,7 @@ namespace OpenSim.Region.Framework.Scenes
             bool isSafe = false;
             lock (m_posInfo)
             {
+                Vector3 pos = _GetPosition(false, false);
                 isSafe = (!IsDeleted) && (!IsInTransit);
                 if (isSafe)
                     avpos = AbsolutePosition;
@@ -779,9 +864,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Constructor(s)
+#region Constructor(s)
 
         private ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo)
         {
@@ -941,14 +1026,14 @@ namespace OpenSim.Region.Framework.Scenes
             return vector;
         }
 
-        #endregion
+#endregion
 
         public uint GenerateClientFlags(UUID ObjectID)
         {
             return m_scene.Permissions.GenerateClientFlags(m_uuid, ObjectID);
         }
 
-        #region Status Methods
+#region Status Methods
 
         /// <summary>
         /// This turns a child agent, into a root agent
@@ -1016,7 +1101,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SwapToRootAgent();
                     m_isChildAgent = false;
                     if (!IsBot)
-                        m_scene.CommsManager.UserService.AddLocalUser(m_uuid);
+                        m_scene.CommsManager.UserService.MakeLocalUser(m_uuid);
 
                     if (m_appearance != null)
                     {
@@ -1211,7 +1296,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.SwapRootAgentCount(true);
                 currentParcelUUID = UUID.Zero;  // so that if the agent reenters this region, it recognizes it as a parcel change.
                 if (!IsBot)
-                    m_scene.CommsManager.UserService.RemoveLocalUser(m_uuid);
+                    m_scene.CommsManager.UserService.UnmakeLocalUser(m_uuid);
             }
             m_scene.EventManager.TriggerOnMakeChildAgent(this);
 
@@ -1253,11 +1338,11 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_physicsActor != null)
                 isFlying = m_physicsActor.Flying;
 
-            Velocity = Vector3.Zero;
             Box boundingBox = GetBoundingBox(false);
             float zmin = (float)Scene.Heightmap.CalculateHeightAt(pos.X, pos.Y);
             if (pos.Z < zmin + (boundingBox.Extent.Z / 2))
                 pos.Z = zmin + (boundingBox.Extent.Z / 2);
+            Velocity = Vector3.Zero;
             AbsolutePosition = pos;
 
             SendTerseUpdateToAllClients();
@@ -1292,9 +1377,9 @@ namespace OpenSim.Region.Framework.Scenes
             SceneView.SendFullUpdateToAllClients();
         }
 
-        #endregion
+#endregion
 
-        #region Event Handlers
+#region Event Handlers
 
         /// <summary>
         /// Sets avatar height in the phyiscs plugin
@@ -1364,6 +1449,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     try
                     {
+                        Scene.CommsManager.UserService.GetUserProfile(this.UUID, true);  // force a cache refresh
                         IsFullyInRegion = true;
                         SendInitialData();
                         Scene.EventManager.TriggerOnCompletedMovementToNewRegion(this);
@@ -1516,7 +1602,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {   // sitting on a prim
                     if (part.ParentGroup.InTransit)
                     {
-                        m_log.Warn("[CROSSING]: AgentUpdate called during prim transit! Ignored.");
+                        // m_log.Warn("[CROSSING]: AgentUpdate called during prim transit! Ignored.");
                         return;
                     }
                 }
@@ -3020,9 +3106,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene.StatsReporter.AddAgentTime(Environment.TickCount - m_perfMonMS);
         }
 
-        #endregion
+#endregion
 
-        #region Overridden Methods
+#region Overridden Methods
 
         public override void Update()
         {
@@ -3048,9 +3134,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Update Client(s)
+#region Update Client(s)
 
         /// <summary>
         /// Sends a location update to the client connected to this scenePresence
@@ -3261,7 +3347,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes());
         }
 
-        private void InitialAttachmentRez(CachedUserInfo userInfo)
+        private void InitialAttachmentRez()
         {
             //retrieve all attachments
             List<AvatarAttachment> attachments = m_appearance.GetAttachments();
@@ -3336,7 +3422,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (Interlocked.CompareExchange(ref _attachmentRezCalled, 1, 0) == 0)
             {
                 //retrieve all attachments
-                CachedUserInfo userInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(m_uuid);
+                CachedUserInfo userInfo = m_scene.CommsManager.UserService.GetUserDetails(m_uuid);
                 if (userInfo == null)
                     return;
                 // If this is after a login in this region and not done yet, add the initial attachments
@@ -3346,7 +3432,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         ControllingClient.RunAttachmentOperation(() =>
                         {
-                            this.InitialAttachmentRez(userInfo);
+                            this.InitialAttachmentRez();
                         });
                     }
                 }
@@ -3411,16 +3497,17 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
 
-        #endregion
+#endregion
 
-        #region Significant Movement Method
+#region Significant Movement Method
 
         /// <summary>
         /// This checks for a significant movement and sends a courselocationchange update
         /// </summary>
         protected void CheckForSignificantMovement()
         {
-            Vector3 pos = AbsolutePosition;
+            Vector3 pos = _GetPosition(true, true); // check for parcel changes and updates from physics
+
             if (Util.GetDistanceTo(pos, posLastSignificantMove) > 0.5)
             {
                 posLastSignificantMove = pos;
@@ -3489,8 +3576,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
-        #region Border Crossing Methods
+#endregion
+#region Border Crossing Methods
 
         /// <summary>
         /// Checks to see if the avatar is in range of a border and calls CrossToNewRegion
@@ -3721,7 +3808,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Disabling the draw distance based visibility until the algorithm handles proper tiling path rules for region visibility.
             // e.g. Diagonal regions (i.e. checkerboard region layouts) are not supposed to be visible without a horizontal/vertical connection region.
-#if false   
+#if false
             // region offset, e.g. (1002, 999) viewing (1000,1000) would be diffX=-2, diffY=1 (left 2, up 1)
             int diffX = (int)regionX - (int)fromX;
             int diffY = (int)regionY - (int)fromY;
@@ -3751,7 +3838,7 @@ namespace OpenSim.Region.Framework.Scenes
 #endif
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// This allows the Sim owner the abiility to kick users from their sim currently.
@@ -3764,9 +3851,9 @@ namespace OpenSim.Region.Framework.Scenes
                 // For now, assign god level 200 to anyone
                 // who is granted god powers, but has no god level set.
                 //
-                CachedUserInfo profile = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(agentID);
-                if (profile.UserProfile.GodLevel > 0)
-                    m_godlevel = profile.UserProfile.GodLevel;
+                UserProfileData profile = m_scene.CommsManager.UserService.GetUserProfile(agentID);
+                if (profile.GodLevel > 0)
+                    m_godlevel = profile.GodLevel;
                 else
                     m_godlevel = 200;
             }
@@ -3778,7 +3865,7 @@ namespace OpenSim.Region.Framework.Scenes
             ControllingClient.SendAdminResponse(token, (uint)m_godlevel);
         }
 
-        #region Child Agent Updates
+#region Child Agent Updates
 
         public void ChildAgentDataUpdate(AgentData cAgentData)
         {
@@ -4026,7 +4113,7 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        #endregion Child Agent Updates
+#endregion Child Agent Updates
 
         /// <summary>
         /// Handles part of the PID controller function for moving an avatar.
@@ -4313,7 +4400,7 @@ namespace OpenSim.Region.Framework.Scenes
             RemoveFromPhysicalScene();
 
             if (!IsBot)
-                m_scene.CommsManager.UserService.RemoveLocalUser(m_uuid); 
+                m_scene.CommsManager.UserService.UnmakeLocalUser(m_uuid); 
             
             m_closed = true;
 

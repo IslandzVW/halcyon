@@ -91,9 +91,8 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
 
 
                 IConfig startupConfig = config.Configs["Communications"];
-                
-                if ((startupConfig == null) 
-                    || (startupConfig != null) 
+                if ((startupConfig == null)
+                    || (startupConfig != null)
                     && (startupConfig.GetString("InterregionComms", "RESTComms") == "RESTComms"))
                 {
                     m_log.Info("[REST COMMS]: Enabling InterregionComms RESTComms module");
@@ -101,8 +100,6 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
 
                     InitOnce(scene);
                 }
-
-                
             }
 
             if (!m_enabled)
@@ -149,7 +146,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
 
         protected virtual void AddHTTPHandlers()
         {
-            m_aScene.CommsManager.HttpServer.AddHTTPHandler("/agent/",  AgentHandler);
+            m_aScene.CommsManager.HttpServer.AddHTTPHandler("/agent/", AgentHandler);
             m_aScene.CommsManager.HttpServer.AddHTTPHandler("/object/", ObjectHandler);
 
             //new handlers for the Thoosa/protobuf creation messages
@@ -326,7 +323,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
             return System.Threading.Interlocked.Increment(ref m_nonceID);
         }
 
-        public bool SendCreateObject(ulong regionHandle, SceneObjectGroup sog, bool isLocalCall, Vector3 posInOtherRegion,
+        public bool SendCreateObject(ulong regionHandle, SceneObjectGroup sog, List<UUID> avatars, bool isLocalCall, Vector3 posInOtherRegion,
             bool isAttachment)
         {
             int createObjectStart = Environment.TickCount;
@@ -334,7 +331,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
             try
             {
                 // Try local first
-                if (m_localBackend.SendCreateObject(regionHandle, sog, true, posInOtherRegion, isAttachment))
+                if (m_localBackend.SendCreateObject(regionHandle, sog, avatars, true, posInOtherRegion, isAttachment))
                 {
                     //m_log.Debug("[REST COMMS]: LocalBackEnd SendCreateObject succeeded");
                     return true;
@@ -351,7 +348,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
 
                         long nonceID = NextNonceID();
 
-                        RegionClient.CreateObject2Ret ret = m_regionClient.DoCreateObject2Call(regInfo, sog.UUID, sogBytes, true, posInOtherRegion, isAttachment, sog.AvatarsToExpect, nonceID);
+                        RegionClient.CreateObject2Ret ret = m_regionClient.DoCreateObject2Call(regInfo, sog.UUID, sogBytes, true, posInOtherRegion, isAttachment, nonceID, avatars);
 
                         if (ret == RegionClient.CreateObject2Ret.Ok)
                             return true;
@@ -746,7 +743,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
                 }
             }
             // This is the meaning of POST object
-            bool result = m_localBackend.SendCreateObject(regionhandle, sog, false, pos, args["pos"] == null);
+            bool result = m_localBackend.SendCreateObject(regionhandle, sog, null, false, pos, args["pos"] == null);
 
             responsedata["int_response_code"] = 200;
             responsedata["str_response_string"] = result.ToString();
@@ -893,10 +890,18 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
                 sog.AbsolutePosition = Util.GetValidRegionXYZ(message.Pos.Value);
             }
 
-            sog.AvatarsToExpect = message.NumAvatars;
+            List<UUID> avatarIDs = new List<UUID>();
+            if (message.Avatars == null)
+                sog.AvatarsToExpect = message.NumAvatars;
+            else
+            {
+                sog.AvatarsToExpect = message.Avatars.Length;
+                foreach (Guid id in message.Avatars)
+                    avatarIDs.Add(new UUID(id));
+            }
 
             // This is the meaning of POST object
-            bool result = m_localBackend.SendCreateObject(regionHandle, sog, false, message.Pos.HasValue ? message.Pos.Value : Vector3.Zero, message.Pos.HasValue);
+            bool result = m_localBackend.SendCreateObject(regionHandle, sog, avatarIDs, false, message.Pos.HasValue ? message.Pos.Value : Vector3.Zero, message.Pos.HasValue);
 
             if (result)
             {

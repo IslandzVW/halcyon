@@ -210,7 +210,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual string GetSimulatorVersion()
         {
-            return VersionInfo.FullVersion;
+            return VersionInfo.Version;
         }
 
         #endregion

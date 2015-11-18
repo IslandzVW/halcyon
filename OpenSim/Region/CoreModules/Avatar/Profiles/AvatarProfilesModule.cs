@@ -94,8 +94,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Profiles
         /// <param name="avatarID"></param>
         public void RequestAvatarProperty(IClientAPI remoteClient, UUID avatarID)
         {
-            CachedUserInfo userinfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(avatarID);
-            UserProfileData profile = (userinfo == null) ? null : userinfo.UserProfile;
+            UserProfileData profile = m_scene.CommsManager.UserService.GetUserProfile(avatarID);
             if (null != profile)
             {
                 Byte[] charterMember;

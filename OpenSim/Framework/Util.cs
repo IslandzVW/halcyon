@@ -2136,6 +2136,29 @@ namespace OpenSim.Framework
             return newPos;
         }
 
+        public static string LocationURL(string regionName, Vector3 pos, string separator)
+        {
+            int x = (int)pos.X;
+            int y = (int)pos.Y;
+            int z = (int)pos.Z;
+            string region;
+            if (regionName == String.Empty)
+            {
+                region = String.Empty;
+                return x.ToString() + separator + y.ToString() + separator + z.ToString();
+            }
+
+            try
+            {
+                region = Util.EscapeUriDataStringRfc3986(regionName);
+            }
+            catch (Exception)
+            {
+                region = regionName;
+            }
+            return "http://places.inworldz.com/" + region + separator + x.ToString() + separator + y.ToString() + separator + z.ToString();
+        }
+
         public static Vector3 EmergencyPosition()
         {
             return new Vector3(Constants.REGION_VALID_X, Constants.REGION_VALID_Y, Constants.REGION_VALID_Z);

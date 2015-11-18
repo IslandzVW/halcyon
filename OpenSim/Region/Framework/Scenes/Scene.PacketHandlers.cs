@@ -376,13 +376,13 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="ownerID"></param>
         public void HandleFetchInventory(IClientAPI remoteClient, UUID itemID, UUID ownerID)
         {
-            if (ownerID == CommsManager.UserProfileCacheService.LibraryRoot.Owner)
+            if (ownerID == CommsManager.LibraryRoot.Owner)
             {
                 //m_log.Debug("request info for library item");
                 return;
             }
 
-            CachedUserInfo userProfile = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userProfile = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (null == userProfile)
             {
@@ -416,7 +416,7 @@ namespace OpenSim.Region.Framework.Scenes
             // CachedUserInfo so that this class doesn't have to know the details (and so that multiple libraries, etc.
             // can be handled transparently).
             InventoryFolderImpl fold = null;
-            if ((fold = CommsManager.UserProfileCacheService.LibraryRoot.FindFolder(folderID)) != null)
+            if ((fold = CommsManager.LibraryRoot.FindFolder(folderID)) != null)
             {
                 remoteClient.SendInventoryFolderDetails(
                     fold.Owner, fold, fold.RequestListOfItems(),
@@ -424,7 +424,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            CachedUserInfo userProfile = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userProfile = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (null == userProfile)
             {
@@ -462,12 +462,12 @@ namespace OpenSim.Region.Framework.Scenes
             // CachedUserInfo so that this class doesn't have to know the details (and so that multiple libraries, etc.
             // can be handled transparently).            
             InventoryFolderImpl fold;
-            if ((fold = CommsManager.UserProfileCacheService.LibraryRoot.FindFolder(folderID)) != null)
+            if ((fold = CommsManager.LibraryRoot.FindFolder(folderID)) != null)
             {
                 return fold.RequestListOfItems();
             }
             
-            CachedUserInfo userProfile = CommsManager.UserProfileCacheService.GetUserDetails(agentID);
+            CachedUserInfo userProfile = CommsManager.UserService.GetUserDetails(agentID);
             
             if (null == userProfile)
             {
@@ -510,7 +510,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleCreateInventoryFolder(IClientAPI remoteClient, UUID folderID, ushort folderType,
                                                 string folderName, UUID parentID)
         {
-            CachedUserInfo userProfile = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userProfile = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (null == userProfile)
             {
@@ -551,7 +551,7 @@ namespace OpenSim.Region.Framework.Scenes
 //            m_log.DebugFormat(
 //                "[AGENT INVENTORY]: Updating inventory folder {0} {1} for {2} {3}", folderID, name, remoteClient.Name, remoteClient.AgentId);
 
-            CachedUserInfo userProfile = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userProfile = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (null == userProfile)
             {
@@ -587,7 +587,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool UserDoesntOwnFolder(UUID userId, UUID folderId)
         {
-            CachedUserInfo userProfile = CommsManager.UserProfileCacheService.GetUserDetails(userId);
+            CachedUserInfo userProfile = CommsManager.UserService.GetUserDetails(userId);
 
             //make sure the user owns the source folder
             InventoryFolderBase folder = userProfile.GetFolderAttributes(folderId);
@@ -607,7 +607,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="parentID"></param>
         public void HandleMoveInventoryFolder(IClientAPI remoteClient, UUID folderID, UUID parentID)
         {
-            CachedUserInfo userProfile = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userProfile = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (null == userProfile)
             {
@@ -639,7 +639,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             Util.FireAndForget(Util.PoolSelection.LongIO, delegate(object obj)
             {
-                CachedUserInfo userProfile = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                CachedUserInfo userProfile = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
                 if (null == userProfile)
                 {
@@ -690,7 +690,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             Util.FireAndForget(Util.PoolSelection.LongIO, delegate(object obj)
             {
-                CachedUserInfo userProfile = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                CachedUserInfo userProfile = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
                 if (null == userProfile)
                 {
