@@ -184,8 +184,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         continue;
 
                     var matIds = getMaterialIDsForPartFromTextureEntry(te);
-
-                    m_log.DebugFormat("[MaterialsModule]: OnObjectAdd for SOP {0}:  {1}", part.LocalId, matIds);
+                    m_log.DebugFormat("[MaterialsModule]: OnObjectAdd for SOP {0}:  {1}", part.LocalId, matIds.ToString());
 
                     foreach (var key in matIds)
                     {
@@ -247,7 +246,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
                     var matIds = getMaterialIDsForPartFromTextureEntry(te);
 
-                    m_log.DebugFormat("[MaterialsModule]: OnObjectRemoved for SOP {0}:  {1}", part.LocalId, matIds);
+                    m_log.DebugFormat("[MaterialsModule]: OnObjectRemoved for SOP {0}:  {1}", part.LocalId, matIds.ToString());
 
                     foreach (var key in matIds)
                     {
@@ -381,41 +380,40 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 UUID id = UUID.Zero;
                 RenderMaterial material = null;
 
+                // Record what we currently have
+                var currentMaterialIDs = getMaterialIDsForPartFromTextureEntry(te);
+
+                // If there is a material being set see if we've seen it before.
+                // If not we'll add it to the region cache
                 if (matData != null)
                 {
                     material = RenderMaterial.FromOSD(matData);
                     id = material.MaterialID;
-                    if (m_knownMaterials.ContainsKey(id))
-                        material = m_knownMaterials[id].material;
-                }
-            
-                // If we are doing a replace this will get set with the old value.
-                UUID currentMatId = UUID.Zero;
 
+                    if (m_knownMaterials.ContainsKey(id))
+                    {
+                        material = m_knownMaterials[id].material;
+                        m_knownMaterials[id].partIds.Add(sop.LocalId);
+                    }
+                    else
+                    {
+                        m_knownMaterials[id] = new RenderMaterialEntry(material, sop.LocalId);
+                    }
+                }
+
+                // Set the Material ID in the sop texture entry. If there's a face defined
+                // use that else use the Default entry.  ID can either be a material ID
+                // we set from the lookup above or Zero when we are clearing a material.
                 if (face < 0)
                 {
-                    if (te.DefaultTexture != null)
-                    {
-                        currentMatId = te.DefaultTexture.MaterialID;
-                        te.DefaultTexture.MaterialID = id;
-                    }
+                    te.DefaultTexture.MaterialID = id;
                 }
                 else
                 {
-                    if (te.FaceTextures.Length >= face - 1)
-                    {
-                        if (te.FaceTextures[face] == null)
-                        {
-                            currentMatId = te.DefaultTexture.MaterialID;
-                            te.DefaultTexture.MaterialID = id;
-                        }
-                        else
-                        {
-                            currentMatId = te.FaceTextures[face].MaterialID;
-                            te.FaceTextures[face].MaterialID = id;
-                        }
-                    }
+                    var faceEntry = te.CreateFace((uint)face);
+                    faceEntry.MaterialID = id;
                 }
+
 
 
                 // If material is null we're just clearing nothing to set. 
@@ -435,39 +433,36 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     sop.Shape.RenderMaterials.AddMaterial(material);
                 }
 
-                /*
+                // Get the updated list of Materials from the TextureEntry.  We will
+                // Use that to rebuild the RenderMaterials for the part. We'll also get a list
+                // of entries that have been removed based on what we fetched initially so we
+                // can clean that up in our cache.
+                var newMaterialIDs = getMaterialIDsForPartFromTextureEntry(te);
+                var materials = new List<RenderMaterial>();
+
                 // If there was an update and the material id has changed, clean up the old value.  
                 // Have to be careful here. It might still be in use in another slot.  So we build 
                 // a list of keys and walk the texture entries subtracting keys in use.  Whatever
                 // is left are candidates to clean up.
-                */
-                if ((currentMatId != UUID.Zero) && (currentMatId != id))
+                foreach (var entry in newMaterialIDs)
                 {
-                    List<UUID> keys = sop.Shape.RenderMaterials.GetMaterialIDs();
+                    if (currentMaterialIDs.Contains(entry))
+                        currentMaterialIDs.Remove(entry);
+                    if (m_knownMaterials.ContainsKey(entry))
+                        materials.Add(m_knownMaterials[entry].material);
+                }
 
-                    if ((te.DefaultTexture != null) && (te.DefaultTexture.MaterialID != null))
-                        keys.Remove(te.DefaultTexture.MaterialID);
+                // Set the new materials list into the part.
+                sop.Shape.RenderMaterials.SetMaterials(materials);
 
-                    foreach (var entry in te.FaceTextures)
+                // currentMaterialsIDs contains orphans if any.  Remove them from the cache
+                foreach (var entry in currentMaterialIDs)
+                {
+                    if (m_knownMaterials.ContainsKey(entry))
                     {
-                        if ((entry != null) && (entry.MaterialID != null))
-                            keys.Remove(entry.MaterialID);
-                    }
-
-                    /*
-                    // Process the list of orphans.  Remove it from the mats in the shape
-                    // And decrease a reference in our known materials list as well.
-                    */
-                    foreach (var orphanKey in keys)
-                    {
-                        sop.Shape.RenderMaterials.RemoveMaterial(orphanKey);
-                        if (m_knownMaterials.ContainsKey(orphanKey))
-                        {
-                            var entry = m_knownMaterials[orphanKey];
-                            entry.partIds.Remove(sop.LocalId);
-                            if (entry.partIds.Count <= 0)
-                                m_knownMaterials.Remove(orphanKey);
-                        }
+                        m_knownMaterials[entry].partIds.Remove(sop.LocalId);
+                        if (m_knownMaterials[entry].partIds.Count <= 0)
+                            m_knownMaterials.Remove(entry);
                     }
                 }
             }

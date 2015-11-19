@@ -54,7 +54,7 @@ namespace OpenSim.Framework
         public const byte    DEFAULT_SPECULAR_LIGHT_EXPONENT = ((byte)(0.2f * 255));
         public const byte    DEFAULT_ENV_INTENSITY = 0;
 
-        public static readonly Color4 DEFAULT_SPECULAR_LIGHT_COLOR = new Color4 (255, 255, 255, 255);
+        public static readonly Color4 DEFAULT_SPECULAR_LIGHT_COLOR = Color4.White;
         public const float  MATERIALS_MULTIPLIER = 10000.0f;
 
         #region Properties
@@ -352,16 +352,24 @@ namespace OpenSim.Framework
             }
         }
 
-        [ProtoMember(13)]
-        public byte[] SerializableSpecularLightColor
+        /// <summary>
+        /// OverWriteList is important here.  Otherwise we get appended copies for some reason.  
+        /// </summary>
+        [ProtoMember(13, OverwriteList = true)]
+        public float[] SerializableSpecularLightColor
         {
             get
             {
-                return SpecularLightColor.GetBytes();
+                return new float[] {
+                    m_SpecularLightColor.R, m_SpecularLightColor.G, m_SpecularLightColor.B, m_SpecularLightColor.A
+                    };
             }
             set
             {
-                SpecularLightColor = new Color4(value, 0, false);
+                m_SpecularLightColor.R = value[0];
+                m_SpecularLightColor.G = value[1];
+                m_SpecularLightColor.B = value[2];
+                m_SpecularLightColor.A = value[3];
             }
         }
 
@@ -447,23 +455,56 @@ namespace OpenSim.Framework
 
         #endregion Properties
 
-        public RenderMaterial()
+        public RenderMaterial() : 
+            this(UUID.Zero, UUID.Zero, DEFAULT_SPECULAR_LIGHT_COLOR)
         {
-            NormalOffsetX = 0.0f;
-            NormalOffsetY = 0.0f;
-            NormalRepeatX = 1.0f;
-            NormalRepeatY = 1.0f;
-            NormalRotation = 0.0f;
-            SpecularOffsetX = 0.0f;
-            SpecularOffsetY = 0.0f;
-            SpecularRepeatX = 1.0f;
-            SpecularRepeatY = 1.0f;
-            SpecularRotation = 0.0f;
-            SpecularLightColor =  DEFAULT_SPECULAR_LIGHT_COLOR;
-            SpecularLightExponent = (byte)DEFAULT_SPECULAR_LIGHT_EXPONENT;
-            EnvironmentIntensity = (byte)DEFAULT_ENV_INTENSITY;
-            DiffuseAlphaMode = (byte)eDiffuseAlphaMode.DIFFUSE_ALPHA_MODE_BLEND;
-            AlphaMaskCutoff = 0;
+        }
+
+        public RenderMaterial(
+            UUID normalID,
+            UUID specularID,
+            Color4 specularLightColor,
+            float normalOffsetX = 0.0f,
+            float normalOffsetY = 0.0f,
+            float normalRepeatX = 1.0f,
+            float normalRepeatY = 1.0f,
+            float normalRotation = 0.0f,
+            float specularOffsetX = 0.0f,
+            float specularOffsetY = 0.0f,
+            float specularRepeatX = 1.0f,
+            float specularRepeatY = 1.0f,
+            float specularRotation = 0.0f,
+            byte specularLightExponent = DEFAULT_SPECULAR_LIGHT_EXPONENT,
+            byte environmentIntensity = DEFAULT_ENV_INTENSITY,
+            eDiffuseAlphaMode diffuseAlphaMode = eDiffuseAlphaMode.DIFFUSE_ALPHA_MODE_BLEND,
+            byte alphaMaskCutoff = 0
+            )
+        {
+            NormalID = normalID;
+            NormalOffsetX = normalOffsetX;
+            NormalOffsetY = normalOffsetY;
+            NormalRepeatX = normalRepeatX;
+            NormalRepeatY = normalRepeatY;
+            NormalRotation = normalRotation;
+
+            SpecularID = specularID;
+            SpecularOffsetX = specularOffsetX;
+            SpecularOffsetY = specularOffsetY;
+            SpecularRepeatX = specularRepeatX;
+            SpecularRepeatY = specularRepeatY;
+            SpecularRotation = specularRotation;
+
+            SpecularLightColor = specularLightColor;
+            SpecularLightExponent = specularLightExponent;
+            EnvironmentIntensity = environmentIntensity;
+            DiffuseAlphaMode = (byte)diffuseAlphaMode;
+            AlphaMaskCutoff = alphaMaskCutoff;
+        }
+
+        public byte[] ComputeMD5Hash()
+        {
+            using (var md5 = MD5.Create())
+                return md5.ComputeHash(ToBytes());
         }
 
         public override bool Equals (object obj)
@@ -556,6 +597,7 @@ namespace OpenSim.Framework
             return (int)Math.Round(f, MidpointRounding.AwayFromZero);
         }
 
+        
         public OSD GetOSD ()
         {
             OSDMap material_data = new OSDMap (17);
