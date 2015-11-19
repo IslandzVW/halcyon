@@ -14,7 +14,7 @@ namespace OpenSim.Framework
     /// methods in RenderMaterials
     /// </summary>
     [ProtoContract]
-    public class RenderMaterial : ICloneable
+    public struct RenderMaterial : ICloneable
     {
         public enum eDiffuseAlphaMode : byte
         {
@@ -59,48 +59,7 @@ namespace OpenSim.Framework
 
         #region Properties
 
-        /// <summary>
-        /// MaterialID - A calculated value computed from the contents of the class. 
-        /// Basically a hash value that given 2 classes are the same should produce the same value.
-        /// </summary>
-        private Object m_lock = new object();
-
-        private UUID m_materialID = UUID.Zero;
-        public UUID MaterialID
-        {
-            get
-            {
-                lock (m_lock)
-                {
-                    if (m_materialID == UUID.Zero)
-                    {
-                        using (var md5 = MD5.Create())
-                            m_materialID = new UUID(md5.ComputeHash(ToBytes()), 0);
-                    }
-
-                    return m_materialID;
-                }
-            }
-        }
-
-        private UUID m_normalID = UUID.Zero;
-        public UUID NormalID {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_normalID;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_normalID = value;
-                }
-            }
-        }
+        public UUID NormalID;
 
         [ProtoMember(1)]
         public Guid SerializableNormalID {
@@ -109,123 +68,21 @@ namespace OpenSim.Framework
         }
 
         [ProtoMember(2)]
-        private float m_NormalOffsetX;
-        public float NormalOffsetX {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_NormalOffsetX;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_NormalOffsetX = value;
-                }
-            }
-        }
+        public float NormalOffsetX;
 
         [ProtoMember(3)]
-        private float m_NormalOffsetY;
-        public float NormalOffsetY {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_NormalOffsetY;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_NormalOffsetY = value;
-                }
-            }
-        }
+        public float NormalOffsetY;
 
         [ProtoMember(4)]
-        private float m_NormalRepeatX;
-        public float NormalRepeatX {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_NormalRepeatX;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_NormalRepeatX = value;
-                }
-            }
-        }
+        public float NormalRepeatX;
 
         [ProtoMember(5)]
-        private float m_NormalRepeatY;
-        public float NormalRepeatY {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_NormalRepeatY;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_NormalRepeatY = value;
-                }
-            }
-        }
+        public float NormalRepeatY;
 
         [ProtoMember(6)]
-        private float m_NormalRotation;
-        public float NormalRotation {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_NormalRotation;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_NormalRotation = value;
-                }
-            }
-        }
+        public float NormalRotation;
 
-        private UUID m_SpecularID;
-        public UUID SpecularID {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_SpecularID;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_SpecularID = value;
-                }
-            }
-        }
+        public UUID SpecularID;
 
         [ProtoMember(7)]
         public Guid SerializableSpecularID {
@@ -234,123 +91,21 @@ namespace OpenSim.Framework
         }
 
         [ProtoMember(8)]
-        private float m_SpecularOffsetX;
-        public float SpecularOffsetX {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_SpecularOffsetX;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_SpecularOffsetX = value;
-                }
-            }
-        }
+        public float SpecularOffsetX;
 
         [ProtoMember(9)]
-        private float m_SpecularOffsetY;
-        public float SpecularOffsetY {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_SpecularOffsetY;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_SpecularOffsetY = value;
-                }
-            }
-        }
+        public float SpecularOffsetY;
 
         [ProtoMember(10)]
-        private float m_SpecularRepeatX;
-        public float SpecularRepeatX {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_SpecularRepeatX;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_SpecularRepeatX = value;
-                }
-            }
-        }
+        public float SpecularRepeatX;
 
         [ProtoMember(11)]
-        private float m_SpecularRepeatY;
-        public float SpecularRepeatY {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_SpecularRepeatY;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_SpecularRepeatY = value;
-                }
-            }
-        }
+        public float SpecularRepeatY;
 
         [ProtoMember(12)]
-        private float m_SpecularRotation;
-        public float SpecularRotation {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_SpecularRotation;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_SpecularRotation = value;
-                }
-            }
-        }
+        public float SpecularRotation;
 
-        private Color4 m_SpecularLightColor;
-        public Color4 SpecularLightColor {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_SpecularLightColor;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_SpecularLightColor = value;
-                }
-            }
-        }
+        public Color4 SpecularLightColor;
 
         /// <summary>
         /// OverWriteList is important here.  Otherwise we get appended copies for some reason.  
@@ -361,104 +116,31 @@ namespace OpenSim.Framework
             get
             {
                 return new float[] {
-                    m_SpecularLightColor.R, m_SpecularLightColor.G, m_SpecularLightColor.B, m_SpecularLightColor.A
+                    SpecularLightColor.R, SpecularLightColor.G, SpecularLightColor.B, SpecularLightColor.A
                     };
             }
             set
             {
-                m_SpecularLightColor.R = value[0];
-                m_SpecularLightColor.G = value[1];
-                m_SpecularLightColor.B = value[2];
-                m_SpecularLightColor.A = value[3];
+                SpecularLightColor.R = value[0];
+                SpecularLightColor.G = value[1];
+                SpecularLightColor.B = value[2];
+                SpecularLightColor.A = value[3];
             }
         }
 
         [ProtoMember(14)]
-        private byte m_SpecularLightExponent;
-        public byte SpecularLightExponent {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_SpecularLightExponent;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_SpecularLightExponent = value;
-                }
-            }
-        }
+        public byte SpecularLightExponent;
 
         [ProtoMember(15)]
-        private byte m_EnvironmentIntensity;
-        public byte EnvironmentIntensity {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_EnvironmentIntensity;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_EnvironmentIntensity = value;
-                }
-            }
-        }
+        public byte EnvironmentIntensity;
 
         [ProtoMember(16)]
-        private byte m_DiffuseAlphaMode;
-        public byte DiffuseAlphaMode {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_DiffuseAlphaMode;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_DiffuseAlphaMode = value;
-                }
-            }
-        }
+        public byte DiffuseAlphaMode;
 
         [ProtoMember(17)]
-        private byte m_AlphaMaskCutoff;
-        public byte AlphaMaskCutoff {
-            get
-            {
-                lock (m_lock)
-                {
-                    return m_AlphaMaskCutoff;
-                }
-            }
-            set
-            {
-                lock (m_lock)
-                {
-                    m_materialID = UUID.Zero;
-                    m_AlphaMaskCutoff = value;
-                }
-            }
-        }
+        public byte AlphaMaskCutoff;
 
         #endregion Properties
-
-        public RenderMaterial() : 
-            this(UUID.Zero, UUID.Zero, DEFAULT_SPECULAR_LIGHT_COLOR)
-        {
-        }
 
         public RenderMaterial(
             UUID normalID,
@@ -505,6 +187,11 @@ namespace OpenSim.Framework
         {
             using (var md5 = MD5.Create())
                 return md5.ComputeHash(ToBytes());
+        }
+
+        public static UUID GenerateMaterialID(RenderMaterial material)
+        {
+            return (new UUID(material.ComputeMD5Hash(), 0));
         }
 
         public override bool Equals (object obj)
@@ -596,7 +283,6 @@ namespace OpenSim.Framework
         {
             return (int)Math.Round(f, MidpointRounding.AwayFromZero);
         }
-
         
         public OSD GetOSD ()
         {
@@ -671,7 +357,7 @@ namespace OpenSim.Framework
 #region Properties
 
         [ProtoMember(1)]
-        protected Dictionary<String, RenderMaterial> Materials {
+        protected Dictionary<Guid, RenderMaterial> Materials {
             get;
             set;
         }
@@ -679,18 +365,16 @@ namespace OpenSim.Framework
 
         public RenderMaterials()
         {
-            Materials = new Dictionary<String, RenderMaterial> ();
+            Materials = new Dictionary<Guid, RenderMaterial> ();
         }
 
         public bool RemoveMaterial(UUID id)
         {
             lock (Materials)
             {
-                string key = id.ToString();
-
-                if (Materials.ContainsKey(key))
+                if (Materials.ContainsKey(id.Guid))
                 {
-                    Materials.Remove(key);
+                    Materials.Remove(id.Guid);
                     return true;
                 }
                 else
@@ -700,21 +384,16 @@ namespace OpenSim.Framework
             }
         }
 
-        public RenderMaterial AddMaterial(RenderMaterial mat)
+        public UUID AddMaterial(RenderMaterial mat)
         {
             lock (Materials)
             {
-                string key = mat.MaterialID.ToString();
+                UUID key = RenderMaterial.GenerateMaterialID(mat);
 
-                if (Materials.ContainsKey(key))
-                {
-                    return Materials[key];
-                }
-                else
-                {
-                    Materials[key] = mat;
-                    return mat;
-                }
+                if (Materials.ContainsKey(key.Guid) == false)
+                    Materials[key.Guid] = mat;
+
+                return key;
             }
         }
 
@@ -722,18 +401,15 @@ namespace OpenSim.Framework
         {
             lock (Materials)
             {
-                return (Materials.ContainsKey(id.ToString()));
+                return (Materials.ContainsKey(id.Guid));
             }
         }
 
-        public RenderMaterial FindMaterial(UUID id)
+        public RenderMaterial GetMaterial(UUID id)
         {
             lock (Materials)
             {
-                if (Materials.ContainsKey(id.ToString()))
-                    return Materials[id.ToString()];
-                else
-                    return null;
+                return Materials[id.Guid];
             }
         }
 
@@ -752,11 +428,12 @@ namespace OpenSim.Framework
                 Materials.Clear();
                 foreach (var material in mats)
                 {
-                    string key = material.MaterialID.ToString();
-                    Materials[key] = material;
+                    UUID key = RenderMaterial.GenerateMaterialID(material);
+                    Materials[key.Guid] = material;
                 }
             }
         }
+
         public List<UUID> GetMaterialIDs()
         {
             lock (Materials)
@@ -837,8 +514,8 @@ namespace OpenSim.Framework
             lock (Materials) {
                 StringBuilder builder = new StringBuilder ();
                 builder.Append ("[ ");
-                foreach (KeyValuePair<string, RenderMaterial> entry in Materials)
-                    builder.AppendFormat (" MaterialId : {0}, RenderMaterial : {{ {1} }} ", entry.Key, entry.Value.ToString ());
+                foreach (KeyValuePair<Guid, RenderMaterial> entry in Materials)
+                    builder.AppendFormat (" MaterialId : {0}, RenderMaterial : {{ {1} }} ", entry.Key.ToString(), entry.Value.ToString ());
                 builder.Append(" ]");
                 return builder.ToString();
             };

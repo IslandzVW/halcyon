@@ -184,27 +184,24 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         continue;
 
                     var matIds = getMaterialIDsForPartFromTextureEntry(te);
-                    m_log.DebugFormat("[MaterialsModule]: OnObjectAdd for SOP {0}:  {1}", part.LocalId, matIds.ToString());
 
                     foreach (var key in matIds)
                     {
-                        if (part.Shape.RenderMaterials.ContainsMaterial(key) == false)
-                        {
-                            m_log.DebugFormat("[MaterialsModule]: Materials data for SOP {0}: {1} not found in object!", part.LocalId, key);
-                            continue;
-                        }
-
                         if (m_knownMaterials.ContainsKey(key))
                         {
                             var entry = m_knownMaterials[key];
                             entry.partIds.Add(part.LocalId);
                             m_log.DebugFormat("[MaterialsModule]: KNOWN Material {0} for SOP {1}", key, part.LocalId);
                         }
-                        else
+                        else if (part.Shape.RenderMaterials.ContainsMaterial(key))
                         {
-                            RenderMaterial mat = part.Shape.RenderMaterials.FindMaterial(key);
+                            RenderMaterial mat = part.Shape.RenderMaterials.GetMaterial(key);
                             m_knownMaterials.Add(key, new RenderMaterialEntry(mat, part.LocalId));
                             m_log.DebugFormat("[MaterialsModule]: NEW Material {0} for SOP {1} ", key, part.LocalId);
+                        }
+                        else
+                        {
+                            m_log.ErrorFormat("[MaterialsModule]: ORPHANED Material {0} for SOP {1}!", key, part.LocalId);
                         }
                     }
                 }
@@ -378,7 +375,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
             lock (m_knownMaterials)
             {
                 UUID id = UUID.Zero;
-                RenderMaterial material = null;
 
                 // Record what we currently have
                 var currentMaterialIDs = getMaterialIDsForPartFromTextureEntry(te);
@@ -387,8 +383,8 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 // If not we'll add it to the region cache
                 if (matData != null)
                 {
-                    material = RenderMaterial.FromOSD(matData);
-                    id = material.MaterialID;
+                    RenderMaterial material = RenderMaterial.FromOSD(matData);
+                    id = sop.Shape.RenderMaterials.AddMaterial(material);
 
                     if (m_knownMaterials.ContainsKey(id))
                     {
@@ -412,25 +408,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 {
                     var faceEntry = te.CreateFace((uint)face);
                     faceEntry.MaterialID = id;
-                }
-
-
-
-                // If material is null we're just clearing nothing to set. 
-                // Otherwise set the new value in the Shape and in known materials.
-                if (material != null)
-                {
-                    if (m_knownMaterials.ContainsKey(id) == false)
-                    {
-                        m_knownMaterials[id] = new RenderMaterialEntry(material, sop.LocalId);
-                    }
-                    else
-                    {
-                        var entry = m_knownMaterials[id];
-                        entry.partIds.Add(sop.LocalId);
-                    }
-
-                    sop.Shape.RenderMaterials.AddMaterial(material);
                 }
 
                 // Get the updated list of Materials from the TextureEntry.  We will

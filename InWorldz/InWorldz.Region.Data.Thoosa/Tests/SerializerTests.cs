@@ -215,13 +215,8 @@ namespace InWorldz.Region.Data.Thoosa.Tests
             var sop2 = Util.RandomSOP("Child1", 2);
             var sop3 = Util.RandomSOP("Child2", 3);
 
-            var mat1 = new RenderMaterial();
-            mat1.NormalID = UUID.Random();
-            mat1.SpecularID = UUID.Random();
-
-            var mat2 = new RenderMaterial();
-            mat2.NormalID = UUID.Random();
-            mat2.SpecularID = UUID.Random();
+            var mat1 = new RenderMaterial(UUID.Random(), UUID.Random(), Color4.White);
+            var mat2 = new RenderMaterial(UUID.Random(), UUID.Random(), Color4.White);
 
             sop1.Shape.RenderMaterials.AddMaterial(mat1);
             sop2.Shape.RenderMaterials.AddMaterial(mat2);
