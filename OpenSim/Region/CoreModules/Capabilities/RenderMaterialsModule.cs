@@ -47,7 +47,7 @@ using OpenSim.Region.Framework.Scenes;
 using CapsUtil = OpenSim.Framework.CapsUtil;
 using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 using OSDArray = OpenMetaverse.StructuredData.OSDArray;
-
+using System.Text;
 
 namespace OpenSim.Region.CoreModules.Capabilities
 {
@@ -81,18 +81,32 @@ namespace OpenSim.Region.CoreModules.Capabilities
         /// </summary>
         public bool Enabled { get; private set; }
 
+        /// <summary>
+        /// EnableDebugging output?
+        /// </summary>
+        public bool DebugEnabled { get; private set; }
+
         #region INonSharedRegionModule Members
 
         public RenderMaterialsModule()
         {
-            Enabled = true;
+            Enabled = false;
+            DebugEnabled = false;
         }
 
         public void Initialize(IConfigSource source)
         {
-            IConfig config = source.Configs["RenderMaterialsModule"];
+            IConfig config = source.Configs["RenderMaterials"];
             if (config != null)
-                Enabled = config.GetBoolean("Enabled", true);
+            {
+                Enabled = config.GetBoolean("Enabled", false);
+                DebugEnabled = config.GetBoolean("DebugEnabled", false);
+            }
+
+            if (DebugEnabled == true)
+                ((log4net.Repository.Hierarchy.Logger)m_log.Logger).Level = log4net.Core.Level.Debug;
+            else
+                ((log4net.Repository.Hierarchy.Logger)m_log.Logger).Level = log4net.Core.Level.Warn;
         }
 
         public void AddRegion(Scene scene)
@@ -243,7 +257,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
                     var matIds = getMaterialIDsForPartFromTextureEntry(te);
 
-                    m_log.DebugFormat("[MaterialsModule]: OnObjectRemoved for SOP {0}:  {1}", part.LocalId, matIds.ToString());
+                    m_log.DebugFormat("[MaterialsModule]: OnObjectRemoved for SOP {0}:  {1}", part.LocalId, DebugMaterialsListToString(matIds));
 
                     foreach (var key in matIds)
                     {
@@ -260,6 +274,16 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     }
                 }
             }
+        }
+
+        private string DebugMaterialsListToString(List<UUID> materials)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.Append("[ ");
+            foreach (var entry in materials)
+                builder.AppendFormat(" {0}, ", entry.ToString());
+            builder.Append(" ]");
+            return builder.ToString();
         }
 
         public string RenderMaterialsPostCap(string request, UUID agentID)
@@ -321,7 +345,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
                 try
                 {
-                    // m_log.Debug("[RenderMaterials]: processing matsMap: " + OSDParser.SerializeJsonString(matsMap));
                     matLocalID = matsMap["ID"].AsUInteger();
 
                     if (matsMap.ContainsKey("Face"))
@@ -395,6 +418,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     {
                         m_knownMaterials[id] = new RenderMaterialEntry(material, sop.LocalId);
                     }
+
+                    m_log.DebugFormat("[RenderMaterials]: SOP {0}, Face {1}, Adding RenderMaterial {2}", 
+                        sop.LocalId, face, material.ToString());
                 }
 
                 // Set the Material ID in the sop texture entry. If there's a face defined
@@ -415,7 +441,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 // of entries that have been removed based on what we fetched initially so we
                 // can clean that up in our cache.
                 var newMaterialIDs = getMaterialIDsForPartFromTextureEntry(te);
-                var materials = new List<RenderMaterial>();
 
                 // If there was an update and the material id has changed, clean up the old value.  
                 // Have to be careful here. It might still be in use in another slot.  So we build 
@@ -424,22 +449,40 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 foreach (var entry in newMaterialIDs)
                 {
                     if (currentMaterialIDs.Contains(entry))
+                    {
                         currentMaterialIDs.Remove(entry);
-                    if (m_knownMaterials.ContainsKey(entry))
-                        materials.Add(m_knownMaterials[entry].material);
+                    }
+
+                    if (sop.Shape.RenderMaterials.ContainsMaterial(entry) == false)
+                    {
+                        m_log.WarnFormat("[RenderMaterials]: SOP {0}, Face {1}, RenderMaterials {2} should be present but isn't!",
+                            sop.LocalId, face, entry.ToString());
+                    }
                 }
 
-                // Set the new materials list into the part.
-                sop.Shape.RenderMaterials.SetMaterials(materials);
-
-                // currentMaterialsIDs contains orphans if any.  Remove them from the cache
+                // currentMaterialsIDs contains orphans if any.  Remove them from the sop.Shape and the cache (if needed)
                 foreach (var entry in currentMaterialIDs)
                 {
+                    if (sop.Shape.RenderMaterials.ContainsMaterial(entry) == true)
+                    {
+                        m_log.DebugFormat("[RenderMaterials]: SOP {0}, Face {1}, Removing unused RenderMaterials {2} from shape.",
+                            sop.LocalId, face, entry.ToString());
+                        sop.Shape.RenderMaterials.RemoveMaterial(entry);
+                    }
+                    else
+                    {
+                        m_log.WarnFormat("[RenderMaterials]: SOP {0}, Face {1}, ORPHANED RenderMaterials {2} should be present but isn't!",
+                            sop.LocalId, face, entry.ToString());
+                    }
+
                     if (m_knownMaterials.ContainsKey(entry))
                     {
                         m_knownMaterials[entry].partIds.Remove(sop.LocalId);
                         if (m_knownMaterials[entry].partIds.Count <= 0)
+                        { 
+                            m_log.DebugFormat("[RenderMaterials]: Removing unused RenderMaterials {2} from region cache.", entry.ToString());
                             m_knownMaterials.Remove(entry);
+                        }
                     }
                 }
             }
