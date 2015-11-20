@@ -197,14 +197,16 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     if (te == null)
                         continue;
 
-                    var matIds = getMaterialIDsForPartFromTextureEntry(te);
+                    var matIds = getMaterialIDsFromTextureEntry(te);
 
                     foreach (var key in matIds)
                     {
                         if (m_knownMaterials.ContainsKey(key))
                         {
                             var entry = m_knownMaterials[key];
-                            entry.partIds.Add(part.LocalId);
+                            if (entry.partIds.Contains(part.LocalId) == false)
+                                entry.partIds.Add(part.LocalId);
+
                             m_log.DebugFormat("[MaterialsModule]: KNOWN Material {0} for SOP {1}", key, part.LocalId);
                         }
                         else if (part.Shape.RenderMaterials.ContainsMaterial(key))
@@ -222,7 +224,14 @@ namespace OpenSim.Region.CoreModules.Capabilities
             }
         }
 
-        private List<UUID> getMaterialIDsForPartFromTextureEntry(Primitive.TextureEntry te)
+        /// <summary>
+        /// Return a list of deduplicated materials ids from the texture entry we receive.
+        /// We remove duplicates because a materialid may be used across faces and we only
+        /// need to represent it here once.
+        /// </summary>
+        /// <param name="te">The TextureEntry that we search for MaterialIDs</param>
+        /// <returns>The List of UUIDs found, possibly empty if no materials are in use.</returns>
+        private List<UUID> getMaterialIDsFromTextureEntry(Primitive.TextureEntry te)
         {
             List<UUID> matIds = new List<UUID>();
 
@@ -234,7 +243,10 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 foreach (var face in te.FaceTextures)
                 {
                     if ((face != null) && (face.MaterialID != UUID.Zero))
-                        matIds.Add(face.MaterialID);
+                    {
+                        if (matIds.Contains(face.MaterialID) == false)
+                            matIds.Add(face.MaterialID);
+                    }
                 }
             }
 
@@ -255,7 +267,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     if (te == null)
                         continue;
 
-                    var matIds = getMaterialIDsForPartFromTextureEntry(te);
+                    var matIds = getMaterialIDsFromTextureEntry(te);
 
                     m_log.DebugFormat("[MaterialsModule]: OnObjectRemoved for SOP {0}:  {1}", part.LocalId, DebugMaterialsListToString(matIds));
 
@@ -400,7 +412,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 UUID id = UUID.Zero;
 
                 // Record what we currently have
-                var currentMaterialIDs = getMaterialIDsForPartFromTextureEntry(te);
+                var currentMaterialIDs = getMaterialIDsFromTextureEntry(te);
 
                 // If there is a material being set see if we've seen it before.
                 // If not we'll add it to the region cache
@@ -412,7 +424,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     if (m_knownMaterials.ContainsKey(id))
                     {
                         material = m_knownMaterials[id].material;
-                        m_knownMaterials[id].partIds.Add(sop.LocalId);
+                        var entry = m_knownMaterials[id];
+                        if (entry.partIds.Contains(sop.LocalId) == false)
+                            entry.partIds.Add(sop.LocalId);
                     }
                     else
                     {
@@ -440,7 +454,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 // Use that to rebuild the RenderMaterials for the part. We'll also get a list
                 // of entries that have been removed based on what we fetched initially so we
                 // can clean that up in our cache.
-                var newMaterialIDs = getMaterialIDsForPartFromTextureEntry(te);
+                var newMaterialIDs = getMaterialIDsFromTextureEntry(te);
 
                 // If there was an update and the material id has changed, clean up the old value.  
                 // Have to be careful here. It might still be in use in another slot.  So we build 
@@ -480,7 +494,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         m_knownMaterials[entry].partIds.Remove(sop.LocalId);
                         if (m_knownMaterials[entry].partIds.Count <= 0)
                         { 
-                            m_log.DebugFormat("[RenderMaterials]: Removing unused RenderMaterials {2} from region cache.", entry.ToString());
+                            m_log.DebugFormat("[RenderMaterials]: Removing unused RenderMaterials {0} from region cache.", entry.ToString());
                             m_knownMaterials.Remove(entry);
                         }
                     }
