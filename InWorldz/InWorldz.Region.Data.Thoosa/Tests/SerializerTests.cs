@@ -215,8 +215,8 @@ namespace InWorldz.Region.Data.Thoosa.Tests
             var sop2 = Util.RandomSOP("Child1", 2);
             var sop3 = Util.RandomSOP("Child2", 3);
 
-            var mat1 = new RenderMaterial(UUID.Random(), UUID.Random(), Color4.White);
-            var mat2 = new RenderMaterial(UUID.Random(), UUID.Random(), Color4.White);
+            var mat1 = new RenderMaterial(UUID.Random(), UUID.Random());
+            var mat2 = new RenderMaterial(UUID.Random(), UUID.Random());
 
             sop1.Shape.RenderMaterials.AddMaterial(mat1);
             sop2.Shape.RenderMaterials.AddMaterial(mat2);

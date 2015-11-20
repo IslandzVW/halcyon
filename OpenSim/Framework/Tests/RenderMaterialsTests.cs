@@ -15,7 +15,7 @@ namespace OpenSim.Framework.Tests
         [Test]
         public void RenderMaterial_OSDFromToTest()
         {
-            RenderMaterial mat = new RenderMaterial(UUID.Zero, UUID.Zero, Color4.White);
+            RenderMaterial mat = new RenderMaterial(UUID.Zero, UUID.Zero);
             OSD map = mat.GetOSD();
             RenderMaterial matFromOSD = RenderMaterial.FromOSD(map);
             Assert.That(mat, Is.EqualTo(matFromOSD));
@@ -31,7 +31,10 @@ namespace OpenSim.Framework.Tests
             Assert.That(matFromOSD.SpecularRepeatX, Is.EqualTo(1.0f));
             Assert.That(matFromOSD.SpecularRepeatY, Is.EqualTo(1.0f));
             Assert.That(matFromOSD.SpecularRotation, Is.EqualTo(0.0f));
-            Assert.That(matFromOSD.SpecularLightColor, Is.EqualTo(RenderMaterial.DEFAULT_SPECULAR_LIGHT_COLOR));
+            Assert.That(matFromOSD.SpecularLightColorR, Is.EqualTo(255));
+            Assert.That(matFromOSD.SpecularLightColorG, Is.EqualTo(255));
+            Assert.That(matFromOSD.SpecularLightColorB, Is.EqualTo(255));
+            Assert.That(matFromOSD.SpecularLightColorA, Is.EqualTo(255));
             Assert.That(matFromOSD.SpecularLightExponent, Is.EqualTo(RenderMaterial.DEFAULT_SPECULAR_LIGHT_EXPONENT));
             Assert.That(matFromOSD.EnvironmentIntensity, Is.EqualTo(RenderMaterial.DEFAULT_ENV_INTENSITY));
             Assert.That(matFromOSD.DiffuseAlphaMode, Is.EqualTo((byte)RenderMaterial.eDiffuseAlphaMode.DIFFUSE_ALPHA_MODE_BLEND));
@@ -57,7 +60,11 @@ namespace OpenSim.Framework.Tests
             mat.SpecularRepeatY = 2.0f;
             mat.SpecularRotation = 180.0f;
 
-            mat.SpecularLightColor = new Color4(0.5f, 0.5f, 0.5f, 1.0f);
+            mat.SpecularLightColorR = 127;
+            mat.SpecularLightColorG = 127;
+            mat.SpecularLightColorB = 127;
+            mat.SpecularLightColorA = 255;
+
             mat.SpecularLightExponent = 2;
             mat.EnvironmentIntensity = 2;
             mat.DiffuseAlphaMode = (byte)RenderMaterial.eDiffuseAlphaMode.DIFFUSE_ALPHA_MODE_MASK;
@@ -88,7 +95,11 @@ namespace OpenSim.Framework.Tests
             mat.SpecularRepeatY = 2.0f;
             mat.SpecularRotation = 180.0f;
 
-            mat.SpecularLightColor = new Color4(0.5f, 0.5f, 0.5f, 1.0f);
+            mat.SpecularLightColorR = 127;
+            mat.SpecularLightColorG = 127;
+            mat.SpecularLightColorB = 127;
+            mat.SpecularLightColorA = 255;
+
             mat.SpecularLightExponent = 2;
             mat.EnvironmentIntensity = 2;
             mat.DiffuseAlphaMode = (byte)RenderMaterial.eDiffuseAlphaMode.DIFFUSE_ALPHA_MODE_MASK;
@@ -123,13 +134,19 @@ namespace OpenSim.Framework.Tests
         public void RenderMaterial_ColorValueToFromMaterialTest()
         {
             RenderMaterial mat = new RenderMaterial();
-            mat.SpecularLightColor = new Color4(0.5f, 0.5f, 0.5f, 1.0f);
+            mat.SpecularLightColorR = 127;
+            mat.SpecularLightColorG = 127;
+            mat.SpecularLightColorB = 127;
+            mat.SpecularLightColorA = 255;
 
             byte[] bytes = mat.ToBytes();
             RenderMaterial newmat = RenderMaterial.FromBytes(bytes, 0, bytes.Length);
 
             Assert.That(mat, Is.EqualTo(newmat));
-            Assert.That(mat.SpecularLightColor, Is.EqualTo(new Color4(0.5f, 0.5f, 0.5f, 1.0f)));
+            Assert.That(mat.SpecularLightColorR, Is.EqualTo(127));
+            Assert.That(mat.SpecularLightColorG, Is.EqualTo(127));
+            Assert.That(mat.SpecularLightColorB, Is.EqualTo(127));
+            Assert.That(mat.SpecularLightColorA, Is.EqualTo(255));
         }
 
         [Test]

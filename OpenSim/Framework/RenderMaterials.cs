@@ -105,39 +105,28 @@ namespace OpenSim.Framework
         [ProtoMember(12)]
         public float SpecularRotation;
 
-        public Color4 SpecularLightColor;
-
-        /// <summary>
-        /// OverWriteList is important here.  Otherwise we get appended copies for some reason.  
-        /// </summary>
-        [ProtoMember(13, OverwriteList = true)]
-        public float[] SerializableSpecularLightColor
-        {
-            get
-            {
-                return new float[] {
-                    SpecularLightColor.R, SpecularLightColor.G, SpecularLightColor.B, SpecularLightColor.A
-                    };
-            }
-            set
-            {
-                SpecularLightColor.R = value[0];
-                SpecularLightColor.G = value[1];
-                SpecularLightColor.B = value[2];
-                SpecularLightColor.A = value[3];
-            }
-        }
+        [ProtoMember(13)]
+        public byte SpecularLightColorR;
 
         [ProtoMember(14)]
-        public byte SpecularLightExponent;
+        public byte SpecularLightColorG;
 
         [ProtoMember(15)]
-        public byte EnvironmentIntensity;
+        public byte SpecularLightColorB;
 
         [ProtoMember(16)]
-        public byte DiffuseAlphaMode;
+        public byte SpecularLightColorA;
 
         [ProtoMember(17)]
+        public byte SpecularLightExponent;
+
+        [ProtoMember(18)]
+        public byte EnvironmentIntensity;
+
+        [ProtoMember(19)]
+        public byte DiffuseAlphaMode;
+
+        [ProtoMember(20)]
         public byte AlphaMaskCutoff;
 
         #endregion Properties
@@ -145,7 +134,6 @@ namespace OpenSim.Framework
         public RenderMaterial(
             UUID normalID,
             UUID specularID,
-            Color4 specularLightColor,
             float normalOffsetX = 0.0f,
             float normalOffsetY = 0.0f,
             float normalRepeatX = 1.0f,
@@ -156,6 +144,10 @@ namespace OpenSim.Framework
             float specularRepeatX = 1.0f,
             float specularRepeatY = 1.0f,
             float specularRotation = 0.0f,
+            byte specularLightColorR = 255,
+            byte specularLightColorG = 255,
+            byte specularLightColorB = 255,
+            byte specularLightColorA = 255,
             byte specularLightExponent = DEFAULT_SPECULAR_LIGHT_EXPONENT,
             byte environmentIntensity = DEFAULT_ENV_INTENSITY,
             eDiffuseAlphaMode diffuseAlphaMode = eDiffuseAlphaMode.DIFFUSE_ALPHA_MODE_BLEND,
@@ -176,7 +168,11 @@ namespace OpenSim.Framework
             SpecularRepeatY = specularRepeatY;
             SpecularRotation = specularRotation;
 
-            SpecularLightColor = specularLightColor;
+            SpecularLightColorR = specularLightColorR;
+            SpecularLightColorG = specularLightColorG;
+            SpecularLightColorB = specularLightColorB;
+            SpecularLightColorA = specularLightColorA;
+
             SpecularLightExponent = specularLightExponent;
             EnvironmentIntensity = environmentIntensity;
             DiffuseAlphaMode = (byte)diffuseAlphaMode;
@@ -216,7 +212,10 @@ namespace OpenSim.Framework
                 SpecularRepeatX == other.SpecularRepeatX && 
                 SpecularRepeatY == other.SpecularRepeatY && 
                 SpecularRotation == other.SpecularRotation && 
-                SpecularLightColor == other.SpecularLightColor && 
+                SpecularLightColorR == other.SpecularLightColorR &&
+                SpecularLightColorG == other.SpecularLightColorG &&
+                SpecularLightColorB == other.SpecularLightColorB &&
+                SpecularLightColorA == other.SpecularLightColorA &&
                 SpecularLightExponent == other.SpecularLightExponent && 
                 EnvironmentIntensity == other.EnvironmentIntensity && 
                 DiffuseAlphaMode == other.DiffuseAlphaMode && 
@@ -239,7 +238,10 @@ namespace OpenSim.Framework
                     SpecularRepeatX.GetHashCode () ^ 
                     SpecularRepeatY.GetHashCode () ^ 
                     SpecularRotation.GetHashCode () ^ 
-                    SpecularLightColor.GetHashCode () ^ 
+                    SpecularLightColorR.GetHashCode () ^
+                    SpecularLightColorG.GetHashCode() ^
+                    SpecularLightColorB.GetHashCode() ^
+                    SpecularLightColorA.GetHashCode() ^
                     SpecularLightExponent.GetHashCode () ^
                     EnvironmentIntensity.GetHashCode () ^ 
                     DiffuseAlphaMode.GetHashCode () ^ 
@@ -249,8 +251,15 @@ namespace OpenSim.Framework
 
         public override string ToString ()
         {
-            return string.Format ("NormalID : {0}, NormalOffsetX : {1}, NormalOffsetY : {2}, NormalRepeatX : {3}, NormalRepeatY : {4}, NormalRotation : {5}, SpecularID : {6}, SpecularOffsetX : {7}, SpecularOffsetY : {8}, SpecularRepeatX : {9}, SpecularRepeatY : {10}, SpecularRotation : {11}, SpecularLightColor : {12}, SpecularLightExponent : {13}, EnvironmentIntensity : {14}, DiffuseAlphaMode : {15}, AlphaMaskCutoff : {16}", 
-                NormalID, NormalOffsetX, NormalOffsetY, NormalRepeatX, NormalRepeatY, NormalRotation, SpecularID, SpecularOffsetX, SpecularOffsetY, SpecularRepeatX, SpecularRepeatY, SpecularRotation, SpecularLightColor, SpecularLightExponent, EnvironmentIntensity, DiffuseAlphaMode, AlphaMaskCutoff);
+            return string.Format (
+                "NormalID : {0}, NormalOffsetX : {1}, NormalOffsetY : {2}, NormalRepeatX : {3}, NormalRepeatY : {4}, NormalRotation : {5}, " +
+                "SpecularID : {6}, SpecularOffsetX : {7}, SpecularOffsetY : {8}, SpecularRepeatX : {9}, SpecularRepeatY : {10}, SpecularRotation : {11}, " +
+                "SpecularLightColorR : {12}, SpecularLightColorG : {13}, SpecularLightColorB : {14}, SpecularLightColorA : {15}, SpecularLightExponent : {16}, " +
+                "EnvironmentIntensity : {17}, DiffuseAlphaMode : {18}, AlphaMaskCutoff : {19}", 
+                NormalID, NormalOffsetX, NormalOffsetY, NormalRepeatX, NormalRepeatY, NormalRotation, 
+                SpecularID, SpecularOffsetX, SpecularOffsetY, SpecularRepeatX, SpecularRepeatY, SpecularRotation, 
+                SpecularLightColorR, SpecularLightColorG, SpecularLightColorB, SpecularLightColorA, SpecularLightExponent, 
+                EnvironmentIntensity, DiffuseAlphaMode, AlphaMaskCutoff);
         }
 
         public byte[] ToBytes()
@@ -275,7 +284,6 @@ namespace OpenSim.Framework
             RenderMaterial ret = (RenderMaterial)this.MemberwiseClone ();
             ret.NormalID = new UUID (this.NormalID);
             ret.SpecularID = new UUID (this.SpecularID);
-            ret.SpecularLightColor = new Color4 (ret.SpecularLightColor);
             return ret;
         }
 
@@ -303,7 +311,13 @@ namespace OpenSim.Framework
             material_data [MATERIALS_CAP_SPECULAR_MAP_REPEAT_Y_FIELD] = OSD.FromInteger(llRound(SpecularRepeatY * MATERIALS_MULTIPLIER));
             material_data [MATERIALS_CAP_SPECULAR_MAP_ROTATION_FIELD] = OSD.FromInteger(llRound(SpecularRotation * MATERIALS_MULTIPLIER));
 
-            material_data [MATERIALS_CAP_SPECULAR_COLOR_FIELD] = OSD.FromColor4 (SpecularLightColor);
+            OSDArray specularColor = new OSDArray();
+            specularColor.Add(OSD.FromInteger(SpecularLightColorR));
+            specularColor.Add(OSD.FromInteger(SpecularLightColorG));
+            specularColor.Add(OSD.FromInteger(SpecularLightColorB));
+            specularColor.Add(OSD.FromInteger(SpecularLightColorA));
+
+            material_data[MATERIALS_CAP_SPECULAR_COLOR_FIELD] = specularColor;
             material_data [MATERIALS_CAP_SPECULAR_EXP_FIELD] = OSD.FromInteger ((int)SpecularLightExponent);
             material_data [MATERIALS_CAP_ENV_INTENSITY_FIELD] = OSD.FromInteger ((int)EnvironmentIntensity);
             material_data [MATERIALS_CAP_DIFFUSE_ALPHA_MODE_FIELD] = OSD.FromInteger ((int)DiffuseAlphaMode);
@@ -331,7 +345,13 @@ namespace OpenSim.Framework
             material.SpecularRepeatY = (float)map [MATERIALS_CAP_SPECULAR_MAP_REPEAT_Y_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
             material.SpecularRotation = (float)map [MATERIALS_CAP_SPECULAR_MAP_ROTATION_FIELD].AsInteger() / MATERIALS_MULTIPLIER;
 
-            material.SpecularLightColor = map [MATERIALS_CAP_SPECULAR_COLOR_FIELD].AsColor4 ();
+            OSDArray specularColor = map[MATERIALS_CAP_SPECULAR_COLOR_FIELD] as OSDArray;
+
+            material.SpecularLightColorR = (byte)specularColor[0].AsInteger ();
+            material.SpecularLightColorG = (byte)specularColor[1].AsInteger();
+            material.SpecularLightColorB = (byte)specularColor[2].AsInteger();
+            material.SpecularLightColorA = (byte)specularColor[3].AsInteger();
+
             material.SpecularLightExponent = (byte)map [MATERIALS_CAP_SPECULAR_EXP_FIELD].AsInteger ();
             material.EnvironmentIntensity = (byte)map [MATERIALS_CAP_ENV_INTENSITY_FIELD].AsInteger ();
             material.DiffuseAlphaMode = (byte)map [MATERIALS_CAP_DIFFUSE_ALPHA_MODE_FIELD].AsInteger ();
