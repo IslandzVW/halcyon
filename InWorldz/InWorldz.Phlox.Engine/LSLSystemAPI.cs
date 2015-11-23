@@ -9744,6 +9744,72 @@ namespace InWorldz.Phlox.Engine
                         foreach (SceneObjectPart part in parts)
                             part.Description = LimitLength(primdesc, MAX_OBJ_DESC);
                         break;
+
+                    case (int)ScriptBaseClass.PRIM_SPECULAR:
+                        if (remain < 8)
+                            return;
+
+                        face = rules.GetLSLIntegerItem(idx++);
+                        string specular_tex = rules.Data[idx++].ToString();
+                        LSL_Vector specular_repeats = rules.GetVector3Item(idx++);
+                        LSL_Vector specular_offsets = rules.GetVector3Item(idx++);
+                        float specular_rotation = rules.GetLSLFloatItem(idx++);
+                        LSL_Vector specular_color = rules.GetVector3Item(idx++);
+                        int specular_glossiness = rules.GetLSLIntegerItem(idx++);
+                        int specular_environment = rules.GetLSLIntegerItem(idx++);
+
+                        // FIXME Provide an implementation
+
+                        //foreach (SceneObjectPart part in parts)
+                        //{
+                        //    SetTexture(part, tex, face);
+                        //    ScaleTexture(part, repeats.X, repeats.Y, face);
+                        //    OffsetTexture(part, offsets.X, offsets.Y, face);
+                        //    RotateTexture(part, rotation, face);
+                        //}
+                        break;
+
+                    case (int)ScriptBaseClass.PRIM_NORMAL:
+                        if (remain < 5)
+                            return;
+                        // [ string texture, vector repeats, vector offsets, float rotation_in_radians ]
+
+                        face = rules.GetLSLIntegerItem(idx++);
+                        string normal_tex = rules.Data[idx++].ToString();
+                        LSL_Vector normal_repeats = rules.GetVector3Item(idx++);
+                        LSL_Vector normal_offsets = rules.GetVector3Item(idx++);
+                        float normal_rotation = rules.GetLSLFloatItem(idx++);
+
+                        // FIXME Provide an implementation
+
+                        //foreach (SceneObjectPart part in parts)
+                        //{
+                        //    SetTexture(part, tex, face);
+                        //    ScaleTexture(part, repeats.X, repeats.Y, face);
+                        //    OffsetTexture(part, offsets.X, offsets.Y, face);
+                        //    RotateTexture(part, rotation, face);
+                        //}
+                        break;
+
+                    case (int)ScriptBaseClass.PRIM_ALPHA_MODE:
+                        if (remain < 3)
+                            return;
+
+                        face = rules.GetLSLIntegerItem(idx++);
+                        int alpha_mode = rules.GetLSLIntegerItem(idx++);
+                        int alpha_mask_cutoff = rules.GetLSLIntegerItem(idx++);
+
+                        // FIXME Provide an implementation
+
+                        //foreach (SceneObjectPart part in parts)
+                        //{
+                        //    SetTexture(part, tex, face);
+                        //    ScaleTexture(part, repeats.X, repeats.Y, face);
+                        //    OffsetTexture(part, offsets.X, offsets.Y, face);
+                        //    RotateTexture(part, rotation, face);
+                        //}
+                        break;
+
                 }
             }
         }
