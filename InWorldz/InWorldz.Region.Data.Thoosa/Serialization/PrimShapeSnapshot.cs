@@ -215,7 +215,7 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
         public int LowestLODBytes;
 
         [ProtoMember(56)]
-        public byte[] RenderMaterials;
+        public RenderMaterials RenderMaterials;
 
         static PrimShapeSnapshot()
         {
@@ -280,7 +280,7 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 MidLODBytes = primitiveBaseShape.MidLODBytes,
                 LowLODBytes = primitiveBaseShape.LowLODBytes,
                 LowestLODBytes = primitiveBaseShape.LowestLODBytes,
-                RenderMaterials = primitiveBaseShape.RenderMaterials.ToBytes()
+                RenderMaterials = primitiveBaseShape.RenderMaterials
             };
         }
 
@@ -345,7 +345,7 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 MidLODBytes = this.MidLODBytes,
                 LowLODBytes = this.LowLODBytes,
                 LowestLODBytes = this.LowestLODBytes,
-                RenderMaterials = OpenSim.Framework.RenderMaterials.FromBytes(this.RenderMaterials, 0)
+                RenderMaterials = this.RenderMaterials
             };
         }
     }
