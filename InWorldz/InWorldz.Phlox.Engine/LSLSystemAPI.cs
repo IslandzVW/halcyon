@@ -10554,8 +10554,95 @@ namespace InWorldz.Phlox.Engine
                             }
                         }
                         break;
+
+                    case (int)ScriptBaseClass.PRIM_SPECULAR:
+                        if (remain < 1)
+                            return new LSL_List(res);
+
+                        face = (int)rules.GetLSLIntegerItem(idx++);
+
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            tex = part.Shape.Textures;
+                            if (face == ScriptBaseClass.ALL_SIDES)
+                            {
+                                for (face = 0; face < part.GetNumberOfSides(); face++)
+                                {
+                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                    // XXX Add implementation
+                                }
+                            }
+                            else
+                            {
+                                if (face >= 0 && face < part.GetNumberOfSides())
+                                {
+                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                    // XXX Add implementation
+                                }
+                            }
+                        }
+
+                        break;
+
+
+                    case (int)ScriptBaseClass.PRIM_NORMAL:
+                        if (remain < 1)
+                            return new LSL_List(res);
+
+                        face = (int)rules.GetLSLIntegerItem(idx++);
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            tex = part.Shape.Textures;
+                            if (face == ScriptBaseClass.ALL_SIDES)
+                            {
+                                for (face = 0; face < part.GetNumberOfSides(); face++)
+                                {
+                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                    // XXX Add implementation
+                                }
+                            }
+                            else
+                            {
+                                if (face >= 0 && face < part.GetNumberOfSides())
+                                {
+                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                    // XXX Add implementation
+                                }
+                            }
+                        }
+
+                        break;
+
+                    case (int)ScriptBaseClass.PRIM_ALPHA_MODE:
+                        if (remain < 1)
+                            return new LSL_List(res);
+
+                        face = (int)rules.GetLSLIntegerItem(idx++);
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            tex = part.Shape.Textures;
+                            if (face == ScriptBaseClass.ALL_SIDES)
+                            {
+                                for (face = 0; face < part.GetNumberOfSides(); face++)
+                                {
+                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                    // XXX Add implementation
+                                }
+                            }
+                            else
+                            {
+                                if (face >= 0 && face < part.GetNumberOfSides())
+                                {
+                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                    // XXX Add implementation
+                                }
+                            }
+                        }
+
+                        break;
                 }
             }
+
             return new LSL_List(res);
         }
 
