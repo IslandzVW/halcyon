@@ -140,8 +140,25 @@ namespace OpenSim.Region.Framework.Scenes
                     
                     // If the prim is a sculpt then preserve this information too
                     if (part.Shape.SculptTexture != UUID.Zero)
-                        assetUuids[part.Shape.SculptTexture] = 1;                    
+                        assetUuids[part.Shape.SculptTexture] = 1;      
                     
+                    // scan through the rendermaterials of this part for any textures used as materials
+                    if (part.Shape.RenderMaterials != null)
+                    {
+                        lock (part.Shape.RenderMaterials)
+                        {
+                            List<RenderMaterial> mats = part.Shape.RenderMaterials.GetMaterials();
+                            foreach(var entry in mats)
+                            {
+                                if (entry.NormalID != UUID.Zero)
+                                    assetUuids[entry.NormalID] = 1;
+                                if (entry.SpecularID != UUID.Zero)
+                                    assetUuids[entry.SpecularID] = 1;
+                            }
+
+                        }
+                    }
+
                     TaskInventoryDictionary taskDictionary = (TaskInventoryDictionary)part.TaskInventory.Clone();
                     
                     // Now analyze this prim's inventory items to preserve all the uuids that they reference
@@ -159,8 +176,9 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.DebugFormat("[ASSET GATHERER]: Texture entry length for prim was {0} (min is 46)", part.Shape.TextureEntryBytes.Length);
                 }
             }
-        }         
-        
+        }
+
+
         /// <summary>
         /// The callback made when we request the asset for an object from the asset service.
         /// </summary>
