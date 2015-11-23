@@ -1022,6 +1022,13 @@ namespace OpenSim.Framework
             }
         }
 
+        /// <summary>
+        /// Calculate a hash value over fields that can affect the underlying physics shape.
+        /// Things like RenderMaterials and TextureEntry data are not included.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <param name="lod"></param>
+        /// <returns>ulong - a calculated hash value</returns>
         public ulong GetMeshKey(Vector3 size, float lod)
         {
             ulong hash = 5381;
@@ -1069,13 +1076,6 @@ namespace OpenSim.Framework
                     hash = djb2(hash, scaleBytes[i]);
 
                 hash = djb2(hash, this.SculptType);
-            }
-
-            if (this.RenderMaterials != null)
-            {
-                scaleBytes = this.RenderMaterials.ToBytes();
-                for (int i = 0; i < scaleBytes.Length; i++)
-                    hash = djb2(hash, scaleBytes[i]);
             }
 
             return hash;
