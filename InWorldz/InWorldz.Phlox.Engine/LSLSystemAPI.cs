@@ -10568,20 +10568,17 @@ namespace InWorldz.Phlox.Engine
                             {
                                 for (face = 0; face < part.GetNumberOfSides(); face++)
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    // XXX Add implementation
+                                    res.AddRange(GetRenderMaterialSpecularData(part, face));
                                 }
                             }
                             else
                             {
                                 if (face >= 0 && face < part.GetNumberOfSides())
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    // XXX Add implementation
+                                    res.AddRange(GetRenderMaterialSpecularData(part, face));
                                 }
                             }
                         }
-
                         break;
 
 
@@ -10590,6 +10587,7 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
 
                         face = (int)rules.GetLSLIntegerItem(idx++);
+
                         foreach (SceneObjectPart part in parts)
                         {
                             tex = part.Shape.Textures;
@@ -10597,20 +10595,17 @@ namespace InWorldz.Phlox.Engine
                             {
                                 for (face = 0; face < part.GetNumberOfSides(); face++)
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    // XXX Add implementation
+                                    res.AddRange(GetRenderMaterialNormalData(part, face));
                                 }
                             }
                             else
                             {
                                 if (face >= 0 && face < part.GetNumberOfSides())
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    // XXX Add implementation
+                                    res.AddRange(GetRenderMaterialNormalData(part, face));
                                 }
                             }
                         }
-
                         break;
 
                     case (int)ScriptBaseClass.PRIM_ALPHA_MODE:
@@ -10618,6 +10613,7 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
 
                         face = (int)rules.GetLSLIntegerItem(idx++);
+
                         foreach (SceneObjectPart part in parts)
                         {
                             tex = part.Shape.Textures;
@@ -10625,25 +10621,94 @@ namespace InWorldz.Phlox.Engine
                             {
                                 for (face = 0; face < part.GetNumberOfSides(); face++)
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    // XXX Add implementation
+                                    res.AddRange(GetRenderMaterialAlphaModeData(part, face));
                                 }
                             }
                             else
                             {
                                 if (face >= 0 && face < part.GetNumberOfSides())
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    // XXX Add implementation
+                                    res.AddRange(GetRenderMaterialAlphaModeData(part, face));
                                 }
                             }
                         }
-
                         break;
                 }
             }
 
             return new LSL_List(res);
+        }
+
+        // Returns the list: [string texture, vector repeats, vector offsets, float rot, vector specular_color, integer glossiness, integer environment]
+        private List<object> GetRenderMaterialSpecularData(SceneObjectPart part, int face)
+        {
+            List<object> res = new List<object>();
+
+            Primitive.TextureEntry tex = part.Shape.Textures;
+            Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+            RenderMaterial mat;
+
+            if ((texface.MaterialID == UUID.Zero) ||
+                (part.Shape.RenderMaterials.ContainsMaterial(texface.MaterialID) == false))
+                mat = RenderMaterial.DefaultMaterial;
+            else
+                mat = part.Shape.RenderMaterials.GetMaterial(texface.MaterialID);
+
+            res.Add(ConditionalTextureNameOrUUID(part, mat.SpecularID).ToString());
+            res.Add(new LSL_Vector(mat.SpecularRepeatX, mat.SpecularRepeatY, 0));
+            res.Add(new LSL_Vector(mat.SpecularOffsetX, mat.SpecularOffsetY, 0));
+            res.Add(mat.SpecularRotation);
+            res.Add(new LSL_Vector(mat.SpecularLightColorR, mat.SpecularLightColorG, mat.SpecularLightColorB));
+            res.Add((int)mat.SpecularLightExponent);
+            res.Add((int)mat.EnvironmentIntensity);
+
+            return res;
+        }
+
+        //  Returns the list: [ string texture, vector repeats, vector offsets, float rot ]
+        private List<object> GetRenderMaterialNormalData(SceneObjectPart part, int face)
+        {
+
+            List<object> res = new List<object>();
+
+            Primitive.TextureEntry tex = part.Shape.Textures;
+            Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+            RenderMaterial mat;
+
+            if ((texface.MaterialID == UUID.Zero) ||
+                (part.Shape.RenderMaterials.ContainsMaterial(texface.MaterialID) == false))
+                mat = RenderMaterial.DefaultMaterial;
+            else
+                mat = part.Shape.RenderMaterials.GetMaterial(texface.MaterialID);
+
+            res.Add(ConditionalTextureNameOrUUID(part, mat.NormalID).ToString());
+            res.Add(new LSL_Vector(mat.NormalRepeatX, mat.NormalRepeatY, 0));
+            res.Add(new LSL_Vector(mat.NormalOffsetX, mat.NormalOffsetY, 0));
+            res.Add(mat.NormalRotation);
+
+            return res;
+        }
+
+        // Returns the list: [ integer alpha_mode, integer mask_cutoff ]
+        private static List<object> GetRenderMaterialAlphaModeData(SceneObjectPart part, int face)
+        {
+
+            List<object> res = new List<object>();
+
+            Primitive.TextureEntry tex = part.Shape.Textures;
+            Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+            RenderMaterial mat;
+
+            if ((texface.MaterialID == UUID.Zero) ||
+                (part.Shape.RenderMaterials.ContainsMaterial(texface.MaterialID) == false))
+                mat = RenderMaterial.DefaultMaterial;
+            else
+                mat = part.Shape.RenderMaterials.GetMaterial(texface.MaterialID);
+
+            res.Add((int)mat.DiffuseAlphaMode);
+            res.Add((int)mat.AlphaMaskCutoff);
+
+            return res;
         }
 
         public LSL_List llGetPrimitiveParams(LSL_List rules)
