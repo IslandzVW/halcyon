@@ -9758,37 +9758,53 @@ namespace InWorldz.Phlox.Engine
                         int specular_glossiness = rules.GetLSLIntegerItem(idx++);
                         int specular_environment = rules.GetLSLIntegerItem(idx++);
 
-                        // FIXME Provide an implementation
-
-                        //foreach (SceneObjectPart part in parts)
-                        //{
-                        //    SetTexture(part, tex, face);
-                        //    ScaleTexture(part, repeats.X, repeats.Y, face);
-                        //    OffsetTexture(part, offsets.X, offsets.Y, face);
-                        //    RotateTexture(part, rotation, face);
-                        //}
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            if (face == ScriptBaseClass.ALL_SIDES)
+                            {
+                                for (face = 0; face < part.GetNumberOfSides(); face++)
+                                {
+                                    SetRenderMaterialSpecularData(part, face, specular_tex, specular_repeats, specular_offsets, specular_rotation, specular_color, specular_glossiness, specular_environment);
+                                }
+                            }
+                            else
+                            {
+                                if (face >= 0 && face < part.GetNumberOfSides())
+                                {
+                                    SetRenderMaterialSpecularData(part, face, specular_tex, specular_repeats, specular_offsets, specular_rotation, specular_color, specular_glossiness, specular_environment);
+                                }
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_NORMAL:
                         if (remain < 5)
                             return;
-                        // [ string texture, vector repeats, vector offsets, float rotation_in_radians ]
 
+                        // [ string texture, vector repeats, vector offsets, float rotation_in_radians ]
                         face = rules.GetLSLIntegerItem(idx++);
                         string normal_tex = rules.Data[idx++].ToString();
                         LSL_Vector normal_repeats = rules.GetVector3Item(idx++);
                         LSL_Vector normal_offsets = rules.GetVector3Item(idx++);
                         float normal_rotation = rules.GetLSLFloatItem(idx++);
 
-                        // FIXME Provide an implementation
-
-                        //foreach (SceneObjectPart part in parts)
-                        //{
-                        //    SetTexture(part, tex, face);
-                        //    ScaleTexture(part, repeats.X, repeats.Y, face);
-                        //    OffsetTexture(part, offsets.X, offsets.Y, face);
-                        //    RotateTexture(part, rotation, face);
-                        //}
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            if (face == ScriptBaseClass.ALL_SIDES)
+                            {
+                                for (face = 0; face < part.GetNumberOfSides(); face++)
+                                {
+                                    SetRenderMaterialNormalData(part, face, normal_tex, normal_repeats, normal_offsets, normal_rotation);
+                                }
+                            }
+                            else
+                            {
+                                if (face >= 0 && face < part.GetNumberOfSides())
+                                {
+                                    SetRenderMaterialNormalData(part, face, normal_tex, normal_repeats, normal_offsets, normal_rotation);
+                                }
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_ALPHA_MODE:
@@ -9799,24 +9815,67 @@ namespace InWorldz.Phlox.Engine
                         int alpha_mode = rules.GetLSLIntegerItem(idx++);
                         int alpha_mask_cutoff = rules.GetLSLIntegerItem(idx++);
 
-                        // FIXME Provide an implementation
-
-                        //foreach (SceneObjectPart part in parts)
-                        //{
-                        //    SetTexture(part, tex, face);
-                        //    ScaleTexture(part, repeats.X, repeats.Y, face);
-                        //    OffsetTexture(part, offsets.X, offsets.Y, face);
-                        //    RotateTexture(part, rotation, face);
-                        //}
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            if (face == ScriptBaseClass.ALL_SIDES)
+                            {
+                                for (face = 0; face < part.GetNumberOfSides(); face++)
+                                {
+                                    SetRenderMaterialAlphaModeData(part, face, alpha_mode, alpha_mask_cutoff);
+                                }
+                            }
+                            else
+                            {
+                                if (face >= 0 && face < part.GetNumberOfSides())
+                                {
+                                    SetRenderMaterialAlphaModeData(part, face, alpha_mode, alpha_mask_cutoff);
+                                }
+                            }
+                        }
                         break;
-
                 }
             }
         }
 
+        private void SetRenderMaterialSpecularData(
+            SceneObjectPart part, 
+            int face, 
+            string specular_tex, 
+            LSL_Vector specular_repeats, 
+            LSL_Vector specular_offsets, 
+            float specular_rotation, 
+            LSL_Vector specular_color, 
+            int specular_glossiness, 
+            int specular_environment
+            )
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SetRenderMaterialNormalData(
+            SceneObjectPart part, 
+            int face, 
+            string normal_tex, 
+            LSL_Vector normal_repeats, 
+            LSL_Vector normal_offsets, 
+            float normal_rotation
+            )
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SetRenderMaterialAlphaModeData(
+            SceneObjectPart part, 
+            int face, 
+            int alpha_mode, 
+            int alpha_mask_cutoff
+            )
+        {
+            throw new NotImplementedException();
+        }
+
         public string llStringToBase64(string str)
         {
-            
             try
             {
                 byte[] encData_byte = new byte[str.Length];
@@ -9833,7 +9892,6 @@ namespace InWorldz.Phlox.Engine
 
         public string llBase64ToString(string str)
         {
-            
             try
             {
                 return Util.Base64ToString(str).Replace("�", "?");
@@ -9846,7 +9904,6 @@ namespace InWorldz.Phlox.Engine
 
         public string llXorBase64Strings(string str1, string str2)
         {
-            
             Deprecated("llXorBase64Strings");
             // ScriptSleep(300);
             return String.Empty;
@@ -9854,19 +9911,16 @@ namespace InWorldz.Phlox.Engine
 
         public void llRemoteDataSetRegion()
         {
-            
             NotImplemented("llRemoteDataSetRegion");
         }
 
         public float llLog10(float val)
         {
-            
             return (float)Math.Log10(val);
         }
 
         public float llLog(float val)
         {
-
             return (float)Math.Log(val);
         }
 
