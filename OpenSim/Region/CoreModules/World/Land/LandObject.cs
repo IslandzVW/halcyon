@@ -493,59 +493,44 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (m_scene.Permissions.BypassPermissions())
                 return false;
 
+            // Is everyone allowed in? Most common case, just permit entry.
+            if ((landData.Flags & (uint)ParcelFlags.UseAccessList) == 0)
+                return false;
+
+            // Land owner always has access. Just permit entry.
             if (landData.OwnerID == avatar)
                 return false;
 
-            if (landData.GroupID != UUID.Zero)
+            // Not public access, not the owner. Check other overrides.
+
+            // Check if this user is listed with access.
+            if (landData.ParcelAccessList.Count != 0)
             {
-                // If group-owned, members are allowed in regardless.
-                // If NOT group-owned, then the land group gets in if that option is enabled.
-                if ((landData.IsGroupOwned) || ((landData.Flags & (uint)ParcelFlags.UseAccessGroup) > 0))
+                ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
+                entry.AgentID = avatar;
+                entry.Flags = AccessList.Access;
+                entry.Time = new DateTime();
+                if (landData.ParcelAccessList.Contains(entry))
+                    return false;   // explicitly permitted to enter
+            }
+
+            // Note: AllowAccessEstatewide is potentially slightly expensive due to partner check profile lookup.
+            if (AllowAccessEstatewide(avatar))
+                return false;
+
+            if (landData.GroupID != UUID.Zero)  // It has a group set.
+            {
+                // If it's group-owned land or group-based access enabled, allow in group members.
+                if (landData.IsGroupOwned || ((landData.Flags & (uint)ParcelFlags.UseAccessGroup) != 0))
                 {
-                    ScenePresence sp = m_scene.GetScenePresence(avatar);
-                    if (sp == null)
-                    {
-                        // Try to get group membership info for the avatar, for the land group.
-                        // If found, then they are group members and allow entry.
-                        IGroupsModule gm = m_scene.RequestModuleInterface<IGroupsModule>();
-                        if (gm != null)
-                        {
-                            if (gm.GetMembershipData(landData.GroupID, avatar) != null)
-                                return false;
-                        }
-                    } else
-                    {
-                        if (sp.ControllingClient.IsGroupMember(landData.GroupID))
-                            return false;
-                    }
+                    // FastConfirmGroupMember is light if the avatar has a root or child connection to this region.
+                    if (m_scene.FastConfirmGroupMember(avatar, landData.GroupID))
+                        return false;
                 }
             }
 
-            if ((landData.Flags & (uint)ParcelFlags.UseAccessList) > 0)
-            {
-                // Delay AllowAccessEstatewide is potentially slightly expensive due to partner check profile lookup
-                if (!AllowAccessEstatewide(avatar))
-                {
-                    if (landData.ParcelAccessList.Count == 0)
-                    {
-                        m_log.WarnFormat("User {0} restricted from land parcel due to empty access list.", avatar.ToString());
-                        return true;
-                    }
-
-                    ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
-                    entry.AgentID = avatar;
-                    entry.Flags = AccessList.Access;
-                    entry.Time = new DateTime();
-                    if (!landData.ParcelAccessList.Contains(entry))
-                    {
-                        //They are not allowed in this parcel, but not banned, so lets send them a notice about this parcel
-                        return true;
-                    }
-                }
-            }
-
-            // no other land restrictions
-            return false;
+            // Parcel not public access and no qualifications to allow in.
+            return true;
         }
 
         private readonly float AVATAR_BOUNCE = 10.0f;

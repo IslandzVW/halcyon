@@ -3935,8 +3935,8 @@ namespace OpenSim.Region.Framework.Scenes
             return result;
         }
 
-        // Must pass either an LLCV client, or a groups module 'gm'.
-        public bool FastConfirmGroupMember(IClientAPI client, IGroupsModule gm, UUID agentId, UUID groupId)
+        // Must pass either an LLCV client, or an agent UUID.
+        public bool FastConfirmGroupMember(IClientAPI client, UUID agentId, UUID groupId)
         {
             if (client != null)
             {
@@ -3945,12 +3945,28 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // do it the slow hard way
+            IGroupsModule gm = RequestModuleInterface<IGroupsModule>();
             if (gm != null)
                 return gm.IsAgentInGroup(agentId, groupId);
 
             return false;   // can't both be null
         }
 
+        public bool FastConfirmGroupMember(UUID agentId, UUID groupId)
+        {
+            ScenePresence sp = GetScenePresence(agentId);
+            IClientAPI client = (sp == null) ? null : sp.ControllingClient;
+
+            return FastConfirmGroupMember(client, agentId, groupId);
+        }
+
+        public bool FastConfirmGroupMember(ScenePresence sp, UUID groupId)
+        {
+            if (sp == null) // must not be null
+                return false;
+
+            return FastConfirmGroupMember(sp.ControllingClient, sp.UUID, groupId);
+        }
 
         public virtual bool AuthorizeUserObject(SceneObjectGroup sog, List<UUID> avatars, out string reason)
         {
@@ -4105,7 +4121,7 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (UUID groupId in m_regInfo.EstateSettings.EstateGroups)
             {
                 // check agent.Id in group
-                if (FastConfirmGroupMember(client, gm, agentId, groupId))
+                if (FastConfirmGroupMember(client, agentId, groupId))
                     return true;
             }
 
