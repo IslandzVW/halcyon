@@ -3934,6 +3934,120 @@ namespace OpenSim.Region.Framework.Scenes
             return result;
         }
 
+        private class UserMembershipInfo
+        {
+            private static readonly TimeSpan EXPIRY = new TimeSpan(0, 0, 30);
+
+            private List<UUID> mGroupList = null;
+            private DateTime mTimeStamp = DateTime.MinValue;
+
+            public UserMembershipInfo()
+            {
+            }
+            public UserMembershipInfo(List<UUID> groups)
+            {
+                Memberships = groups;
+            }
+
+            public List<UUID> Memberships
+            {
+                get
+                {
+                    lock (this)
+                    {
+                        return new List<UUID>(mGroupList);
+                    }
+                }
+                set
+                {
+                    lock (this)
+                    {
+                        mGroupList = new List<UUID>(value);
+                        mTimeStamp = DateTime.Now;
+                    }
+                }
+            }
+
+            public bool IsExpired
+            {
+                get
+                {
+                    lock (this)
+                    {
+                        return (DateTime.Now > mTimeStamp + EXPIRY);
+                    }
+                }
+            }
+        }
+
+        // This is a cache for IsGroupMember, to ensure FastConfirmGroupMember is fast even if there's no client.
+        private Dictionary<UUID, UserMembershipInfo> _UserGroups = new Dictionary<UUID, UserMembershipInfo>();
+
+        private void UserGroupsSet(UUID agentId, List<UUID> memberships)
+        {
+            lock (_UserGroups)
+            {
+                _UserGroups[agentId] = new UserMembershipInfo(memberships);
+            }
+        }
+
+        public void UserGroupsInvalidate(UUID agentId)
+        {
+            lock (_UserGroups)
+            {
+                _UserGroups.Remove(agentId);
+            }
+        }
+
+        // Dictionary<UUID, List<UUID>> _UserGroups = new Dictionary<UUID, List<UUID>>();
+        public List<UUID> UserGroupsGet(UUID agentId)
+        {
+            List<UUID> groups = null;
+            bool asyncUpdate = false;
+            lock (_UserGroups)
+            {
+                if (!_UserGroups.ContainsKey(agentId))
+                {
+                    // do it the slow hard way
+                    IGroupsModule gm = RequestModuleInterface<IGroupsModule>();
+                    if (gm != null)
+                        groups = gm.GetAgentGroupList(agentId);
+                    if (groups != null)
+                        UserGroupsSet(agentId, groups); 
+                } else
+                {
+                    UserMembershipInfo membership = _UserGroups[agentId];
+                    groups = membership.Memberships;
+                    asyncUpdate = membership.IsExpired;
+                }
+            }
+
+            // Check for async update, but use the current data this time.
+            if (asyncUpdate)
+            {
+                Util.FireAndForget((o) =>
+                {
+                    IGroupsModule gm = RequestModuleInterface<IGroupsModule>();
+                    if (gm != null)
+                    {
+                        groups = gm.GetAgentGroupList(agentId);
+                        if (groups != null) // not error
+                            UserGroupsSet(agentId, groups);
+                    }
+                });
+            }
+            return groups;
+        }
+
+        // Just a quick check to see if it's already cached/known.
+        public bool UserGroupsKnown(UUID agentId)
+        {
+            lock (_UserGroups)
+            {
+                return _UserGroups.ContainsKey(agentId);
+            }
+        }
+
         // Must pass either an LLCV client, or an agent UUID.
         public bool FastConfirmGroupMember(IClientAPI client, UUID agentId, UUID groupId)
         {
@@ -3943,12 +4057,8 @@ namespace OpenSim.Region.Framework.Scenes
                 return client.IsGroupMember(groupId);
             }
 
-            // do it the slow hard way
-            IGroupsModule gm = RequestModuleInterface<IGroupsModule>();
-            if (gm != null)
-                return gm.IsAgentInGroup(agentId, groupId);
-
-            return false;   // can't both be null
+            List<UUID> groups = UserGroupsGet(agentId);
+            return (groups == null) ? false : groups.Contains(groupId);
         }
 
         public bool FastConfirmGroupMember(UUID agentId, UUID groupId)

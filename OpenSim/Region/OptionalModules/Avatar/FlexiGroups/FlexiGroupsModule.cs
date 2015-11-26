@@ -998,6 +998,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             return m_groupData.GetAgentGroupMembership(null, agentID, groupID);
         }
 
+        // Returns null on error, empty list if not in any groups.
+        public List<UUID> GetAgentGroupList(UUID agentID)
+        {
+            if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+
+            return m_groupData.GetAgentGroupList(null, agentID);
+        }
+
         public void UpdateGroupInfo(IClientAPI remoteClient, UUID groupID, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish)
         {
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
