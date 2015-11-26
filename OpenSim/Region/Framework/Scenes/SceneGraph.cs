@@ -251,6 +251,9 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
 
+            // Prime (cache) the owner's group list.
+            m_parentScene.UserGroupsGet(sceneObject.OwnerID);
+
             foreach (SceneObjectPart part in sceneObject.Children.Values)
             {
                 Vector3 scale = part.Shape.Scale;
