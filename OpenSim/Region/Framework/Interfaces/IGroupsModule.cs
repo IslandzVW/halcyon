@@ -46,6 +46,7 @@ namespace OpenSim.Region.Framework.Interfaces
         GroupProfileData GroupProfileRequest(IClientAPI remoteClient, UUID groupID);
         GroupMembershipData[] GetMembershipData(UUID UserID);
         GroupMembershipData GetMembershipData(UUID GroupID, UUID UserID);
+        List<UUID> GetAgentGroupList(UUID AgentID); // Returns null on error, empty list if not in any groups.
         bool IsAgentInGroup(IClientAPI remoteClient, UUID groupID);
         bool IsAgentInGroup(UUID agentID, UUID groupID);
 

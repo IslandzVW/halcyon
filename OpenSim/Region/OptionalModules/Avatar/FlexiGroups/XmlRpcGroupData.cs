@@ -469,6 +469,29 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             return memberships;
         }
 
+        // Returns null on error, empty list if not in any groups.
+        public List<UUID> GetAgentGroupList(GroupRequestID requestID, UUID AgentID)
+        {
+            Hashtable param = new Hashtable();
+            param["AgentID"] = AgentID.ToString();
+
+            Hashtable respData = XmlRpcCall(requestID, "groups.getAgentGroupMemberships", param);
+
+            if (respData.Contains("error"))
+                return null;
+
+            List<UUID> groups = new List<UUID>();
+            foreach (object membership in respData.Values)
+            {
+                Hashtable data = (Hashtable)membership;
+                UUID groupID = new UUID((string)data["GroupID"]);
+
+                groups.Add(groupID);
+            }
+
+            return groups;
+        }
+
         public bool IsAgentInGroup(UUID groupID, UUID agentID)
         {
             throw new NotImplementedException();
