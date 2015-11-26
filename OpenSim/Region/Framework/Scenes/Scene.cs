@@ -3936,7 +3936,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private class UserMembershipInfo
         {
-            private static readonly TimeSpan EXPIRY = new TimeSpan(0, 10, 0);
+            private static readonly TimeSpan EXPIRY = new TimeSpan(0, 0, 30);
 
             private List<UUID> mGroupList = null;
             private DateTime mTimeStamp = DateTime.MinValue;
