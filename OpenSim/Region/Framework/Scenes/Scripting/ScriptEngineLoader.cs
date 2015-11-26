@@ -57,61 +57,24 @@ namespace OpenSim.Region.Framework.Scenes.Scripting
         }
 
         /// <summary>
-        /// Does actual loading and initialization of script Assembly
+        /// Does actual loading and initialization of script Assembly. Can throw many kinds of errors, depending on what problem was run across during loading.
         /// </summary>
-        /// <param name="FreeAppDomain">AppDomain to load script into</param>
-        /// <param name="FileName">FileName of script assembly (.dll)</param>
+        /// <param name="file_name">File name of script assembly (.dll)</param>
+        /// <param name="namespace_class">The namespace and type in the assembly to initialize and return</param>
         /// <returns></returns>
-        private ScriptEngineInterface LoadAndInitAssembly(string FileName, string NameSpace)
+        private ScriptEngineInterface LoadAndInitAssembly(string file_name, string namespace_class)
         {
             //Common.SendToDebug("Loading ScriptEngine Assembly " + FileName);
-            // Load .Net Assembly (.dll)
-            // Initialize and return it
 
-            // TODO: Add error handling
+            // Load .Net Assembly (.dll), initialize and return it
 
-            Assembly a;
-            //try
-            //{
+            // All error checking is expected to be handled by caller.
 
+            Assembly a = Assembly.LoadFrom(file_name);
 
-            // Load to default appdomain (temporary)
-            a = Assembly.LoadFrom(FileName);
-            // Load to specified appdomain
-            // TODO: Insert security
-            //a = FreeAppDomain.Load(FileName);
-            //}
-            //catch (Exception e)
-            //{
-            //    m_log.Error("[ScriptEngine]: Error loading assembly \String.Empty + FileName + "\": " + e.ToString());
-            //}
+            Type t = a.GetType(namespace_class, true);
 
-
-            //m_log.Debug("Loading: " + FileName);
-            //foreach (Type _t in a.GetTypes())
-            //{
-            //    m_log.Debug("Type: " + _t.ToString());
-            //}
-
-            Type t;
-            //try
-            //{
-            t = a.GetType(NameSpace, true);
-            //}
-            //catch (Exception e)
-            //{
-            //    m_log.Error("[ScriptEngine]: Error initializing type \String.Empty + NameSpace + "\" from \String.Empty + FileName + "\": " + e.ToString());
-            //}
-
-            ScriptEngineInterface ret;
-            //try
-            //{
-            ret = (ScriptEngineInterface) Activator.CreateInstance(t);
-            //}
-            //catch (Exception e)
-            //{
-            //    m_log.Error("[ScriptEngine]: Error initializing type \String.Empty + NameSpace + "\" from \String.Empty + FileName + "\": " + e.ToString());
-            //}
+            ScriptEngineInterface ret = (ScriptEngineInterface) Activator.CreateInstance(t);
 
             return ret;
         }
