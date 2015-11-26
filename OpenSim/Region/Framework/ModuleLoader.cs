@@ -212,7 +212,7 @@ namespace OpenSim.Region.Framework
                         {
                             if (!pluginType.IsAbstract)
                             {
-                                if (pluginType.GetInterface("IRegionModule") != null)
+                                if (typeof(IRegionModule).IsAssignableFrom(pluginType))
                                 {
                                     modules.Add((IRegionModule)Activator.CreateInstance(pluginType));
                                 }

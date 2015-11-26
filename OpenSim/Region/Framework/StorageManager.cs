@@ -64,9 +64,7 @@ namespace OpenSim.Region.Framework
             {
                 if (pluginType.IsPublic)
                 {
-                    Type typeInterface = pluginType.GetInterface("IRegionDataStore", true);
-
-                    if (typeInterface != null)
+                    if (typeof(IRegionDataStore).IsAssignableFrom(pluginType))
                     {
                         IRegionDataStore plug =
                             (IRegionDataStore) Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
@@ -77,9 +75,7 @@ namespace OpenSim.Region.Framework
                         m_log.Info("[DATASTORE]: Added IRegionDataStore Interface");
                     }
 
-                    typeInterface = pluginType.GetInterface("IEstateDataStore", true);
-
-                    if (typeInterface != null)
+                    if (typeof(IEstateDataStore).IsAssignableFrom(pluginType))
                     {
                         IEstateDataStore estPlug =
                             (IEstateDataStore) Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));

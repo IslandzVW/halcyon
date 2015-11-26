@@ -134,8 +134,6 @@ namespace OpenSim.Servers.Base
         /// <returns></returns>
         public static T LoadPlugin<T>(string dllName, string className, Object[] args) where T:class
         {
-            string interfaceName = typeof(T).ToString();
-
             try
             {
                 Assembly pluginAssembly = Assembly.LoadFrom(dllName);
@@ -148,9 +146,7 @@ namespace OpenSim.Servers.Base
                              (pluginType.ToString() != pluginType.Namespace + "." + className))
                             continue;
                         
-                        Type typeInterface = pluginType.GetInterface(interfaceName, true);
-
-                        if (typeInterface != null)
+                        if (typeof (T).IsAssignableFrom(pluginType))
                         {
                             T plug = null;
                             try
@@ -163,7 +159,7 @@ namespace OpenSim.Servers.Base
                                 if (!(e is System.MissingMethodException))
                                 {
                                     m_log.ErrorFormat("Error loading plugin {0} from {1}. Exception: {2}",
-                                        interfaceName, dllName, e.InnerException == null ? e.Message : e.InnerException.Message);
+                                        typeof(T).ToString(), dllName, e.InnerException == null ? e.Message : e.InnerException.Message);
                                 }
                                 return null;
                             }

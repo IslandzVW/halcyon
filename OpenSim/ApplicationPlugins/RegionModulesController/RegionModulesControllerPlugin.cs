@@ -89,7 +89,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
             foreach (TypeExtensionNode node in
                     AddinManager.GetExtensionNodes("/OpenSim/RegionModules"))
             {
-                if (node.Type.GetInterface(typeof(ISharedRegionModule).ToString()) != null)
+                if (typeof(ISharedRegionModule).IsAssignableFrom(node.Type))
                 {
                     if (CheckModuleEnabled(node, modulesConfig))
                     {
@@ -97,7 +97,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                         m_sharedModules.Add(node);
                     }
                 }
-                else if (node.Type.GetInterface(typeof(INonSharedRegionModule).ToString()) != null)
+                else if (typeof(INonSharedRegionModule).IsAssignableFrom(node.Type))
                 {
                     if (CheckModuleEnabled(node, modulesConfig))
                     {

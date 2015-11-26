@@ -503,9 +503,7 @@ namespace OpenSim.Framework
                 {
                     if (!pluginType.IsAbstract)
                     {
-                        Type typeInterface = pluginType.GetInterface("IGenericConfig", true);
-
-                        if (typeInterface != null)
+                        if (typeof(IGenericConfig).IsAssignableFrom(pluginType))
                         {
                             plug =
                                 (IGenericConfig) Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
