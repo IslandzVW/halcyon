@@ -63,7 +63,7 @@ namespace OpenSim.Grid.UserServer
 
         protected UserDataBaseService m_userDataBaseService;
 
-        public UserManager m_userManager;
+        public Modules.UserManager m_userManager;
 
         protected UserServerAvatarAppearanceModule m_avatarAppearanceModule;
         protected UserServerFriendsModule m_friendsModule;
@@ -184,7 +184,7 @@ namespace OpenSim.Grid.UserServer
             m_userDataBaseService.Initialize(this);
 
             //TODO: change these modules so they fetch the databaseService class in the PostInitialize method
-            m_userManager = new UserManager(m_userDataBaseService);
+            m_userManager = new Modules.UserManager(m_userDataBaseService);
             m_userManager.Initialize(this);
 
             m_avatarAppearanceModule = new UserServerAvatarAppearanceModule(m_userDataBaseService);

@@ -612,9 +612,57 @@ namespace OpenSim.Region.Framework.Scenes
             else
             {
                 // Find the current parcel before we update the position.
-                Vector3 currentPos = AbsolutePosition;
+                Vector3 currentPos = RootPart.GroupPositionNoUpdate;
                 if (CurrentParcel == null)
                     CurrentParcel = m_scene.LandChannel.GetLandObject(currentPos.X, currentPos.Y);
+
+                ILandObject NewParcel = m_scene.LandChannel.GetLandObject(val.X, val.Y);
+                if (NewParcel == null)
+                    return; // Just don't allow it to change to something invalid
+
+                if ((NewParcel != null) && (val.Z < m_scene.LandChannel.GetBanHeight()))
+                {
+                    // Possibly entering a restricted parcel.
+                    ParcelPropertiesStatus reason;
+                    if (physicsTriggered)
+                    {
+                        // If the sat-upon object is physical, we can't stop it.
+                        // First, let's check each rider to see if we need to eject them.
+                        List<ScenePresence> sitters = GetSittingAvatars();
+                        foreach(ScenePresence sitter in sitters)
+                        {
+                            if (NewParcel.DenyParcelAccess(sitter.UUID, out reason))
+                            {
+                                Util.FireAndForget((o) =>
+                                {
+                                    Scene.LandChannel.RemoveAvatarFromParcel(sitter.UUID);
+                                    if (reason == ParcelPropertiesStatus.CollisionBanned)
+                                        sitter.ControllingClient.SendAlertMessage("You are not permitted to enter this parcel because you are banned.");
+                                    else
+                                        sitter.ControllingClient.SendAlertMessage("You are not permitted to enter this parcel due to parcel restrictions.");
+                                });
+                            }
+                        }
+                        // Then, if the owner of the object itself is banned, let's return it.
+                        if (NewParcel.DenyParcelAccess(this, false, out reason))
+                        {
+                            this.IsSelected = true; // force kinematic to stop further pos updates/returns
+
+                            Util.FireAndForget((o) =>
+                            {
+                                Thread.Sleep(500);  // Give the avatars a chance to stand above (not really needed, but may help)
+                                m_scene.returnObjects(new SceneObjectGroup[] { this }, "physical object entry not permitted");
+                            });
+                        }
+                        return; // it was a physical move, we've done all we can.
+                    }
+
+                    // If we reach here, the object is non-physical. Check entry and fix if denied.
+                    if (NewParcel.DenyParcelAccess(this, true, out reason))
+                    {
+                        val = currentPos; // force undo the position change and continue
+                    }
+                }
 
                 // Update the position.
                 m_rootPart.SetGroupPosition(val, false, physicsTriggered);
@@ -623,16 +671,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if ((m_scene != null) && !IsAttachment)
                 {
                     //check for changing of parcel
-                    ILandObject NewParcel = m_scene.LandChannel.GetLandObject(val.X, val.Y);
-                    if (NewParcel != null)
+                    if ((CurrentParcel != null) && (val != currentPos))
                     {
-                        if ((CurrentParcel != null) && (val != currentPos))
+                        if (NewParcel.landData.LocalID != CurrentParcel.landData.LocalID)
                         {
-                            if (NewParcel.landData.LocalID != CurrentParcel.landData.LocalID)
-                            {
-                                m_scene.EventManager.TriggerGroupCrossedToNewParcel(this, CurrentParcel, NewParcel);
-                                CurrentParcel = NewParcel;
-                            }
+                            m_scene.EventManager.TriggerGroupCrossedToNewParcel(this, CurrentParcel, NewParcel);
+                            CurrentParcel = NewParcel;
                         }
                     }
                 }
@@ -914,9 +958,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         //public UUID FromAssetId { get; set; }
 
-        #endregion
+#endregion
 
-        #region Constructors
+#region Constructors
 
         /// <summary>
         /// Constructor
@@ -1061,6 +1105,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Need the bounding box now.
             BoundingBox();
+
+            //Signal a new object appearing in the scene
+            Scene.EventManager.TriggerObjectAddedToScene(this);
         }
 
         /// <summary>
@@ -1278,7 +1325,7 @@ namespace OpenSim.Region.Framework.Scenes
             return returnresult;
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// Used to set absolute positioning without crossing the prim into a new scene in case of negative values
@@ -1827,7 +1874,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #region Events
+#region Events
 
         private static SceneObjectGroup CopyObjectForBackup(SceneObjectGroup group)
         {
@@ -1925,9 +1972,9 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
-        #endregion
+#endregion
 
-        #region Client Updating
+#region Client Updating
 
         public void SendFullUpdateToClient(IClientAPI remoteClient)
         {
@@ -2019,9 +2066,9 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
 
-        #endregion
+#endregion
 
-        #region Copying
+#region Copying
 
 
         public SceneObjectGroup Copy(UUID cAgentID, UUID cGroupID, bool userExposed, bool serializePhysicsState)
@@ -2478,9 +2525,9 @@ namespace OpenSim.Region.Framework.Scenes
             part.GroupID = cGroupID;
         }
 
-        #endregion
+#endregion
 
-        #region Scheduling
+#region Scheduling
 
         public override void Update()
         {
@@ -2611,9 +2658,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region SceneGroupPart Methods
+#region SceneGroupPart Methods
 
         /// <summary>
         /// Get the child part by LinkNum
@@ -2706,9 +2753,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Packet Handlers
+#region Packet Handlers
 
         /// <summary>
         /// Link the prims in otherGroup to this group
@@ -3365,9 +3412,9 @@ namespace OpenSim.Region.Framework.Scenes
             return rc;
         }
 
-        #endregion
+#endregion
 
-        #region Shape
+#region Shape
 
         /// <summary>
         ///
@@ -3382,9 +3429,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Resize
+#region Resize
 
         /// <summary>
         /// Resize the given part
@@ -3577,9 +3624,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Position
+#region Position
 
         /// <summary>
         /// Move this scene object
@@ -3589,6 +3636,9 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (InTransit)
                 return; // discard the update while in transit
+
+            if (pos == AbsolutePosition)
+                return; // nothing to do
 
             if (SaveUpdate)
             {
@@ -3712,9 +3762,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_rootPart.SetGroupPosition(offset, true, false);
         }
 
-        #endregion
+#endregion
 
-        #region Rotation
+#region Rotation
 
         /// <summary>
         ///
@@ -3863,7 +3913,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_rootPart.ScheduleTerseUpdate();
         }
 
-        #endregion
+#endregion
 
         public int RegisterTargetWaypoint(Vector3 target, float tolerance)
         {
@@ -4219,7 +4269,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #region ISceneObject
+#region ISceneObject
 
         public virtual ISceneObject CloneForNewScene()
         {
@@ -4275,7 +4325,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             SetFromItemID(uuid);
         }
-        #endregion
+#endregion
 
         private void TrackLocalId(SceneObjectPart part, uint localId)
         {
@@ -4696,6 +4746,16 @@ namespace OpenSim.Region.Framework.Scenes
             if (++_numCrossingFailures == MAX_FAILURES_BEFORE_RETURN)
             {
                 m_scene.returnObjects(new SceneObjectGroup[1] { this }, "object crossing failed too many times");
+            }
+        }
+
+        public void ForceAboveParcel(float height)
+        {
+            if (!IsDeleted)
+            {
+                Vector3 pos = AbsolutePosition;
+                pos.Z = height;
+                AbsolutePosition = pos; // AbsolutePosition setter takes care of all cases
             }
         }
 

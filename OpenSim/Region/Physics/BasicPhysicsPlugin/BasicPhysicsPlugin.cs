@@ -486,6 +486,11 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
         }
 
+        public override void ForceAboveParcel(float height)
+        {
+
+        }
+
         public override void UnSubscribeEvents()
         {
 

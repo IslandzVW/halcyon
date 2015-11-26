@@ -290,7 +290,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             }
 
             CachedUserInfo userInfo =
-                m_userTransactions.Manager.MyScene.CommsManager.UserProfileCacheService.GetUserDetails(
+                m_userTransactions.Manager.MyScene.CommsManager.UserService.GetUserDetails(
                     ourClient.AgentId);
 
             if (userInfo != null)

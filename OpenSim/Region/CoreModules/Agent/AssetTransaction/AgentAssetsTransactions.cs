@@ -210,7 +210,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 return false;
             }
 
-            CachedUserInfo userInfo = Manager.MyScene.CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userInfo = Manager.MyScene.CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
             if (userInfo == null)
             {
                 m_log.WarnFormat("[ASSET TRANSACTIONS]: Could not find user {0} for transaction {1} for inventory update {2}",

@@ -156,13 +156,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                             reason = "No appearance could be found for the owner.";
                             return UUID.Zero;
                         }
-                        CachedUserInfo userInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(owner);
-                        if (userInfo == null)
+                        ownerName = m_scene.CommsManager.UserService.Key2Name(owner,false);
+                        if (ownerName == String.Empty)
                         {
                             reason = "Owner could not be found.";
                             return UUID.Zero;
                         }
-                        ownerName = userInfo.UserProfile.Name;
                     }
                     else
                     {
@@ -185,13 +184,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         reason = "No such outfit could be found.";
                         return UUID.Zero;
                     }
-                    CachedUserInfo userInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(owner);
-                    if (userInfo == null)
+                    ownerName = m_scene.CommsManager.UserService.Key2Name(owner, false);
+                    if (ownerName == String.Empty)
                     {
                         reason = "Owner could not be found.";
                         return UUID.Zero;
                     }
-                    ownerName = userInfo.UserProfile.Name;
                 }
 
                 if (!CheckAttachmentCount(appearance, parcel, appearance.Owner, out reason))
@@ -436,23 +434,23 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
                 return false;
 
-            CachedUserInfo userInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(botID);
-            if (userInfo == null)
+            UserProfileData profile = m_scene.CommsManager.UserService.GetUserProfile(botID);
+            if (profile == null)
                 return false;
 
             m_scene.CommsManager.UserService.AddTemporaryUserProfile(new UserProfileData() 
             { 
-                AboutText = aboutText ?? userInfo.UserProfile.AboutText,
+                AboutText = aboutText ?? profile.AboutText,
                 Created = Util.ToUnixTime(bot.TimeCreated),
                 CustomType = "Bot",
-                Email = email ?? userInfo.UserProfile.Email,
-                FirstLifeAboutText = userInfo.UserProfile.FirstLifeAboutText,
+                Email = email ?? profile.Email,
+                FirstLifeAboutText = profile.FirstLifeAboutText,
                 FirstLifeImage = UUID.Zero,
                 FirstName = bot.FirstName,
                 GodLevel = 0,
                 ID = botID,
-                Image = imageUUID.HasValue ? imageUUID.Value : userInfo.UserProfile.Image,
-                ProfileURL = profileURL ?? userInfo.UserProfile.ProfileURL,
+                Image = imageUUID.HasValue ? imageUUID.Value : profile.Image,
+                ProfileURL = profileURL ?? profile.ProfileURL,
                 SurName = bot.LastName,
             });
 

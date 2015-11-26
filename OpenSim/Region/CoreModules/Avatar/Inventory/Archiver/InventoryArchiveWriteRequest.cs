@@ -312,7 +312,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             {
                 // Record the creator of this item
                 CachedUserInfo creator 
-                    = m_module.CommsManager.UserProfileCacheService.GetUserDetails(creatorId);
+                    = m_module.CommsManager.UserService.GetUserDetails(creatorId);
 
                 if (creator != null)
                 {

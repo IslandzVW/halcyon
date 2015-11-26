@@ -114,6 +114,9 @@ namespace OpenSim.Framework
 
         private PhysicsShapeType _preferredPhysicsShape;
 
+        // Materials
+        [XmlIgnore] private RenderMaterials _renderMaterials;
+
         // Sculpted
         [XmlIgnore] private UUID _sculptTexture = UUID.Zero;
         [XmlIgnore] private byte _sculptType = (byte)0;
@@ -208,6 +211,7 @@ namespace OpenSim.Framework
             PCode = (byte) PCodeEnum.Primitive;
             ExtraParams = new byte[1];
             Textures = new Primitive.TextureEntry(DEFAULT_TEXTURE_ID);
+            RenderMaterials = new RenderMaterials();
         }
 
         public PrimitiveBaseShape(bool noShape)
@@ -218,6 +222,7 @@ namespace OpenSim.Framework
             PCode = (byte)PCodeEnum.Primitive;
             ExtraParams = new byte[1];
             Textures = new Primitive.TextureEntry(DEFAULT_TEXTURE_ID);
+            RenderMaterials = new RenderMaterials();
         }
 
         /// <summary>
@@ -265,6 +270,8 @@ namespace OpenSim.Framework
             {
                 SculptType = (byte)OpenMetaverse.SculptType.None;
             }
+
+            RenderMaterials = new RenderMaterials();
         }
 
         [XmlIgnore]
@@ -1002,6 +1009,26 @@ namespace OpenSim.Framework
             }
         }
 
+        [XmlIgnore]
+        public RenderMaterials RenderMaterials
+        {
+            get
+            {
+                return _renderMaterials;
+            }
+            set
+            {
+                _renderMaterials = value;
+            }
+        }
+
+        /// <summary>
+        /// Calculate a hash value over fields that can affect the underlying physics shape.
+        /// Things like RenderMaterials and TextureEntry data are not included.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <param name="lod"></param>
+        /// <returns>ulong - a calculated hash value</returns>
         public ulong GetMeshKey(Vector3 size, float lod)
         {
             ulong hash = 5381;
@@ -1862,6 +1889,11 @@ namespace OpenSim.Framework
 
             public void ReadXml(string rawXml)
             {
+                if (rawXml.StartsWith("&lt;"))
+                {
+                    rawXml = rawXml.Replace("&lt;", "<").Replace("&gt;", ">");
+                }
+
                 using (StringReader sr = new StringReader(rawXml))
                 {
                     using (XmlTextReader xtr = new XmlTextReader(sr))
