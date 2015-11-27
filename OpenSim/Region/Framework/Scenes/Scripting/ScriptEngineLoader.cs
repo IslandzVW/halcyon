@@ -37,9 +37,9 @@ namespace OpenSim.Region.Framework.Scenes.Scripting
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public ScriptEngineInterface LoadScriptEngine(string EngineName)
+        public IScriptEngineInterface LoadScriptEngine(string EngineName)
         {
-            ScriptEngineInterface ret = null;
+            IScriptEngineInterface ret = null;
             try
             {
                 ret =
@@ -62,7 +62,7 @@ namespace OpenSim.Region.Framework.Scenes.Scripting
         /// <param name="file_name">File name of script assembly (.dll)</param>
         /// <param name="namespace_class">The namespace and type in the assembly to initialize and return</param>
         /// <returns></returns>
-        private ScriptEngineInterface LoadAndInitAssembly(string file_name, string namespace_class)
+        private IScriptEngineInterface LoadAndInitAssembly(string file_name, string namespace_class)
         {
             //Common.SendToDebug("Loading ScriptEngine Assembly " + FileName);
 
@@ -74,7 +74,7 @@ namespace OpenSim.Region.Framework.Scenes.Scripting
 
             Type t = a.GetType(namespace_class, true);
 
-            ScriptEngineInterface ret = (ScriptEngineInterface) Activator.CreateInstance(t);
+            IScriptEngineInterface ret = (IScriptEngineInterface) Activator.CreateInstance(t);
 
             return ret;
         }

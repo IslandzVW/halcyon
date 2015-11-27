@@ -4921,14 +4921,14 @@ namespace OpenSim.Region.Framework.Scenes
 
 #region Script Engine
 
-        private List<ScriptEngineInterface> ScriptEngines = new List<ScriptEngineInterface>();
+        private List<IScriptEngineInterface> ScriptEngines = new List<IScriptEngineInterface>();
         private AvatarTransit.AvatarTransitController m_transitController;
 
         /// <summary>
         ///
         /// </summary>
         /// <param name="scriptEngine"></param>
-        public void AddScriptEngine(ScriptEngineInterface scriptEngine)
+        public void AddScriptEngine(IScriptEngineInterface scriptEngine)
         {
             ScriptEngines.Add(scriptEngine);
             scriptEngine.InitializeEngine(this);
