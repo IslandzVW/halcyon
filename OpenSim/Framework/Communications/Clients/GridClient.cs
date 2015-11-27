@@ -125,7 +125,7 @@ namespace OpenSim.Framework.Communications.Clients
 
         public bool DeregisterRegion(string gridServerURL, string sendKey, string receiveKey, RegionInfo regionInfo, out string errorMsg)
         {
-            errorMsg = "";
+            errorMsg = String.Empty;
             Hashtable GridParams = new Hashtable();
 
             GridParams["UUID"] = regionInfo.RegionID.ToString();
@@ -291,7 +291,7 @@ namespace OpenSim.Framework.Communications.Clients
                     return false;
                 }
 
-                regionInfo = BuildRegionInfo(responseData, "");
+                regionInfo = BuildRegionInfo(responseData, String.Empty);
 
             }
             catch (Exception e)

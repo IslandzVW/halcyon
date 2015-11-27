@@ -156,7 +156,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         private void OnRegisterCaps(UUID agentID, OpenSim.Framework.Communications.Capabilities.Caps caps)
         {
-            string renderCap = CapsUtil.CreateCAPS("RenderMaterials", "");
+            string renderCap = CapsUtil.CreateCAPS("RenderMaterials", String.Empty);
 
             // OpenSimulator CAPs infrastructure seems to be somewhat hostile towards any CAP that requires both GET
             // and POST handlers, so we first set up a POST handler normally and then add a GET/PUT handler via MainServer

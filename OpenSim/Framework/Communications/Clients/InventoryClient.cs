@@ -65,7 +65,7 @@ namespace OpenSim.Framework.Communications.Clients
             System.Console.WriteLine("[HGrid] GetInventory " + item.ID + " from " + ServerURL);
             try
             {
-                item = SynchronousRestSessionObjectPoster<Guid, InventoryItemBase>.BeginPostObject("POST", ServerURL + "/GetItem/", item.ID.Guid, "", "");
+                item = SynchronousRestSessionObjectPoster<Guid, InventoryItemBase>.BeginPostObject("POST", ServerURL + "/GetItem/", item.ID.Guid, String.Empty, String.Empty);
                 return item;
             }
             catch (Exception e)

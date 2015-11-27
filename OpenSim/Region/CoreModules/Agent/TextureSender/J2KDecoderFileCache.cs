@@ -100,7 +100,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                             for (int i = 0; i < Layers.Length; i++)
                             {
                                 if (i == (Layers.Length - 1))
-                                    strEnd = "";
+                                    strEnd = String.Empty;
 
                                 stringResult.AppendFormat("{0}|{1}|{2}{3}", Layers[i].Start, Layers[i].End, Layers[i].End - Layers[i].Start, strEnd);
                             }

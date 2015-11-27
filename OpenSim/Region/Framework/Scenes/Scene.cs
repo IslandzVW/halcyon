@@ -591,7 +591,7 @@ namespace OpenSim.Region.Framework.Scenes
                     while ((line = file.ReadLine()) != null)
                     {
                         line = line.Trim();
-                        if ((line != "") && !line.StartsWith(";") && !line.StartsWith("//"))
+                        if ((line != String.Empty) && !line.StartsWith(";") && !line.StartsWith("//"))
                         {
                             theList.Add(line);
                         }
@@ -848,7 +848,7 @@ namespace OpenSim.Region.Framework.Scenes
         public string GetEnv(string name)
         {
             IConfig config = null;
-            string ret = "";
+            string ret = String.Empty;
 
             // NOTE: All case values in must be lowercase for case-insensitive compare.
             switch (name.ToLower())
@@ -874,12 +874,12 @@ namespace OpenSim.Region.Framework.Scenes
                 case "dynamic_pathfinding": // (integer) Get the region's dynamic_pathfinding status, "1" or "0".
                     ret = "disabled";
                     break;
-                case "inworldz": // (integer) Is this an InWorldz server? "1" or "".
+                case "inworldz": // (integer) Is this an InWorldz server? "1" or String.Empty.
                     config = m_config.Configs["GridInfo"];
-                    ret = (config.GetString("gridmanagement", VersionInfo.DefaultGrid).Trim() == "InWorldz") ? "1" : "";
+                    ret = (config.GetString("gridmanagement", VersionInfo.DefaultGrid).Trim() == "InWorldz") ? "1" : String.Empty;
                     break;
-                case "halcyon": // (integer) Is this a Halcyon server? "1" or "".
-                    ret = (VersionInfo.SoftwareName == "Halcyon") ? "1" : "";
+                case "halcyon": // (integer) Is this a Halcyon server? "1" or String.Empty.
+                    ret = (VersionInfo.SoftwareName == "Halcyon") ? "1" : String.Empty;
                     break;
                 case "script_engine":
                     ret = "Phlox";  // always Phlox in Halcyon
@@ -953,19 +953,19 @@ namespace OpenSim.Region.Framework.Scenes
                     break;
                 case "platform":
                     config = m_config.Configs["GridInfo"];    // Halcyon, OpenSim, SecondLife
-                    return (config == null) ? "" : config.GetString("platform", VersionInfo.SoftwareName).Trim();
+                    return (config == null) ? String.Empty : config.GetString("platform", VersionInfo.SoftwareName).Trim();
                 case "grid_management":
                     config = m_config.Configs["GridInfo"];    // InWorldz, ARL, LindenLab, etc.
-                    return (config == null) ? "" : config.GetString("gridmanagement", VersionInfo.DefaultGrid).Trim();
+                    return (config == null) ? String.Empty : config.GetString("gridmanagement", VersionInfo.DefaultGrid).Trim();
                 case "grid_nick":
                     config = m_config.Configs["GridInfo"];    // InWorldz, InWorldzBeta, SecondLife, etc.
-                    return (config == null) ? "" : config.GetString("gridnick", VersionInfo.DefaultGrid).Trim();
+                    return (config == null) ? String.Empty : config.GetString("gridnick", VersionInfo.DefaultGrid).Trim();
                 case "grid_name":
                     config = m_config.Configs["GridInfo"];    // InWorldz, InWorldz Beta, Second Life, etc.
-                    return (config == null) ? "" : config.GetString("gridname", VersionInfo.DefaultGrid).Trim();
+                    return (config == null) ? String.Empty : config.GetString("gridname", VersionInfo.DefaultGrid).Trim();
                 case "shard":
                     config = m_config.Configs["Network"];    // "InWorldz", "Beta", "Some Other Grid", "Testing", etc.
-                    return (config == null) ? "" : config.GetString("shard", VersionInfo.DefaultGrid).Trim();
+                    return (config == null) ? String.Empty : config.GetString("shard", VersionInfo.DefaultGrid).Trim();
             }
             return ret;
         }
@@ -2283,7 +2283,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
 
-            reason = "";
+            reason = String.Empty;
             return true;
         }
 
@@ -2326,7 +2326,7 @@ namespace OpenSim.Region.Framework.Scenes
                                        byte RayEndIsIntersection, IClientAPI remoteClient)
         {
             Vector3 pos = GetNewRezLocation(RayStart, RayEnd, RayTargetID, rot, bypassRaycast, RayEndIsIntersection, true, new Vector3(0.5f, 0.5f, 0.5f), false, remoteClient.AgentId);
-            string reason = "";
+            string reason = String.Empty;
             int landImpact = 1;
 
             if (IsBadUser(ownerID))
@@ -3249,7 +3249,7 @@ namespace OpenSim.Region.Framework.Scenes
             UserPreferencesData prefs = CommsManager.UserService.RetrieveUserPreferences(client.AgentId);
             if (prefs != null)
             {
-                client.SendUserInfoReply(prefs.ReceiveIMsViaEmail, prefs.ListedInDirectory, "");
+                client.SendUserInfoReply(prefs.ReceiveIMsViaEmail, prefs.ListedInDirectory, String.Empty);
             }
         }
 
@@ -3973,7 +3973,7 @@ namespace OpenSim.Region.Framework.Scenes
             reason = String.Empty;
             if (!m_strictAccessControl) return true;
 
-            if (!AuthorizeUserInRegion(sog.OwnerID, "", "", null, out reason))
+            if (!AuthorizeUserInRegion(sog.OwnerID, String.Empty, String.Empty, null, out reason))
             {
                 m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} does not have region access.", RegionInfo.RegionName, sog.OwnerID);
                 reason = String.Format("Object owner does not have access to {0}.", RegionInfo.RegionName);
@@ -3982,7 +3982,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             Vector3 pos = sog.AbsolutePosition;
             ILandObject land = LandChannel.GetLandObject(pos.X, pos.Y);
-            if (!AuthorizeUserInParcel(sog.OwnerID, "", "", land, pos, out reason))
+            if (!AuthorizeUserInParcel(sog.OwnerID, String.Empty, String.Empty, land, pos, out reason))
             {
                 m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} does not have parcel access.", RegionInfo.RegionName, sog.OwnerID);
                 reason = String.Format("Object owner {0} does not have access to that parcel.", sog.OwnerID);
@@ -3997,14 +3997,14 @@ namespace OpenSim.Region.Framework.Scenes
                     if (agentID == sog.OwnerID)
                         continue;   // we already checked above
 
-                    if (!AuthorizeUserInRegion(agentID, "", "", null, out reason))
+                    if (!AuthorizeUserInRegion(agentID, String.Empty, String.Empty, null, out reason))
                     {
                         m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} does not have region access.", RegionInfo.RegionName, agentID);
                         reason = String.Format("User {0} does not have access to {1}.", agentID, RegionInfo.RegionName);
                         return false;
                     }
 
-                    if (!AuthorizeUserInParcel(agentID, "", "", land, pos, out reason))
+                    if (!AuthorizeUserInParcel(agentID, String.Empty, String.Empty, land, pos, out reason))
                     {
                         m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} {2}", RegionInfo.RegionName, agentID, reason);
                         reason = String.Format("Object entry denied: user {0} {1}", agentID, reason);

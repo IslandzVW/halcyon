@@ -237,7 +237,7 @@ namespace InWorldz.VivoxVoice
                     
                     string channelId;
 
-                    string sceneUUID  = m_forcedChannelName == String.Empty ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
+                    string sceneUUID  = String.IsNullOrEmpty(m_forcedChannelName) ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
                     string sceneName  = scene.RegionInfo.RegionName;
                     
                     // Make sure that all local channels are deleted.
@@ -744,7 +744,7 @@ namespace InWorldz.VivoxVoice
             string landName;
             string parentId;
 
-            lock (m_parents) parentId = m_forcedChannelName == String.Empty ? m_parents[scene.RegionInfo.RegionID.ToString()] : m_parents[m_forcedChannelName];
+            lock (m_parents) parentId = String.IsNullOrEmpty(m_forcedChannelName) ? m_parents[scene.RegionInfo.RegionID.ToString()] : m_parents[m_forcedChannelName];
 
             // Create parcel voice channel. If no parcel exists, then the voice channel ID is the same
             // as the directory ID. Otherwise, it reflects the parcel's ID.
@@ -759,7 +759,7 @@ namespace InWorldz.VivoxVoice
             else
             {
                 landName = String.Format("{0}:{1}", scene.RegionInfo.RegionName, scene.RegionInfo.RegionName);
-                landUUID = m_forcedChannelName == String.Empty ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
+                landUUID = String.IsNullOrEmpty(m_forcedChannelName) ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
                 //m_log.DebugFormat("[VivoxVoice]: Region:Parcel \"{0}\": parcel id {1}: using channel name {2}", 
                 //                  landName, land.LocalID, landUUID);
             }
@@ -871,11 +871,11 @@ namespace InWorldz.VivoxVoice
         {
             string requrl = String.Format(m_vivoxChannelPath, m_vivoxServer, "create", channelId, m_authToken);
 
-            if (parent != null && parent != String.Empty)
+            if (!String.IsNullOrEmpty(parent))
             {
                 requrl = String.Format("{0}&chan_parent={1}", requrl, parent);
             }
-            if (description != null && description != String.Empty)
+            if (!String.IsNullOrEmpty(description))
             {
                 requrl = String.Format("{0}&chan_desc={1}", requrl, description);
             }
@@ -907,12 +907,12 @@ namespace InWorldz.VivoxVoice
         {
             string requrl = String.Format(m_vivoxChannelPath, m_vivoxServer, "create", dirId, m_authToken);
 
-            // if (parent != null && parent != String.Empty)
+            // if (!String.IsNullOrEmpty(parent))
             // {
             //     requrl = String.Format("{0}&chan_parent={1}", requrl, parent);
             // }
 
-            if (description != null && description != String.Empty)
+            if (!String.IsNullOrEmpty(description))
             {
                 requrl = String.Format("{0}&chan_desc={1}", requrl, description);
             }
@@ -1087,7 +1087,7 @@ namespace InWorldz.VivoxVoice
         private XmlElement VivoxDeleteChannel(string parent, string channelid)
         {
             string requrl = String.Format(m_vivoxChannelDel, m_vivoxServer, "delete", channelid, m_authToken);
-            if (parent != null && parent != String.Empty)
+            if (!String.IsNullOrEmpty(parent))
             {
                 requrl = String.Format("{0}&chan_parent={1}", requrl, parent);
             }
@@ -1257,7 +1257,7 @@ namespace InWorldz.VivoxVoice
         /// </summary>
         private bool XmlFind(XmlElement root, string tag, int nth, out string result)
         {
-            if (root == null || tag == null || tag == String.Empty)
+            if (root == null || String.IsNullOrEmpty(tag))
             { 
                 result = String.Empty;
                 return false;
@@ -1268,7 +1268,7 @@ namespace InWorldz.VivoxVoice
         private bool XmlFind(XmlElement root, string tag, out string result)
         {
             int nth = 0;
-            if (root == null || tag == null || tag == String.Empty)
+            if (root == null || String.IsNullOrEmpty(tag))
             { 
                 result = String.Empty;
                 return false;

@@ -71,7 +71,7 @@ namespace OpenSim.Services.Base
 
                     if (pluginType.IsPublic)
                     {
-                        if (className != String.Empty &&
+                        if (!String.IsNullOrEmpty(className) &&
                                 pluginType.ToString() !=
                                 pluginType.Namespace + "." + className)
                             continue;

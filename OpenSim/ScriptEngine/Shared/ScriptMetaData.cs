@@ -40,7 +40,7 @@ namespace OpenSim.ScriptEngine.Shared
                 return ret;
 
             // Process it line by line
-            string Line = "";
+            string Line = String.Empty;
             for (int i = 0; i < Script.Length + 1; i++)
             {
                 // Found a line separator?
@@ -57,7 +57,7 @@ namespace OpenSim.ScriptEngine.Shared
                     if (!_GetMetaFromLine(ret, Line))
                         continue;
                     // Empty for next round
-                    Line = "";
+                    Line = String.Empty;
                 }
             }
             return ret;
@@ -68,7 +68,7 @@ namespace OpenSim.ScriptEngine.Shared
             line = line.Trim();
 
             // Empty line? We may find more later
-            if (line == "")
+            if (String.IsNullOrEmpty(line))
                 return true;
 
             // Is this a comment? If not, then return false
@@ -81,7 +81,7 @@ namespace OpenSim.ScriptEngine.Shared
             keyval[1] = keyval[1].Trim();
 
             // Add it
-            if (keyval[0] != "")
+            if (keyval[0] != String.Empty)
                 if (!ret.ContainsKey(keyval[0]))
                 {
                     //m_log.DebugFormat("[DotNetEngine] Script metadata: Key: \"{0}\", Value: \"{1}\".", keyval[0], keyval[1]);

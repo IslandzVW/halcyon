@@ -77,7 +77,7 @@ namespace OpenSim
             // Configure Log4Net
             configSource.AddSwitch("Startup", "logconfig");
             string logConfigFile = configSource.Configs["Startup"].GetString("logconfig", String.Empty);
-            if (logConfigFile != String.Empty)
+            if (!String.IsNullOrEmpty(logConfigFile))
             {
                 XmlConfigurator.Configure(new System.IO.FileInfo(logConfigFile));
                 m_log.InfoFormat("[HALCYON MAIN]: configured log4net using \"{0}\" as configuration file", 

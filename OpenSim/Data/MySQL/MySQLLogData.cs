@@ -57,7 +57,7 @@ namespace OpenSim.Data.MySQL
         /// <param name="connect">connect string</param>
         public void Initialize(string connect)
         {
-            if (connect != String.Empty)
+            if (!String.IsNullOrEmpty(connect))
             {
                 database = new MySQLManager(connect);
             }

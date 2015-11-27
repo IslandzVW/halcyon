@@ -1014,7 +1014,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private void InstallInterfaces()
         {
             // Load / Save
-            string supportedFileExtensions = "";
+            string supportedFileExtensions = String.Empty;
             foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
                 supportedFileExtensions += " " + loader.Key + " (" + loader.Value + ")";
 

@@ -106,7 +106,7 @@ namespace OpenSim.Region.Framework.Scenes
             args["Memory"] = OSD.FromReal(Math.Round(GC.GetTotalMemory(false) / 1024.0 / 1024.0));
             args["Version"] = OSD.FromString(VersionInfo.FullVersion);
             
-            string strBuffer = "";
+            string strBuffer = String.Empty;
             strBuffer = OSDParser.SerializeJsonString(args);
 
             return strBuffer;

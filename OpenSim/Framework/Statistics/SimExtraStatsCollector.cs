@@ -411,7 +411,7 @@ Average Asset Write Request Latency: {1} ms
             args["Uptime"] = OSD.FromString(uptime);
             args["Version"] = OSD.FromString(version);
             
-            string strBuffer = "";
+            string strBuffer = String.Empty;
             strBuffer = OSDParser.SerializeJsonString(args);
 
             return strBuffer;
@@ -468,7 +468,7 @@ Average Asset Write Request Latency: {1} ms
         
         public string XReport(string uptime, string version)
         {
-            return "";
+            return String.Empty;
         }
     }
 }

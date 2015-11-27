@@ -66,7 +66,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Expression set in the client.  Null if [None] is selected
         /// </summary>
-        public string ExpressionName; // "" (null)
+        public string ExpressionName; // String.Empty (null)
 
         /// <summary>
         /// The time in seconds to start the animation

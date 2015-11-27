@@ -540,7 +540,7 @@ namespace OpenSim.Data.MySQL
                 retval.ID = id;
                 retval.FirstName = (string)reader["username"];
                 retval.SurName = (string)reader["lastname"];
-                retval.Email = (reader.IsDBNull(reader.GetOrdinal("email"))) ? "" : (string)reader["email"];
+                retval.Email = (reader.IsDBNull(reader.GetOrdinal("email"))) ? String.Empty : (string)reader["email"];
 
                 retval.PasswordHash = (string)reader["passwordHash"];
                 retval.PasswordSalt = (string)reader["passwordSalt"];
@@ -566,12 +566,12 @@ namespace OpenSim.Data.MySQL
                 retval.UserAssetURI = (string)reader["userAssetURI"];
 
                 if (reader.IsDBNull(reader.GetOrdinal("profileAboutText")))
-                    retval.AboutText = "";
+                    retval.AboutText = String.Empty;
                 else
                     retval.AboutText = (string)reader["profileAboutText"];
 
                 if (reader.IsDBNull(reader.GetOrdinal("profileFirstText")))
-                    retval.FirstLifeAboutText = "";
+                    retval.FirstLifeAboutText = String.Empty;
                 else
                     retval.FirstLifeAboutText = (string)reader["profileFirstText"];
 
@@ -607,7 +607,7 @@ namespace OpenSim.Data.MySQL
                 retval.UserFlags = Convert.ToInt32(reader["userFlags"].ToString());
                 retval.GodLevel = Convert.ToInt32(reader["godLevel"].ToString());
                 if (reader.IsDBNull(reader.GetOrdinal("customType")))
-                    retval.CustomType = "";
+                    retval.CustomType = String.Empty;
                 else
                     retval.CustomType = reader["customType"].ToString();
 
@@ -623,7 +623,7 @@ namespace OpenSim.Data.MySQL
                 }
 
                 if (reader.IsDBNull(reader.GetOrdinal("profileURL")))
-                    retval.ProfileURL = "";
+                    retval.ProfileURL = String.Empty;
                 else
                     retval.ProfileURL = (string)reader["profileURL"];
 
@@ -755,7 +755,7 @@ namespace OpenSim.Data.MySQL
             parameters["?webLoginKey"] = webLoginKey.ToString();
             parameters["?userFlags"] = userFlags;
             parameters["?godLevel"] = godLevel;
-            parameters["?customType"] = customType == null ? "" : customType;
+            parameters["?customType"] = customType == null ? String.Empty : customType;
             parameters["?partner"] = partner.ToString();
             parameters["?profileURL"] = ProfileURL;
             bool returnval = false;
@@ -854,7 +854,7 @@ namespace OpenSim.Data.MySQL
             parameters["?webLoginKey"] = webLoginKey.ToString();
             parameters["?userFlags"] = userFlags;
             parameters["?godLevel"] = godLevel;
-            parameters["?customType"] = customType == null ? "" : customType;
+            parameters["?customType"] = customType == null ? String.Empty : customType;
             parameters["?partner"] = partner.ToString();
 
             bool returnval = false;

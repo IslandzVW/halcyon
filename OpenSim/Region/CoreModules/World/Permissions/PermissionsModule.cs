@@ -1649,7 +1649,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             // Optional test for land impact limits.
             if (landImpact > 0)
             {
-                string reason = "";
+                string reason = String.Empty;
                 return m_scene.CheckLandImpact(parcel, landImpact, out reason);
             }
 

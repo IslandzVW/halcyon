@@ -369,7 +369,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             try
             {
 
-                if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
+                if (String.IsNullOrEmpty(request.HttpMethod)) // Can't handle empty requests, not wasting a thread
                 {
                     buffer = SendHTML500(response);
                 }
@@ -532,8 +532,8 @@ namespace OpenSim.Framework.Servers.HttpServer
                         request.SeqNo,
                         request.HttpMethod,
                         request.Url.AbsolutePath,
-                        requestHandler != null ? requestHandler.Name : "",
-                        requestHandler != null ? requestHandler.Description : "",
+                        requestHandler != null ? requestHandler.Name : String.Empty,
+                        requestHandler != null ? requestHandler.Description : String.Empty,
                         request.RemoteIPEndPoint,
                         tickdiff);
                 }
@@ -593,8 +593,8 @@ namespace OpenSim.Framework.Servers.HttpServer
                     request.SeqNo,
                     request.HttpMethod,
                     request.Url.AbsolutePath,
-                    requestHandler != null ? requestHandler.Name : "",
-                    requestHandler != null ? requestHandler.Description : "",
+                    requestHandler != null ? requestHandler.Name : String.Empty,
+                    requestHandler != null ? requestHandler.Description : String.Empty,
                     tickdiff);
                 // note that request.RemoteIPEndPoint is often disposed when we reach here (e.g. remote end has crashed)
             }
@@ -621,8 +621,8 @@ namespace OpenSim.Framework.Servers.HttpServer
                     request.SeqNo,
                     request.HttpMethod,
                     request.Url.AbsolutePath,
-                    requestHandler != null ? requestHandler.Name : "",
-                    requestHandler != null ? requestHandler.Description : "");
+                    requestHandler != null ? requestHandler.Name : String.Empty,
+                    requestHandler != null ? requestHandler.Description : String.Empty);
 
                 try
                 {

@@ -132,7 +132,7 @@ namespace InWorldz.ApplicationPlugins.ChatFilterModule
         void EventManager_OnChatFromClient(object sender, OSChatMessage chat)
         {
             if (!m_enabled) return;
-            if (chat.Message == "" || chat.SenderUUID == chat.DestinationUUID) return;
+            if (String.IsNullOrEmpty(chat.Message) || chat.SenderUUID == chat.DestinationUUID) return;
 
             if (chat.Message.Length < m_minWordLength) return; //too small, nothing to filter, dont waste time
 
@@ -195,7 +195,7 @@ namespace InWorldz.ApplicationPlugins.ChatFilterModule
         bool EventManager_OnBeforeSendInstantMessage(GridInstantMessage message)
         {
             if (!m_enabled) return true;
-            if (message.message == "" || message.fromAgentID == message.toAgentID) return true;
+            if (String.IsNullOrEmpty(message.message) || message.fromAgentID == message.toAgentID) return true;
             if (message.message.Length < m_minWordLength) return true; //too small, nothing to filter, dont waste time
 
             StringBuilder result = new StringBuilder(message.message);

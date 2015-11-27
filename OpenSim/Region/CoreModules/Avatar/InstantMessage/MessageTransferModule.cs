@@ -226,8 +226,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 UUID toAgentID = UUID.Zero;
                 UUID imSessionID = UUID.Zero;
                 uint timestamp = 0;
-                string fromAgentName = "";
-                string message = "";
+                string fromAgentName = String.Empty;
+                string message = String.Empty;
                 byte dialog = (byte)0;
                 bool fromGroup = false;
                 byte offline = (byte)0;

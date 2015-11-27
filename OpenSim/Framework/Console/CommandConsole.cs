@@ -111,7 +111,7 @@ namespace OpenSim.Framework.Console
             // Remove initial help keyword
             helpParts.RemoveAt(0);
 
-            help.Add(""); // Will become a newline.
+            help.Add(String.Empty); // Will become a newline.
 
             // General help
             if (helpParts.Count == 0)
@@ -129,7 +129,7 @@ namespace OpenSim.Framework.Console
                 help.AddRange(CollectHelp(helpParts));
             }
 
-            help.Add(""); // Will become a newline.
+            help.Add(String.Empty); // Will become a newline.
 
             return help;
         }
@@ -262,7 +262,7 @@ namespace OpenSim.Framework.Console
 //                }
 //                else
 //                {
-//                    if (((CommandInfo)kvp.Value).long_help != String.Empty)
+        //                if (!String.IsNullOrEmpty(((CommandInfo)kvp.Value).long_help))
 //                        result.Add(((CommandInfo)kvp.Value).help_text+" - "+
 //                                ((CommandInfo)kvp.Value).long_help);
 //                }
@@ -405,7 +405,7 @@ namespace OpenSim.Framework.Console
                 bool addcr = false;
                 foreach (string s in current.Keys)
                 {
-                    if (s == String.Empty)
+                    if (String.IsNullOrEmpty(s))
                     {
                         CommandInfo ci = (CommandInfo)current[String.Empty];
                         if (ci.fn.Count != 0)
@@ -497,7 +497,7 @@ namespace OpenSim.Framework.Console
             if (((Dictionary<string, object>)tree["quit"]).Count == 0)
                 tree.Remove("quit");
 
-            XmlElement root = doc.CreateElement("", "HelpTree", "");
+            XmlElement root = doc.CreateElement(String.Empty, "HelpTree", String.Empty);
 
             ProcessTreeLevel(tree, root, doc);
 
@@ -518,7 +518,7 @@ namespace OpenSim.Framework.Console
             {
                 if (kvp.Value is Dictionary<string, Object>)
                 {
-                    XmlElement next = doc.CreateElement("", "Level", "");
+                    XmlElement next = doc.CreateElement(String.Empty, "Level", String.Empty);
                     next.SetAttribute("Name", kvp.Key);
 
                     xml.AppendChild(next);
@@ -529,27 +529,27 @@ namespace OpenSim.Framework.Console
                 {
                     CommandInfo c = (CommandInfo)kvp.Value;
 
-                    XmlElement cmd = doc.CreateElement("", "Command", "");
+                    XmlElement cmd = doc.CreateElement(String.Empty, "Command", String.Empty);
 
                     XmlElement e;
 
-                    e = doc.CreateElement("", "Module", "");
+                    e = doc.CreateElement(String.Empty, "Module", String.Empty);
                     cmd.AppendChild(e);
                     e.AppendChild(doc.CreateTextNode(c.module));
 
-                    e = doc.CreateElement("", "Shared", "");
+                    e = doc.CreateElement(String.Empty, "Shared", String.Empty);
                     cmd.AppendChild(e);
                     e.AppendChild(doc.CreateTextNode(c.shared.ToString()));
 
-                    e = doc.CreateElement("", "HelpText", "");
+                    e = doc.CreateElement(String.Empty, "HelpText", String.Empty);
                     cmd.AppendChild(e);
                     e.AppendChild(doc.CreateTextNode(c.help_text));
 
-                    e = doc.CreateElement("", "LongHelp", "");
+                    e = doc.CreateElement(String.Empty, "LongHelp", String.Empty);
                     cmd.AppendChild(e);
                     e.AppendChild(doc.CreateTextNode(c.long_help));
 
-                    e = doc.CreateElement("", "Description", "");
+                    e = doc.CreateElement(String.Empty, "Description", String.Empty);
                     cmd.AppendChild(e);
                     e.AppendChild(doc.CreateTextNode(c.descriptive_help));
 
@@ -659,7 +659,7 @@ namespace OpenSim.Framework.Console
                     bool option = false;
                     foreach (string w in words)
                     {
-                        if (w != String.Empty)
+                        if (!String.IsNullOrEmpty(w))
                         {
                             if (optionRegex.Match(w) == Match.Empty)
                                 option = false;
@@ -741,7 +741,7 @@ namespace OpenSim.Framework.Console
         {
             string line = ReadLine(DefaultPrompt + "# ", true, true);
 
-            if (line != String.Empty)
+            if (!String.IsNullOrEmpty(line))
                 Output("Invalid command");
         }
 

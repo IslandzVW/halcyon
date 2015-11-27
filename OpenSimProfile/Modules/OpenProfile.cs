@@ -143,10 +143,10 @@ namespace OpenSimProfile.Modules.OpenProfile
             using (ISimpleDB db = _connFactory.GetConnection())
             {
                 uint skillsMask = new uint();
-                string skillsText = "";
+                string skillsText = String.Empty;
                 uint wantToMask = new uint();
-                string wantToText = "";
-                string languagesText = "";
+                string wantToText = String.Empty;
+                string languagesText = String.Empty;
 
                 Dictionary<string, object> parms = new Dictionary<string, object>();
                 parms.Add("?avatarID", avatarID);
@@ -324,8 +324,8 @@ namespace OpenSimProfile.Modules.OpenProfile
                 // explode the GlobalPos value off the bat
 
                 string origGlobPos = queryGlobalPos.ToString();
-                string tempAGlobPos = origGlobPos.Replace("<", "");
-                string tempBGlobPos = tempAGlobPos.Replace(">", "");
+                string tempAGlobPos = origGlobPos.Replace("<", String.Empty);
+                string tempBGlobPos = tempAGlobPos.Replace(">", String.Empty);
 
                 char[] delimiterChars = { ',', ' ' };
                 string[] globalPosBits = tempBGlobPos.Split(delimiterChars);
@@ -513,12 +513,12 @@ namespace OpenSimProfile.Modules.OpenProfile
 
                 bool topPick = new bool();
                 UUID parcelUUID = new UUID();
-                string name = "";
-                string description = "";
+                string name = String.Empty;
+                string description = String.Empty;
                 UUID snapshotID = new UUID();
-                string userName = "";
-                string originalName = "";
-                string simName = "";
+                string userName = String.Empty;
+                string originalName = String.Empty;
+                string simName = String.Empty;
                 Vector3 globalPos = new Vector3();
                 int sortOrder = new int();
                 bool enabled = new bool();
@@ -629,7 +629,7 @@ namespace OpenSimProfile.Modules.OpenProfile
                 List<Dictionary <string, string>> countList = db.QueryWithResults(queryPicksCount, parms);
                 
                 string query;
-                string picksCount="";
+                string picksCount = String.Empty;
                 
                 foreach (Dictionary<string, string> row in countList)
                 {

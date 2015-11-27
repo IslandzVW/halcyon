@@ -167,7 +167,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             foreach (string host in rdbHosts)
             {
                 ConnectionFactory rdbFactory;
-                if ((++whichDB == 1) || (_rdbConnectionTemplateDebug.Trim() == String.Empty))
+                if ((++whichDB == 1) || String.IsNullOrWhiteSpace(_rdbConnectionTemplateDebug))
                     rdbFactory = new ConnectionFactory("MySQL", String.Format(_rdbConnectionTemplate, host));
                 else  // Special debugging support for multiple RDBs on one machine ("inworldz_rdb2", etc)
                     rdbFactory = new ConnectionFactory("MySQL", String.Format(_rdbConnectionTemplateDebug, host, whichDB));

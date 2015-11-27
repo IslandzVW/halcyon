@@ -59,7 +59,7 @@ namespace OpenSim.Region.CoreModules.Avatar.MuteList
             public uint m_Flags;
             public MuteListEntry()
             {
-                m_Type = (int)MuteType.AGENT; m_Name = ""; m_Flags = 0;
+                m_Type = (int)MuteType.AGENT; m_Name = String.Empty; m_Flags = 0;
             }
             public MuteListEntry(int type, string name, uint flags)
             {
@@ -303,7 +303,7 @@ namespace OpenSim.Region.CoreModules.Avatar.MuteList
         private byte[] GetMuteListFileData(UUID AgentID)
         {
             Dictionary<UUID, MuteListEntry> MuteList;
-            string data = "";
+            string data = String.Empty;
             int lines = 0;
 
             MuteList = GetMuteList(AgentID);

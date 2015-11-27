@@ -47,8 +47,8 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
         private Scene m_scene;
         private IDynamicTextureManager m_textureManager;
 
-        private string m_proxyurl = "";
-        private string m_proxyexcepts = "";
+        private string m_proxyurl = String.Empty;
+        private string m_proxyexcepts = String.Empty;
 
         #region IDynamicTextureRender Members
 

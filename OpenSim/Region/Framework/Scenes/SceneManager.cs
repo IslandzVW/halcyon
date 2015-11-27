@@ -1031,7 +1031,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private static string OarStatusNameFromRegionName(string regionName)
         {
-            return regionName.Replace(" ", "").Replace("\'", "") + ".oarstatus";
+            return regionName.Replace(" ", String.Empty).Replace("\'", String.Empty) + ".oarstatus";
         }
 
         public Scene FindSceneByName(string name)

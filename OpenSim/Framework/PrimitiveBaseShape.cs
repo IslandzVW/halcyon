@@ -1710,7 +1710,7 @@ namespace OpenSim.Framework
 
             prim.Properties = new Primitive.ObjectProperties();
             prim.Properties.Name = "Primitive";
-            prim.Properties.Description = "";
+            prim.Properties.Description = String.Empty;
             prim.Properties.CreatorID = UUID.Zero;
             prim.Properties.GroupID = UUID.Zero;
             prim.Properties.OwnerID = UUID.Zero;

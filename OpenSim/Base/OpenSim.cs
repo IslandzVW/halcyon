@@ -89,7 +89,7 @@ namespace OpenSim
                 m_startupCommandsFile = startupConfig.GetString("startup_console_commands_file", "startup_commands.txt");
                 m_shutdownCommandsFile = startupConfig.GetString("shutdown_console_commands_file", "shutdown_commands.txt");
 
-                if (startupConfig.GetString("console", String.Empty) == String.Empty)
+                if (String.IsNullOrEmpty(startupConfig.GetString("console", String.Empty)))
                     m_gui = startupConfig.GetBoolean("gui", false);
                 else
                     m_consoleType= startupConfig.GetString("console", String.Empty);
@@ -105,7 +105,7 @@ namespace OpenSim
                         log4net.Appender.FileAppender appender =
                                 (log4net.Appender.FileAppender)m_logFileAppender;
                         string fileName = startupConfig.GetString("LogFile", String.Empty);
-                        if (fileName != String.Empty)
+                        if (!String.IsNullOrEmpty(fileName))
                             appender.File = fileName;
                         m_log.InfoFormat("[LOGGING] Logging started to file {0}", appender.File);
                     }
@@ -463,7 +463,7 @@ namespace OpenSim
 
         public override void ShutdownSpecific()
         {
-            if (m_shutdownCommandsFile != String.Empty)
+            if (!String.IsNullOrEmpty(m_shutdownCommandsFile))
             {
                 RunCommandScript(m_shutdownCommandsFile);
             }
@@ -513,7 +513,7 @@ namespace OpenSim
                     presence.Scene.IncomingCloseAgent(presence.UUID);
                 }
             }
-            m_console.Notice("");
+            m_console.Notice(String.Empty);
         }
 
         /// <summary>
@@ -530,7 +530,7 @@ namespace OpenSim
                 string currentCommand;
                 while ((currentCommand = readFile.ReadLine()) != null)
                 {
-                    if (currentCommand != String.Empty)
+                    if (!String.IsNullOrEmpty(currentCommand))
                     {
                         m_log.Info("[COMMANDFILE]: Running '" + currentCommand + "'");
                         m_console.RunCommand(currentCommand);
@@ -993,7 +993,7 @@ namespace OpenSim
                     else
                         m_console.Notice(String.Format("Agents connected: {0}", nRoot));
 
-                    m_console.Notice("");
+                    m_console.Notice(String.Empty);
                     break;
 
                 case "remotes":
@@ -1027,7 +1027,7 @@ namespace OpenSim
                     m_sceneManager.ForEachScene(
                     delegate(Scene scene)
                     {
-                        string rating = "";
+                        string rating = String.Empty;
                         if (scene.RegionInfo.RegionSettings.Maturity == 1)
                         {
                             rating = "MATURE";
@@ -1056,7 +1056,7 @@ namespace OpenSim
                     }
                     Dictionary<UUID,SceneOwnerCounts> counts = m_sceneManager.GetCurrentSceneOwnerCounts();
 
-                    m_console.Notice(String.Format("Objects Prims UUID Name {0}",MinCount>1?"(with prim counts above "+MinCount.ToString()+")" : ""));
+                    m_console.Notice(String.Format("Objects Prims UUID Name {0}",MinCount>1?"(with prim counts above "+MinCount.ToString()+")" : String.Empty));
                     foreach (KeyValuePair<UUID, SceneOwnerCounts> kvp in counts)
                     {
                         SceneOwnerCounts count = kvp.Value;
@@ -1110,7 +1110,7 @@ namespace OpenSim
                 }
             }
 
-            m_console.Notice("");
+            m_console.Notice(String.Empty);
         }
 
         public void DisableAllTraces(string mod, string[] cmd)
@@ -1149,7 +1149,7 @@ namespace OpenSim
                     m_console.Output(String.Format("Timer Interval: {0}", runtimeInfo.TimerInterval));
                     m_console.Output(String.Format("Timer Last Scheduled: {0}", runtimeInfo.TimerLastScheduledOn));
                     m_console.Output(String.Format("Current Function: {0}", runtimeInfo.StackFrameFunctionName == null ? "none" : runtimeInfo.StackFrameFunctionName));
-                    m_console.Output("");
+                    m_console.Output(String.Empty);
                 }
             }
         }
@@ -1368,7 +1368,7 @@ namespace OpenSim
             else regY = Convert.ToUInt32(cmdparams[6]);
 
             if (cmdparams.Length < 8)
-                email = MainConsole.Instance.CmdPrompt("Email", "");
+                email = MainConsole.Instance.CmdPrompt("Email", String.Empty);
             else email = cmdparams[7];
 
             if (null == m_commsManager.UserService.GetUserProfile(firstName, lastName))

@@ -70,9 +70,9 @@ namespace OpenSim.Services.AssetService
             IConfig dbConfig = config.Configs["DatabaseService"];
             if (dbConfig != null)
             {
-                if (dllName == String.Empty)
+                if (String.IsNullOrEmpty(dllName))
                     dllName = dbConfig.GetString("StorageProvider", String.Empty);
-                if (connString == String.Empty)
+                if (String.IsNullOrEmpty(connString))
                     connString = dbConfig.GetString("ConnectionString", String.Empty);
             }
 
@@ -91,7 +91,7 @@ namespace OpenSim.Services.AssetService
             string loaderName = assetConfig.GetString("DefaultAssetLoader",
                     String.Empty);
 
-            if (loaderName != String.Empty)
+            if (!String.IsNullOrEmpty(loaderName))
             {
                 m_AssetLoader = LoadPlugin<IAssetLoader>(loaderName);
 

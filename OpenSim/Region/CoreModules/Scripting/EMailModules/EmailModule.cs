@@ -278,7 +278,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 SmtpServer smtpServer=new SmtpServer(SMTP_SERVER_HOSTNAME,SMTP_SERVER_PORT);
                 // Add authentication only when requested
                 //
-                if (SMTP_SERVER_LOGIN != String.Empty && SMTP_SERVER_PASSWORD != String.Empty)
+                if (!(String.IsNullOrEmpty(SMTP_SERVER_LOGIN) || String.IsNullOrEmpty(SMTP_SERVER_PASSWORD)))
                 {
                     //Authentication
                     smtpServer.SmtpAuthToken=new SmtpAuthToken(SMTP_SERVER_LOGIN, SMTP_SERVER_PASSWORD);

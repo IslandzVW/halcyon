@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Net;
 
 namespace OpenSim.Framework
@@ -56,7 +57,7 @@ namespace OpenSim.Framework
         public bool IsLocalUser(string userserver)
         {
             string userServerURI = ServerURI(userserver);
-            bool ret = (((userServerURI == null) || (userServerURI == "") || (userServerURI == LocalUserServerURI)));
+            bool ret = ((String.IsNullOrEmpty(userServerURI) || (userServerURI == LocalUserServerURI)));
             //m_log.Debug("-------------> HGNetworkServersInfo.IsLocalUser? " + ret + "(userServer=" + userServerURI + "; localuserserver=" + LocalUserServerURI + ")");
             return ret;
         }
@@ -86,7 +87,7 @@ namespace OpenSim.Framework
             catch { }
 
             IPAddress ipaddr1 = null;
-            string port1 = "";
+            string port1 = String.Empty;
             try
             {
                 ipaddr1 = Util.GetHostFromURL(uri);

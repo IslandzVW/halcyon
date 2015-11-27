@@ -53,7 +53,7 @@ namespace OpenSim.Framework
                                                 "DLL for database provider", "OpenSim.Data.MySQL.dll", false);
 
             m_configMember.addConfigurationOption("database_connect", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
-                                                "Database connection string", "", false);
+                                                "Database connection string", String.Empty, false);
 
             m_configMember.addConfigurationOption("http_port", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Http Listener port", ConfigSettings.DefaultAssetServerHttpPort.ToString(), false);

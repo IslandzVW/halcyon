@@ -142,7 +142,7 @@ namespace OpenSim.Servers.Base
                 {
                     if (pluginType.IsPublic)
                     {
-                        if ((className != String.Empty) && 
+                        if (!String.IsNullOrEmpty(className) && 
                              (pluginType.ToString() != pluginType.Namespace + "." + className))
                             continue;
                         
@@ -253,7 +253,7 @@ namespace OpenSim.Servers.Base
                         part = System.Web.HttpUtility.UrlEncode(kvp.Key) +
                                 "[]=" + System.Web.HttpUtility.UrlEncode(s);
 
-                        if (qstring != String.Empty)
+                        if (!String.IsNullOrEmpty(qstring))
                             qstring += "&";
 
                         qstring += part;
@@ -261,7 +261,7 @@ namespace OpenSim.Servers.Base
                 }
                 else
                 {
-                    if (kvp.Value.ToString() != String.Empty)
+                    if (!String.IsNullOrEmpty(kvp.Value.ToString()))
                     {
                         part = System.Web.HttpUtility.UrlEncode(kvp.Key) +
                                 "=" + System.Web.HttpUtility.UrlEncode(kvp.Value.ToString());
@@ -271,7 +271,7 @@ namespace OpenSim.Servers.Base
                         part = System.Web.HttpUtility.UrlEncode(kvp.Key);
                     }
 
-                    if (qstring != String.Empty)
+                    if (!String.IsNullOrEmpty(qstring))
                         qstring += "&";
 
                     qstring += part;
@@ -286,12 +286,12 @@ namespace OpenSim.Servers.Base
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                    String.Empty, String.Empty);
 
             doc.AppendChild(xmlnode);
 
-            XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+            XmlElement rootElement = doc.CreateElement(String.Empty, "ServerResponse",
+                    String.Empty);
 
             doc.AppendChild(rootElement);
 
@@ -307,13 +307,13 @@ namespace OpenSim.Servers.Base
                 if (kvp.Value == null)
                     continue;
 
-                XmlElement elem = parent.OwnerDocument.CreateElement("",
-                        XmlConvert.EncodeLocalName(kvp.Key), "");
+                XmlElement elem = parent.OwnerDocument.CreateElement(String.Empty,
+                        XmlConvert.EncodeLocalName(kvp.Key), String.Empty);
 
                 if (kvp.Value is Dictionary<string, object>)
                 {
-                    XmlAttribute type = parent.OwnerDocument.CreateAttribute("",
-                        "type", "");
+                    XmlAttribute type = parent.OwnerDocument.CreateAttribute(String.Empty,
+                        "type", String.Empty);
                     type.Value = "List";
 
                     elem.Attributes.Append(type);

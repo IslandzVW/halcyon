@@ -1033,7 +1033,7 @@ namespace OpenSim.Framework
             }
             catch (Exception)
             {
-                return "";
+                return String.Empty;
             }
         }
 
@@ -1500,7 +1500,7 @@ namespace OpenSim.Framework
             // Glob
 
             path = vol;
-            if (vol != String.Empty)
+            if (!String.IsNullOrEmpty(vol))
                 path += new String(new char[] { Path.VolumeSeparatorChar, Path.DirectorySeparatorChar });
             else
                 path = new String(new char[] { Path.DirectorySeparatorChar });
@@ -1548,7 +1548,7 @@ namespace OpenSim.Framework
             uri = uri.TrimEnd('/');
 
             IPAddress ipaddr1 = null;
-            string port1 = "";
+            string port1 = String.Empty;
             try
             {
                 ipaddr1 = Util.GetHostFromURL(uri);
@@ -1568,7 +1568,7 @@ namespace OpenSim.Framework
         public static string XmlRpcRequestPrefix(string methodName)
         {
             string prefix = "/xmlrpc";
-            if ((methodName != null) && (methodName != ""))
+            if ((methodName != null) && (methodName != String.Empty))
                 prefix += ("/" + methodName);
             return (prefix);
         }
@@ -2142,7 +2142,7 @@ namespace OpenSim.Framework
             int y = (int)pos.Y;
             int z = (int)pos.Z;
             string region;
-            if (regionName == String.Empty)
+            if (String.IsNullOrEmpty(regionName))
             {
                 region = String.Empty;
                 return x.ToString() + separator + y.ToString() + separator + z.ToString();

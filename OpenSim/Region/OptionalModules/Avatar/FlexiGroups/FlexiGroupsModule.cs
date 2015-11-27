@@ -1080,13 +1080,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
         public void GroupRoleUpdate(IClientAPI remoteClient, UUID groupID, UUID roleID, string name, string description, string title, ulong powers, byte updateType)
         {
-            name = Regex.Replace(name, @"[\u000A]", "");
-            description = Regex.Replace(description, @"[\u000A]", "");
-            title = Regex.Replace(title, @"[\u000A]", "");
+            name = Regex.Replace(name, @"[\u000A]", String.Empty);
+            description = Regex.Replace(description, @"[\u000A]", String.Empty);
+            title = Regex.Replace(title, @"[\u000A]", String.Empty);
 
-            name = Regex.Replace(name, @"[\u000B]", "");
-            description = Regex.Replace(description, @"[\u000B]", "");
-            title = Regex.Replace(title, @"[\u000B]", "");
+            name = Regex.Replace(name, @"[\u000B]", String.Empty);
+            description = Regex.Replace(description, @"[\u000B]", String.Empty);
+            title = Regex.Replace(title, @"[\u000B]", String.Empty);
 
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
@@ -1181,7 +1181,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 notice.noticeData.AssetType = 0;
                 notice.noticeData.OwnerID = UUID.Zero;
                 notice.noticeData.ItemID = UUID.Zero;
-                notice.noticeData.Attachment = "";
+                notice.noticeData.Attachment = String.Empty;
             }
             else
             {   // we have enough attachment data
@@ -1461,7 +1461,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             int rc = m_groupData.AddAgentToGroupInvite(grID, agentID, InviteID, groupID, roleID, invitedAgentID, out reason);
             if (rc != 0)
             {
-                if ((remoteClient != null) && (reason != String.Empty))
+                if (!(remoteClient == null || String.IsNullOrEmpty(reason)))
                     remoteClient.SendAlertMessage(reason);
                 return rc;
             }
@@ -1495,7 +1495,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             msg.binaryBucket = new byte[20];
 
             OutgoingInstantMessage(msg, invitedAgentID);
-            if ((remoteClient != null) && (reason != String.Empty))
+            if (!(remoteClient == null || String.IsNullOrEmpty(reason)))
                 remoteClient.SendAlertMessage(reason);
             return (int)Constants.GenericReturnCodes.SUCCESS;
         }

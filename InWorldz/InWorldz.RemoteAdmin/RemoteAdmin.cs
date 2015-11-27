@@ -132,7 +132,7 @@ namespace InWorldz.RemoteAdmin
             try
             {
                 responseData["Status"] = "Success";
-                responseData["Value"] = "";
+                responseData["Value"] = String.Empty;
 
                 XmlMethodHandler handler = LookupCommand(request.MethodNameObject, request.MethodNameMethod);
 
@@ -236,7 +236,7 @@ namespace InWorldz.RemoteAdmin
 
             string command = (string)args[1];
             MainConsole.Instance.RunCommand(command);
-            return "";
+            return String.Empty;
         }
 
         public void Dispose()

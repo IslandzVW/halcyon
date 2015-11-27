@@ -157,7 +157,7 @@ namespace OpenSim
             IConfig networkConfig = m_config.Source.Configs["Network"];
             if (networkConfig != null)
             {
-                proxyUrl = networkConfig.GetString("proxy_url", "");
+                proxyUrl = networkConfig.GetString("proxy_url", String.Empty);
                 proxyOffset = Int32.Parse(networkConfig.GetString("proxy_offset", "0"));
             }
         }
@@ -191,7 +191,7 @@ namespace OpenSim
             if (startupConfig != null)
             {
                 string pidFile = startupConfig.GetString("PIDFile", String.Empty);
-                if (pidFile != String.Empty)
+                if (!String.IsNullOrEmpty(pidFile))
                     CreatePIDFile(pidFile);
                 
                 userStatsURI = startupConfig.GetString("Stats_URI", String.Empty);
@@ -302,7 +302,7 @@ namespace OpenSim
             IAssetServer assetServer = null;
             string mode = m_configSettings.AssetStorage;
 
-            if (mode == null | mode == String.Empty)
+            if (String.IsNullOrEmpty(mode))
             {
                 throw new Exception("No asset server specified");
             }
@@ -331,7 +331,7 @@ namespace OpenSim
         // if not, then the first match is used.
         private IAssetServer loadAssetServer(string id, PluginInitializerBase pi)
         {
-            if (id != null && id != String.Empty)
+            if (!String.IsNullOrEmpty(id))
             {
                 m_log.DebugFormat("[HALCYONBASE] Attempting to load asset server id={0}", id);
 

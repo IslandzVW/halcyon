@@ -1493,7 +1493,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 if (db == null)
                     return false;
 
-                string binBucketString = OpenMetaverse.Utils.BytesToHexString(binaryBucket, "");
+                string binBucketString = OpenMetaverse.Utils.BytesToHexString(binaryBucket, String.Empty);
 
                 string query = " INSERT INTO osgroupnotice" +
                                 " (GroupID, NoticeID, Timestamp, FromName, Subject, Message, BinaryBucket)" +
@@ -1588,7 +1588,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 data.AssetType = 0;
                 data.OwnerID = UUID.Zero;
                 data.ItemID = UUID.Zero;
-                data.Attachment = "";
+                data.Attachment = String.Empty;
             } else {
                 data.HasAttachment = true;
                 data.AssetType = bucket[1];

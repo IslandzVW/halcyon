@@ -583,7 +583,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
                 if (agent != null) // just to make sure
                 {
                     map = agent.Pack();
-                    string strBuffer = "";
+                    string strBuffer = String.Empty;
                     try
                     {
                         strBuffer = OSDParser.SerializeJsonString(map);
@@ -616,7 +616,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
             //m_log.Debug(" >>> DoDelete action:" + action + "; regionHandle:" + regionHandle);
             
             if (action.Equals("release"))
-                m_localBackend.SendReleaseAgent(regionHandle, id, "");
+                m_localBackend.SendReleaseAgent(regionHandle, id, String.Empty);
             else
                 m_localBackend.SendCloseAgent(regionHandle, id);
 
@@ -693,7 +693,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
             }
             
             Vector3 pos = Vector3.Zero;
-            string sogXmlStr = "", extraStr = "", stateXmlStr = "";
+            string sogXmlStr = String.Empty, extraStr = String.Empty, stateXmlStr = String.Empty;
             if (args.ContainsKey("sog"))
                 sogXmlStr = args["sog"].AsString();
             if (args.ContainsKey("extra"))
@@ -729,7 +729,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
             if ((args.ContainsKey("state")) && m_aScene.m_allowScriptCrossings)
             {
                 stateXmlStr = args["state"].AsString();
-                if (stateXmlStr != "")
+                if (stateXmlStr != String.Empty)
                 {
                     try
                     {
@@ -784,7 +784,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
             try
             {
                 string nonceStr = headers["x-nonce-id"];
-                if (nonceStr != String.Empty)
+                if (!String.IsNullOrEmpty(nonceStr))
                     return Convert.ToInt64(nonceStr);
             }
             catch(Exception)
@@ -1058,7 +1058,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
         public static bool GetParams(string uri, out UUID uuid, out ulong regionHandle, out string action)
         {
             uuid = UUID.Zero;
-            action = "";
+            action = String.Empty;
             regionHandle = 0;
 
             uri = uri.Trim(new char[] { '/' });

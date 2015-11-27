@@ -255,7 +255,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 transInfo.ItemDescription = Util.StringToBytes256(transDesc);
 
                 string message;
-                if ((transDesc == null) || (transDesc == String.Empty))
+                if (String.IsNullOrEmpty(transDesc))
                     message = "You paid $" + transAmount.ToString() + ".";
                 else
                     message = "You paid $" + transAmount.ToString() + " for " + transDesc + ".";
@@ -616,8 +616,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             int transAmount = e.amount;
             IClientAPI sourceAvatarClient;
             IClientAPI destAvatarClient;
-            string sourceText = "";
-            string destText = "";
+            string sourceText = String.Empty;
+            string destText = String.Empty;
 
             TransactionInfoBlock transInfo = new TransactionInfoBlock();
             transInfo.Amount = transAmount;
@@ -738,7 +738,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 int avatarFunds = getCurrentBalance(e.mBuyerID);
                 if (avatarFunds < costToApply)
                 {
-                    string costText = "";
+                    string costText = String.Empty;
                     if (e.mOrigPrice != 0) // this is an updated classified
                         costText = "increase ";
                     remoteClient.SendAgentAlertMessage("The classified price " + costText + " (I'z$" + costToApply.ToString() + ") exceeds your current balance (" + avatarFunds.ToString() + ").", true);
@@ -841,7 +841,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 // we'll let them test the buy, but nothing happens money wise.
                 if (!s.PerformObjectBuy(remoteClient, categoryID, localID, saleType))
                     return;
-                sourceAvatarClient.SendBlueBoxMessage(agentID, "", sourceAlertText);
+                sourceAvatarClient.SendBlueBoxMessage(agentID, String.Empty, sourceAlertText);
             }
             else
             {
@@ -960,14 +960,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             if (sourceClient != null)
             {
                 string destName = resolveAgentName(destClientID);
-                if (destName == String.Empty) destName = "a group (or unknown user)";
+                if (String.IsNullOrEmpty(destName)) destName = "a group (or unknown user)";
                 string sourceText = "You paid Iz$" + transAmount + " to " + destName + " for a parcel of land.";
                 SendMoneyBalanceTransaction(sourceClient, transID, true, sourceText, transInfo);
             }
             if (destClient != null)
             {
                 string destName = resolveAgentName(sourceClientID);
-                if (destName == String.Empty) destName = "a group (or unknown user)";
+                if (String.IsNullOrEmpty(destName)) destName = "a group (or unknown user)";
                 string destText = "You were paid Iz$" + transAmount + " by " + destName + " for a parcel of land.";
                 SendMoneyBalanceTransaction(destClient, transID, true, destText, transInfo);
             }
@@ -1036,7 +1036,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             // try avatar username surname
             Scene scene = GetRandomScene();
             string name = scene.CommsManager.UserService.Key2Name(agentID,false);
-            if (name == String.Empty)
+            if (String.IsNullOrEmpty(name))
                 m_log.ErrorFormat("[MONEY]: Could not resolve user {0}", agentID);
 
             return name;
@@ -1107,7 +1107,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
 
 /*
 +class MoneyTransactionType(object):
-+    """ Money transaction type constants """
++    String.Empty" Money transaction type constants String.Empty"
 +
 +    Null                   = 0
 +

@@ -500,7 +500,7 @@ namespace OpenSim.Framework.Console
                         }
 
                         // If we're not echoing to screen (e.g. a password) then we probably don't want it in history
-                        if (m_echo && commandLine != "")
+                        if (m_echo && commandLine != String.Empty)
                             AddToHistory(commandLine);
                         
                         return commandLine;

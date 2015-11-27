@@ -690,7 +690,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
         }
         public bool AddGroupNotice(GroupRequestID requestID, UUID groupID, UUID noticeID, string fromName, string subject, string message, byte[] binaryBucket)
         {
-            string binBucket = OpenMetaverse.Utils.BytesToHexString(binaryBucket, "");
+            string binBucket = OpenMetaverse.Utils.BytesToHexString(binaryBucket, String.Empty);
 
             Hashtable param = new Hashtable();
             param["GroupID"] = groupID.ToString();

@@ -41,7 +41,7 @@ namespace OpenSim.Framework
         /// <summary>
         ///     Name of the teleHUB object
         /// </summary>
-        public string Name = "";
+        public string Name = String.Empty;
 
         /// <summary>
         ///     UUID of the teleHUB object
@@ -70,14 +70,14 @@ namespace OpenSim.Framework
 
         public string BuildFromList(List<Vector3> SpawnPos)
         {
-            return SpawnPos.Aggregate("", (current, Pos) => current + (Pos.ToString() + "\n"));
+            return SpawnPos.Aggregate(String.Empty, (current, Pos) => current + (Pos.ToString() + "\n"));
         }
 
         public static List<Vector3> BuildToList(string SpawnPos)
         {
-            if (SpawnPos == "" || SpawnPos == " ")
+            if (String.IsNullOrWhiteSpace(SpawnPos))
                 return new List<Vector3>();
-            return (from Pos in SpawnPos.Split('\n') where Pos != "" select Vector3.Parse(Pos)).ToList();
+            return (from Pos in SpawnPos.Split('\n') where Pos != String.Empty select Vector3.Parse(Pos)).ToList();
         }
     }
 }
