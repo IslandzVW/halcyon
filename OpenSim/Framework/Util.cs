@@ -742,7 +742,7 @@ namespace OpenSim.Framework
                 m_log.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
 
                 // Still going to throw the exception on for now, since this was what was happening in the first place
-                throw e;
+                throw;
             }
 
             foreach (IPAddress host in hosts)
@@ -2221,7 +2221,7 @@ namespace OpenSim.Framework
                     if (i == retryCount)
                     {
                         //cant retry anymore. rethrow
-                        throw e;
+                        throw;
                     }
 
                     if (passthroughExceptions != null)
@@ -2263,7 +2263,7 @@ namespace OpenSim.Framework
                     if (i == retryCount)
                     {
                         //cant retry anymore. rethrow
-                        throw e;
+                        throw;
                     }
 
                     if (passthroughExceptions != null)

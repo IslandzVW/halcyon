@@ -40,7 +40,7 @@ namespace OpenSim
     /// <summary>
     /// Starting class for the OpenSimulator Region
     /// </summary>
-    public class Application
+    public static class Application
     {
         /// <summary>
         /// Text Console Logger
@@ -60,7 +60,7 @@ namespace OpenSim
         /// <summary>
         /// Instance of the OpenSim class.  This could be OpenSim or OpenSimBackground depending on the configuration
         /// </summary>
-        protected static OpenSimBase m_sim = null;
+        private static OpenSimBase m_sim = null;
 
         //could move our main function into OpenSimMain and kill this class
         public static void Main(string[] args)

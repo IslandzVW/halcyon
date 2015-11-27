@@ -227,7 +227,7 @@ namespace OpenSim.Region.Framework
                         pluginAssembly.FullName, e.Message, e.StackTrace);
                     
                     // justincc: Right now this is fatal to really get the user's attention
-                    throw e;
+                    throw;
                 }
             }
 

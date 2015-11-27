@@ -62,13 +62,14 @@ namespace OpenSim.Region.ClientStack
                         }
                     }
                 }
-            } catch (ReflectionTypeLoadException e)
+            }
+            catch (ReflectionTypeLoadException e)
             {
                 foreach (Exception e2 in e.LoaderExceptions)
                 {
                     m_log.Error(e2.ToString());
                 }
-                throw e;
+                throw;
             }
         }
         
