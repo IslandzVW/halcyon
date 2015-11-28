@@ -9849,7 +9849,28 @@ namespace InWorldz.Phlox.Engine
             int specular_environment
             )
         {
-            throw new NotImplementedException();
+            UUID id = part.Shape.GetMaterialID(face);
+            RenderMaterial material;
+
+            if (id == UUID.Zero)
+                material = (RenderMaterial)RenderMaterial.DefaultMaterial.Clone();
+            else
+                material = part.Shape.RenderMaterials.GetMaterial(id);
+
+            material.SpecularID = new UUID(specular_tex);
+            material.SpecularRepeatX = specular_repeats.X;
+            material.SpecularRepeatY = specular_repeats.Y;
+            material.SpecularOffsetX = specular_offsets.X;
+            material.SpecularOffsetY = specular_offsets.Y;
+            material.SpecularRotation = specular_rotation;
+            material.SpecularLightColorR = OpenMetaverse.Utils.FloatToByte(specular_color.X, 0f, 1f);
+            material.SpecularLightColorG = OpenMetaverse.Utils.FloatToByte(specular_color.Y, 0f, 1f);
+            material.SpecularLightColorB = OpenMetaverse.Utils.FloatToByte(specular_color.Z, 0f, 1f);
+            material.SpecularLightColorA = 0;
+            material.SpecularLightExponent = (byte)specular_glossiness;
+            material.EnvironmentIntensity = (byte)specular_environment;
+
+            AssignMaterial(part, face, material);
         }
 
         private void SetRenderMaterialNormalData(
@@ -9861,7 +9882,22 @@ namespace InWorldz.Phlox.Engine
             float normal_rotation
             )
         {
-            throw new NotImplementedException();
+            UUID id = part.Shape.GetMaterialID(face);
+            RenderMaterial material;
+
+            if (id == UUID.Zero)
+                material = (RenderMaterial)RenderMaterial.DefaultMaterial.Clone();
+            else
+                material = part.Shape.RenderMaterials.GetMaterial(id);
+
+            material.NormalID = new UUID(normal_tex);
+            material.NormalRepeatX = normal_repeats.X;
+            material.NormalRepeatY = normal_repeats.Y;
+            material.NormalOffsetX = normal_offsets.X;
+            material.NormalOffsetY = normal_offsets.Y;
+            material.NormalRotation = normal_rotation;
+
+            AssignMaterial(part, face, material);
         }
 
         private void SetRenderMaterialAlphaModeData(
@@ -9871,7 +9907,74 @@ namespace InWorldz.Phlox.Engine
             int alpha_mask_cutoff
             )
         {
-            throw new NotImplementedException();
+            UUID id = part.Shape.GetMaterialID(face);
+            RenderMaterial material;
+
+            if (id == UUID.Zero)
+                material = (RenderMaterial)RenderMaterial.DefaultMaterial.Clone();
+            else
+                material = part.Shape.RenderMaterials.GetMaterial(id);
+
+            material.DiffuseAlphaMode = (byte)alpha_mode;
+            material.AlphaMaskCutoff = (byte)alpha_mask_cutoff;
+
+            AssignMaterial(part, face, material);
+        }
+
+        /// <summary>
+        /// Assign a single material value.  Based on the values passed we'll either set (or clear) the materials for a SOP.
+        /// </summary>
+        /// <param name="sop">The SOP being affected.</param>
+        /// <param name="face">The face to assign, or -1 if the default texture is being set.</param>
+        /// <param name="id">The ID assigned to this material.  Setting a Zero UUID clears it.</param>
+        /// <param name="material">If not null, the material to set.  Otherwise we are clearing.</param>
+        private void AssignMaterial(SceneObjectPart sop, int face, RenderMaterial material)
+        {
+            // Add the new material to the SOP Shape.  We get an ID back
+            UUID id = sop.Shape.RenderMaterials.AddMaterial(material);
+
+            // Signal the change so the region cache gets updated
+            if (sop.ParentGroup.Scene != null)
+                sop.ParentGroup.Scene.EventManager.TriggerRenderMaterialAddedToPrim(sop, id, material);
+
+            // If the new material is replacing one lets record it so we can clean up
+            UUID oldMaterialID = UUID.Zero;
+
+            /// Get a copy of the texture entry so we can make changes.
+            var te = new Primitive.TextureEntry(sop.Shape.TextureEntry, 0, sop.Shape.TextureEntry.Length);
+
+            // Set the Material ID in the TextureEntry. If face is ALL_SIDES then
+            // set the default entry, otherwise fetch the face and set it there.
+            if (face < 0)
+            {
+                oldMaterialID = te.DefaultTexture.MaterialID;
+                te.DefaultTexture.MaterialID = id;
+            }
+            else
+            {
+                var faceEntry = te.CreateFace((uint)face);
+                oldMaterialID = faceEntry.MaterialID;
+                faceEntry.MaterialID = id;
+            }
+
+            // Update the texture entry which will force an update to connected clients
+            sop.UpdateTexture(te);
+
+            // If the material has changed and it wasn't previously Zero 
+            // Deallocate the old value if its not in use and signal the change
+            if ((oldMaterialID != id) &&
+                (oldMaterialID != UUID.Zero))
+            {
+                var currentMaterialIDs = sop.Shape.GetMaterialIDs();
+                if (currentMaterialIDs.Contains(oldMaterialID) == false)
+                {
+                    if (sop.Shape.RenderMaterials.ContainsMaterial(oldMaterialID) == true)
+                        sop.Shape.RenderMaterials.RemoveMaterial(oldMaterialID);
+
+                    if (sop.ParentGroup.Scene != null)
+                        sop.ParentGroup.Scene.EventManager.TriggerRenderMaterialRemovedFromPrim(sop, oldMaterialID);
+                }
+            }
         }
 
         public string llStringToBase64(string str)
@@ -10712,7 +10815,10 @@ namespace InWorldz.Phlox.Engine
             res.Add(new LSL_Vector(mat.SpecularRepeatX, mat.SpecularRepeatY, 0));
             res.Add(new LSL_Vector(mat.SpecularOffsetX, mat.SpecularOffsetY, 0));
             res.Add(mat.SpecularRotation);
-            res.Add(new LSL_Vector(mat.SpecularLightColorR, mat.SpecularLightColorG, mat.SpecularLightColorB));
+            res.Add(new LSL_Vector(
+                Utils.ByteToFloat(mat.SpecularLightColorR, 0f, 1f),
+                Utils.ByteToFloat(mat.SpecularLightColorG, 0f, 1f),
+                Utils.ByteToFloat(mat.SpecularLightColorB, 0f, 1f)));
             res.Add((int)mat.SpecularLightExponent);
             res.Add((int)mat.EnvironmentIntensity);
 

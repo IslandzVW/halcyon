@@ -1622,6 +1622,55 @@ namespace OpenSim.Framework
             return data;
         }
 
+        /// <summary>
+        /// Return a single MaterialID for a given Face
+        /// </summary>
+        /// <returns>The UUID of the Material or UUID.Zero if none is set</returns>
+        public UUID GetMaterialID(int face)
+        {
+            UUID id;
+
+            if (face < 0)
+            {
+                return Textures.DefaultTexture.MaterialID;
+            }
+            else
+            {
+                var faceEntry = Textures.CreateFace((uint)face);
+                return faceEntry.MaterialID;
+            }
+        }
+
+        /// <summary>
+        /// Return a list of deduplicated materials ids from the texture entry.
+        /// We remove duplicates because a materialid may be used across faces and we only
+        /// need to represent it here once.
+        /// </summary>
+        /// <returns>The List of UUIDs found, possibly empty if no materials are in use.</returns>
+        public List<UUID> GetMaterialIDs()
+        {
+            List<UUID> matIds = new List<UUID>();
+
+            if (Textures != null)
+            {
+                if ((Textures.DefaultTexture != null) &&
+                    (Textures.DefaultTexture.MaterialID != UUID.Zero))
+                {
+                    matIds.Add(Textures.DefaultTexture.MaterialID);
+                }
+
+                foreach (var face in Textures.FaceTextures)
+                {
+                    if ((face != null) && (face.MaterialID != UUID.Zero))
+                    {
+                        if (matIds.Contains(face.MaterialID) == false)
+                            matIds.Add(face.MaterialID);
+                    }
+                }
+            }
+
+            return matIds;
+        }
 
         /// <summary>
         /// Creates a OpenMetaverse.Primitive and populates it with converted PrimitiveBaseShape values

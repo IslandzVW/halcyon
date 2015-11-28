@@ -194,14 +194,10 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 foreach (SceneObjectPart part in obj.GetParts())
                 {
                     // scan through the rendermaterials of this part for any textures used as materials
-                    if ((part.Shape.TextureEntry == null) || (part.Shape.RenderMaterials == null))
+                    if ((part.Shape.Textures == null) || (part.Shape.RenderMaterials == null))
                         continue;
 
-                    var te = new Primitive.TextureEntry(part.Shape.TextureEntry, 0, part.Shape.TextureEntry.Length);
-                    if (te == null)
-                        continue;
-
-                    var matIds = getMaterialIDsFromTextureEntry(te);
+                    var matIds = part.Shape.GetMaterialIDs();
 
                     foreach (var key in matIds)
                     {
@@ -228,35 +224,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
             }
         }
 
-        /// <summary>
-        /// Return a list of deduplicated materials ids from the texture entry we receive.
-        /// We remove duplicates because a materialid may be used across faces and we only
-        /// need to represent it here once.
-        /// </summary>
-        /// <param name="te">The TextureEntry that we search for MaterialIDs</param>
-        /// <returns>The List of UUIDs found, possibly empty if no materials are in use.</returns>
-        private List<UUID> getMaterialIDsFromTextureEntry(Primitive.TextureEntry te)
-        {
-            List<UUID> matIds = new List<UUID>();
-
-            if (te != null)
-            { 
-                if ((te.DefaultTexture != null) && (te.DefaultTexture.MaterialID != UUID.Zero))
-                    matIds.Add(te.DefaultTexture.MaterialID);
-
-                foreach (var face in te.FaceTextures)
-                {
-                    if ((face != null) && (face.MaterialID != UUID.Zero))
-                    {
-                        if (matIds.Contains(face.MaterialID) == false)
-                            matIds.Add(face.MaterialID);
-                    }
-                }
-            }
-
-            return matIds;
-        }
-
         private void OnObjectRemoved(SceneObjectGroup obj)
         {
             lock (m_knownMaterials)
@@ -264,14 +231,10 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 foreach (SceneObjectPart part in obj.GetParts())
                 {
                     // scan through the rendermaterials of this part for any textures used as materials
-                    if ((part.Shape.TextureEntry == null) || (part.Shape.RenderMaterials == null))
+                    if ((part.Shape.Textures == null) || (part.Shape.RenderMaterials == null))
                         continue;
 
-                    var te = new Primitive.TextureEntry(part.Shape.TextureEntry, 0, part.Shape.TextureEntry.Length);
-                    if (te == null)
-                        continue;
-
-                    var matIds = getMaterialIDsFromTextureEntry(te);
+                    var matIds = part.Shape.GetMaterialIDs();
 
                     foreach (var key in matIds)
                     {
@@ -433,27 +396,26 @@ namespace OpenSim.Region.CoreModules.Capabilities
         {
             UUID id = UUID.Zero;
 
-            // If there is a material being set see if we've seen it before.
-            // If not we'll add it to the region cache
+            // If there is a material being set, see if we've seen it before.
+            // If not we'll add it to the Shape RenderMaterials and the region cache
             if (matData != null)
             {
                 RenderMaterial material = RenderMaterial.FromOSD(matData);
                 id = sop.Shape.RenderMaterials.AddMaterial(material);
-
                 m_scene.EventManager.TriggerRenderMaterialAddedToPrim(sop, id, material);
 
                 m_log.DebugFormat("[RenderMaterials]: SOP {0}, Face {1}, Adding RenderMaterial {2}", 
                     sop.LocalId, face, material.ToString());
             }
 
+            // If the new material is replacing one lets record it so we can clean up
+            UUID oldMaterialID = UUID.Zero;
+
             /// Get a copy of the texture entry so we can make changes.
             var te = new Primitive.TextureEntry(sop.Shape.TextureEntry, 0, sop.Shape.TextureEntry.Length);
 
-            UUID oldMaterialID = UUID.Zero;
-
-            // Set the Material ID in the sop texture entry. If there's a face defined
-            // use that else use the Default entry.  ID can either be a material ID
-            // we set from the lookup above or Zero when we are clearing a material.
+            // Set the Material ID in the TextureEntry. If face is ALL_SIDES then
+            // set the default entry, otherwise fetch the face and set it there.
             if (face < 0)
             {
                 oldMaterialID = te.DefaultTexture.MaterialID;
@@ -466,34 +428,24 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 faceEntry.MaterialID = id;
             }
 
+            // Update the texture entry which will force an update to connected clients
+            sop.UpdateTexture(te);
+
             // If the material has changed and it wasn't previously Zero 
             // Deallocate the old value if its not in use and signal the change
             if ((oldMaterialID != id) && 
                 (oldMaterialID != UUID.Zero))
             {
-                var currentMaterialIDs = getMaterialIDsFromTextureEntry(te);
+                var currentMaterialIDs = sop.Shape.GetMaterialIDs();
                 if (currentMaterialIDs.Contains(oldMaterialID) == false)
                 {
                     if (sop.Shape.RenderMaterials.ContainsMaterial(oldMaterialID) == true)
-                    {
-                        m_log.DebugFormat("[RenderMaterials]: SOP {0}, Face {1}, Removing unused RenderMaterials {2} from shape.",
-                            sop.LocalId, face, oldMaterialID.ToString());
                         sop.Shape.RenderMaterials.RemoveMaterial(oldMaterialID);
-                    }
-                    else
-                    {
-                        m_log.WarnFormat("[RenderMaterials]: SOP {0}, Face {1}, ORPHANED RenderMaterials {2} should be present but isn't!",
-                            sop.LocalId, face, oldMaterialID.ToString());
-                    }
 
                     m_scene.EventManager.TriggerRenderMaterialRemovedFromPrim(sop, oldMaterialID);
                 }
             }
-
-            // Update the texture entry which will force an update to connected clients
-            sop.UpdateTextureEntry(te.GetBytes());
         }
-
 
         /// <summary>
         /// Given an array of Materials IDs return the data to the caller.
