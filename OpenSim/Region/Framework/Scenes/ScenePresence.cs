@@ -907,6 +907,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_connection = world.ConnectionManager.GetConnection(this.UUID);
             if (m_connection != null)   // can be null for bots which don't have a LLCV
                 m_connection.ScenePresence = this;
+
+            // Prime (cache) the user's group list.
+            m_scene.UserGroupsGet(this.UUID);
         }
 
         public ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo, AvatarAppearance appearance)

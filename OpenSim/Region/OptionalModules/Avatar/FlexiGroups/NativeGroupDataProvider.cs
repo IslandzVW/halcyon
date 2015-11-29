@@ -1480,6 +1480,31 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             }
         }
 
+        // Returns null on error, empty list if not in any groups.
+        public List<UUID> GetAgentGroupList(GroupRequestID requestID, UUID AgentID)
+        {
+            List<UUID> groups = new List<UUID>();
+
+            using (ISimpleDB db = GetConnection())
+            {
+                if (db == null)
+                    return null;    // signal error
+
+                string query = " SELECT osgroupmembership.GroupID FROM osgroupmembership WHERE osgroupmembership.AgentID = ?agentID";
+
+                Dictionary<string, object> parms = new Dictionary<string, object>();
+                parms.Add("?agentID", AgentID);
+
+                List<Dictionary<string, string>> results = db.QueryWithResults(query, parms);
+                foreach (Dictionary<string, string> result in results)
+                {
+                    groups.Add(new UUID(result["GroupID"]));
+                }
+            }
+
+            return groups;
+        }
+
         public bool AddGroupNotice(GroupRequestID requestID, OpenMetaverse.UUID groupID, OpenMetaverse.UUID noticeID, string fromName, string subject, string message, byte[] binaryBucket)
         {
             if (!this.TestForPower(requestID, requestID.AgentID, groupID, (ulong)GroupPowers.SendNotices))
