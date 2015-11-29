@@ -7437,7 +7437,7 @@ namespace InWorldz.Phlox.Engine
         }
 
         public LSL_List iwParseString2List(string str, LSL_List separators, LSL_List in_spacers, LSL_List args) {
-            if(str == string.Empty) return new LSL_List();
+            if(str == String.Empty) return new LSL_List();
             List<object> ret = new List<object>();
             List<object> spacers = new List<object>();
 
@@ -8772,7 +8772,7 @@ namespace InWorldz.Phlox.Engine
 
             // the rest of the permission checks are done in RezScript, so check the pin there as well
             string result = World.RezScript(srcId, m_host, destId, pin, running, start_param);
-            if (result != string.Empty)
+            if (result != String.Empty)
             {
                 // validation error updating script
                 if (result == "PIN")    // special case for public error (let's not match the silly SL "illegal" text)
@@ -9773,7 +9773,7 @@ namespace InWorldz.Phlox.Engine
             }
             catch
             {
-                return string.Empty;
+                return String.Empty;
             }
         }
 
@@ -11058,7 +11058,7 @@ namespace InWorldz.Phlox.Engine
 
             if (!UUID.TryParse(request_id, out requestIdAsUuid))
             {
-                return string.Empty;
+                return String.Empty;
             }
 
             if (m_UrlModule != null)
@@ -11131,7 +11131,7 @@ namespace InWorldz.Phlox.Engine
             foreach (object obj in separray)
             {
                 string str = (string)obj;
-                if (str != string.Empty)
+                if (str != String.Empty)
                 {
                     newSepArray.Add(obj);
                 }
@@ -11144,7 +11144,7 @@ namespace InWorldz.Phlox.Engine
             foreach (object obj in spcarray)
             {
                 string str = (string)obj;
-                if (str != string.Empty)
+                if (str != String.Empty)
                 {
                     newSpcArray.Add(obj);
                 }
@@ -13638,7 +13638,7 @@ namespace InWorldz.Phlox.Engine
                     if (!IsTeleportAuthorized(targetSP))
                         return;
 
-                    if (region == string.Empty)
+                    if (region == String.Empty)
                         region = targetSP.Scene.RegionInfo.RegionName;
                     else
                     if (region != targetSP.Scene.RegionInfo.RegionName) // diff region?
@@ -14547,7 +14547,7 @@ namespace InWorldz.Phlox.Engine
 
         public string iwInt2Char(int num)
         {
-            if (num < 0 || num > 0xffff) return string.Empty;
+            if (num < 0 || num > 0xffff) return String.Empty;
             return Convert.ToChar(num).ToString();
         }
 
@@ -14561,7 +14561,7 @@ namespace InWorldz.Phlox.Engine
 
         public string iwFormatString(string str, LSL_List values)
         {
-            if (str == string.Empty) return str;
+            if (str == String.Empty) return str;
 
             int len = values.Length;
 
@@ -14574,7 +14574,7 @@ namespace InWorldz.Phlox.Engine
             {
                 string pattern = "{" + Convert.ToString(i) + "}";
                 string val = values.GetLSLStringItem(i);
-                if (val == string.Empty) val = null;
+                if (val == String.Empty) val = null;
                 else if (val.Length > 1024) val = val.Substring(0, 1023);
                 if (str.Contains(pattern))
                 {
@@ -15326,7 +15326,7 @@ namespace InWorldz.Phlox.Engine
             switch (codec)
             {
                 case "ascii":
-                    if (str == string.Empty) return str;
+                    if (str == String.Empty) return str;
                     if(operation == OP_ENCODE) {
                         return CodecUtil.StringToAscii(str);
                     } else if(operation == OP_DECODE) {
@@ -15346,7 +15346,7 @@ namespace InWorldz.Phlox.Engine
                     }
                     break;
                 case "gzip":
-                    if (str == string.Empty) return str;
+                    if (str == String.Empty) return str;
                     string outputCodec = "base4096";
                     if (extraParams.Length >= 2 && extraParams.Length % 2 == 0)
                     {
@@ -15369,7 +15369,7 @@ namespace InWorldz.Phlox.Engine
                     else if (operation == OP_DECODE) return CodecUtil.gzipDecompress(str, outputCodec);
                     break;
                 case "ascii-zip":
-                    if (str == string.Empty) return str;
+                    if (str == String.Empty) return str;
                     if (operation == OP_ENCODE) return CodecUtil.AsciiCompress(str);
                     else if (operation == OP_DECODE) return CodecUtil.AsciiDecompress(str);
                     break;
@@ -15408,7 +15408,7 @@ namespace InWorldz.Phlox.Engine
                     }
                     return CodecUtil.Hash(str, nonce, codec, outCodec);
                 case "aes-key":
-                    if (str == string.Empty)
+                    if (str == String.Empty)
                     {
                         LSLError(string.Format("Error: using a blank password to generate an AES encryption key is not allowed."));
                         return String.Empty;
@@ -15461,7 +15461,7 @@ namespace InWorldz.Phlox.Engine
                         return aesKeyNew;
                     }
                 case "aes":
-                    if (str == string.Empty) return str;
+                    if (str == String.Empty) return str;
                     string aesCodec = "base4096";
                     string aesKeyCodec = "base16";
                     string aesKey = String.Empty;
@@ -15552,7 +15552,7 @@ namespace InWorldz.Phlox.Engine
                     LSLError("Error: No codec specified for iwStringCodec!");
                     break;
                 default:
-                    if (str == string.Empty) return str;
+                    if (str == String.Empty) return str;
                     string ret = null;
                     if (operation == OP_ENCODE)
                     {
@@ -15796,7 +15796,7 @@ namespace InWorldz.Phlox.Engine
             UUID userID = UUID.Zero;
             if ((!UUID.TryParse(user, out userID)) || (userID == UUID.Zero))
                 return (int)Constants.GenericReturnCodes.PARAMETER;
-            if (roleName == string.Empty)
+            if (roleName == String.Empty)
                 roleName = "Everyone";
 
             if (!ScriptOwnerIsCreator())
@@ -15887,12 +15887,12 @@ namespace InWorldz.Phlox.Engine
         {
             UUID botUUID = UUID.Zero;
             if (!UUID.TryParse(botID, out botUUID) || (botUUID == UUID.Zero))
-                return string.Empty;
+                return String.Empty;
 
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
                 return manager.GetBotOwner(botUUID).ToString();
-            return string.Empty;
+            return String.Empty;
         }
 
         public int botIsBot(string userID)
@@ -15911,12 +15911,12 @@ namespace InWorldz.Phlox.Engine
         {
             UUID botUUID = UUID.Zero;
             if (!UUID.TryParse(botID, out botUUID) || (botUUID == UUID.Zero))
-                return string.Empty;
+                return String.Empty;
 
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
                 return manager.GetBotName(botUUID);
-            return string.Empty;
+            return String.Empty;
         }
 
         public void botChangeOwner(string botID, string newOwnerID)
