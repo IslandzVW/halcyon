@@ -471,7 +471,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     }
                     else
                     {
-                        m_log.Warn("[RenderMaterials]: request for UNKNOWN material ID: " + id.ToString());
+                        m_log.Debug("[RenderMaterials]: request for UNKNOWN material ID: " + id.ToString());
                     }
                 }
             }

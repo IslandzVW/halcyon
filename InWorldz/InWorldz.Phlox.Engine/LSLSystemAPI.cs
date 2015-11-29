@@ -9750,7 +9750,15 @@ namespace InWorldz.Phlox.Engine
                             return;
 
                         face = rules.GetLSLIntegerItem(idx++);
+
                         string specular_tex = rules.Data[idx++].ToString();
+                        UUID SpecularTextureID = InventoryKey(specular_tex, (int)AssetType.Texture);
+                        if (SpecularTextureID == UUID.Zero)
+                            UUID.TryParse(specular_tex, out SpecularTextureID);
+                        if (SpecularTextureID == UUID.Zero)
+                            return;
+                        specular_tex = SpecularTextureID.ToString();
+
                         LSL_Vector specular_repeats = rules.GetVector3Item(idx++);
                         LSL_Vector specular_offsets = rules.GetVector3Item(idx++);
                         float specular_rotation = rules.GetLSLFloatItem(idx++);
@@ -9781,9 +9789,16 @@ namespace InWorldz.Phlox.Engine
                         if (remain < 5)
                             return;
 
-                        // [ string texture, vector repeats, vector offsets, float rotation_in_radians ]
                         face = rules.GetLSLIntegerItem(idx++);
+
                         string normal_tex = rules.Data[idx++].ToString();
+                        UUID NormaLTextureID = InventoryKey(normal_tex, (int)AssetType.Texture);
+                        if (NormaLTextureID == UUID.Zero)
+                            UUID.TryParse(normal_tex, out NormaLTextureID);
+                        if (NormaLTextureID == UUID.Zero)
+                            return;
+                        normal_tex = NormaLTextureID.ToString();
+
                         LSL_Vector normal_repeats = rules.GetVector3Item(idx++);
                         LSL_Vector normal_offsets = rules.GetVector3Item(idx++);
                         float normal_rotation = rules.GetLSLFloatItem(idx++);
