@@ -1206,7 +1206,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (item.InvType == (int)InventoryType.LSL)
                 {
                     string n = engine.GetXMLState(item.ItemID, stopScriptReason);
-                    if (n != String.Empty)
+                    if (!String.IsNullOrEmpty(n))
                     {
                         ret[item.ItemID] = n;
                     }

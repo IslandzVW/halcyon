@@ -729,7 +729,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
             if ((args.ContainsKey("state")) && m_aScene.m_allowScriptCrossings)
             {
                 stateXmlStr = args["state"].AsString();
-                if (stateXmlStr != String.Empty)
+                if (!String.IsNullOrEmpty(stateXmlStr))
                 {
                     try
                     {

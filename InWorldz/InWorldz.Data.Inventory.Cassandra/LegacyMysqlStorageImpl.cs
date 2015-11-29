@@ -111,7 +111,7 @@ namespace InWorldz.Data.Inventory.Cassandra
 
             foreach (InventoryFolderBase folder in folders)
             {
-                if (inList != String.Empty) inList += ",";
+                if (!String.IsNullOrEmpty(inList)) inList += ",";
                 inList += "'" + folder.ID.ToString() + "'";
             }
 

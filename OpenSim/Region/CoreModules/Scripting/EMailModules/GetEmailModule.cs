@@ -304,12 +304,12 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 Dictionary<string, object> parms = new Dictionary<string, object>();
                 string query = "SELECT * FROM emailmessages WHERE uuid = ?uuid";
                 parms.Add("?uuid", uuid);
-                if (sender != String.Empty)
+                if (!String.IsNullOrEmpty(sender))
                 {
                     query += " AND from = ?from";
                     parms.Add("?from", sender);
                 }
-                if (subject != String.Empty)
+                if (!String.IsNullOrEmpty(subject))
                 {
                     query += " AND subject = ?subject";
                     parms.Add("?subject", subject);

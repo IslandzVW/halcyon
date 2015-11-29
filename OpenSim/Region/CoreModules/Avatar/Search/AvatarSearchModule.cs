@@ -836,7 +836,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                 sqlAddTerms += " AND category=?category";
             }
 
-            if(userText != String.Empty)
+            if(!String.IsNullOrEmpty(userText))
             {
                 sqlAddTerms += " AND (description LIKE ?userText OR name LIKE ?userText)";
             }

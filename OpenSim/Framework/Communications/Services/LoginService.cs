@@ -89,7 +89,7 @@ namespace OpenSim.Framework.Communications.Services
                     while ((line = file.ReadLine()) != null)
                     {
                         line = line.Trim();
-                        if ((line != String.Empty) && !line.StartsWith(";") && !line.StartsWith("//"))
+                        if (!String.IsNullOrEmpty(line) && !line.StartsWith(";") && !line.StartsWith("//"))
                         {
                             theList.Add(line);
                             m_log.InfoFormat("[LOGINSERVICE] Added {0} {1}", desc, line);

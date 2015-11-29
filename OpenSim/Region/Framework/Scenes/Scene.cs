@@ -591,7 +591,7 @@ namespace OpenSim.Region.Framework.Scenes
                     while ((line = file.ReadLine()) != null)
                     {
                         line = line.Trim();
-                        if ((line != String.Empty) && !line.StartsWith(";") && !line.StartsWith("//"))
+                        if (!String.IsNullOrEmpty(line) && !line.StartsWith(";") && !line.StartsWith("//"))
                         {
                             theList.Add(line);
                         }

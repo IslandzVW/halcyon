@@ -60,7 +60,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                             AnimsUUID.Add(name, id);
                             AnimsNames.Add(id, name);
-                            if (animState != String.Empty)
+                            if (!String.IsNullOrEmpty(animState))
                                 AnimStateNames.Add(id, animState);
                         }
                     }

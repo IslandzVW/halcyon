@@ -1568,7 +1568,7 @@ namespace OpenSim.Framework
         public static string XmlRpcRequestPrefix(string methodName)
         {
             string prefix = "/xmlrpc";
-            if ((methodName != null) && (methodName != String.Empty))
+            if (!String.IsNullOrEmpty(methodName))
                 prefix += ("/" + methodName);
             return (prefix);
         }

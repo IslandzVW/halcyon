@@ -2284,7 +2284,7 @@ namespace InWorldz.Phlox.Engine
 
             // We need to provide the name if present in the prim.
             string result = InventoryName(assetID);
-            if (result != String.Empty)
+            if (!String.IsNullOrEmpty(result))
                 return result;
 
             // Not present in the prim, if full-perm object, return the UUID.
@@ -7613,7 +7613,7 @@ namespace InWorldz.Phlox.Engine
 
             str = iwParseString2ListSub(str, trimString, doCapitalize);
 
-            if (str != String.Empty || keepNulls == true)
+            if (!String.IsNullOrEmpty(str) || keepNulls == true)
             {
                 if (autoCast > 1) ret.Add(AutoCastString((string)str));
                 else ret.Add((string)(str));
@@ -7699,7 +7699,7 @@ namespace InWorldz.Phlox.Engine
                     str = str.Substring(cindex + cdeli.Length);
                 }
             } while (dfound);
-            if (str != String.Empty)
+            if (!String.IsNullOrEmpty(str))
             {
                 ret.Add((string)(str));
             }
@@ -14042,7 +14042,7 @@ namespace InWorldz.Phlox.Engine
                 OSDArray ar = node as OSDArray;
                 foreach (OSD o in ar)
                 {
-                    if (resp != String.Empty) resp += ",";
+                    if (!String.IsNullOrEmpty(resp)) resp += ",";
                     resp += JsonNode2ListElement(o, true);
                 }
 
@@ -14054,7 +14054,7 @@ namespace InWorldz.Phlox.Engine
                 OSDMap ar = node as OSDMap;
                 foreach (KeyValuePair<string, OSD> o in ar)
                 {
-                    if (resp != String.Empty) resp += ",";
+                    if (!String.IsNullOrEmpty(resp)) resp += ",";
                     resp += "\""+o.Key.ToString() + "\":" + JsonNode2ListElement(o.Value, true).ToString();
                 }
                 return "{" + resp + "}";
@@ -15480,7 +15480,7 @@ namespace InWorldz.Phlox.Engine
                                     aesKey = val;
                                     break;
                                 case "vector":
-                                    if (val != String.Empty) aesVector = val.Replace("-",null);
+                                    if (!String.IsNullOrEmpty(val)) aesVector = val.Replace("-",null);
                                     break;
                                 case "key codec":
                                     aesKeyCodec = val;

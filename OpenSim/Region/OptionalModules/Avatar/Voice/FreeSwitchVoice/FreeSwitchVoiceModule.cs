@@ -754,7 +754,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
 
             foreach (string s in nvps) {
     
-                if (s.Trim() != String.Empty)
+                if (!String.IsNullOrWhiteSpace(s))
                 {
                     string [] nvp = s.Split(new Char [] {'='});
                     bodyParams.Add(HttpUtility.UrlDecode(nvp[0]), HttpUtility.UrlDecode(nvp[1]));

@@ -81,12 +81,11 @@ namespace OpenSim.ScriptEngine.Shared
             keyval[1] = keyval[1].Trim();
 
             // Add it
-            if (keyval[0] != String.Empty)
-                if (!ret.ContainsKey(keyval[0]))
-                {
-                    //m_log.DebugFormat("[DotNetEngine] Script metadata: Key: \"{0}\", Value: \"{1}\".", keyval[0], keyval[1]);
-                    ret.Add(keyval[0], keyval[1]);
-                }
+            if (!String.IsNullOrEmpty(keyval[0]) && !ret.ContainsKey(keyval[0]))
+            {
+                //m_log.DebugFormat("[DotNetEngine] Script metadata: Key: \"{0}\", Value: \"{1}\".", keyval[0], keyval[1]);
+                ret.Add(keyval[0], keyval[1]);
+            }
 
             return true;
         }

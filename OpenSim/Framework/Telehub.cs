@@ -77,7 +77,7 @@ namespace OpenSim.Framework
         {
             if (String.IsNullOrWhiteSpace(SpawnPos))
                 return new List<Vector3>();
-            return (from Pos in SpawnPos.Split('\n') where Pos != String.Empty select Vector3.Parse(Pos)).ToList();
+            return (from Pos in SpawnPos.Split('\n') where !String.IsNullOrEmpty(Pos) select Vector3.Parse(Pos)).ToList();
         }
     }
 }

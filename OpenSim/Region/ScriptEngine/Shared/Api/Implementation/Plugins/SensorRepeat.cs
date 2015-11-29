@@ -336,7 +336,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
 
             Vector3 ZeroVector = new Vector3(0, 0, 0);
 
-            bool nameSearch = (ts.name != null && ts.name != String.Empty);
+            bool nameSearch = !String.IsNullOrEmpty(ts.name);
 
             foreach (EntityBase ent in Entities)
             {
@@ -490,7 +490,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.Api.Plugins
             double mag_fwd = Vector3.Mag(forward_dir);
 
             bool attached = (GetAttachmentPoint(SensePoint) != 0);
-            bool nameSearch = (ts.name != null && ts.name != String.Empty);
+            bool nameSearch = !String.IsNullOrEmpty(ts.name);
             Vector3 toRegionPos;
             double dis;
 
