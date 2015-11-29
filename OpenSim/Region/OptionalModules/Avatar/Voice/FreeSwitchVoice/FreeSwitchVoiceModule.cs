@@ -586,7 +586,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         {
             Hashtable response = new Hashtable();
             response["int_response_code"] = 200;
-            response["str_response_string"] = string.Empty;
+            response["str_response_string"] = String.Empty;
             response["content-type"] = "text/xml";
 
             Hashtable requestBody = parseRequestBody((string)request["body"]);
@@ -666,7 +666,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
             //string pwd = (string) requestBody["pwd"];
             string userid = (string) requestBody["userid"];
 
-            string avatarName = string.Empty;
+            string avatarName = String.Empty;
             int pos = -1;
             lock (m_UUIDName)
             {
@@ -720,7 +720,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
             m_log.DebugFormat("[FreeSwitchVoice] FreeSwitchConfigHTTPHandler called with {0}", (string)request["body"]);
             
             Hashtable response = new Hashtable();
-            response["str_response_string"] = string.Empty;
+            response["str_response_string"] = String.Empty;
             // all the params come as NVPs in the request body
             Hashtable requestBody = parseRequestBody((string) request["body"]);
 

@@ -2173,7 +2173,7 @@ namespace OpenSim.Region.Framework.Scenes
             ReplaceItemArgs replaceArgs = new ReplaceItemArgs(destTaskItem, running, start_param);
             destPart.Inventory.AddReplaceInventoryItem(destTaskItem, false, true, replaceArgs);
 
-            return string.Empty;    // success, no error
+            return String.Empty;    // success, no error
         }
 
         /// <summary>

@@ -38,7 +38,7 @@ namespace OpenSim.Framework
         public string DatabaseConnect = String.Empty;
         public string DatabaseProvider = String.Empty;
         public uint HttpPort = ConfigSettings.DefaultAssetServerHttpPort;
-        public string AssetSetsLocation = string.Empty;
+        public string AssetSetsLocation = String.Empty;
 
         public AssetConfig(string description, string filename)
         {

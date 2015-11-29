@@ -1083,8 +1083,8 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
 
         public static bool GetAuthentication(Hashtable request, out string authority, out string authKey)
         {
-            authority = string.Empty;
-            authKey = string.Empty;
+            authority = String.Empty;
+            authKey = String.Empty;
 
             Uri authUri;
             Hashtable headers = (Hashtable)request["headers"];

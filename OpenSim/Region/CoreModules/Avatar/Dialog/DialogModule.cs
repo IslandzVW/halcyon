@@ -223,7 +223,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
 
         private string CombineParams(string[] commandParams, int pos)
         {
-            string result = string.Empty;
+            string result = String.Empty;
             for (int i = pos; i < commandParams.Length; i++)
             {
                 result += commandParams[i] + " ";

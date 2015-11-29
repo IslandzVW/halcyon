@@ -1541,8 +1541,8 @@ namespace OpenSim.Framework
 
         public static string ServerURI(string uri)
         {
-            if (uri == string.Empty)
-                return string.Empty;
+            if (uri == String.Empty)
+                return String.Empty;
 
             // Get rid of eventual slashes at the end
             uri = uri.TrimEnd('/');

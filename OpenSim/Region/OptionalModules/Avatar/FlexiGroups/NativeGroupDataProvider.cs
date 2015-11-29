@@ -220,7 +220,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                     query += " osgroup.GroupID = ?groupID ";
                     parms.Add("?groupID", GroupID);
                 }
-                else if ((GroupName != null) && (GroupName != string.Empty))
+                else if ((GroupName != null) && (GroupName != String.Empty))
                 {
                     query += " osgroup.Name = ?groupName ";
                     parms.Add("?groupName", GroupName);
@@ -1611,7 +1611,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             data.noticeData.FromName = result["FromName"];
             data.noticeData.Subject = result["Subject"];
             if (data.Message == null)
-                data.Message = string.Empty;
+                data.Message = String.Empty;
 
             data.BinaryBucket = Utils.HexStringToBytes(result["BinaryBucket"], true);
 

@@ -321,7 +321,7 @@ namespace InWorldz.ApplicationPlugins.AvatarRemoteCommandModule
             {
                 Channel = channel,
                 DestinationUUID = UUID.Zero,
-                From = string.Empty,
+                From = String.Empty,
                 Message = message,
                 Position = presence.AbsolutePosition,
                 Scene = presence.Scene,

@@ -49,17 +49,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_serviceURL = string.Empty;
+        private string m_serviceURL = String.Empty;
 
-        private string m_groupReadKey  = string.Empty;
-        private string m_groupWriteKey = string.Empty;
+        private string m_groupReadKey  = String.Empty;
+        private string m_groupWriteKey = String.Empty;
 
         public XmlRpcGroupDataProvider(string serviceURL, bool disableKeepAlive, string groupReadKey, string groupWriteKey)
         {
             m_serviceURL = serviceURL.Trim();
 
             if ((serviceURL == null) ||
-                (serviceURL == string.Empty))
+                (serviceURL == String.Empty))
             {
                 throw new Exception("Please specify a valid ServiceURL for XmlRpcGroupDataProvider in Halcyon.ini, [Groups], XmlRpcServiceURL");
             }
@@ -181,7 +181,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             {
                 param["GroupID"] = GroupID.ToString();
             }
-            if ((GroupName != null) && (GroupName != string.Empty))
+            if ((GroupName != null) && (GroupName != String.Empty))
             {
                 param["Name"] = GroupName.ToString();
             }
@@ -683,7 +683,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
             if (data.Message == null)
             {
-                data.Message = string.Empty;
+                data.Message = String.Empty;
             }
 
             return data;

@@ -296,8 +296,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
             UUID activeGroupID = UUID.Zero;
-            string activeGroupTitle = string.Empty;
-            string activeGroupName = string.Empty;
+            string activeGroupTitle = String.Empty;
+            string activeGroupName = String.Empty;
             ulong activeGroupPowers  = (ulong)0;
 
             GroupMembershipData membership = m_groupData.GetAgentActiveMembership(GetClientGroupRequestID(remoteClient), dataForAgentID);
@@ -1058,7 +1058,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             {
                 return membership.GroupTitle;
             } 
-            return string.Empty;
+            return String.Empty;
         }
 
         /// <summary>

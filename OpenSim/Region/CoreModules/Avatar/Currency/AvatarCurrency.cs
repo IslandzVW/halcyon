@@ -478,7 +478,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
         // Send a pure balance notification only.
         private void SendMoneyBalance(IClientAPI client)
         {
-            SendMoneyBalanceTransaction(client, UUID.Zero, true, string.Empty, null);
+            SendMoneyBalanceTransaction(client, UUID.Zero, true, String.Empty, null);
         }
 
         public bool ObjectGiveMoney(UUID objectID, UUID sourceAvatarID, UUID destAvatarID, int amount)

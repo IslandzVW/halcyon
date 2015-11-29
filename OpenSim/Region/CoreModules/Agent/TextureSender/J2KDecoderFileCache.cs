@@ -138,7 +138,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             if ((File.Exists(filename) == false) || (enabled == false))
                 return false;
 
-            string readResult = string.Empty;
+            string readResult = String.Empty;
 
             try
             {

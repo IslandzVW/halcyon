@@ -48,7 +48,7 @@ namespace OpenSim.Services.AssetService
 
         public AssetServiceBase(IConfigSource config, string configName) : base(config)
         {
-            if (configName != string.Empty)
+            if (configName != String.Empty)
                 m_ConfigName = configName;
 
             string dllName = String.Empty;

@@ -699,11 +699,11 @@ namespace OpenSimProfile.Modules.OpenProfile
                 string query = "SELECT notes from usernotes where useruuid=?avatarID AND targetuuid=?targetID";
                 List<Dictionary<string, string>> notesResult = db.QueryWithResults(query, parms);
 
-                string notes = string.Empty;
+                string notes = String.Empty;
                 if (notesResult.Count > 0)
                     notes = notesResult[0]["notes"];
                 if (notes == LEGACY_EMPTY)  // filter out the old text that said there was no text. ;)
-                    notes = string.Empty;
+                    notes = String.Empty;
 
                 remoteClient.SendAvatarNotesReply(targetAvatarID, notes);
             }
@@ -719,7 +719,7 @@ namespace OpenSimProfile.Modules.OpenProfile
 
             // filter out the old text that said there was no text. ;)
             if (notes == LEGACY_EMPTY)
-                notes = string.Empty;
+                notes = String.Empty;
 
             using (ISimpleDB db = _connFactory.GetConnection())
             {
@@ -729,7 +729,7 @@ namespace OpenSimProfile.Modules.OpenProfile
                 parms.Add("?notes", notes);
 
                 string query;
-                if (notes == string.Empty)
+                if (notes == String.Empty)
                     query = "DELETE FROM usernotes WHERE useruuid=?avatarID AND targetuuid=?targetID";
                 else
                     query = "INSERT INTO usernotes(useruuid, targetuuid, notes) VALUES(?avatarID,?targetID,?notes) ON DUPLICATE KEY UPDATE notes=?notes";

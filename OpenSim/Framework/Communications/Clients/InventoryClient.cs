@@ -52,7 +52,7 @@ namespace OpenSim.Framework.Communications.Clients
                         = new RestSessionObjectPosterResponse<InventoryItemBase, InventoryItemBase>();
                 requester.ResponseCallback = callBack;
 
-                requester.BeginPostObject(ServerURL + "/GetItem/", item, string.Empty, string.Empty);
+                requester.BeginPostObject(ServerURL + "/GetItem/", item, String.Empty, String.Empty);
             }
             catch (Exception e)
             {

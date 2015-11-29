@@ -1283,7 +1283,7 @@ namespace OpenSim.Framework.Communications
         public string GetNewKey(string url, UUID userID, UUID authToken)
         {
             UserProfileData profile = GetUserProfile(userID);
-            string newKey = string.Empty;
+            string newKey = String.Empty;
             if (!url.EndsWith("/"))
                 url = url + "/";
 

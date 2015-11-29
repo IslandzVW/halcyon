@@ -199,8 +199,8 @@ namespace OpenSim.Framework.Console
                 string descriptiveHelp = commandInfo.descriptive_help;
 
                 // If we do have some descriptive help then insert a spacing line before for readability.
-                if (descriptiveHelp != string.Empty)
-                    help.Add(string.Empty);
+                if (descriptiveHelp != String.Empty)
+                    help.Add(String.Empty);
                 
                 help.Add(commandInfo.descriptive_help);
             }
@@ -488,12 +488,12 @@ namespace OpenSim.Framework.Console
         public XmlElement GetXml(XmlDocument doc)
         {
             CommandInfo help = (CommandInfo)((Dictionary<string, object>)tree["help"])[String.Empty];
-            ((Dictionary<string, object>)tree["help"]).Remove(string.Empty);
+            ((Dictionary<string, object>)tree["help"]).Remove(String.Empty);
             if (((Dictionary<string, object>)tree["help"]).Count == 0)
                 tree.Remove("help");
 
             CommandInfo quit = (CommandInfo)((Dictionary<string, object>)tree["quit"])[String.Empty];
-            ((Dictionary<string, object>)tree["quit"]).Remove(string.Empty);
+            ((Dictionary<string, object>)tree["quit"]).Remove(String.Empty);
             if (((Dictionary<string, object>)tree["quit"]).Count == 0)
                 tree.Remove("quit");
 
@@ -561,12 +561,12 @@ namespace OpenSim.Framework.Console
         public void FromXml(XmlElement root, CommandDelegate fn)
         {
             CommandInfo help = (CommandInfo)((Dictionary<string, object>)tree["help"])[String.Empty];
-            ((Dictionary<string, object>)tree["help"]).Remove(string.Empty);
+            ((Dictionary<string, object>)tree["help"]).Remove(String.Empty);
             if (((Dictionary<string, object>)tree["help"]).Count == 0)
                 tree.Remove("help");
 
             CommandInfo quit = (CommandInfo)((Dictionary<string, object>)tree["quit"])[String.Empty];
-            ((Dictionary<string, object>)tree["quit"]).Remove(string.Empty);
+            ((Dictionary<string, object>)tree["quit"]).Remove(String.Empty);
             if (((Dictionary<string, object>)tree["quit"]).Count == 0)
                 tree.Remove("quit");
 

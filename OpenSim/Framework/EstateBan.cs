@@ -63,7 +63,7 @@ namespace OpenSim.Framework
             }
         }
 
-        private string m_bannedHostAddress = string.Empty;
+        private string m_bannedHostAddress = String.Empty;
         /// <summary>
         /// IP address or domain name of the banned client.
         /// </summary>
@@ -79,7 +79,7 @@ namespace OpenSim.Framework
             }
         }
 
-        private string m_bannedHostIPMask = string.Empty;
+        private string m_bannedHostIPMask = String.Empty;
         /// <summary>
         /// IP address mask for banning group of client hosts.
         /// </summary>
@@ -95,7 +95,7 @@ namespace OpenSim.Framework
             }
         }
 
-        private string m_bannedHostNameMask = string.Empty;
+        private string m_bannedHostNameMask = String.Empty;
         /// <summary>
         /// Domain name mask for banning group of client hosts.
         /// </summary>

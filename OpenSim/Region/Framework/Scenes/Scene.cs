@@ -2305,7 +2305,7 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                     return REZ_NOT_PERMITTED;
             }
-            string reason = string.Empty;
+            string reason = String.Empty;
             ILandObject parcel = LandChannel.GetLandObject(pos.X, pos.Y);
             if (parcel == null)
                 return REZ_NO_LAND_PARCEL;

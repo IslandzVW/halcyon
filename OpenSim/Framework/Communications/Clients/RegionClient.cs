@@ -482,7 +482,7 @@ namespace OpenSim.Framework.Communications.Clients
             request.Headers["authorization"] = GenerateAuthorization();
 
             HttpWebResponse webResponse = null;
-            string reply = string.Empty;
+            string reply = String.Empty;
             try
             {
                 webResponse = (HttpWebResponse)request.GetResponse();

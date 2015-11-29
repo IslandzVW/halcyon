@@ -58,7 +58,7 @@ namespace OpenSim.Framework
                  
             }
         } 
-        private string m_name = string.Empty;
+        private string m_name = String.Empty;
         
         /// <summary>
         /// A UUID containing the ID for the inventory node itself

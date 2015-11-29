@@ -341,7 +341,7 @@ namespace OpenSim.Data.MySQL
 
         public EstateSettings LoadEstateSettings(UUID regionID)
         {
-            return LoadEstateSettings(regionID, string.Empty, UUID.Zero, false);
+            return LoadEstateSettings(regionID, String.Empty, UUID.Zero, false);
         }
 
         private void StoreEstateSettingsOnly(EstateSettings es)

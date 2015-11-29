@@ -49,12 +49,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_serviceURL = string.Empty;
+        private string m_serviceURL = String.Empty;
 
         private bool m_disableKeepAlive = false;
 
-        private string m_groupReadKey  = string.Empty;
-        private string m_groupWriteKey = string.Empty;
+        private string m_groupReadKey  = String.Empty;
+        private string m_groupWriteKey = String.Empty;
 
         public XmlRpcGroupDataProvider(string serviceURL, bool disableKeepAlive, string groupReadKey, string groupWriteKey)
         {
@@ -62,7 +62,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             m_disableKeepAlive = disableKeepAlive;
 
             if ((serviceURL == null) ||
-                (serviceURL == string.Empty))
+                (serviceURL == String.Empty))
             {
                 throw new Exception("Please specify a valid ServiceURL for XmlRpcGroupDataProvider in Halcyon.ini, [Groups], XmlRpcServiceURL");
             }
@@ -184,7 +184,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 param["GroupID"] = GroupID.ToString();
             }
-            if ((GroupName != null) && (GroupName != string.Empty))
+            if ((GroupName != null) && (GroupName != String.Empty))
             {
                 param["Name"] = GroupName.ToString();
             }
@@ -674,7 +674,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             if (data.Message == null)
             {
-                data.Message = string.Empty;
+                data.Message = String.Empty;
             }
 
             return data;
@@ -797,7 +797,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
     {
         public GroupNoticeData noticeData = new GroupNoticeData();
         public UUID GroupID = UUID.Zero;
-        public string Message = string.Empty;
+        public string Message = String.Empty;
         public byte[] BinaryBucket = new byte[0];
     }
 }

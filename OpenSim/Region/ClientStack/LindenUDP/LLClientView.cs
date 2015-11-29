@@ -12297,7 +12297,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 default:
                     break;
             }
-            return string.Empty;
+            return String.Empty;
         }
 
         public void SendDirPlacesReply(UUID queryID, DirPlacesReplyData[] data)

@@ -92,7 +92,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 //                {
 //                    xtw.WriteStartElement("asset");
 //
-//                    string extension = string.Empty;
+//                    string extension = String.Empty;
 //
 //                    if (ArchiveConstants.ASSET_TYPE_TO_EXTENSION.ContainsKey(asset.Type))
 //                    {
@@ -125,7 +125,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             // It appears that gtar, at least, doesn't need the intermediate directory entries in the tar
             //archive.AddDir("assets");
 
-            string extension = string.Empty;
+            string extension = String.Empty;
 
             if (ArchiveConstants.ASSET_TYPE_TO_EXTENSION.ContainsKey(asset.Type))
             {

@@ -149,7 +149,7 @@ namespace OpenSim.Region.Framework.Scenes
             unknown1 = 0;
             Priority = 1;
             Length = 0;
-            ExpressionName = string.Empty;
+            ExpressionName = String.Empty;
             InPoint = 0;
             OutPoint = 0;
             Loop = false;
@@ -263,7 +263,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // advance the 1 null character
                 i++;
-                return string.Empty;
+                return String.Empty;
             }
             else
             {

@@ -1193,7 +1193,7 @@ namespace OpenSim
 
             if (args.Length > 2)
             {
-                string param2 = (args.Length > 3) ? args[3] : string.Empty;
+                string param2 = (args.Length > 3) ? args[3] : String.Empty;
                 SceneManager.BlacklistOp operation = SceneManager.BlacklistOp.Owner;
                 m_sceneManager.BlacklistOperation(operation, args[2], param2);
             }
@@ -1213,7 +1213,7 @@ namespace OpenSim
 
             if (args.Length > 2)
             {
-                string param2 = (args.Length > 3) ? args[3] : string.Empty;
+                string param2 = (args.Length > 3) ? args[3] : String.Empty;
                 SceneManager.BlacklistOp operation = SceneManager.BlacklistOp.Creator;
                 SceneManager.BlacklistOperation(operation, args[2], param2);
             }
@@ -1234,7 +1234,7 @@ namespace OpenSim
             if (args.Length > 2)
             {
                 SceneManager.BlacklistOp operation = SceneManager.BlacklistOp.Name;
-                m_sceneManager.BlacklistOperation(operation, args[2], string.Empty);
+                m_sceneManager.BlacklistOperation(operation, args[2], String.Empty);
             }
             else
             {
@@ -1254,7 +1254,7 @@ namespace OpenSim
 
             if (args.Length > 1)
             {
-                string param2 = (args.Length > 2) ? args[2] : string.Empty;
+                string param2 = (args.Length > 2) ? args[2] : String.Empty;
                 SceneManager.BlacklistOp operation = SceneManager.BlacklistOp.User;
                 m_sceneManager.BlacklistOperation(operation, args[1], param2);
             }
@@ -1275,7 +1275,7 @@ namespace OpenSim
             if (args.Length > 1)
             {
                 SceneManager.BlacklistOp operation = SceneManager.BlacklistOp.Remove;
-                m_sceneManager.BlacklistOperation(operation, args[1], string.Empty);
+                m_sceneManager.BlacklistOperation(operation, args[1], String.Empty);
             }
             else
             {
@@ -1288,7 +1288,7 @@ namespace OpenSim
             base.HandleBlacklistClear(module, cmd);
 
             SceneManager.BlacklistOp operation = SceneManager.BlacklistOp.Clear;
-            m_sceneManager.BlacklistOperation(operation, string.Empty, string.Empty);
+            m_sceneManager.BlacklistOperation(operation, String.Empty, String.Empty);
         }
         // blacklist show
         public override void HandleBlacklistShow(string module, string[] cmd)
@@ -1296,7 +1296,7 @@ namespace OpenSim
             base.HandleBlacklistShow(module, cmd);
 
             SceneManager.BlacklistOp operation = SceneManager.BlacklistOp.Show;
-            m_sceneManager.BlacklistOperation(operation, string.Empty, string.Empty);
+            m_sceneManager.BlacklistOperation(operation, String.Empty, String.Empty);
         }
 
         private string GetQueuesReport()
