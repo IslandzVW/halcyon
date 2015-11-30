@@ -269,6 +269,12 @@ namespace OpenSim.Region.Framework.Scenes
         public delegate void ObjectBeingRemovedFromScene(SceneObjectGroup obj);
         public event ObjectBeingRemovedFromScene OnObjectBeingRemovedFromScene;
 
+        public delegate void RenderMaterialAdded(SceneObjectPart part, UUID MaterialID, RenderMaterial material);
+        public event RenderMaterialAdded OnRenderMaterialAddedToPrim;
+
+        public delegate void RenderMaterialRemoved(SceneObjectPart part, UUID matID);
+        public event RenderMaterialRemoved OnRenderMaterialRemovedFromPrim;
+
         public delegate void NoticeNoLandDataFromStorage();
         public event NoticeNoLandDataFromStorage OnNoticeNoLandDataFromStorage;
 
@@ -568,6 +574,9 @@ namespace OpenSim.Region.Framework.Scenes
         private RequestParcelPrimCountUpdate handlerRequestParcelPrimCountUpdate = null;
         private ParcelPrimCountTainted handlerParcelPrimCountTainted = null;
         private ObjectBeingRemovedFromScene handlerObjectBeingRemovedFromScene = null;
+        private RenderMaterialAdded handlerOnRenderMaterialAddedToPrim = null;
+        private RenderMaterialRemoved handlerOnRenderMaterialRemovedFromPrim = null;
+
         private ScriptTimerEvent handlerScriptTimerEvent = null;
         private EstateToolsSunUpdate handlerEstateToolsSunUpdate = null;
 
@@ -740,6 +749,50 @@ namespace OpenSim.Region.Framework.Scenes
             if (handlerObjectBeingRemovedFromScene != null)
             {
                 handlerObjectBeingRemovedFromScene(obj);
+            }
+        }
+
+        public void TriggerRenderMaterialAddedToPrim(SceneObjectPart part, UUID matID, RenderMaterial material)
+        {
+            RenderMaterialAdded handler = OnRenderMaterialAddedToPrim;
+            
+            if (handler != null)
+            {
+                foreach (RenderMaterialAdded d in handler.GetInvocationList())
+                {
+                    try
+                    {
+                        d(part, matID, material);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for TriggerRenderMaterialAddedToPrim failed - continuing.  {0} {1}",
+                            e.Message, e.StackTrace);
+                    }
+                }
+            }
+        }
+
+        public void TriggerRenderMaterialRemovedFromPrim(SceneObjectPart part, UUID MaterialID)
+        {
+            RenderMaterialRemoved handler = OnRenderMaterialRemovedFromPrim;
+
+            if (handler != null)
+            {
+                foreach (RenderMaterialRemoved d in handler.GetInvocationList())
+                {
+                    try
+                    {
+                        d(part, MaterialID);
+                    }
+                    catch (Exception e)
+                    {
+                        m_log.ErrorFormat(
+                            "[EVENT MANAGER]: Delegate for TriggerRenderMaterialRemovedFromPrim failed - continuing.  {0} {1}",
+                            e.Message, e.StackTrace);
+                    }
+                }
             }
         }
 

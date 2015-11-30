@@ -274,20 +274,19 @@ namespace OpenSim.Framework.Communications
             if (name == " ")
                 return null;    // fast exit for no user specified
 
-            UserProfileData testProfile;
+            UserProfileData profile;
             lock (m_userDataLock)
             {
                 // m_userDataByName includes both regular and local UserProfileData entries.
-                if (m_userDataByName.TryGetValue(name, out testProfile))
-                {
-                    // We know the UUID, just use the function above.
-                    uuid = testProfile.ID;
-                    return GetUserProfile(uuid, forceRefresh);  // in case it has expired
-                }
+                if (m_userDataByName.TryGetValue(name, out profile))
+                    uuid = profile.ID;
             }
+            // Now if know the UUID, outside the lock, just use the other function.
+            if (uuid != UUID.Zero)
+                return GetUserProfile(uuid, forceRefresh);  // in case it has expired
 
-            // Not cached, fetch from storage/XMLRPC.
-            UserProfileData profile = m_storage.GetUserProfileData(firstName, lastName);
+            // Not cached, UUID unknown, fetch from storage/XMLRPC by name.
+            profile = m_storage.GetUserProfileData(firstName, lastName);
             lock (m_userDataLock)
             {
                 // Now that it's locked again, ensure the lists have the correct data.

@@ -57,6 +57,8 @@ namespace OpenSim.Framework
         public static readonly Color4 DEFAULT_SPECULAR_LIGHT_COLOR = Color4.White;
         public const float  MATERIALS_MULTIPLIER = 10000.0f;
 
+        public static readonly RenderMaterial DefaultMaterial = new RenderMaterial(UUID.Zero, UUID.Zero);
+
         #region Properties
 
         public UUID NormalID;

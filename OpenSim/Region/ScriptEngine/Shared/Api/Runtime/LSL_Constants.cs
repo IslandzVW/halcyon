@@ -342,6 +342,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int PRIM_POS_LOCAL = 33;
         public const int PRIM_LINK_TARGET = 34;
         public const int PRIM_SLICE = 35;
+        public const int PRIM_SPECULAR = 36;
+        public const int PRIM_NORMAL = 37;
+        public const int PRIM_ALPHA_MODE = 38;
+
         // large out of normal range value unlikely to conflict with future LL values
         public const int IW_PRIM_ALPHA = 11001;
 
@@ -404,6 +408,11 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int PRIM_PHYSICS_SHAPE_PRIM = 0;
         public const int PRIM_PHYSICS_SHAPE_NONE = 1;
         public const int PRIM_PHYSICS_SHAPE_CONVEX = 2;
+
+        public const int PRIM_ALPHA_MODE_NONE = 0;
+        public const int PRIM_ALPHA_MODE_BLEND = 1;
+        public const int PRIM_ALPHA_MODE_MASK = 2;
+        public const int PRIM_ALPHA_MODE_EMISSIVE = 3;
 
         public const int MASK_BASE = 0;
         public const int MASK_OWNER = 1;
