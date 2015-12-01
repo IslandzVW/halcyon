@@ -61,7 +61,7 @@ namespace OpenSim
             string iniFileName = startupConfig.GetString("inifile", "Halcyon.ini");
             ApplicationBase.iniFilePath = Path.Combine(Util.configDir(), iniFileName);
 
-            string masterFileName = startupConfig.GetString("inimaster", "");
+            string masterFileName = startupConfig.GetString("inimaster", String.Empty);
             string masterfilePath = Path.Combine(Util.configDir(), masterFileName);
 
             string iniDirName = startupConfig.GetString("inidirectory", "config");
@@ -238,9 +238,9 @@ namespace OpenSim
                 config.Set("accounts_authenticate", true);
                 config.Set("welcome_message", "Welcome to Halcyon");
                 config.Set("inventory_plugin", "OpenSim.Data.SQLite.dll");
-                config.Set("inventory_source", "");
+                config.Set("inventory_source", String.Empty);
                 config.Set("userDatabase_plugin", "OpenSim.Data.SQLite.dll");
-                config.Set("user_source", "");
+                config.Set("user_source", String.Empty);
                 config.Set("asset_plugin", "OpenSim.Data.SQLite.dll");
                 config.Set("asset_source", "URI=file:Asset.db,version=3");
                 config.Set("LibrariesXMLFile", string.Format(".{0}inventory{0}Libraries.xml", Path.DirectorySeparatorChar));

@@ -35,6 +35,8 @@ namespace OpenSim.Framework
     public class AssetBase
     {
         private byte[] m_data;
+
+        [NonSerialized]
         private AssetMetadata m_metadata;
 
         public AssetBase()

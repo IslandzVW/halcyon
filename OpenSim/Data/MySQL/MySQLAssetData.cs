@@ -65,7 +65,7 @@ namespace OpenSim.Data.MySQL
 
             // TODO: This will let you pass in the connect string in
             // the config, though someone will need to write that.
-            if (connect == String.Empty)
+            if (String.IsNullOrEmpty(connect))
             {
                 // This is old seperate config file
                 m_log.Warn("no connect string, using old mysql_connection.ini instead");

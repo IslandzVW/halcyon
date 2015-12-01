@@ -95,7 +95,7 @@ namespace OpenSim.Framework
         private Vector3 _userLookAt = new Vector3();
         private int _otherCleanTime = 0;
         private string _mediaType = "none/none";
-        private string _mediaDescription = "";
+        private string _mediaDescription = String.Empty;
         private int _mediaHeight = 0;
         private int _mediaWidth = 0;
         private bool _mediaLoop = false;

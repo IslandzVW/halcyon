@@ -110,7 +110,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
         void EventManager_OnChatToClient(string message, UUID fromID, UUID toID, UUID regionID, 
             uint timestamp, ChatToClientType type)
         {
-            if (message == "" || toID == fromID) return;
+            if (String.IsNullOrEmpty(message) || toID == fromID) return;
 
             //Create the log, then pass it to the backend
             ChatMessageLog log = new ChatMessageLog()

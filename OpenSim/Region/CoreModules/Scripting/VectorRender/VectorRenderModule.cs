@@ -166,8 +166,8 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
             foreach (string pair in nvps)
             {
                 string[] nvp = pair.Split(nvpDelimiter);
-                string name = "";
-                string value = "";
+                string name = String.Empty;
+                string value = String.Empty;
                 
                 if (nvp[0] != null)
                 {    
@@ -567,7 +567,7 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
                 x = Convert.ToSingle(xVal, CultureInfo.InvariantCulture);
                 y = Convert.ToSingle(yVal, CultureInfo.InvariantCulture);
 
-                line = "";
+                line = String.Empty;
                 for (int i = 2; i < parts.Length; i++)
                 {
                     line = line + parts[i].Trim();

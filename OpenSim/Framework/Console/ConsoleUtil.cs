@@ -224,13 +224,13 @@ namespace OpenSim.Framework.Console
             }
     
             for (int i = components.Count; i < 3; i++)
-                components.Add("");
+                components.Add(String.Empty);
     
             List<string> semiDigestedComponents
                 = components.ConvertAll<string>(
                     c =>
                     {
-                        if (c == "")
+                        if (String.IsNullOrEmpty(c))
                             return blankComponentFunc.Invoke(c);
                         else if (c == MaxRawConsoleVectorValue)
                             return float.MaxValue.ToString();

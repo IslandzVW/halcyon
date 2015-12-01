@@ -232,7 +232,7 @@ namespace OpenSim.Client.Linden
             else
             {
                 bool success = false;
-                string denyMess = "";
+                string denyMess = String.Empty;
         
                 Scene scene;
                 if (TryGetRegion(regionHandle, out scene))

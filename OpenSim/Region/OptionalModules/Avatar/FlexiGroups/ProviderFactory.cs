@@ -47,8 +47,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                     string ServiceURL = groupsConfig.GetString("XmlRpcServiceURL");
                     bool DisableKeepAlive = groupsConfig.GetBoolean("XmlRpcDisableKeepAlive", false);
 
-                    string ServiceReadKey = groupsConfig.GetString("XmlRpcServiceReadKey", string.Empty);
-                    string ServiceWriteKey = groupsConfig.GetString("XmlRpcServiceWriteKey", string.Empty);
+                    string ServiceReadKey = groupsConfig.GetString("XmlRpcServiceReadKey", String.Empty);
+                    string ServiceWriteKey = groupsConfig.GetString("XmlRpcServiceWriteKey", String.Empty);
 
                     log.InfoFormat("[GROUPS]: XmlRpc Service URL set to: {0}", ServiceURL);
 
