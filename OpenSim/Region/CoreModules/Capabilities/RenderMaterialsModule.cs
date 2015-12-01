@@ -375,9 +375,10 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 }
 
                 // Make sure we can modify it
-                if (m_scene.Permissions.CanEditObject(sop.UUID, agentID, (uint)PermissionMask.Modify) == false)
+                if (m_scene.Permissions.CanEditObject(sop.ParentGroup.UUID, agentID, (uint)PermissionMask.Modify) == false)
                 {
-                    m_log.WarnFormat("[RenderMaterials]: User {0} can't edit object {1} {2}", agentID, sop.Name, sop.UUID);
+                    m_log.WarnFormat("[RenderMaterials]: User {0} can't edit object {1} {2}", 
+                        agentID, sop.ParentGroup.Name, sop.ParentGroup.UUID);
                     continue;
                 }
 
