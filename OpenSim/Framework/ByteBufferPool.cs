@@ -59,6 +59,11 @@ namespace OpenSim.Framework
         private volatile int _currAllocatedBytes;
 
         /// <summary>
+        /// The max age in ms for an idle byte buffer before it is culled
+        /// </summary>
+        private ulong _idleBufferMaxAge;
+
+        /// <summary>
         /// Stores byte arrays of varying sizes
         /// </summary>
         private List<KeyValuePair<int, LocklessQueue<ImmutableTimestampedItem<byte[]>>>> _storage 
@@ -69,9 +74,20 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="maxAllocatedBytes">Maximum bytes to allow to be allocated total for all pools</param>
         /// <param name="bufferSizes">List of buffer sizes in bytes to split the pool by</param>
-        public ByteBufferPool(int maxAllocatedBytes, int[] bufferSizes)
+        public ByteBufferPool(int maxAllocatedBytes, int[] bufferSizes) : this(maxAllocatedBytes, bufferSizes, 0)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new buffer pool with the given levels
+        /// </summary>
+        /// <param name="maxAllocatedBytes">Maximum bytes to allow to be allocated total for all pools</param>
+        /// <param name="bufferSizes">List of buffer sizes in bytes to split the pool by</param>
+        /// <param name="idleBufferMaxAge">The maximum age of a buffer before </param>
+        public ByteBufferPool(int maxAllocatedBytes, int[] bufferSizes, ulong idleBufferMaxAge)
         {
             _maxAllocatedBytes = maxAllocatedBytes;
+            _idleBufferMaxAge = idleBufferMaxAge;
 
             foreach (int bufferSz in bufferSizes)
             {
@@ -158,6 +174,47 @@ namespace OpenSim.Framework
         }
 
         #endregion
+
+        /// <summary>
+        /// Removes any buffer that has been idle for more than the max age
+        /// specified during construction
+        /// </summary>
+        public void Maintain()
+        {
+            if (_idleBufferMaxAge == 0) return;
+
+            foreach (var kvp in _storage)
+            {
+                var queue = kvp.Value;
+
+                HashSet<byte[]> knownBuffers = new HashSet<byte[]>();
+
+                //dequeue and requeue until we get false back (no items)
+                //or we hit an item we've already seen
+                //it would be nice if we could just rely on the implicit queue 
+                //ordering to allow us to stop early, but the way this loop
+                //works with enqueue/dequeue, it actually breaks the time sorted
+                //ordering so we can't just rely on it to break out of the loop early
+                ImmutableTimestampedItem<byte[]> item;
+                while (queue.Dequeue(out item))
+                {
+                    //have we seen this item before?
+                    if (knownBuffers.Contains(item.Item))
+                    {
+                        //yes, we're done
+                        break;
+                    }
+
+                    if (item.ElapsedMilliseconds < _idleBufferMaxAge)
+                    {
+                        //track that we've seen the item
+                        knownBuffers.Add(item.Item);
+                        //put the item back
+                        queue.Enqueue(item);
+                    }
+                }
+            }
+        }
     }
 }
 #pragma warning restore 420

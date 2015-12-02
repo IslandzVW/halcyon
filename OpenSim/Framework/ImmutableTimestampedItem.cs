@@ -77,5 +77,11 @@ namespace OpenSim.Framework
             _item = item;
             _timeStamp = Util.GetLongTickCount();
         }
+
+        public ImmutableTimestampedItem(T item, ulong timeStamp)
+        {
+            _item = item;
+            _timeStamp = timeStamp;
+        }
     }
 }
