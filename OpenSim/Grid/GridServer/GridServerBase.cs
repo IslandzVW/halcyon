@@ -121,7 +121,7 @@ namespace OpenSim.Grid.GridServer
             {
                 m_log.ErrorFormat("[RADMIN] Shutdown: failed: {0}", e.Message);
                 m_log.DebugFormat("[RADMIN] Shutdown: failed: {0}", e.ToString());
-                throw e;
+                throw;
             }
 
             m_log.Info("[RADMIN]: Shutdown Administrator Request complete");

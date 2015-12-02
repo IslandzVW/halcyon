@@ -85,7 +85,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
             IConfig config = openSim.ConfigSource.Source.Configs["ChatLogModule"];
             if (config == null) return;
 
-            m_enabled = config.GetBoolean("Enabled", false) && config.GetString("Backend", "") == "Cassandra12Backend";
+            m_enabled = config.GetBoolean("Enabled", false) && config.GetString("Backend", String.Empty) == "Cassandra12Backend";
             m_debug = config.GetBoolean("Debug", m_debug);
             m_ttl = config.GetInt("TTL", m_ttl);
 

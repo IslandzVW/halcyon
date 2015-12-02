@@ -227,7 +227,7 @@ namespace OpenSim.Framework.Console
         public string CmdPrompt(string p, string def)
         {
             string ret = ReadLine(String.Format("{0} [{1}]: ", p, def), false, true);
-            if (ret == String.Empty)
+            if (String.IsNullOrEmpty(ret))
                 ret = def;
 
             return ret;
@@ -264,7 +264,7 @@ namespace OpenSim.Framework.Console
                 itisdone = true;
                 ret = CmdPrompt(p, def);
                 
-                if (ret == String.Empty)
+                if (String.IsNullOrEmpty(ret))
                 {
                     ret = def;
                 }

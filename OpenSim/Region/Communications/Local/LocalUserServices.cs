@@ -68,7 +68,7 @@ namespace OpenSim.Region.Communications.Local
             }
 
             m_log.Debug("Unknown Master User. Sandbox Mode: Creating Account");
-            AddUser(firstName, lastName, password, "", m_defaultHomeX, m_defaultHomeY);
+            AddUser(firstName, lastName, password, String.Empty, m_defaultHomeX, m_defaultHomeY);
             return GetUserProfile(firstName, lastName);
         }
 

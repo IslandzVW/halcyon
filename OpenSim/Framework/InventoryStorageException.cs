@@ -41,7 +41,7 @@ namespace OpenSim.Framework
     /// </summary>
     public class InventoryStorageException : Exception
     {
-        private string _details = string.Empty;
+        private string _details = String.Empty;
 
         public string ErrorDetails
         {
@@ -74,7 +74,7 @@ namespace OpenSim.Framework
         {
             get
             {
-                if (_details == string.Empty)
+                if (_details == String.Empty)
                 {
                     return base.Message;
                 }

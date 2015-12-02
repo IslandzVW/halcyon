@@ -90,7 +90,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
     public class GroupRequestID
     {
         public UUID AgentID = UUID.Zero;
-        public string UserServiceURL = string.Empty;
+        public string UserServiceURL = String.Empty;
         public UUID SessionID = UUID.Zero;
     }
 
@@ -98,7 +98,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
     {
         public GroupNoticeData noticeData = new GroupNoticeData();
         public UUID GroupID = UUID.Zero;
-        public string Message = string.Empty;
+        public string Message = String.Empty;
         public byte[] BinaryBucket = null;
     }
 

@@ -67,7 +67,7 @@ namespace InWorldz.Testing
 
         public string ActiveGroupName
         {
-            get { return ""; }
+            get { return String.Empty; }
         }
 
         public ulong ActiveGroupPowers
@@ -1134,7 +1134,7 @@ namespace InWorldz.Testing
 
         public string GetClientOption(string option)
         {
-            return "";
+            return String.Empty;
         }
 
         public void SendSetFollowCamProperties(OpenMetaverse.UUID objectID, Dictionary<int, float> parameters)

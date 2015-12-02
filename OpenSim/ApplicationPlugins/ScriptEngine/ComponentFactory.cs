@@ -41,8 +41,6 @@ namespace OpenSim.ApplicationPlugins.ScriptEngine
         public static Dictionary<string, Type> scriptEngines = new Dictionary<string, Type>();
 
         internal static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly static string nameIScriptEngineComponent = typeof(IScriptEngineComponent).Name; // keep interface name in managed code
-        private readonly static string nameIScriptEngine = typeof(IScriptEngine).Name; // keep interface name in managed code
 
         public static string Name
         {
@@ -81,7 +79,7 @@ namespace OpenSim.ApplicationPlugins.ScriptEngine
                                 && !componentType.IsAbstract)
                             {
                                 //if (componentType.IsSubclassOf(typeof(ComponentBase)))
-                                if (componentType.GetInterface(nameIScriptEngineComponent) != null)
+                                if (typeof(IScriptEngineComponent).IsAssignableFrom(componentType))
                                 {
                                     // We have found an type which is derived from ProdiverBase, add it to provider list
                                     m_log.InfoFormat("[{0}] Adding component: {1}", Name, componentType.Name);
@@ -91,7 +89,7 @@ namespace OpenSim.ApplicationPlugins.ScriptEngine
                                     }
                                 }
                                 //if (componentType.IsSubclassOf(typeof(ScriptEngineBase)))
-                                if (componentType.GetInterface(nameIScriptEngine) != null)
+                                if (typeof(IScriptEngine).IsAssignableFrom(componentType))
                                 {
                                     // We have found an type which is derived from RegionScriptEngineBase, add it to engine list
                                     m_log.InfoFormat("[{0}] Adding script engine: {1}", Name, componentType.Name);
@@ -129,13 +127,12 @@ namespace OpenSim.ApplicationPlugins.ScriptEngine
             }
         }
 
-        private readonly static string nameIScriptEngineRegionComponent = typeof(IScriptEngineRegionComponent).Name; // keep interface name in managed code
         public static IScriptEngineComponent GetComponentInstance(RegionInfoStructure info, string name, params Object[] args)
         {
             IScriptEngineComponent c = GetComponentInstance(name, args);
 
             // If module is IScriptEngineRegionComponent then it will have one instance per region and we will initialize it
-            if (c.GetType().GetInterface(nameIScriptEngineRegionComponent) != null)
+            if (typeof(IScriptEngineRegionComponent).IsAssignableFrom(c.GetType()))
                 ((IScriptEngineRegionComponent)c).Initialize(info);
 
             return c;

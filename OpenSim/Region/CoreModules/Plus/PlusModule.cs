@@ -170,7 +170,7 @@ namespace OpenSim.Region.CoreModules.Plus
             int x = (int)Math.Floor(posx);
             int y = (int)Math.Floor(posy);
             int z = (int)Math.Floor(posz);
-            string prefix = includePrefix ? "http://places.inworldz.com/" : "";
+            string prefix = includePrefix ? "http://places.inworldz.com/" : String.Empty;
 
             return prefix + Util.EscapeUriDataStringRfc3986(region) + "/" + x.ToString() + "/" + y.ToString() + "/" + z.ToString();
         }

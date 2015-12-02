@@ -119,7 +119,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public SimStatsReporter(Scene scene)
         {
-            statsUpdateFactor = (float)(statsUpdatesEveryMS / 1000);
+            statsUpdateFactor = statsUpdatesEveryMS / 1000.0f;
             m_scene = scene;
             ReportingRegion = scene.RegionInfo;
 
@@ -135,7 +135,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetUpdateMS(int ms)
         {
             statsUpdatesEveryMS = ms;
-            statsUpdateFactor = (float)(statsUpdatesEveryMS / 1000);
+            statsUpdateFactor = statsUpdatesEveryMS / 1000.0f;
             m_report.Interval = statsUpdatesEveryMS;
         }
 

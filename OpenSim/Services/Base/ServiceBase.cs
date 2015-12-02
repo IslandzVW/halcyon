@@ -59,8 +59,6 @@ namespace OpenSim.Services.Base
 
         public T LoadPlugin<T>(string dllName, string className, Object[] args) where T:class
         {
-            string interfaceName = typeof(T).ToString();
-
             try
             {
                 Assembly pluginAssembly = Assembly.LoadFrom(dllName);
@@ -73,14 +71,12 @@ namespace OpenSim.Services.Base
 
                     if (pluginType.IsPublic)
                     {
-                        if (className != String.Empty &&
+                        if (!String.IsNullOrEmpty(className) &&
                                 pluginType.ToString() !=
                                 pluginType.Namespace + "." + className)
                             continue;
 
-                        Type typeInterface =
-                                pluginType.GetInterface(interfaceName, true);
-                        if (typeInterface != null)
+                        if (typeof(T).IsAssignableFrom(pluginType))
                         {
                             T plug = (T)Activator.CreateInstance(pluginType,
                                     args);
@@ -101,7 +97,7 @@ namespace OpenSim.Services.Base
                 m_log.Error(
                     string.Format(
                         "[SERVICE BASE]: Failed to load plugin {0} from {1} with args {2}", 
-                        interfaceName, dllName, string.Join(", ", strArgs.ToArray())), e);
+                        typeof (T).ToString(), dllName, string.Join(", ", strArgs.ToArray())), e);
                 
                 return null;
             }

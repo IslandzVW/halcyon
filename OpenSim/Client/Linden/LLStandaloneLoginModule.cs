@@ -88,13 +88,13 @@ namespace OpenSim.Client.Linden
                 if (m_enabled)
                 {
                     bool authenticate = true;
-                    string welcomeMessage = "Welcome to InWorldz", mapServerURI = "";
+                    string welcomeMessage = "Welcome to InWorldz", mapServerURI = String.Empty;
                     IConfig standaloneConfig = source.Configs["StandAlone"];
                     if (standaloneConfig != null)
                     {
                         authenticate = standaloneConfig.GetBoolean("accounts_authenticate", true);
                         welcomeMessage = standaloneConfig.GetString("welcome_message");
-                        mapServerURI = standaloneConfig.GetString("map_server_uri", "");
+                        mapServerURI = standaloneConfig.GetString("map_server_uri", String.Empty);
                     }
 
                     //TODO: fix casting.

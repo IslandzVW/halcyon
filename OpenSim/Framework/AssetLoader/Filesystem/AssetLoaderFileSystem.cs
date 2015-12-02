@@ -93,7 +93,7 @@ namespace OpenSim.Framework.AssetLoader.Filesystem
             if (File.Exists(assetSetFilename))
             {
                 string assetSetPath = "ERROR";
-                string assetRootPath = "";
+                string assetRootPath = String.Empty;
                 try
                 {
                     XmlConfigSource source = new XmlConfigSource(assetSetFilename);

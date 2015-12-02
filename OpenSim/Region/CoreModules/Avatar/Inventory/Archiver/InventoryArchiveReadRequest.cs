@@ -237,7 +237,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                             m_log.DebugFormat(
                                 "[INVENTORY ARCHIVER]: Found no previously created fs path for {0}",
                                 originalFsPath);
-                            fsPath = string.Empty;
+                            fsPath = String.Empty;
                             foundFolder = rootDestinationFolder;
                         }
                     }

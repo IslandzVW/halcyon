@@ -74,7 +74,7 @@ namespace OpenSim.Framework
                                                 "Key to expect from grid server", "null", false);
 
             m_configMember.addConfigurationOption("database_connect", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
-                                                "Connection String for Database", "", false);
+                                                "Connection String for Database", String.Empty, false);
 
             m_configMember.addConfigurationOption("database_provider", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                 "DLL for database provider", "OpenSim.Data.MySQL.dll", false);

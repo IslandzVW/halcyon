@@ -178,7 +178,7 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_setAlwaysRun;
 
         private string m_movementAnimation = "DEFAULT";
-        private string m_previousMovement = "";        // this doubles as our thread reentrancy lock (critical region) on anim updates
+        private string m_previousMovement = String.Empty;        // this doubles as our thread reentrancy lock (critical region) on anim updates
         private long m_animPersistUntil = 0;
         private bool m_allowFalling = false;
         private bool m_useFlySlow = false;
@@ -213,7 +213,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool IsRestrictedToRegion;
 
-        public string JID = string.Empty;
+        public string JID = String.Empty;
 
         // Agent moves with a PID controller causing a force to be exerted.
         private float m_health = 100f;
@@ -1434,7 +1434,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // Release the lock before calling PostProcessMakeRootAgent, it calls functions that use lock
                     PostProcessMakeRootAgent(parent, m_flying);
 
-                    if ((m_callbackURI != null) && !m_callbackURI.Equals(""))
+                    if ((m_callbackURI != null) && !m_callbackURI.Equals(String.Empty))
                     {
                         m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
                         Scene.SendReleaseAgent(m_rootRegionHandle, UUID, m_callbackURI);

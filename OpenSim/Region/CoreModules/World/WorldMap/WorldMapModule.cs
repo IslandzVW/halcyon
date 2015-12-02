@@ -164,7 +164,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             myMapImageJPEG = new byte[0];
 
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
-            regionimage = regionimage.Replace("-", "");
+            regionimage = regionimage.Replace("-", String.Empty);
             m_log.Info("[WORLD MAP]: JPEG Map location: http://" + m_scene.RegionInfo.ExternalHostName + ":" + m_scene.RegionInfo.HttpPort.ToString() + "/index.php?method=" + regionimage);
 
             m_scene.CommsManager.HttpServer.AddHTTPHandler(regionimage, OnHTTPGetMapImage);
@@ -188,10 +188,10 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             m_scene.EventManager.OnRegisterCaps -= OnRegisterCaps;
 
             string regionimage = "regionImage" + m_scene.RegionInfo.RegionID.ToString();
-            regionimage = regionimage.Replace("-", "");
+            regionimage = regionimage.Replace("-", String.Empty);
             m_scene.CommsManager.HttpServer.RemoveLLSDHandler("/MAP/MapItems/" + m_scene.RegionInfo.RegionHandle.ToString(),
                                                               HandleRemoteMapItemRequest);
-            m_scene.CommsManager.HttpServer.RemoveHTTPHandler("", regionimage);
+            m_scene.CommsManager.HttpServer.RemoveHTTPHandler(String.Empty, regionimage);
         }
 
         public void OnRegisterCaps(UUID agentID, Caps caps)
@@ -376,7 +376,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 }
                 else
                 {
-                    RequestMapItems("",remoteClient.AgentId,flags,EstateID,godlike,itemtype,regionhandle);
+                    RequestMapItems(String.Empty,remoteClient.AgentId,flags,EstateID,godlike,itemtype,regionhandle);
                 }
             }
         }

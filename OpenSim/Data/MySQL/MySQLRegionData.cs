@@ -1415,7 +1415,7 @@ namespace OpenSim.Data.MySQL
         {
             // "INSERT INTO room(person,address) VALUES(?person, ?address)"
 
-            if (varlist == string.Empty)
+            if (varlist == String.Empty)
             {
                 varlist += ",";
                 values += ",";
@@ -1456,8 +1456,8 @@ namespace OpenSim.Data.MySQL
                     }
 
                     // start with two empty strings
-                    string varlist = string.Empty;
-                    string values = string.Empty;
+                    string varlist = String.Empty;
+                    string values = String.Empty;
 
                     // Sky
                     AddQueryParam(cmd, ref varlist, ref values, "region_id", env.regionID);

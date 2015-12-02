@@ -156,7 +156,7 @@ namespace OpenSim.Region.CoreModules.World.LightShare
                     {
                         string result = SetEnvironmentSettings(request, agentID);
                         if (result == null)
-                            return string.Empty;
+                            return String.Empty;
                         return result;
                     }));
         }

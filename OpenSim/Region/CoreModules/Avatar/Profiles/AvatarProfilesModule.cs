@@ -98,7 +98,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Profiles
             if (null != profile)
             {
                 Byte[] charterMember;
-                if (profile.CustomType == "")
+                if (String.IsNullOrEmpty(profile.CustomType))
                 {
                     charterMember = new Byte[1];
                     charterMember[0] = (Byte)((profile.UserFlags & 0xf00) >> 8);

@@ -56,7 +56,7 @@ namespace OpenSim.Framework.Console
 
         public void RunCommand(string cmd) {}
 
-        public string ReadLine(string p, bool isCommand, bool e) { return ""; }
+        public string ReadLine(string p, bool isCommand, bool e) { return String.Empty; }
 
         public object ConsoleScene { 
             get { return null; }
@@ -67,14 +67,14 @@ namespace OpenSim.Framework.Console
         public void Output(string text) {}
         public void OutputFormat(string format, params object[] components) {}
 
-        public string CmdPrompt(string p) { return ""; }
-        public string CmdPrompt(string p, string def) { return ""; }
-        public string CmdPrompt(string p, List<char> excludedCharacters) { return ""; }
-        public string CmdPrompt(string p, string def, List<char> excludedCharacters) { return ""; }
+        public string CmdPrompt(string p) { return String.Empty; }
+        public string CmdPrompt(string p, string def) { return String.Empty; }
+        public string CmdPrompt(string p, List<char> excludedCharacters) { return String.Empty; }
+        public string CmdPrompt(string p, string def, List<char> excludedCharacters) { return String.Empty; }
 
-        public string CmdPrompt(string prompt, string defaultresponse, List<string> options) { return ""; }
+        public string CmdPrompt(string prompt, string defaultresponse, List<string> options) { return String.Empty; }
 
-        public string PasswdPrompt(string p) { return ""; }
+        public string PasswdPrompt(string p) { return String.Empty; }
     }
 
     public class MockCommands : ICommands

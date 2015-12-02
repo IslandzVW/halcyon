@@ -121,7 +121,7 @@ namespace OpenSim.Framework.Serialization
 
         public static byte[] ConvertDecimalToPaddedOctalBytes(int d, int padding)
         {
-            string oString = "";
+            string oString = String.Empty;
 
             while (d > 0)
             {

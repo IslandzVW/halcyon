@@ -186,7 +186,7 @@ namespace InWorldz.Phlox.Engine
                         Vector3 pos = m_host.AbsolutePosition;
                         string thePos = string.Format("at {0}/{1}/{2}", (int)pos.X, (int)pos.Y, (int)pos.Z);
                         string theObject = " in '" + m_host.ParentGroup.Name + "'";
-                        string theLink = (m_host.LinkNum < 2) ? "" : " link #" + m_host.LinkNum.ToString();
+                        string theLink = (m_host.LinkNum < 2) ? String.Empty : " link #" + m_host.LinkNum.ToString();
                         string context = string.Format("{0}{1} {2}", theObject, theLink, thePos);
                         m_log.WarnFormat("[Phlox]: Script '{0}' calling llResetScript too frequently: {1}",
                             llGetScriptName(), context);
@@ -1143,7 +1143,7 @@ namespace InWorldz.Phlox.Engine
         {
             // try avatar username surname
             string name = World.CommsManager.UserService.Key2Name(objecUUID, false);
-            if (name != String.Empty)
+            if (!String.IsNullOrEmpty(name))
             {
                 return name;
             }
@@ -2284,7 +2284,7 @@ namespace InWorldz.Phlox.Engine
 
             // We need to provide the name if present in the prim.
             string result = InventoryName(assetID);
-            if (result != "")
+            if (!String.IsNullOrEmpty(result))
                 return result;
 
             // Not present in the prim, if full-perm object, return the UUID.
@@ -2662,7 +2662,7 @@ namespace InWorldz.Phlox.Engine
                 date = DateTime.SpecifyKind(date, DateTimeKind.Local);
             }
 
-            if (format == "")
+            if (String.IsNullOrEmpty(format))
                 format = "yyyy'-'MM'-'dd' 'HH':'mm':'ss";
             return date.ToString(format);
         }
@@ -3111,7 +3111,7 @@ namespace InWorldz.Phlox.Engine
                     // If either of these are null, then there was an unknown error.
                     if (new_group == null)
                     {
-                        string errtext = "";
+                        string errtext = String.Empty;
                         switch (reason)
                         {
                             case "permission":
@@ -4020,7 +4020,7 @@ namespace InWorldz.Phlox.Engine
                         result = presence.AddAnimation(anim, m_host.UUID);
                     else
                         result = presence.AddAnimation(animID, m_host.UUID);
-                    if (result != String.Empty)
+                    if (!String.IsNullOrEmpty(result))
                         ScriptShoutError(result);
                 }
                 else
@@ -4090,7 +4090,7 @@ namespace InWorldz.Phlox.Engine
                         result = presence.AddAnimation(anim, m_host.UUID);
                     else
                         result = presence.AddAnimation(animID, m_host.UUID);
-                    if (result != String.Empty)
+                    if (!String.IsNullOrEmpty(result))
                         ScriptShoutError(result);
                 }
                 else
@@ -4481,7 +4481,7 @@ namespace InWorldz.Phlox.Engine
 
             // Okay, now we need to ask the user for permission.
             string ownerName = resolveName(m_host.ParentGroup.RootPart.OwnerID);
-            if (ownerName == String.Empty)
+            if (String.IsNullOrEmpty(ownerName))
                 ownerName = "(hippos)";
 
             lock (m_host.TaskInventory)
@@ -5024,7 +5024,7 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkInventoryName(int linknumber, int type, int number)
         {
-            string name = "";
+            string name = String.Empty;
             SceneObjectPart[] parts = GetLinkParts(linknumber);
     
             if (parts.Length == 1)
@@ -5048,7 +5048,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     if(inv.Value.Type == type || type == -1)
                     {
-                        if (pattern == "" || iwMatchString(inv.Value.Name, pattern, matchType) == 1)
+                        if (String.IsNullOrEmpty(pattern) || iwMatchString(inv.Value.Name, pattern, matchType) == 1)
                             keys.Add(inv.Value.Name);
                     }
                 }
@@ -5213,7 +5213,7 @@ namespace InWorldz.Phlox.Engine
             int x = (int)Math.Floor(posx);
             int y = (int)Math.Floor(posy);
             int z = (int)Math.Floor(posz);
-            string prefix = includePrefix ? "http://places.inworldz.com/" : "";
+            string prefix = includePrefix ? "http://places.inworldz.com/" : String.Empty;
 
             return prefix + Util.EscapeUriDataStringRfc3986(region) + "/" + x.ToString() + "/" + y.ToString() + "/" + z.ToString();
         }
@@ -5429,7 +5429,7 @@ namespace InWorldz.Phlox.Engine
                     break;
 
                 case ScriptBaseClass.DATA_NAME: // "First Last"
-                    reply = (userProfile == null) ? "" : userProfile.FirstName + " " + userProfile.SurName;
+                    reply = (userProfile == null) ? String.Empty : userProfile.FirstName + " " + userProfile.SurName;
                     break;
 
                 case ScriptBaseClass.DATA_BORN: // "YYYY-MM-DD"
@@ -5686,7 +5686,7 @@ namespace InWorldz.Phlox.Engine
             UUID avatar = (UUID)id;
             ScenePresence presence = World.GetScenePresence(avatar);
             if (presence == null)
-                return "";
+                return String.Empty;
 
             if (m_host.RegionHandle == presence.RegionHandle)
             {
@@ -6194,14 +6194,14 @@ namespace InWorldz.Phlox.Engine
                     }
                 }
             }
-            return "";
+            return String.Empty;
         }
         public string iwGetLinkInventoryDesc(int linknumber, string name)
         {
             SceneObjectPart[] parts = GetLinkParts(linknumber);
 
             if (parts.Length != 1)
-                return "";
+                return String.Empty;
 
             return GetInventoryDesc(parts[0], name);
         }
@@ -7372,9 +7372,9 @@ namespace InWorldz.Phlox.Engine
 
         private Object AutoCastString(string str)
         {
-            if(str == "") return str;
+            if(String.IsNullOrEmpty(str)) return str;
 
-            int c = str.Length - str.Replace(".", "").Length;
+            int c = str.Length - str.Replace(".", String.Empty).Length;
 
             if (c == 1)
             {
@@ -7414,7 +7414,7 @@ namespace InWorldz.Phlox.Engine
 
         private string iwParseString2ListSub(string str, int trimString, int doCapitalize)
         {
-            if (str == "") return "";
+            if (String.IsNullOrEmpty(str)) return str;
             if (trimString != 0)
             {
                 str = llStringTrim(str, trimString);
@@ -7437,7 +7437,7 @@ namespace InWorldz.Phlox.Engine
         }
 
         public LSL_List iwParseString2List(string str, LSL_List separators, LSL_List in_spacers, LSL_List args) {
-            if(str == string.Empty) return new LSL_List();
+            if(str == String.Empty) return new LSL_List();
             List<object> ret = new List<object>();
             List<object> spacers = new List<object>();
 
@@ -7532,12 +7532,12 @@ namespace InWorldz.Phlox.Engine
             {
                 dfound = false;
                 int cindex = -1;
-                string cdeli = "";
+                string cdeli = String.Empty;
                 foreach (var delimiter in delimiters)
                 {
                     int index = str.IndexOf(delimiter.ToString());
                     bool found = index != -1;
-                    if (found && String.Empty != delimiter.ToString())
+                    if (found && !String.IsNullOrEmpty(delimiter.ToString()))
                     {
                         if ((cindex > index) || (cindex == -1))
                         {
@@ -7551,7 +7551,6 @@ namespace InWorldz.Phlox.Engine
                 {
                     if (cindex > 0)
                     {
-                        //string temp = (string)(str.Substring(0, cindex));
                         string temp = iwParseString2ListSub((string)(str.Substring(0, cindex)), trimString, doCapitalize);
                         if (temp.Length > 0 || keepNulls == true)
                         {
@@ -7563,7 +7562,7 @@ namespace InWorldz.Phlox.Engine
                     else if (cindex == 0 || keepNulls == true)
                     {
                         totalSplits++;
-                        ret.Add("");
+                        ret.Add(String.Empty);
                     }
                     if (maxSplits > 0 && totalSplits >= maxSplits)
                     {
@@ -7614,7 +7613,7 @@ namespace InWorldz.Phlox.Engine
 
             str = iwParseString2ListSub(str, trimString, doCapitalize);
 
-            if (str != "" || keepNulls == true)
+            if (!String.IsNullOrEmpty(str) || keepNulls == true)
             {
                 if (autoCast > 1) ret.Add(AutoCastString((string)str));
                 else ret.Add((string)(str));
@@ -7667,12 +7666,12 @@ namespace InWorldz.Phlox.Engine
             {
                 dfound = false;
                 int cindex = -1;
-                string cdeli = "";
+                string cdeli = String.Empty;
                 foreach (var delimiter in delimiters)
                 {
                     int index = str.IndexOf(delimiter.ToString());
                     bool found = index != -1;
-                    if (found && String.Empty != delimiter.ToString())
+                    if (found && !String.IsNullOrEmpty(delimiter.ToString()))
                     {
                         if ((cindex > index) || (cindex == -1))
                         {
@@ -7700,7 +7699,7 @@ namespace InWorldz.Phlox.Engine
                     str = str.Substring(cindex + cdeli.Length);
                 }
             } while (dfound);
-            if (str != "")
+            if (!String.IsNullOrEmpty(str))
             {
                 ret.Add((string)(str));
             }
@@ -8655,7 +8654,7 @@ namespace InWorldz.Phlox.Engine
 
                 for (int i = 0; i < buttons.Length; i++)
                 {
-                    if (buttons.Data[i].ToString() == String.Empty)
+                    if (String.IsNullOrEmpty(buttons.Data[i].ToString()))
                     {
                         LSLError("button label cannot be blank");
                         return;
@@ -8773,7 +8772,7 @@ namespace InWorldz.Phlox.Engine
 
             // the rest of the permission checks are done in RezScript, so check the pin there as well
             string result = World.RezScript(srcId, m_host, destId, pin, running, start_param);
-            if (result != string.Empty)
+            if (result != String.Empty)
             {
                 // validation error updating script
                 if (result == "PIN")    // special case for public error (let's not match the silly SL "illegal" text)
@@ -8795,7 +8794,7 @@ namespace InWorldz.Phlox.Engine
                 IXmlRpcRouter xmlRpcRouter = m_ScriptEngine.World.RequestModuleInterface<IXmlRpcRouter>();
                 if (xmlRpcRouter != null)
                     xmlRpcRouter.RegisterNewReceiver(m_ScriptEngine.ScriptModule, channelID, m_host.UUID, m_itemID, "http://" + System.Environment.MachineName + ":" + xmlrpcMod.Port.ToString() + "/");
-                object[] resobj = new object[] { (int)(1), (string)(channelID.ToString()), (string)(UUID.Zero.ToString()), (string)(String.Empty), (int)(0), (string)(String.Empty) };
+                object[] resobj = new object[] { (int)(1), channelID.ToString(), UUID.Zero.ToString(), String.Empty, (int)(0), String.Empty };
                 m_ScriptEngine.PostScriptEvent(m_itemID, new EventParams(
                         "remote_data", resobj,
                         new DetectParams[0]));
@@ -10069,7 +10068,7 @@ namespace InWorldz.Phlox.Engine
             catch (Exception e)
             {
                 LSLError("Error in base64Encode" + e.Message);
-                return "";
+                return String.Empty;
             }
         }
 
@@ -10081,7 +10080,7 @@ namespace InWorldz.Phlox.Engine
             }
             catch
             {
-                return string.Empty;
+                return String.Empty;
             }
         }
 
@@ -11560,7 +11559,7 @@ namespace InWorldz.Phlox.Engine
 
             if (!UUID.TryParse(request_id, out requestIdAsUuid))
             {
-                return string.Empty;
+                return String.Empty;
             }
 
             if (m_UrlModule != null)
@@ -11633,7 +11632,7 @@ namespace InWorldz.Phlox.Engine
             foreach (object obj in separray)
             {
                 string str = (string)obj;
-                if (str != string.Empty)
+                if (str != String.Empty)
                 {
                     newSepArray.Add(obj);
                 }
@@ -11646,7 +11645,7 @@ namespace InWorldz.Phlox.Engine
             foreach (object obj in spcarray)
             {
                 string str = (string)obj;
-                if (str != string.Empty)
+                if (str != String.Empty)
                 {
                     newSpcArray.Add(obj);
                 }
@@ -11774,7 +11773,7 @@ namespace InWorldz.Phlox.Engine
             if (beginning == srclen)
             {
                 if (srclen != 0)
-                    tokens.Add((string)(""));
+                    tokens.Add((string)(String.Empty));
             }
 
             return new LSL_List(tokens);
@@ -12907,7 +12906,7 @@ namespace InWorldz.Phlox.Engine
 
         public string llXorBase64StringsCorrect(string str1, string str2)
         {
-            if ((str1 == String.Empty) || (str2 == String.Empty))
+            if (String.IsNullOrEmpty(str1) || String.IsNullOrEmpty(str2))
                 return str1;
             string ret = String.Empty;
             string src1 = llBase64ToString(str1);
@@ -13306,7 +13305,7 @@ namespace InWorldz.Phlox.Engine
                         ret.Add(av.Firstname + " " + av.Lastname);
                         break;
                     case ScriptBaseClass.OBJECT_DESC:
-                        ret.Add("");
+                        ret.Add(String.Empty);
                         break;
                     case ScriptBaseClass.OBJECT_POS:
                         Vector3 pos = av.AbsolutePosition;
@@ -14140,7 +14139,7 @@ namespace InWorldz.Phlox.Engine
                     if (!IsTeleportAuthorized(targetSP))
                         return;
 
-                    if (region == string.Empty)
+                    if (region == String.Empty)
                         region = targetSP.Scene.RegionInfo.RegionName;
                     else
                     if (region != targetSP.Scene.RegionInfo.RegionName) // diff region?
@@ -14302,7 +14301,7 @@ namespace InWorldz.Phlox.Engine
         public string UserNameToReport(UUID agentId, bool onlyIfCached)
         {
             string name = World.CommsManager.UserService.Key2Name(agentId, onlyIfCached);
-            if (name != String.Empty)
+            if (!String.IsNullOrEmpty(name))
                 return name;
 
             return agentId.ToString();
@@ -14433,7 +14432,7 @@ namespace InWorldz.Phlox.Engine
                 OSD specVal = JsonGetSpecific(o, specifiers, 0);
                 if (specVal == null) return ScriptBaseClass.JSON_INVALID;
                 string ret = OSDToJsonStringValue(specVal);
-                if (ret == "") return ScriptBaseClass.JSON_NULL;
+                if (String.IsNullOrEmpty(ret)) return ScriptBaseClass.JSON_NULL;
                 return ret;
             }
             catch (Exception)
@@ -14448,7 +14447,7 @@ namespace InWorldz.Phlox.Engine
             try
             {
                 // Special case an empty string as meaning empty list
-                if (text == "")
+                if (String.IsNullOrEmpty(text))
                     return new LSL_List();
                 LitJson.JsonData json = DetectJson(text);
                 if (json == null)
@@ -14540,11 +14539,11 @@ namespace InWorldz.Phlox.Engine
             }
             else if (node.Type == OSDType.Array)
             {
-                string resp = "";
+                string resp = String.Empty;
                 OSDArray ar = node as OSDArray;
                 foreach (OSD o in ar)
                 {
-                    if (resp != "") resp += ",";
+                    if (!String.IsNullOrEmpty(resp)) resp += ",";
                     resp += JsonNode2ListElement(o, true);
                 }
 
@@ -14552,11 +14551,11 @@ namespace InWorldz.Phlox.Engine
             }
             else if (node.Type == OSDType.Map)
             {
-                string resp = "";
+                string resp = String.Empty;
                 OSDMap ar = node as OSDMap;
                 foreach (KeyValuePair<string, OSD> o in ar)
                 {
-                    if (resp != "") resp += ",";
+                    if (!String.IsNullOrEmpty(resp)) resp += ",";
                     resp += "\""+o.Key.ToString() + "\":" + JsonNode2ListElement(o.Value, true).ToString();
                 }
                 return "{" + resp + "}";
@@ -15049,21 +15048,21 @@ namespace InWorldz.Phlox.Engine
 
         public string iwInt2Char(int num)
         {
-            if (num < 0 || num > 0xffff) return string.Empty;
+            if (num < 0 || num > 0xffff) return String.Empty;
             return Convert.ToChar(num).ToString();
         }
 
         public string iwReplaceString(string str, string pattern, string replacement)
         {
-            if (str == string.Empty || pattern == string.Empty) return str;
-            if (replacement == "") return str.Replace(pattern, null);
+            if (String.IsNullOrEmpty(str) || String.IsNullOrEmpty(pattern)) return str;
+            if (String.IsNullOrEmpty(replacement)) return str.Replace(pattern, null);
             if (replacement.Length > 1024 || pattern.Length > 1024) return str;
             return str.Replace(pattern, replacement);
         }
 
         public string iwFormatString(string str, LSL_List values)
         {
-            if (str == string.Empty) return str;
+            if (str == String.Empty) return str;
 
             int len = values.Length;
 
@@ -15076,7 +15075,7 @@ namespace InWorldz.Phlox.Engine
             {
                 string pattern = "{" + Convert.ToString(i) + "}";
                 string val = values.GetLSLStringItem(i);
-                if (val == string.Empty) val = null;
+                if (val == String.Empty) val = null;
                 else if (val.Length > 1024) val = val.Substring(0, 1023);
                 if (str.Contains(pattern))
                 {
@@ -15089,7 +15088,7 @@ namespace InWorldz.Phlox.Engine
                 if (str.Length > 32768)
                 {
                     LSLError("Return value from iwFormatString is greater than 64kb");
-                    return "";
+                    return String.Empty;
                 }
 
                 float time2 = Util.GetLongTickCount();
@@ -15284,7 +15283,7 @@ namespace InWorldz.Phlox.Engine
                     case "base16":
                         return DecodeBase16(str);
                     case "uuid":
-                        return DecodeBase16(str.Replace("-",""));
+                        return DecodeBase16(str.Replace("-", String.Empty));
                     case "base64":
                         try
                         {
@@ -15486,9 +15485,9 @@ namespace InWorldz.Phlox.Engine
                 if (str.EndsWith("==")) extra = 2;
                 else if (str.EndsWith("=")) extra = 1;
 
-                str = Uri.EscapeDataString(str.Replace("=",""));
-                //byte[] bytes = Encoding.Unicode.GetBytes(str.Replace("%", "").ToLower());
-                byte[] inBytes = DecodeBase16(str.Replace("%", ""));
+                str = Uri.EscapeDataString(str.Replace("=", String.Empty));
+                //byte[] bytes = Encoding.Unicode.GetBytes(str.Replace("%", String.Empty).ToLower());
+                byte[] inBytes = DecodeBase16(str.Replace("%", String.Empty));
                 StringBuilder ret = new StringBuilder();
 
 
@@ -15700,7 +15699,7 @@ namespace InWorldz.Phlox.Engine
             // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             public static string AsciiCompress(string str)
             {
-                if (str == "") return str;
+                if (String.IsNullOrEmpty(str)) return str;
                 str = StringToAscii(str);
                 int len = str.Length;
                 bool emptyEnd = false;
@@ -15729,7 +15728,7 @@ namespace InWorldz.Phlox.Engine
             // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             public static string AsciiDecompress(string str)
             {
-                if (str == "") return str;
+                if (String.IsNullOrEmpty(str)) return str;
                 int len = str.Length;
                 StringBuilder result = new StringBuilder(len * 2);
                 for (int i = 0; i < len; i++)
@@ -15786,7 +15785,7 @@ namespace InWorldz.Phlox.Engine
                             bytes = sha512util.ComputeHash(inBytes);
                         break;
                     default:
-                        return "";
+                        return String.Empty;
                 }
                 return Encode(bytes, outCodec);
             }
@@ -15818,7 +15817,7 @@ namespace InWorldz.Phlox.Engine
                     if (CodecUtil.HasCodec(v) == false)
                     {
                         LSLError("Invalid input codec: " + v);
-                        return "";
+                        return String.Empty;
                     }
                     cBytes = CodecUtil.Decode(str, v.ToLower());
                     useBytes = true;
@@ -15828,7 +15827,7 @@ namespace InWorldz.Phlox.Engine
             switch (codec)
             {
                 case "ascii":
-                    if (str == string.Empty) return str;
+                    if (str == String.Empty) return str;
                     if(operation == OP_ENCODE) {
                         return CodecUtil.StringToAscii(str);
                     } else if(operation == OP_DECODE) {
@@ -15848,7 +15847,7 @@ namespace InWorldz.Phlox.Engine
                     }
                     break;
                 case "gzip":
-                    if (str == string.Empty) return str;
+                    if (str == String.Empty) return str;
                     string outputCodec = "base4096";
                     if (extraParams.Length >= 2 && extraParams.Length % 2 == 0)
                     {
@@ -15865,13 +15864,13 @@ namespace InWorldz.Phlox.Engine
                     if (!CodecUtil.HasCodec(outputCodec))
                     {
                         LSLError("Bad codec for gzip compression: " + outputCodec);
-                        return "";
+                        return String.Empty;
                     }
                     if (operation == OP_ENCODE) return CodecUtil.gzipCompress(str, outputCodec);
                     else if (operation == OP_DECODE) return CodecUtil.gzipDecompress(str, outputCodec);
                     break;
                 case "ascii-zip":
-                    if (str == string.Empty) return str;
+                    if (str == String.Empty) return str;
                     if (operation == OP_ENCODE) return CodecUtil.AsciiCompress(str);
                     else if (operation == OP_DECODE) return CodecUtil.AsciiDecompress(str);
                     break;
@@ -15883,7 +15882,7 @@ namespace InWorldz.Phlox.Engine
                 case "sha384":
                 case "sha512":
                     string outCodec = "base16";
-                    string nonce = "";
+                    string nonce = String.Empty;
                     if (extraParams.Length >= 0 && extraParams.Length % 2 == 0)
                     {
                         int len = extraParams.Length;
@@ -15910,10 +15909,10 @@ namespace InWorldz.Phlox.Engine
                     }
                     return CodecUtil.Hash(str, nonce, codec, outCodec);
                 case "aes-key":
-                    if (str == string.Empty)
+                    if (str == String.Empty)
                     {
                         LSLError(string.Format("Error: using a blank password to generate an AES encryption key is not allowed."));
-                        return "";
+                        return String.Empty;
                     }
                     byte[] _aesKeySalt = null;
                     string _aesKeyCodec = "base16";
@@ -15930,7 +15929,7 @@ namespace InWorldz.Phlox.Engine
                                 case "salt":
                                     if(val.Length == 0) {
                                         LSLError("Salt for AES encryption key cannot be blank.");
-                                        return "";
+                                        return String.Empty;
                                     }
                                     _aesKeySalt = Encoding.UTF8.GetBytes(val);
                                     break;
@@ -15938,7 +15937,7 @@ namespace InWorldz.Phlox.Engine
                                     if (CodecUtil.HasCodec(val) == false)
                                     {
                                         LSLError("Error: invalid codec for AES encryption key: " + val);
-                                        return "";
+                                        return String.Empty;
                                     }
                                     _aesKeyCodec = val;
                                     break;
@@ -15946,7 +15945,7 @@ namespace InWorldz.Phlox.Engine
                                     int iterTest = Convert.ToInt32(val);
                                     if (iterTest < 1 || iterTest > 1024) {
                                         LSLError("Rounds for AES encryption key cannot be more than 1024 or less than 1");
-                                        return "";
+                                        return String.Empty;
                                     }
                                     _aesKeyIter = iterTest;
                                     break;
@@ -15963,11 +15962,11 @@ namespace InWorldz.Phlox.Engine
                         return aesKeyNew;
                     }
                 case "aes":
-                    if (str == string.Empty) return str;
+                    if (str == String.Empty) return str;
                     string aesCodec = "base4096";
                     string aesKeyCodec = "base16";
-                    string aesKey = "";
-                    string aesVector = "";
+                    string aesKey = String.Empty;
+                    string aesVector = String.Empty;
                     
                     if (extraParams.Length >= 0)
                     {
@@ -15982,7 +15981,7 @@ namespace InWorldz.Phlox.Engine
                                     aesKey = val;
                                     break;
                                 case "vector":
-                                    if (val != "") aesVector = val.Replace("-",null);
+                                    if (!String.IsNullOrEmpty(val)) aesVector = val.Replace("-",null);
                                     break;
                                 case "key codec":
                                     aesKeyCodec = val;
@@ -15995,24 +15994,24 @@ namespace InWorldz.Phlox.Engine
                             }
                         }
                     }
-                    if (aesKey == "" || aesVector == "" || aesCodec == "")
+                    if (String.IsNullOrEmpty(aesKey) || String.IsNullOrEmpty(aesVector) || String.IsNullOrEmpty(aesCodec))
                     {
                         LSLError("Error: some parameters for AES encryption are blank or missing!");
-                        return "";
+                        return String.Empty;
                     }
                     if (aesVector.Length != 32)
                     {
                         LSLError("AES vectors require a 32-character hexadecimal string.");
-                        return "";
+                        return String.Empty;
                     }
                     if (CodecUtil.HasCodec(aesCodec) == false)
                     {
                         LSLError("Error: invalid codec for AES encryption: " + aesCodec);
-                        return "";
+                        return String.Empty;
                     }
                     if(CodecUtil.HasCodec(aesKeyCodec) == false) {
                         LSLError("Error: invalid input codec for AES encryption key: " + aesKeyCodec);
-                        return "";
+                        return String.Empty;
                     }
                     byte[] aesKeyBytes = CodecUtil.Decode(aesKey, aesKeyCodec);
 
@@ -16054,7 +16053,7 @@ namespace InWorldz.Phlox.Engine
                     LSLError("Error: No codec specified for iwStringCodec!");
                     break;
                 default:
-                    if (str == string.Empty) return str;
+                    if (str == String.Empty) return str;
                     string ret = null;
                     if (operation == OP_ENCODE)
                     {
@@ -16072,11 +16071,11 @@ namespace InWorldz.Phlox.Engine
                     if (ret == null)
                     {
                         LSLError("Error: \"X\" is not a valid codec for iwStringCodec!".Replace("X", codec));
-                        return "";
+                        return String.Empty;
                     }
                     return ret;
             }
-            return "";
+            return String.Empty;
         }
 
         public LSL_List llCastRay(Vector3 start, Vector3 end, LSL_List options)
@@ -16298,7 +16297,7 @@ namespace InWorldz.Phlox.Engine
             UUID userID = UUID.Zero;
             if ((!UUID.TryParse(user, out userID)) || (userID == UUID.Zero))
                 return (int)Constants.GenericReturnCodes.PARAMETER;
-            if (roleName == string.Empty)
+            if (roleName == String.Empty)
                 roleName = "Everyone";
 
             if (!ScriptOwnerIsCreator())
@@ -16389,12 +16388,12 @@ namespace InWorldz.Phlox.Engine
         {
             UUID botUUID = UUID.Zero;
             if (!UUID.TryParse(botID, out botUUID) || (botUUID == UUID.Zero))
-                return string.Empty;
+                return String.Empty;
 
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
                 return manager.GetBotOwner(botUUID).ToString();
-            return string.Empty;
+            return String.Empty;
         }
 
         public int botIsBot(string userID)
@@ -16413,12 +16412,12 @@ namespace InWorldz.Phlox.Engine
         {
             UUID botUUID = UUID.Zero;
             if (!UUID.TryParse(botID, out botUUID) || (botUUID == UUID.Zero))
-                return string.Empty;
+                return String.Empty;
 
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
                 return manager.GetBotName(botUUID);
-            return string.Empty;
+            return String.Empty;
         }
 
         public void botChangeOwner(string botID, string newOwnerID)
@@ -16630,7 +16629,7 @@ namespace InWorldz.Phlox.Engine
                         int count=0;
                         foreach(string outfit in itms)
                         {
-                            if(pattern == "" || iwMatchString(outfit, pattern, matchType) == 1)
+                            if(String.IsNullOrEmpty(pattern) || iwMatchString(outfit, pattern, matchType) == 1)
                             {
                                 if (count >= start && (end == -1 || count <= end))
                                 {
@@ -17031,7 +17030,7 @@ namespace InWorldz.Phlox.Engine
 
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
-                manager.BotChat(botUUID, 0, "", ChatTypeEnum.StartTyping, m_host.OwnerID);
+                manager.BotChat(botUUID, 0, String.Empty, ChatTypeEnum.StartTyping, m_host.OwnerID);
             ScriptSleep(15);
         }
 
@@ -17043,7 +17042,7 @@ namespace InWorldz.Phlox.Engine
 
             IBotManager manager = World.RequestModuleInterface<IBotManager>();
             if (manager != null)
-                manager.BotChat(botUUID, 0, "", ChatTypeEnum.StopTyping, m_host.OwnerID);
+                manager.BotChat(botUUID, 0, String.Empty, ChatTypeEnum.StopTyping, m_host.OwnerID);
             ScriptSleep(15);
         }
 
@@ -17397,7 +17396,7 @@ namespace InWorldz.Phlox.Engine
 
             foreach(SceneObjectPart part in m_host.ParentGroup.Children.Values)
             {
-                if (pattern == "" || iwMatchString(part.Name, pattern, matchType) == 1)
+                if (String.IsNullOrEmpty(pattern) || iwMatchString(part.Name, pattern, matchType) == 1)
                     parts.Add(part);
             }
 
@@ -17429,7 +17428,7 @@ namespace InWorldz.Phlox.Engine
 
             foreach (SceneObjectPart part in m_host.ParentGroup.Children.Values)
             {
-                if (pattern == "" || iwMatchString(part.Description, pattern, matchType) == 1)
+                if (String.IsNullOrEmpty(pattern) || iwMatchString(part.Description, pattern, matchType) == 1)
                     parts.Add(part);
             }
 
@@ -17542,7 +17541,7 @@ namespace InWorldz.Phlox.Engine
                                 }
 
                                 string ln = Util.ArraySegmentToString(input[idx], Encoding.UTF8);
-                                if (ln.Contains("\r")) ln = ln.Replace("\r", "");
+                                if (ln.Contains("\r")) ln = ln.Replace("\r", String.Empty);
 
                                 output.Add(ln);
                                 count += input[idx].Count + 1;
@@ -17596,26 +17595,26 @@ namespace InWorldz.Phlox.Engine
         public static string GetLine(UUID assetID, int line, int startOffset, int maxLength)
         {
             if ((line < 0) || (maxLength < 0))
-                return "";
+                return String.Empty;
 
             string data;
 
             lock (m_Notecards)
             {
                 if (!IsCachedNoLock(assetID))
-                    return "";
+                    return String.Empty;
 
                 m_Notecards[assetID].lastRef = DateTime.Now;
 
                 if (maxLength == 0)  // 0 is valid so update lastRef before this check.
-                    return "";
+                    return String.Empty;
 
                 if (line >= m_Notecards[assetID].text.Length)
                     return "\n\n\n";
 
                 data = m_Notecards[assetID].text[line];
                 if (startOffset >= data.Length)
-                    return "";  // no more data
+                    return String.Empty;  // no more data
                 if (startOffset + maxLength > data.Length)
                     maxLength = data.Length - startOffset;  // last bit of data on the line
 

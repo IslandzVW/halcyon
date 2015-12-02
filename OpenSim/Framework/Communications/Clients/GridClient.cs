@@ -125,7 +125,7 @@ namespace OpenSim.Framework.Communications.Clients
 
         public bool DeregisterRegion(string gridServerURL, string sendKey, string receiveKey, RegionInfo regionInfo, out string errorMsg)
         {
-            errorMsg = "";
+            errorMsg = String.Empty;
             Hashtable GridParams = new Hashtable();
 
             GridParams["UUID"] = regionInfo.RegionID.ToString();
@@ -173,7 +173,7 @@ namespace OpenSim.Framework.Communications.Clients
         {
             // didn't find it so far, we have to go the long way
             regionInfo = null;
-            errorMsg = string.Empty;
+            errorMsg = String.Empty;
             Hashtable requestData = new Hashtable();
             requestData["region_UUID"] = regionUUID.ToString();
             requestData["authkey"] = sendKey;
@@ -211,7 +211,7 @@ namespace OpenSim.Framework.Communications.Clients
         {
             // didn't find it so far, we have to go the long way
             regionInfo = null;
-            errorMsg = string.Empty;
+            errorMsg = String.Empty;
 
             try
             {
@@ -270,7 +270,7 @@ namespace OpenSim.Framework.Communications.Clients
         public bool RequestClosestRegion(string gridServerURL, string sendKey, string receiveKey, string regionName, out RegionInfo regionInfo, out string errorMsg)
         {
             regionInfo = null;
-            errorMsg = string.Empty;
+            errorMsg = String.Empty;
             try
             {
                 Hashtable requestData = new Hashtable();
@@ -291,7 +291,7 @@ namespace OpenSim.Framework.Communications.Clients
                     return false;
                 }
 
-                regionInfo = BuildRegionInfo(responseData, "");
+                regionInfo = BuildRegionInfo(responseData, String.Empty);
 
             }
             catch (Exception e)
@@ -314,7 +314,7 @@ namespace OpenSim.Framework.Communications.Clients
         public bool MapBlockQuery(string gridServerURL, int minX, int minY, int maxX, int maxY, out Hashtable respData, out string errorMsg)
         {
             respData = new Hashtable();
-            errorMsg = string.Empty;
+            errorMsg = String.Empty;
 
             Hashtable param = new Hashtable();
             param["xmin"] = minX;
@@ -343,7 +343,7 @@ namespace OpenSim.Framework.Communications.Clients
         public bool SearchRegionByName(string gridServerURL, IList parameters, out Hashtable respData, out string errorMsg)
         {
             respData = null;
-            errorMsg = string.Empty;
+            errorMsg = String.Empty;
             try
             {
                 string methodName = "search_for_region_by_name";

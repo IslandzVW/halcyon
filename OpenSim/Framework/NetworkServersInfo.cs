@@ -50,9 +50,9 @@ namespace OpenSim.Framework
         public string UserURL = String.Empty;
         public string HostName = String.Empty;
         public bool HttpUsesSSL = false;
-        public string HttpSSLCN = "";
-        public string HttpSSLCert = "";
-        public string HttpSSLPassword = "";
+        public string HttpSSLCN = String.Empty;
+        public string HttpSSLCert = String.Empty;
+        public string HttpSSLPassword = String.Empty;
         public uint httpSSLPort = 9001;
         public bool useHTTPS = false;
         public SslProtocols sslProtocol = SslProtocols.Default;
@@ -89,8 +89,8 @@ namespace OpenSim.Framework
             httpSSLPort = (uint)config.Configs["Network"].GetInt("http_listener_sslport", ((int)ConfigSettings.DefaultRegionHttpPort+1));
             HttpUsesSSL = config.Configs["Network"].GetBoolean("http_listener_ssl", false);
             HttpSSLCN = config.Configs["Network"].GetString("http_listener_cn", "localhost");
-            HttpSSLCert = config.Configs["Network"].GetString("http_listener_ssl_cert", "");
-            HttpSSLPassword = config.Configs["Network"].GetString("http_listener_ssl_passwd", "");
+            HttpSSLCert = config.Configs["Network"].GetString("http_listener_ssl_cert", String.Empty);
+            HttpSSLPassword = config.Configs["Network"].GetString("http_listener_ssl_passwd", String.Empty);
             useHTTPS = config.Configs["Network"].GetBoolean("use_https", false);
 
             string sslproto = config.Configs["Network"].GetString("https_ssl_protocol", "Default");

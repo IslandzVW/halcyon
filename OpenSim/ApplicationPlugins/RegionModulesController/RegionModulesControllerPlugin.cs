@@ -89,7 +89,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
             foreach (TypeExtensionNode node in
                     AddinManager.GetExtensionNodes("/OpenSim/RegionModules"))
             {
-                if (node.Type.GetInterface(typeof(ISharedRegionModule).ToString()) != null)
+                if (typeof(ISharedRegionModule).IsAssignableFrom(node.Type))
                 {
                     if (CheckModuleEnabled(node, modulesConfig))
                     {
@@ -97,7 +97,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                         m_sharedModules.Add(node);
                     }
                 }
-                else if (node.Type.GetInterface(typeof(INonSharedRegionModule).ToString()) != null)
+                else if (typeof(INonSharedRegionModule).IsAssignableFrom(node.Type))
                 {
                     if (CheckModuleEnabled(node, modulesConfig))
                     {
@@ -127,7 +127,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                         modulesConfig.GetString("Setup_" + node.Id, String.Empty);
 
                 // Get the port number, if there is one
-                if (moduleString != String.Empty)
+                if (!String.IsNullOrEmpty(moduleString))
                 {
                     // Get the port number from the string
                     string[] moduleParts = moduleString.Split(new char[] { '/' },
@@ -230,7 +230,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                     modulesConfig.GetString("Setup_" + node.Id, String.Empty);
 
             // We have a selector
-            if (moduleString != String.Empty)
+            if (!String.IsNullOrEmpty(moduleString))
             {
                 // Allow disabling modules even if they don't have
                 // support for it
@@ -245,8 +245,8 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                     className = moduleParts[1];
 
                 // Match the class name if given
-                if (className != String.Empty &&
-                        node.Type.ToString() != className)
+                if (!(String.IsNullOrEmpty(className) ||
+                    node.Type.ToString() == className))
                     return false;
             }            
             
@@ -324,7 +324,7 @@ namespace OpenSim.ApplicationPlugins.RegionModulesController
                         modulesConfig.GetString("Setup_" + node.Id, String.Empty);
 
                 // Get the port number, if there is one
-                if (moduleString != String.Empty)
+                if (!String.IsNullOrEmpty(moduleString))
                 {
                     // Get the port number from the string
                     string[] moduleParts = moduleString.Split(new char[] {'/'},

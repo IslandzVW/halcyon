@@ -618,7 +618,7 @@ namespace OpenSim.Region.Communications.OGS1
                     return null;
                 }
 
-                regionInfo = buildRegionInfo(responseData, "");
+                regionInfo = buildRegionInfo(responseData, String.Empty);
 
                 if (m_useRemoteRegionCache)
                 {

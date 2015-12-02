@@ -84,7 +84,7 @@ namespace OpenSim.Framework
         [XmlIgnore]
         public static readonly UUID DEFAULT_TEXTURE_ID = new UUID("89556747-24cb-43ed-920b-47caed15465f");
 
-        [XmlIgnore]
+        [XmlIgnore][NonSerialized]
         private Primitive.TextureEntry m_textures;
 
         private byte[] m_textureEntryBytes;  // persisted byte version of m_textures
@@ -115,7 +115,7 @@ namespace OpenSim.Framework
         private PhysicsShapeType _preferredPhysicsShape;
 
         // Materials
-        [XmlIgnore] private RenderMaterials _renderMaterials;
+        [XmlIgnore][NonSerialized] private RenderMaterials _renderMaterials;
 
         // Sculpted
         [XmlIgnore] private UUID _sculptTexture = UUID.Zero;
@@ -1781,7 +1781,7 @@ namespace OpenSim.Framework
 
             prim.Properties = new Primitive.ObjectProperties();
             prim.Properties.Name = "Primitive";
-            prim.Properties.Description = "";
+            prim.Properties.Description = String.Empty;
             prim.Properties.CreatorID = UUID.Zero;
             prim.Properties.GroupID = UUID.Zero;
             prim.Properties.OwnerID = UUID.Zero;
@@ -1803,6 +1803,7 @@ namespace OpenSim.Framework
 
             // keys are 0-based (face number - 1)
 //            protected Dictionary<int,MediaEntry> m_MediaList = new Dictionary<int,MediaEntry>();
+            [NonSerialized]
             protected MediaEntry[] m_MediaFaces = null;
 
             public PrimMedia() : base() 

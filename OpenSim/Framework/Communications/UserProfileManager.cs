@@ -367,8 +367,8 @@ namespace OpenSim.Framework.Communications
                 }
             }
 
-            firstName = "";
-            lastName = "";
+            firstName = String.Empty;
+            lastName = String.Empty;
 
             if (onlyIfCached)
                 return false;
@@ -386,30 +386,30 @@ namespace OpenSim.Framework.Communications
 
         public string Key2Name(UUID uuid, bool onlyIfCached)
         {
-            string firstName = "";
-            string lastName = "";
+            string firstName = String.Empty;
+            string lastName = String.Empty;
             if (!Key2Names(uuid, onlyIfCached, out firstName, out lastName))
-                return "";
+                return String.Empty;
 
             return firstName + " " + lastName;
         }
 
         public string GetLastName(UUID uuid, bool onlyIfCached)
         {
-            string firstName = "";
-            string lastName = "";
+            string firstName = String.Empty;
+            string lastName = String.Empty;
             if (!Key2Names(uuid, onlyIfCached, out firstName, out lastName))
-                return "";
+                return String.Empty;
 
             return lastName;
         }
 
         public string GetFirstName(UUID uuid, bool onlyIfCached)
         {
-            string firstName = "";
-            string lastName = "";
+            string firstName = String.Empty;
+            string lastName = String.Empty;
             if (!Key2Names(uuid, onlyIfCached, out firstName, out lastName))
-                return "";
+                return String.Empty;
 
             return firstName;
         }
@@ -1282,7 +1282,7 @@ namespace OpenSim.Framework.Communications
         public string GetNewKey(string url, UUID userID, UUID authToken)
         {
             UserProfileData profile = GetUserProfile(userID);
-            string newKey = string.Empty;
+            string newKey = String.Empty;
             if (!url.EndsWith("/"))
                 url = url + "/";
 
