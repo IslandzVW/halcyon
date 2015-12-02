@@ -9615,6 +9615,71 @@ namespace InWorldz.Phlox.Engine
                             SetPointLight(part, light, lightcolor, intensity, radius, falloff);
                         break;
 
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR_ENABLED:
+                        if (remain < 1)
+                            return;
+                        bool projector = rules.GetLSLIntegerItem(idx++) == 1;
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            shape.ProjectionEntry = projector;
+                            part.ParentGroup.HasGroupChanged = true;
+                            part.ScheduleFullUpdate();
+                        }
+                        break;
+
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR_TEXTURE:
+                        if (remain < 1)
+                            return;
+                        tex = rules.Data[idx++].ToString();
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            shape.ProjectionTextureUUID = tex;
+                            part.ParentGroup.HasGroupChanged = true;
+                            part.ScheduleFullUpdate();
+                        }
+                        break;
+
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR_FOV:
+                        if (remain < 1)
+                            return;
+                        float fov = rules.GetLSLFloatItem(idx++);
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            shape.ProjectionFOV = fov;
+                            part.ParentGroup.HasGroupChanged = true;
+                            part.ScheduleFullUpdate();
+                        }
+                        break;
+
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR_FOCUS:
+                        if (remain < 1)
+                            return;
+                        float focus = rules.GetLSLFloatItem(idx++);
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            shape.ProjectionFocus = focus;
+                            part.ParentGroup.HasGroupChanged = true;
+                            part.ScheduleFullUpdate();
+                        }
+                        break;
+
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR_AMBIENCE:
+                        if (remain < 1)
+                            return;
+                        float amb = rules.GetLSLFloatItem(idx++);
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            shape.ProjectionAmbiance = amb;
+                            part.ParentGroup.HasGroupChanged = true;
+                            part.ScheduleFullUpdate();
+                        }
+                        break;
+
                     case (int)ScriptBaseClass.PRIM_GLOW:
                         if (remain < 2)
                             return;
@@ -10646,6 +10711,49 @@ namespace InWorldz.Phlox.Engine
                             res.Add((float)(shape.LightIntensity)); // intensity
                             res.Add((float)(shape.LightRadius));    // radius
                             res.Add((float)(shape.LightFalloff));   // falloff
+                        }
+                        break;
+
+                    case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_ENABLED:
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            if (shape.ProjectionEntry)
+                                res.Add((int)(1));              // active
+                            else
+                                res.Add((int)(0));
+                        }
+                        break;
+
+                    case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_TEXTURE:
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            res.Add(ConditionalTextureNameOrUUID(part, shape.ProjectionTextureUUID));
+                        }
+                        break;
+
+                    case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_FOV:
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            res.Add((float)(shape.ProjectionFOV));
+                        }
+                        break;
+
+                    case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_FOCUS:
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            res.Add((float)(shape.ProjectionFocus));
+                        }
+                        break;
+
+                    case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_AMBIENCE:
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            res.Add((float)(shape.ProjectionAmbiance));
                         }
                         break;
 
