@@ -61,7 +61,8 @@ namespace OpenSim.Framework
         /// <summary>
         /// Stores byte arrays of varying sizes
         /// </summary>
-        private List<KeyValuePair<int, LocklessQueue<byte[]>>> _storage = new List<KeyValuePair<int, LocklessQueue<byte[]>>>();
+        private List<KeyValuePair<int, LocklessQueue<TimestampedItem<byte[]>>>> _storage 
+            = new List<KeyValuePair<int, LocklessQueue<TimestampedItem<byte[]>>>>();
 
         /// <summary>
         /// Creates a new buffer pool with the given levels
@@ -74,11 +75,11 @@ namespace OpenSim.Framework
 
             foreach (int bufferSz in bufferSizes)
             {
-                _storage.Add(new KeyValuePair<int, LocklessQueue<byte[]>>(bufferSz, new LocklessQueue<byte[]>()));
+                _storage.Add(new KeyValuePair<int, LocklessQueue<TimestampedItem<byte[]>>>());
             }
         }
 
-        private LocklessQueue<byte[]> FindContainer(int minSize)
+        private LocklessQueue<TimestampedItem<byte[]>> FindContainer(int minSize)
         {
             foreach (var kvp in _storage)
             {
@@ -91,7 +92,7 @@ namespace OpenSim.Framework
             return null;
         }
 
-        private LocklessQueue<byte[]> FindExactContainer(int size)
+        private LocklessQueue<TimestampedItem<byte[]>> FindExactContainer(int size)
         {
             foreach (var kvp in _storage)
             {
@@ -121,7 +122,7 @@ namespace OpenSim.Framework
 
         public byte[] LeaseBytes(int minSize)
         {
-            LocklessQueue<byte[]> container = this.FindContainer(minSize);
+            LocklessQueue<TimestampedItem<byte[]>> container = this.FindContainer(minSize);
             if (container == null)
             {
                 s_Log.WarnFormat("[ByteBufferPool] Not servicing request for {0} bytes", minSize);
@@ -130,11 +131,11 @@ namespace OpenSim.Framework
                 return new byte[minSize];
             }
 
-            byte[] buffer;
+            TimestampedItem<byte[]> buffer;
             if (container.Dequeue(out buffer))
             {
-                Interlocked.Add(ref _currAllocatedBytes, -buffer.Length);
-                return buffer;
+                Interlocked.Add(ref _currAllocatedBytes, -buffer.Item.Length);
+                return buffer.Item;
             }
             else
             {
@@ -145,13 +146,13 @@ namespace OpenSim.Framework
 
         public void ReturnBytes(byte[] bytes)
         {
-            LocklessQueue<byte[]> container = this.FindExactContainer(bytes.Length);
+            LocklessQueue<TimestampedItem<byte[]>> container = this.FindExactContainer(bytes.Length);
             if (container != null)
             {
                 if (_currAllocatedBytes < _maxAllocatedBytes)
                 {
                     Interlocked.Add(ref _currAllocatedBytes, bytes.Length);
-                    container.Enqueue(bytes);
+                    container.Enqueue(new TimestampedItem<byte[]>(bytes));
                 }
             }
         }
