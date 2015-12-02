@@ -117,7 +117,7 @@ namespace OpenSim.Framework.Communications.Services
                 m_welcomeMessage = welcomeMess;
             if (!String.IsNullOrEmpty(mapServerURI))
                 m_MapServerURI = mapServerURI;
-            if (profileServerURI != String.Empty)
+            if (!String.IsNullOrEmpty(profileServerURI))
                 m_ProfileServerURI = profileServerURI;
 
             // For new users' first-time logins
@@ -155,7 +155,7 @@ namespace OpenSim.Framework.Communications.Services
         // For new users' first-time logins
         public void LoadDefaultLoginsFromFile(string fileName)
         {
-            if (fileName.Length == 0)
+            if (String.IsNullOrEmpty(fileName))
                 DumpRegionsList(_DefaultLoginsList, "Default login locations for new users");
             else
                 _DefaultLoginsList = LoadRegionsFromFile(fileName, "Default login locations for new users");
@@ -163,7 +163,7 @@ namespace OpenSim.Framework.Communications.Services
         // For returning users' where the preferred region is down
         public void LoadDefaultRegionsFromFile(string fileName)
         {
-            if (fileName.Length == 0)
+            if (String.IsNullOrEmpty(fileName))
                 DumpRegionsList(_DefaultRegionsList, "Default region locations");
             else
                 _DefaultRegionsList = LoadRegionsFromFile(fileName, "Default region locations");

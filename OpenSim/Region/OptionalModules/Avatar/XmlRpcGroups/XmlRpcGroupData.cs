@@ -58,14 +58,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
         public XmlRpcGroupDataProvider(string serviceURL, bool disableKeepAlive, string groupReadKey, string groupWriteKey)
         {
-            m_serviceURL = serviceURL.Trim();
-            m_disableKeepAlive = disableKeepAlive;
-
-            if ((serviceURL == null) ||
-                (serviceURL == String.Empty))
+            if (String.IsNullOrWhiteSpace(serviceURL))
             {
                 throw new Exception("Please specify a valid ServiceURL for XmlRpcGroupDataProvider in Halcyon.ini, [Groups], XmlRpcServiceURL");
             }
+
+            m_serviceURL = serviceURL.Trim();
+            m_disableKeepAlive = disableKeepAlive;
 
             m_groupReadKey = groupReadKey;
             m_groupWriteKey = groupWriteKey;
@@ -184,7 +183,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 param["GroupID"] = GroupID.ToString();
             }
-            if ((GroupName != null) && (GroupName != String.Empty))
+            if (!String.IsNullOrEmpty(GroupName))
             {
                 param["Name"] = GroupName.ToString();
             }

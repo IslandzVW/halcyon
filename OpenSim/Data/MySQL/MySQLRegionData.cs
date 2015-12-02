@@ -1415,7 +1415,7 @@ namespace OpenSim.Data.MySQL
         {
             // "INSERT INTO room(person,address) VALUES(?person, ?address)"
 
-            if (varlist == String.Empty)
+            if (String.IsNullOrEmpty(varlist))
             {
                 varlist += ",";
                 values += ",";

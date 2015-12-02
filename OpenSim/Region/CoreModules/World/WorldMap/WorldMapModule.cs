@@ -496,7 +496,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 if (m_cachedRegionMapItemsAddress.ContainsKey(regionhandle))
                     httpserver = m_cachedRegionMapItemsAddress[regionhandle];
             }
-            if (httpserver.Length == 0)
+            if (String.IsNullOrEmpty(httpserver))
             {
                 RegionInfo mreg = m_scene.SceneGridService.RequestNeighbouringRegionInfo(regionhandle);
 
@@ -528,7 +528,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
 
             // Can't find the http server
-            if (httpserver.Length == 0 || blacklisted)
+            if (String.IsNullOrEmpty(httpserver) || blacklisted)
                 return new OSDMap();
 
             MapRequestState mrs = new MapRequestState();

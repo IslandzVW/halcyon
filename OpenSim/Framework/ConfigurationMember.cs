@@ -296,7 +296,7 @@ namespace OpenSim.Framework
                             convertSuccess = true;
                             break;
                         case ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY:
-                            if (console_result.Length > 0)
+                            if (!String.IsNullOrEmpty(console_result))
                             {
                                 return_result = console_result;
                                 convertSuccess = true;

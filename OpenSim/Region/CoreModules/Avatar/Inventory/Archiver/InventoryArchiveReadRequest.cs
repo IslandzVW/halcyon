@@ -214,9 +214,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             InventoryFolderImpl foundFolder = null;
 
             // XXX: Nasty way of dealing with a path that has no directory component
-            if (fsPath.Length > 0)
+            if (!String.IsNullOrEmpty(fsPath))
             {
-                while (null == foundFolder && fsPath.Length > 0)
+                while (null == foundFolder && !String.IsNullOrEmpty(fsPath))
                 {
                     if (foldersCreated.ContainsKey(fsPath))
                     {

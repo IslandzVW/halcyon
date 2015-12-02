@@ -47,7 +47,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FriendPermissions
                 connString = userConfig.GetString("ConnectionString", String.Empty);
             }
 
-            if (String.Empty == connString)
+            if (String.IsNullOrEmpty(connString))
             {
                 userConfig = source.Configs["StandAlone"];
                 connString = userConfig.GetString("user_source", String.Empty);

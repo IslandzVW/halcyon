@@ -609,7 +609,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                     {
                         continue;
                     }
-                    if (li.GetName().Length > 0 && !li.GetName().Equals(name))
+                    if (!String.IsNullOrEmpty(li.GetName()) && !li.GetName().Equals(name))
                     {
                         continue;
                     }
@@ -617,7 +617,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
                     {
                         continue;
                     }
-                    if (li.GetMessage().Length > 0 && !li.GetMessage().Equals(msg))
+                    if (!String.IsNullOrEmpty(li.GetMessage()) && !li.GetMessage().Equals(msg))
                     {
                         continue;
                     }

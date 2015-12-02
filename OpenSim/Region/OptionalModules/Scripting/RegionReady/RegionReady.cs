@@ -138,10 +138,12 @@ namespace OpenSim.Region.CoreModules.Scripting.RegionReady
         void OnOarFileLoaded(Guid requestId, string message)
         {
             m_oarFileLoading = true;
-            if (message==String.Empty) 
+            if (String.IsNullOrEmpty(message))
             {
                 m_lastOarLoadedOk = true;
-            } else {
+            }
+            else
+            {
                 m_log.InfoFormat("[RegionReady]: Oar file load errors: {0}", message);
                 m_lastOarLoadedOk = false;
             }

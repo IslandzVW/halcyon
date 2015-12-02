@@ -127,8 +127,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
             if (m_TransferModule != null)
             {
-                if (client != null && client.FirstName != null && client.FirstName != String.Empty
-                    && client.LastName != null && client.LastName != String.Empty)
+                if (client != null && !String.IsNullOrEmpty(client.FirstName) && !String.IsNullOrEmpty(client.LastName))
                 {
                     im.fromAgentName = client.Name;
                 }

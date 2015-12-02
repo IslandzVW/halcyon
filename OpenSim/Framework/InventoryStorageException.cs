@@ -74,7 +74,7 @@ namespace OpenSim.Framework
         {
             get
             {
-                if (_details == String.Empty)
+                if (String.IsNullOrEmpty(_details))
                 {
                     return base.Message;
                 }

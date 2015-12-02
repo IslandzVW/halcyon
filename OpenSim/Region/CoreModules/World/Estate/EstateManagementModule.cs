@@ -930,7 +930,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                                         uuidNameLookupList.Add(sog.OwnerID);
                                 }
 
-                                if (filter.Length != 0)
+                                if (!String.IsNullOrEmpty(filter))
                                 {
                                     if ((lsri.OwnerName.Contains(filter) || lsri.TaskName.Contains(filter)))
                                     {

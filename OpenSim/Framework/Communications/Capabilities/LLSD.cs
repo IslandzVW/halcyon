@@ -526,7 +526,7 @@ namespace OpenSim.Framework.Communications.Capabilities
 
         public static object ParseTerseLLSD(string llsd, out int endPos)
         {
-            if (llsd.Length == 0)
+            if (String.IsNullOrEmpty(llsd))
             {
                 endPos = 0;
                 return null;
