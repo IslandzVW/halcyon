@@ -9631,13 +9631,21 @@ namespace InWorldz.Phlox.Engine
                         if (remain < 1)
                             return;
                         tex = rules.Data[idx++].ToString();
-                        foreach (SceneObjectPart part in parts)
+                        UUID textureID = new UUID();
+                        textureID = InventoryKey(tex, (int)AssetType.Texture);
+                        if (textureID == UUID.Zero)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            shape.ProjectionTextureUUID = tex;
-                            part.ParentGroup.HasGroupChanged = true;
-                            part.ScheduleFullUpdate();
+                            UUID.TryParse(tex, out textureID);
                         }
+
+                        if (textureID != UUID.Zero)
+                            foreach (SceneObjectPart part in parts)
+                            {
+                                PrimitiveBaseShape shape = part.Shape;
+                                shape.ProjectionTextureUUID = textureID;
+                                part.ParentGroup.HasGroupChanged = true;
+                                part.ScheduleFullUpdate();
+                            }
                         break;
 
                     case ScriptBaseClass.IW_PRIM_PROJECTOR_FOV:
