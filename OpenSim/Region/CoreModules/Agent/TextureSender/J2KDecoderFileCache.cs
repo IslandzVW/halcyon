@@ -69,12 +69,12 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                 Createj2KCacheFolder(pFolder);
             }
         }
-		
-		public static string CacheFolder 
+        
+        public static string CacheFolder 
         { 
-			get { return Util.dataDir() + "/j2kDecodeCache"; } 
-		}
-		 
+            get { return Util.dataDir() + "/j2kDecodeCache"; } 
+        }
+         
         /// <summary>
         /// Save Layers to Disk Cache
         /// </summary>
@@ -100,7 +100,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                             for (int i = 0; i < Layers.Length; i++)
                             {
                                 if (i == (Layers.Length - 1))
-                                    strEnd = "";
+                                    strEnd = String.Empty;
 
                                 stringResult.AppendFormat("{0}|{1}|{2}{3}", Layers[i].Start, Layers[i].End, Layers[i].End - Layers[i].Start, strEnd);
                             }
@@ -138,7 +138,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
             if ((File.Exists(filename) == false) || (enabled == false))
                 return false;
 
-            string readResult = string.Empty;
+            string readResult = String.Empty;
 
             try
             {
@@ -251,7 +251,7 @@ namespace OpenSim.Region.CoreModules.Agent.TextureSender
                 }
             }
 
-			return true;
+            return true;
         }
 
         /// <summary>

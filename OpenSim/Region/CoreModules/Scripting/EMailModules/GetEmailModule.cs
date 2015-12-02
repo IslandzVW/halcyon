@@ -58,7 +58,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
 
         // Database support
         private ConnectionFactory _connectionFactory;
-        private string _connectString = "";
+        private string _connectString = String.Empty;
         private static long mTicksToEpoch = new DateTime(1970, 1, 1).Ticks;
 
         // Scenes by Region Handle
@@ -91,7 +91,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             }
         }
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_Config = config;
             IConfig SMTPConfig;
@@ -121,8 +121,8 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 }
 
                 // Database support
-                _connectString = SMTPConfig.GetString("inbound_storage_connection", "");
-                if (_connectString == "")
+                _connectString = SMTPConfig.GetString("inbound_storage_connection", String.Empty);
+                if (String.IsNullOrEmpty(_connectString))
                 {
                     m_log.ErrorFormat("[InboundEmail]: Could not find SMTP inbound_storage_connection.");
                     m_Enabled = false;
@@ -167,7 +167,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -304,12 +304,12 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 Dictionary<string, object> parms = new Dictionary<string, object>();
                 string query = "SELECT * FROM emailmessages WHERE uuid = ?uuid";
                 parms.Add("?uuid", uuid);
-                if (sender != "")
+                if (!String.IsNullOrEmpty(sender))
                 {
                     query += " AND from = ?from";
                     parms.Add("?from", sender);
                 }
-                if (subject != "")
+                if (!String.IsNullOrEmpty(subject))
                 {
                     query += " AND subject = ?subject";
                     parms.Add("?subject", subject);

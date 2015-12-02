@@ -131,7 +131,7 @@ namespace OpenSim.TestSuite
         {
             throw new NotImplementedException();
 
-#if false	// unreachable code, set to true to test with
+#if false    // unreachable code, set to true to test with
             client.Settings.LOGIN_SERVER = loginURI;
            // client.Network.OnConnected += new NetworkManager.ConnectedCallback(this.Network_OnConnected);
             //client.Network.OnSimConnected += new NetworkManager.SimConnectedCallback(this.Network_OnConnected);
@@ -181,7 +181,7 @@ namespace OpenSim.TestSuite
 
         public string[] readexcuses()
         {
-            string allexcuses = "";
+            string allexcuses = String.Empty;
 
             string file = Path.Combine(Util.configDir(), "pCampBotSentences.txt");
             if (File.Exists(file))

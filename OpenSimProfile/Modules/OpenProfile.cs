@@ -44,7 +44,7 @@ namespace OpenSimProfile.Modules.OpenProfile
         private ConnectionFactory _connFactory;
         private ConnectionFactory _regionConnFactory;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (!m_Enabled)
                 return;
@@ -72,7 +72,7 @@ namespace OpenSimProfile.Modules.OpenProfile
             scene.EventManager.OnNewClient += OnNewClient;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (!m_Enabled)
                 return;
@@ -143,10 +143,10 @@ namespace OpenSimProfile.Modules.OpenProfile
             using (ISimpleDB db = _connFactory.GetConnection())
             {
                 uint skillsMask = new uint();
-                string skillsText = "";
+                string skillsText = String.Empty;
                 uint wantToMask = new uint();
-                string wantToText = "";
-                string languagesText = "";
+                string wantToText = String.Empty;
+                string languagesText = String.Empty;
 
                 Dictionary<string, object> parms = new Dictionary<string, object>();
                 parms.Add("?avatarID", avatarID);
@@ -324,8 +324,8 @@ namespace OpenSimProfile.Modules.OpenProfile
                 // explode the GlobalPos value off the bat
 
                 string origGlobPos = queryGlobalPos.ToString();
-                string tempAGlobPos = origGlobPos.Replace("<", "");
-                string tempBGlobPos = tempAGlobPos.Replace(">", "");
+                string tempAGlobPos = origGlobPos.Replace("<", String.Empty);
+                string tempBGlobPos = tempAGlobPos.Replace(">", String.Empty);
 
                 char[] delimiterChars = { ',', ' ' };
                 string[] globalPosBits = tempBGlobPos.Split(delimiterChars);
@@ -513,12 +513,12 @@ namespace OpenSimProfile.Modules.OpenProfile
 
                 bool topPick = new bool();
                 UUID parcelUUID = new UUID();
-                string name = "";
-                string description = "";
+                string name = String.Empty;
+                string description = String.Empty;
                 UUID snapshotID = new UUID();
-                string userName = "";
-                string originalName = "";
-                string simName = "";
+                string userName = String.Empty;
+                string originalName = String.Empty;
+                string simName = String.Empty;
                 Vector3 globalPos = new Vector3();
                 int sortOrder = new int();
                 bool enabled = new bool();
@@ -629,7 +629,7 @@ namespace OpenSimProfile.Modules.OpenProfile
                 List<Dictionary <string, string>> countList = db.QueryWithResults(queryPicksCount, parms);
                 
                 string query;
-                string picksCount="";
+                string picksCount = String.Empty;
                 
                 foreach (Dictionary<string, string> row in countList)
                 {
@@ -699,11 +699,11 @@ namespace OpenSimProfile.Modules.OpenProfile
                 string query = "SELECT notes from usernotes where useruuid=?avatarID AND targetuuid=?targetID";
                 List<Dictionary<string, string>> notesResult = db.QueryWithResults(query, parms);
 
-                string notes = string.Empty;
+                string notes = String.Empty;
                 if (notesResult.Count > 0)
                     notes = notesResult[0]["notes"];
                 if (notes == LEGACY_EMPTY)  // filter out the old text that said there was no text. ;)
-                    notes = string.Empty;
+                    notes = String.Empty;
 
                 remoteClient.SendAvatarNotesReply(targetAvatarID, notes);
             }
@@ -719,7 +719,7 @@ namespace OpenSimProfile.Modules.OpenProfile
 
             // filter out the old text that said there was no text. ;)
             if (notes == LEGACY_EMPTY)
-                notes = string.Empty;
+                notes = String.Empty;
 
             using (ISimpleDB db = _connFactory.GetConnection())
             {
@@ -729,7 +729,7 @@ namespace OpenSimProfile.Modules.OpenProfile
                 parms.Add("?notes", notes);
 
                 string query;
-                if (notes == string.Empty)
+                if (notes == String.Empty)
                     query = "DELETE FROM usernotes WHERE useruuid=?avatarID AND targetuuid=?targetID";
                 else
                     query = "INSERT INTO usernotes(useruuid, targetuuid, notes) VALUES(?avatarID,?targetID,?notes) ON DUPLICATE KEY UPDATE notes=?notes";

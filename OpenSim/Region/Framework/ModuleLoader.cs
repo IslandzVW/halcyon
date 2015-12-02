@@ -86,24 +86,24 @@ namespace OpenSim.Region.Framework
         }
 
 
-        public void InitialiseSharedModules(Scene scene)
+        public void InitializeSharedModules(Scene scene)
         {
             foreach (IRegionModule module in m_loadedSharedModules.Values)
             {
-                module.Initialise(scene, m_config);
+                module.Initialize(scene, m_config);
                 scene.AddModule(module.Name, module); //should be doing this?
             }
         }
 
         public void InitializeModule(IRegionModule module, Scene scene)
         {
-            module.Initialise(scene, m_config);
+            module.Initialize(scene, m_config);
             scene.AddModule(module.Name, module);
             m_loadedModules.Add(module);
         }
 
         /// <summary>
-        ///  Loads/initialises a Module instance that can be used by multiple Regions
+        ///  Loads/initializes a Module instance that can be used by multiple Regions
         /// </summary>
         /// <param name="dllName"></param>
         /// <param name="moduleName"></param>
@@ -116,7 +116,7 @@ namespace OpenSim.Region.Framework
         }
 
         /// <summary>
-        ///  Loads/initialises a Module instance that can be used by multiple Regions
+        ///  Loads/initializes a Module instance that can be used by multiple Regions
         /// </summary>
         /// <param name="module"></param>
         public void LoadSharedModule(IRegionModule module)
@@ -212,7 +212,7 @@ namespace OpenSim.Region.Framework
                         {
                             if (!pluginType.IsAbstract)
                             {
-                                if (pluginType.GetInterface("IRegionModule") != null)
+                                if (typeof(IRegionModule).IsAssignableFrom(pluginType))
                                 {
                                     modules.Add((IRegionModule)Activator.CreateInstance(pluginType));
                                 }
@@ -227,23 +227,23 @@ namespace OpenSim.Region.Framework
                         pluginAssembly.FullName, e.Message, e.StackTrace);
                     
                     // justincc: Right now this is fatal to really get the user's attention
-                    throw e;
+                    throw;
                 }
             }
 
             return modules.ToArray();
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             foreach (IRegionModule module in m_loadedSharedModules.Values)
             {
-                module.PostInitialise();
+                module.PostInitialize();
             }
 
             foreach (IRegionModule module in m_loadedModules)
             {
-                module.PostInitialise();
+                module.PostInitialize();
             }
         }
 

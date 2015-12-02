@@ -74,7 +74,7 @@ namespace OpenSim.Data.MySQL
         private long m_lastConnectionUse;
 
         /// <summary>
-        /// Initialises and creates a new MySQL connection and maintains it.
+        /// Initializes and creates a new MySQL connection and maintains it.
         /// </summary>
         /// <param name="hostname">The MySQL server being connected to</param>
         /// <param name="database">The name of the MySQL database being used</param>
@@ -88,23 +88,23 @@ namespace OpenSim.Data.MySQL
             string s = "Server=" + hostname + ";Port=" + port + ";Database=" + database + ";User ID=" +
                 username + ";Password=" + password + ";Pooling=" + cpooling + ";";
 
-            Initialise(s);
+            Initialize(s);
         }
 
         /// <summary>
-        /// Initialises and creates a new MySQL connection and maintains it.
+        /// Initializes and creates a new MySQL connection and maintains it.
         /// </summary>
         /// <param name="connect">connectionString</param>
         public MySQLManager(String connect)
         {
-            Initialise(connect);
+            Initialize(connect);
         }
 
         /// <summary>
-        /// Initialises and creates a new MySQL connection and maintains it.
+        /// Initializes and creates a new MySQL connection and maintains it.
         /// </summary>
         /// <param name="connect">connectionString</param>
-        public void Initialise(String connect)
+        public void Initialize(String connect)
         {
             try
             {
@@ -125,7 +125,7 @@ namespace OpenSim.Data.MySQL
             }
             catch (Exception e)
             {
-                throw new Exception("Error initialising MySql Database: " + e.ToString());
+                throw new Exception("Error initializing MySql Database: " + e.ToString());
             }
         }
 
@@ -540,7 +540,7 @@ namespace OpenSim.Data.MySQL
                 retval.ID = id;
                 retval.FirstName = (string)reader["username"];
                 retval.SurName = (string)reader["lastname"];
-                retval.Email = (reader.IsDBNull(reader.GetOrdinal("email"))) ? "" : (string)reader["email"];
+                retval.Email = (reader.IsDBNull(reader.GetOrdinal("email"))) ? String.Empty : (string)reader["email"];
 
                 retval.PasswordHash = (string)reader["passwordHash"];
                 retval.PasswordSalt = (string)reader["passwordSalt"];
@@ -566,12 +566,12 @@ namespace OpenSim.Data.MySQL
                 retval.UserAssetURI = (string)reader["userAssetURI"];
 
                 if (reader.IsDBNull(reader.GetOrdinal("profileAboutText")))
-                    retval.AboutText = "";
+                    retval.AboutText = String.Empty;
                 else
                     retval.AboutText = (string)reader["profileAboutText"];
 
                 if (reader.IsDBNull(reader.GetOrdinal("profileFirstText")))
-                    retval.FirstLifeAboutText = "";
+                    retval.FirstLifeAboutText = String.Empty;
                 else
                     retval.FirstLifeAboutText = (string)reader["profileFirstText"];
 
@@ -607,7 +607,7 @@ namespace OpenSim.Data.MySQL
                 retval.UserFlags = Convert.ToInt32(reader["userFlags"].ToString());
                 retval.GodLevel = Convert.ToInt32(reader["godLevel"].ToString());
                 if (reader.IsDBNull(reader.GetOrdinal("customType")))
-                    retval.CustomType = "";
+                    retval.CustomType = String.Empty;
                 else
                     retval.CustomType = reader["customType"].ToString();
 
@@ -623,7 +623,7 @@ namespace OpenSim.Data.MySQL
                 }
 
                 if (reader.IsDBNull(reader.GetOrdinal("profileURL")))
-                    retval.ProfileURL = "";
+                    retval.ProfileURL = String.Empty;
                 else
                     retval.ProfileURL = (string)reader["profileURL"];
 
@@ -755,7 +755,7 @@ namespace OpenSim.Data.MySQL
             parameters["?webLoginKey"] = webLoginKey.ToString();
             parameters["?userFlags"] = userFlags;
             parameters["?godLevel"] = godLevel;
-            parameters["?customType"] = customType == null ? "" : customType;
+            parameters["?customType"] = customType == null ? String.Empty : customType;
             parameters["?partner"] = partner.ToString();
             parameters["?profileURL"] = ProfileURL;
             bool returnval = false;
@@ -854,7 +854,7 @@ namespace OpenSim.Data.MySQL
             parameters["?webLoginKey"] = webLoginKey.ToString();
             parameters["?userFlags"] = userFlags;
             parameters["?godLevel"] = godLevel;
-            parameters["?customType"] = customType == null ? "" : customType;
+            parameters["?customType"] = customType == null ? String.Empty : customType;
             parameters["?partner"] = partner.ToString();
 
             bool returnval = false;
@@ -966,11 +966,6 @@ namespace OpenSim.Data.MySQL
             {
                 IDbCommand result = Query(sql, parameters);
 
-                // int x;
-                // if ((x = result.ExecuteNonQuery()) > 0)
-                // {
-                //     returnval = true;
-                // }
                 if (result.ExecuteNonQuery() > 0)
                 {
                     returnval = true;
@@ -1006,11 +1001,6 @@ namespace OpenSim.Data.MySQL
 
                 IDbCommand result = Query(sql, parameters);
 
-                // int x;
-                // if ((x = result.ExecuteNonQuery()) > 0)
-                // {
-                //     returnval = true;
-                // }
                 if (result.ExecuteNonQuery() > 0)
                 {
                     returnval = true;
@@ -1058,11 +1048,6 @@ namespace OpenSim.Data.MySQL
             {
                 IDbCommand result = Query(sql, parameters);
 
-                // int x;
-                // if ((x = result.ExecuteNonQuery()) > 0)
-                // {
-                //     returnval = true;
-                // }
                 if (result.ExecuteNonQuery() > 0)
                 {
                     returnval = true;

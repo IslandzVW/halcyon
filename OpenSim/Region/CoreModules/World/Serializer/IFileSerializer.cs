@@ -25,14 +25,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//TODO: WHERE TO PLACE THIS?
+using OpenSim.Region.Framework.Scenes;
 
-namespace OpenSim.Region.Framework.Scenes.Scripting
+namespace OpenSim.Region.CoreModules.World.Serializer
 {
-    public interface ScriptEngineInterface
+    internal interface IFileSerializer
     {
-        void InitializeEngine(Scene Sceneworld);
-        void Shutdown();
-//        void StartScript(string ScriptID, IScriptHost ObjectID);
+        string WriteToFile(Scene scene, string dir);
     }
 }

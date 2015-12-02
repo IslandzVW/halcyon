@@ -11,6 +11,12 @@
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
+*.mdb 
+*.mdp
+
+# Nant
+*.dll.build
+*.exe.build
 
 # Build results
 [Dd]ebug/
@@ -196,6 +202,9 @@ FakesAssemblies/
 # Visual Studio 6 workspace options file
 *.opt
 
+# Produced by runprebuild.bat (prbably not used by anyone since it's an absolute hard-coded path)
+compile.bat
+
 # Bin stuff that we don't want to commit that gets created when you run the server
 *.nxs
 *.maddin
@@ -212,6 +221,30 @@ bin/ScriptEngines/Phlox/states/script_states.db3
 
 # Other files that need to be created per-installation
 bin/Halcyon.ini
-bin/Regions/region.xml
+bin/aperture.cfg
+bin/GridServer_Config.xml
+bin/MessagingServer_Config.xml
+bin/UserServer_Config.xml
+bin/Regions
+
+# Other testing folder ignores 
+bin/*.dll
+bin/Halcyon.exe
+bin/Halcyon.vshost.exe
+bin/OpenSim.Grid.UserServer.exe
+bin/OpenSim.Grid.GridServer.exe
+bin/OpenSim.Grid.MessagingServer.exe
+bin/OpenSim.TestSuite.exe
+bin/Physics/InWorldz.PhysxPhysics.dll
+bin/Physics/OpenSim.Region.Physics.BasicPhysicsPlugin.dll
+bin/Physics/OpenSim.Region.Physics.Meshing.dll
+bin/Terrain/OpenSim.Region.CoreModules.World.Terrain.DefaultEffects.dll
+bin/crashes
+bin/Grid
+bin/GridLogin
+bin2
+bin3
+bin4
 
 #Other ignores
+*.oar

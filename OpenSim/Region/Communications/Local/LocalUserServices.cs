@@ -34,7 +34,7 @@ using System.Reflection;
 
 namespace OpenSim.Region.Communications.Local
 {
-    public class LocalUserServices : UserManagerBase
+    public class LocalUserServices : UserProfileManager
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly uint m_defaultHomeX;
@@ -68,7 +68,7 @@ namespace OpenSim.Region.Communications.Local
             }
 
             m_log.Debug("Unknown Master User. Sandbox Mode: Creating Account");
-            AddUser(firstName, lastName, password, "", m_defaultHomeX, m_defaultHomeY);
+            AddUser(firstName, lastName, password, String.Empty, m_defaultHomeX, m_defaultHomeY);
             return GetUserProfile(firstName, lastName);
         }
 

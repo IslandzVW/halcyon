@@ -84,7 +84,7 @@ namespace OpenSim.Framework
         [XmlIgnore]
         public static readonly UUID DEFAULT_TEXTURE_ID = new UUID("89556747-24cb-43ed-920b-47caed15465f");
 
-        [XmlIgnore]
+        [XmlIgnore][NonSerialized]
         private Primitive.TextureEntry m_textures;
 
         private byte[] m_textureEntryBytes;  // persisted byte version of m_textures
@@ -113,6 +113,9 @@ namespace OpenSim.Framework
         private HollowShape _hollowShape;
 
         private PhysicsShapeType _preferredPhysicsShape;
+
+        // Materials
+        [XmlIgnore][NonSerialized] private RenderMaterials _renderMaterials;
 
         // Sculpted
         [XmlIgnore] private UUID _sculptTexture = UUID.Zero;
@@ -208,6 +211,7 @@ namespace OpenSim.Framework
             PCode = (byte) PCodeEnum.Primitive;
             ExtraParams = new byte[1];
             Textures = new Primitive.TextureEntry(DEFAULT_TEXTURE_ID);
+            RenderMaterials = new RenderMaterials();
         }
 
         public PrimitiveBaseShape(bool noShape)
@@ -218,6 +222,7 @@ namespace OpenSim.Framework
             PCode = (byte)PCodeEnum.Primitive;
             ExtraParams = new byte[1];
             Textures = new Primitive.TextureEntry(DEFAULT_TEXTURE_ID);
+            RenderMaterials = new RenderMaterials();
         }
 
         /// <summary>
@@ -265,6 +270,8 @@ namespace OpenSim.Framework
             {
                 SculptType = (byte)OpenMetaverse.SculptType.None;
             }
+
+            RenderMaterials = new RenderMaterials();
         }
 
         [XmlIgnore]
@@ -272,7 +279,7 @@ namespace OpenSim.Framework
         {
             get
             {
-				return m_textures; 
+                return m_textures; 
             }
 
             set {
@@ -1002,6 +1009,26 @@ namespace OpenSim.Framework
             }
         }
 
+        [XmlIgnore]
+        public RenderMaterials RenderMaterials
+        {
+            get
+            {
+                return _renderMaterials;
+            }
+            set
+            {
+                _renderMaterials = value;
+            }
+        }
+
+        /// <summary>
+        /// Calculate a hash value over fields that can affect the underlying physics shape.
+        /// Things like RenderMaterials and TextureEntry data are not included.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <param name="lod"></param>
+        /// <returns>ulong - a calculated hash value</returns>
         public ulong GetMeshKey(Vector3 size, float lod)
         {
             ulong hash = 5381;
@@ -1595,6 +1622,55 @@ namespace OpenSim.Framework
             return data;
         }
 
+        /// <summary>
+        /// Return a single MaterialID for a given Face
+        /// </summary>
+        /// <returns>The UUID of the Material or UUID.Zero if none is set</returns>
+        public UUID GetMaterialID(int face)
+        {
+            UUID id;
+
+            if (face < 0)
+            {
+                return Textures.DefaultTexture.MaterialID;
+            }
+            else
+            {
+                var faceEntry = Textures.CreateFace((uint)face);
+                return faceEntry.MaterialID;
+            }
+        }
+
+        /// <summary>
+        /// Return a list of deduplicated materials ids from the texture entry.
+        /// We remove duplicates because a materialid may be used across faces and we only
+        /// need to represent it here once.
+        /// </summary>
+        /// <returns>The List of UUIDs found, possibly empty if no materials are in use.</returns>
+        public List<UUID> GetMaterialIDs()
+        {
+            List<UUID> matIds = new List<UUID>();
+
+            if (Textures != null)
+            {
+                if ((Textures.DefaultTexture != null) &&
+                    (Textures.DefaultTexture.MaterialID != UUID.Zero))
+                {
+                    matIds.Add(Textures.DefaultTexture.MaterialID);
+                }
+
+                foreach (var face in Textures.FaceTextures)
+                {
+                    if ((face != null) && (face.MaterialID != UUID.Zero))
+                    {
+                        if (matIds.Contains(face.MaterialID) == false)
+                            matIds.Add(face.MaterialID);
+                    }
+                }
+            }
+
+            return matIds;
+        }
 
         /// <summary>
         /// Creates a OpenMetaverse.Primitive and populates it with converted PrimitiveBaseShape values
@@ -1683,7 +1759,7 @@ namespace OpenSim.Framework
 
             prim.Properties = new Primitive.ObjectProperties();
             prim.Properties.Name = "Primitive";
-            prim.Properties.Description = "";
+            prim.Properties.Description = String.Empty;
             prim.Properties.CreatorID = UUID.Zero;
             prim.Properties.GroupID = UUID.Zero;
             prim.Properties.OwnerID = UUID.Zero;
@@ -1705,6 +1781,7 @@ namespace OpenSim.Framework
 
             // keys are 0-based (face number - 1)
 //            protected Dictionary<int,MediaEntry> m_MediaList = new Dictionary<int,MediaEntry>();
+            [NonSerialized]
             protected MediaEntry[] m_MediaFaces = null;
 
             public PrimMedia() : base() 
@@ -1862,6 +1939,11 @@ namespace OpenSim.Framework
 
             public void ReadXml(string rawXml)
             {
+                if (rawXml.StartsWith("&lt;"))
+                {
+                    rawXml = rawXml.Replace("&lt;", "<").Replace("&gt;", ">");
+                }
+
                 using (StringReader sr = new StringReader(rawXml))
                 {
                     using (XmlTextReader xtr = new XmlTextReader(sr))

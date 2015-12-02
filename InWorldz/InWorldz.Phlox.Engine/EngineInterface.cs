@@ -89,7 +89,7 @@ namespace InWorldz.Phlox.Engine
             get { return null; }
         }
 
-        public void Initialise(Nini.Config.IConfigSource source)
+        public void Initialize(Nini.Config.IConfigSource source)
         {
             _configSource = source;
 

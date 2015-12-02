@@ -68,8 +68,8 @@ namespace OpenSim.Region.CoreModules.Capabilities
         /// </summary>
         private OSDMap m_features = new OSDMap();
 
-        private string m_MapImageServerURL = string.Empty;
-        private string m_SearchURL = string.Empty;
+        private string m_MapImageServerURL = String.Empty;
+        private string m_SearchURL = String.Empty;
         private bool m_MeshEnabled = true;
         private bool m_PhysicsMaterialsEnabled = true;
         private bool m_DynamicPathfindingEnabled = false;
@@ -79,20 +79,20 @@ namespace OpenSim.Region.CoreModules.Capabilities
         private int m_shoutdistance = 100;
         #region ISharedRegionModule Members
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             IConfig config = source.Configs["SimulatorFeatures"];
             if (config != null)
             {
-                m_MapImageServerURL = config.GetString("MapImageServerURI", string.Empty);
-                if (m_MapImageServerURL != string.Empty)
+                m_MapImageServerURL = config.GetString("MapImageServerURI", String.Empty);
+                if (m_MapImageServerURL != String.Empty)
                 {
                     m_MapImageServerURL = m_MapImageServerURL.Trim();
                     if (!m_MapImageServerURL.EndsWith("/"))
                         m_MapImageServerURL = m_MapImageServerURL + "/";
                 }
 
-                m_SearchURL = config.GetString("SearchServerURI", string.Empty);
+                m_SearchURL = config.GetString("SearchServerURI", String.Empty);
                 m_MeshEnabled = config.GetBoolean("MeshEnabled", m_MeshEnabled);
                 m_PhysicsMaterialsEnabled = config.GetBoolean("PhysicsMaterialsEnabled", m_MeshEnabled);
                 m_DynamicPathfindingEnabled = config.GetBoolean("DynamicPathfindingEnabled", m_DynamicPathfindingEnabled);
@@ -127,7 +127,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
         {
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -171,9 +171,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
     
                 // Extra information for viewers that want to use it
                 OSDMap opensimFeatures = new OSDMap();
-                if (m_MapImageServerURL != string.Empty)
+                if (m_MapImageServerURL != String.Empty)
                     opensimFeatures["map-server-url"] = OSD.FromString(m_MapImageServerURL);
-                if (m_SearchURL != string.Empty)
+                if (m_SearchURL != String.Empty)
                     opensimFeatures["search-server-url"] = OSD.FromString(m_SearchURL);
                 opensimFeatures["ExportSupported"] = m_ExportSupported;
                 opensimFeatures["whisper-range"] = m_whisperdistance;

@@ -58,7 +58,7 @@ namespace OpenSim.Data.MySQL
 
         private object m_PrimDBLock = new object();
 
-        public void Initialise(string connectionString)
+        public void Initialize(string connectionString)
         {
             m_ConnectionString = connectionString;
         }
@@ -174,8 +174,9 @@ namespace OpenSim.Data.MySQL
                 "PathTaperX, PathTaperY, PathTwist, " +
                 "PathTwistBegin, ProfileBegin, ProfileEnd, " +
                 "ProfileCurve, ProfileHollow, Texture, " +
-                "ExtraParams, Media, State, PhysicsData, PreferredPhysicsShape, " +
-                "VertexCount, HighLODBytes, MidLODBytes, LowLODBytes, LowestLODBytes) values ";
+                "ExtraParams, Media, Materials, State, PhysicsData, " +
+                "PreferredPhysicsShape, VertexCount, HighLODBytes, " +
+                "MidLODBytes, LowLODBytes, LowestLODBytes) values ";
 
             const string primQueryEpilogue =
                 " ON DUPLICATE KEY UPDATE " +
@@ -225,9 +226,9 @@ namespace OpenSim.Data.MySQL
                 "PathTaperX=VALUES(PathTaperX), PathTaperY=VALUES(PathTaperY), PathTwist=VALUES(PathTwist), " +
                 "PathTwistBegin=VALUES(PathTwistBegin), ProfileBegin=VALUES(ProfileBegin), ProfileEnd=VALUES(ProfileEnd), " +
                 "ProfileCurve=VALUES(ProfileCurve), ProfileHollow=VALUES(ProfileHollow), Texture=VALUES(Texture), " +
-                "ExtraParams=VALUES(ExtraParams), Media=VALUES(Media), State=VALUES(State), PhysicsData=VALUES(PhysicsData), " +
-                "PreferredPhysicsShape=VALUES(PreferredPhysicsShape), VertexCount=VALUES(VertexCount), HighLODBytes=VALUES(HighLODBytes), " +
-                "MidLODBytes=VALUES(MidLODBytes), LowLODBytes=VALUES(LowLODBytes), LowestLODBytes=VALUES(LowestLODBytes);";
+                "ExtraParams=VALUES(ExtraParams), Media=VALUES(Media), Materials=VALUES(Materials), State=VALUES(State), " +
+                "PhysicsData=VALUES(PhysicsData), PreferredPhysicsShape=VALUES(PreferredPhysicsShape), VertexCount=VALUES(VertexCount), " +
+                "HighLODBytes=VALUES(HighLODBytes), MidLODBytes=VALUES(MidLODBytes), LowLODBytes=VALUES(LowLODBytes), LowestLODBytes=VALUES(LowestLODBytes);";
 
             StringBuilder currentPrimQuery = new StringBuilder(basePrimQuery);
             StringBuilder currentShapesQuery = new StringBuilder(baseShapesQuery);
@@ -343,6 +344,7 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("Texture" + numString, s.TextureEntryBytes);
             cmd.Parameters.AddWithValue("ExtraParams" + numString, s.ExtraParams);
             cmd.Parameters.AddWithValue("Media" + numString, s.Media == null ? null : s.Media.ToXml());
+            cmd.Parameters.AddWithValue("Materials" + numString, s.RenderMaterials == null ? null : s.RenderMaterials.ToBytes());
             cmd.Parameters.AddWithValue("State" + numString, s.State);
             cmd.Parameters.AddWithValue("PhysicsData" + numString, prim.SerializedPhysicsData);
             cmd.Parameters.AddWithValue("PreferredPhysicsShape" + numString, s.PreferredPhysicsShape);
@@ -503,7 +505,7 @@ namespace OpenSim.Data.MySQL
                                 "?PathTwistBegin, ?ProfileBegin, " +
                                 "?ProfileEnd, ?ProfileCurve, " +
                                 "?ProfileHollow, ?Texture, ?ExtraParams, " +
-                                "?Media, ?State, ?PhysicsData, ?PreferredPhysicsShape, ?VertexCount, " +
+                                "?Media, ?Materials, ?State, ?PhysicsData, ?PreferredPhysicsShape, ?VertexCount, " +
                                 "?HighLODBytes, ?MidLODBytes, ?LowLODBytes, ?LowestLODBytes)";
 
             const int SZ_PAD = 100;
@@ -1413,7 +1415,7 @@ namespace OpenSim.Data.MySQL
         {
             // "INSERT INTO room(person,address) VALUES(?person, ?address)"
 
-            if (varlist == string.Empty)
+            if (varlist == String.Empty)
             {
                 varlist += ",";
                 values += ",";
@@ -1454,8 +1456,8 @@ namespace OpenSim.Data.MySQL
                     }
 
                     // start with two empty strings
-                    string varlist = string.Empty;
-                    string values = string.Empty;
+                    string varlist = String.Empty;
+                    string values = String.Empty;
 
                     // Sky
                     AddQueryParam(cmd, ref varlist, ref values, "region_id", env.regionID);
@@ -1936,7 +1938,7 @@ namespace OpenSim.Data.MySQL
             newSettings.TerrainTexture1 = new UUID(Convert.ToString(row["terrain_texture_1"]));
             newSettings.TerrainTexture2 = new UUID(Convert.ToString(row["terrain_texture_2"]));
             newSettings.TerrainTexture3 = new UUID(Convert.ToString(row["terrain_texture_3"]));
-			newSettings.TerrainTexture4 = new UUID(Convert.ToString(row["terrain_texture_4"]));
+            newSettings.TerrainTexture4 = new UUID(Convert.ToString(row["terrain_texture_4"]));
             newSettings.Elevation1NW = Convert.ToDouble(row["elevation_1_nw"]);
             newSettings.Elevation2NW = Convert.ToDouble(row["elevation_2_nw"]);
             newSettings.Elevation1NE = Convert.ToDouble(row["elevation_1_ne"]);
@@ -2014,7 +2016,7 @@ namespace OpenSim.Data.MySQL
             UUID snapshotID = UUID.Zero;
 
             UUID.TryParse(Convert.ToString(row["AuthBuyerID"]), out authedbuyer);
-			UUID.TryParse(Convert.ToString(row["SnapshotUUID"]), out snapshotID);
+            UUID.TryParse(Convert.ToString(row["SnapshotUUID"]), out snapshotID);
             newData.OtherCleanTime = Convert.ToInt32(row["OtherCleanTime"]);
             newData.Dwell = Convert.ToInt32(row["Dwell"]);
 
@@ -2268,7 +2270,13 @@ namespace OpenSim.Data.MySQL
                 byte[] media = (byte[])row["Media"];
                 s.Media = PrimitiveBaseShape.PrimMedia.FromXml(UTF8Encoding.UTF8.GetString(media, 0, media.Length));
             }
-            
+
+            if (!(row["Materials"] is System.DBNull))
+            {
+                byte[] materials = (byte[])row["Materials"];
+                s.RenderMaterials = RenderMaterials.FromBytes(materials, 0);
+            }
+
             s.State = Convert.ToByte(row["State"]);
 
             s.PreferredPhysicsShape = (OpenMetaverse.PhysicsShapeType) Convert.ToByte(row["PreferredPhysicsShape"]);
@@ -2321,6 +2329,7 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("Texture", s.TextureEntryBytes);
             cmd.Parameters.AddWithValue("ExtraParams", s.ExtraParams);
             cmd.Parameters.AddWithValue("Media", s.Media == null ? null : s.Media.ToXml());
+            cmd.Parameters.AddWithValue("Materials", s.RenderMaterials == null ? null : s.RenderMaterials.ToBytes());
             cmd.Parameters.AddWithValue("State", s.State);
         }
 

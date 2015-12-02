@@ -59,7 +59,7 @@ namespace PhysXtest
         {
             const float HEIGHT = 20.0f;
 
-			var rigid = scene.Physics.CreateRigidDynamic();
+            var rigid = scene.Physics.CreateRigidDynamic();
             var shape = rigid.CreateShape(new PhysX.BoxGeometry(1.0f, 1.0f, 1.0f), material);
             
             rigid.GlobalPose = PhysX.Math.Matrix.Translation(130f, 130f, HEIGHT + offset);

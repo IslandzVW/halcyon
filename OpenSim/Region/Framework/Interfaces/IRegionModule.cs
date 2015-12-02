@@ -47,9 +47,9 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </remarks>
         /// <param name="scene"></param>
         /// <param name="source">Configuration information.  For a shared module this will be identical on every scene call</param>
-        void Initialise(Scene scene, IConfigSource source);
+        void Initialize(Scene scene, IConfigSource source);
         
-        void PostInitialise();
+        void PostInitialize();
         void Close();
         string Name { get; }
         bool IsSharedModule { get; }

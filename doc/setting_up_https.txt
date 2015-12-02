@@ -45,7 +45,7 @@ a certificate signed by the CA cert you created.  The second step below also ins
 
 
 
-2) OpenSim.ini configuration
+2) Halcyon.ini configuration
 
 You need add a few addition entries in the [Network] configuration section.  Only the relevant changes are show.
 

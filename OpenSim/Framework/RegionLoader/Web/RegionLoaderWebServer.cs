@@ -57,7 +57,7 @@ namespace OpenSim.Framework.RegionLoader.Web
             {
                 IConfig startupConfig = (IConfig) m_configSource.Configs["Startup"];
                 string url = startupConfig.GetString("regionload_webserver_url", String.Empty).Trim();
-                if (url == String.Empty)
+                if (String.IsNullOrEmpty(url))
                 {
                     m_log.Error("[WEBLOADER]: Unable to load webserver URL - URL was empty.");
                     return null;

@@ -47,12 +47,12 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.User
             get { return null; }
         }
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
             {
-                string name = moduleConfig.GetString("UserServices", "");
+                string name = moduleConfig.GetString("UserServices", String.Empty);
                 if (name == Name)
                 {
                     m_Enabled = true;
@@ -60,7 +60,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.User
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (!m_Enabled)
                 return;

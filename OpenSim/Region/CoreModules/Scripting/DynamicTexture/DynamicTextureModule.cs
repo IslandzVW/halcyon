@@ -186,7 +186,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
             {
@@ -195,7 +195,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

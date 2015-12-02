@@ -55,7 +55,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
         }
 
-        public void Initialise(IPAddress listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource)
+        public void Initialize(IPAddress listenIP, ref uint port, int proxyPortOffsetParm, bool allow_alternate_port, IConfigSource configSource)
         {
             m_udpServer = new LLUDPServer(listenIP, ref port, proxyPortOffsetParm, allow_alternate_port, configSource);
         }
@@ -553,7 +553,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     OutgoingPacket outgoingPacket = packetList[i];
 
                     /*m_log.DebugFormat("[LLUDPSERVER]: {0} Resending packet #{1} (attempt {2}), {3}ms have passed",
-                        (expiredPackets.Key & UnackedPacketCollection.ResendReason.FastRetransmit) != 0 ? "(Fast)" : "",
+                        (expiredPackets.Key & UnackedPacketCollection.ResendReason.FastRetransmit) != 0 ? "(Fast)" : String.Empty,
                         outgoingPacket.SequenceNumber, outgoingPacket.ResendCount, Environment.TickCount - outgoingPacket.TickCount);
                     */
 
@@ -574,7 +574,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 if (packetList.Count != 0)
                 {
                     m_log.DebugFormat("[LLUDPSERVER]: {0} Resent {1} packet(s) for {2}",
-                        (expiredPackets.Key & UnackedPacketCollection.ResendReason.FastRetransmit) != 0 ? "(Fast)" : "",
+                        (expiredPackets.Key & UnackedPacketCollection.ResendReason.FastRetransmit) != 0 ? "(Fast)" : String.Empty,
                         packetList.Count, udpClient.AgentID);
                 }*/
             }
@@ -753,7 +753,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             IClientAPI client;
             if (!m_scene.TryGetClient(address, out client) || !(client is LLClientView))
             {
-//				m_log.Warn("[LLUDPSERVER]: Received a " + packet.Type.ToString() + " packet from an unrecognized source: " + address.ToString() + " in " + m_scene.RegionInfo.RegionName);
+//                m_log.Warn("[LLUDPSERVER]: Received a " + packet.Type.ToString() + " packet from an unrecognized source: " + address.ToString() + " in " + m_scene.RegionInfo.RegionName);
                 return;
             }
 
@@ -881,7 +881,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         // Number of seconds to log for
         static TimeSpan binStatsMaxFilesize = TimeSpan.FromSeconds(300);
         static object binStatsLogLock = new object();
-        static string binStatsDir = "";
+        static string binStatsDir = String.Empty;
 
         public static void LogPacketHeader(bool incoming, uint circuit, byte flags, PacketType packetType, ushort size)
         {
@@ -917,7 +917,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         // First log file or time has expired, start writing to a new log file
                         PacketLog = new PacketLogger();
                         PacketLog.StartTime = now;
-                        PacketLog.Path = (binStatsDir.Length > 0 ? binStatsDir + System.IO.Path.DirectorySeparatorChar.ToString() : "")
+                        PacketLog.Path = (binStatsDir.Length > 0 ? binStatsDir + System.IO.Path.DirectorySeparatorChar.ToString() : String.Empty)
                                 + String.Format("packets-{0}.log", now.ToString("yyyyMMddHHmmss"));
                         PacketLog.Log = new BinaryWriter(File.Open(PacketLog.Path, FileMode.Append, FileAccess.Write));
                     }

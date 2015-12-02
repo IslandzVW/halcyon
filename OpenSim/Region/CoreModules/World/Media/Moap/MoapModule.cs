@@ -98,7 +98,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
         /// </summary>
         protected Dictionary<UUID, string> m_omuCapUrls = new Dictionary<UUID, string>();
 
-        public void Initialise(IConfigSource configSource)
+        public void Initialize(IConfigSource configSource)
         {
             m_isEnabled = true;
             IConfig config = configSource.Configs["MediaOnAPrim"];
@@ -325,11 +325,11 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 m_log.WarnFormat(
                     "[MOAP]: Received a GET ObjectMediaRequest for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return string.Empty;
+                return String.Empty;
             }
 
             if (null == part.Shape.Media)
-                return string.Empty;
+                return String.Empty;
 
             ObjectMediaResponse resp = new ObjectMediaResponse();
 
@@ -364,7 +364,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 m_log.WarnFormat(
                     "[MOAP]: Received an UPDATE ObjectMediaRequest for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return string.Empty;
+                return String.Empty;
             }
 
             //            m_log.DebugFormat("[MOAP]: Received {0} media entries for prim {1}", omu.FaceMedia.Length, primId);
@@ -381,7 +381,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 m_log.WarnFormat(
                     "[MOAP]: Received {0} media entries from client for prim {1} {2} but this prim has only {3} faces.  Dropping request.",
                     omu.FaceMedia.Length, part.Name, part.UUID, part.GetNumberOfSides());
-                return string.Empty;
+                return String.Empty;
             }
 
             UUID agentId = default(UUID);
@@ -456,7 +456,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
 
             part.TriggerScriptChangedEvent(Changed.MEDIA);
 
-            return string.Empty;
+            return String.Empty;
         }
 
         /// <summary>
@@ -486,7 +486,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 m_log.WarnFormat(
                     "[MOAP]: Received an ObjectMediaNavigateMessage for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return string.Empty;
+                return String.Empty;
             }
 
             UUID agentId = default(UUID);
@@ -495,7 +495,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 agentId = m_omuCapUsers[path];
 
             if (!m_scene.Permissions.CanInteractWithPrimMedia(agentId, part.UUID, omn.Face))
-                return string.Empty;
+                return String.Empty;
 
             //            m_log.DebugFormat(
             //                "[MOAP]: Received request to update media entry for face {0} on prim {1} {2} to {3}", 
@@ -503,7 +503,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
 
             // If media has never been set for this prim, then just return.
             if (null == part.Shape.Media)
-                return string.Empty;
+                return String.Empty;
 
             MediaEntry me = null;
 
@@ -512,7 +512,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
 
             // Do the same if media has not been set up for a specific face
             if (null == me)
-                return string.Empty;
+                return String.Empty;
 
             if (me.EnableWhiteList)
             {
@@ -522,7 +522,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                     //                        "[MOAP]: Blocking change of face {0} on prim {1} {2} to {3} since it's not on the enabled whitelist", 
                     //                        omn.Face, part.Name, part.UUID, omn.URL);
 
-                    return string.Empty;
+                    return String.Empty;
                 }
             }
 

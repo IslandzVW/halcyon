@@ -88,7 +88,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         private DateTime _rdbCacheTime;
         private List<string> _rdbHostCache = new List<string>();
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_scene = scene;
             m_landIDList.Initialize();
@@ -167,7 +167,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             foreach (string host in rdbHosts)
             {
                 ConnectionFactory rdbFactory;
-                if ((++whichDB == 1) || (_rdbConnectionTemplateDebug.Trim() == String.Empty))
+                if ((++whichDB == 1) || String.IsNullOrWhiteSpace(_rdbConnectionTemplateDebug))
                     rdbFactory = new ConnectionFactory("MySQL", String.Format(_rdbConnectionTemplate, host));
                 else  // Special debugging support for multiple RDBs on one machine ("inworldz_rdb2", etc)
                     rdbFactory = new ConnectionFactory("MySQL", String.Format(_rdbConnectionTemplateDebug, host, whichDB));
@@ -211,7 +211,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             client.OnParcelReclaim += new ParcelReclaim(handleParcelReclaim);
             client.OnParcelInfoRequest += new ParcelInfoRequest(handleParcelInfo);
             client.OnParcelDwellRequest += new ParcelDwellRequest(handleParcelDwell);
-			client.OnParcelFreezeUser += new FreezeUserUpdate(OnParcelFreezeUser);
+            client.OnParcelFreezeUser += new FreezeUserUpdate(OnParcelFreezeUser);
             client.OnParcelEjectUser += new EjectUserUpdate(OnParcelEjectUser);
 
             client.OnParcelDeedToGroup += new ParcelDeedToGroup(handleParcelDeedToGroup);
@@ -228,7 +228,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -351,13 +351,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             return parcelsNear;
         }
 
-        public bool SendNoEntryNotice(ScenePresence avatar, ParcelPropertiesStatus reason)
+        public void SendNoEntryNotice(ScenePresence avatar, ParcelPropertiesStatus reason)
         {
             if (!AllowedForcefulBans)
             {
                 avatar.ControllingClient.SendAlertMessage(
                     "You are not allowed on this parcel, however the grid administrator has disabled ban lines globally. Please respect the land owner's privacy, or you could be banned from the full region.");
-                return false;
+                return;
             }
 
             if (reason == ParcelPropertiesStatus.CollisionBanned)
@@ -366,19 +366,35 @@ namespace OpenSim.Region.CoreModules.World.Land
             else
                 avatar.ControllingClient.SendAlertMessage(
                     "You are not permitted to enter this parcel due to parcel restrictions.");
+        }
+
+        // Bounce constants are how far above a no-entry parcel we'll place an object or avatar.
+        private readonly float AVATAR_BOUNCE = 10.0f;
+        public void RemoveAvatarFromParcel(ScenePresence avatar)
+        {
+            EntityBase.PositionInfo posInfo = avatar.GetPosInfo();
+
+            if (posInfo.Parent != null)
+            {
+                // can't find the prim seated on, stand up
+                avatar.StandUp(null, false, true);
+
+                // fall through to unseated avatar code.
+            }
 
             // If they are moving, stop them.  This updates the physics object as well.
             avatar.Velocity = Vector3.Zero;
-            Vector3 pos;
+
+            Vector3 pos = avatar.AbsolutePosition;  // may have changed from posInfo by StandUp above.
+
             ParcelPropertiesStatus reason2;
             if (!avatar.lastKnownAllowedPosition.Equals(Vector3.Zero))
             {
-                pos = new Vector3(avatar.lastKnownAllowedPosition.X, avatar.lastKnownAllowedPosition.Y, avatar.lastKnownAllowedPosition.Z);
+                pos = avatar.lastKnownAllowedPosition;
             }
             else
             {
                 // Still a forbidden parcel, they must have been above the limit or entering region for the first time.
-                pos = new Vector3(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y, avatar.AbsolutePosition.Z);
                 // Let's put them up higher, over the restricted parcel.
                 // We could add 50m to avatar.Scene.Heightmap[x,y] but then we need subscript checks, etc.
                 // For now, this is simple and safer than TPing them home.
@@ -388,17 +404,18 @@ namespace OpenSim.Region.CoreModules.World.Land
             ILandObject parcel = landChannel.GetLandObject(pos.X, pos.Y);
             if (parcel.DenyParcelAccess(avatar.UUID, out reason2))
             {
-                // Havent found anywhere safe to put the avatar, TP them home.
-//              avatar.ControllingClient.SendTeleportLocationStart();
-//              avatar.Scene.TeleportClientHome(avatar.UUID, avatar.ControllingClient);
-//              return true;
-
-                if (pos.Z < 150.0f)
-                    pos.Z = 150.0f;
+                float minZ = LandChannel.BAN_LINE_SAFETY_HEIGHT + AVATAR_BOUNCE;
+                if (pos.Z < minZ)
+                    pos.Z = minZ;
             }
 
-            avatar.Teleport(pos);
-            return true;
+            // Now force the non-sitting avatar to a position above the parcel
+            avatar.Teleport(pos);   // this is really just a move
+        }
+        public void RemoveAvatarFromParcel(UUID userID)
+        {
+            ScenePresence sp = m_scene.GetScenePresence(userID);
+            RemoveAvatarFromParcel(sp);
         }
 
         public void handleAvatarChangingParcel(ScenePresence avatar, int localLandID, UUID regionID)
@@ -419,21 +436,14 @@ namespace OpenSim.Region.CoreModules.World.Land
                         ParcelPropertiesStatus reason;
                         if (parcelAvatarIsEntering.DenyParcelAccess(avatar.UUID, out reason))
                         {
-                            // Check if the avatar is seated and unsit before reposition/teleport in SendNoEntryNotice.
-                            EntityBase.PositionInfo posInfo = avatar.GetPosInfo();
-                            if (posInfo.Parent != null)
-                                avatar.StandUp(null, false, true);
+                            EntityBase.PositionInfo avatarPos = avatar.GetPosInfo();
+                            if (avatarPos.Parent == null)   // not seated
+                                RemoveAvatarFromParcel(avatar);
                             SendNoEntryNotice(avatar, reason);
-                        }
-                        else
-                        {
-                            avatar.lastKnownAllowedPosition = new Vector3(pos);
+                            return;
                         }
                     }
-                    else
-                    {
-                        avatar.lastKnownAllowedPosition = new Vector3(pos);
-                    }
+                    avatar.lastKnownAllowedPosition = pos;
                 }
             }
         }
@@ -493,48 +503,45 @@ namespace OpenSim.Region.CoreModules.World.Land
                 {
                     avatar.Invulnerable = true;
                 }
-
-                m_scene.EventManager.TriggerAvatarEnteringNewParcel(avatar, parcel.landData.LocalID, m_scene.RegionInfo.RegionID);
             }
         }
 
-        public ILandObject GetAvatarParcel(ScenePresence avatar)
+        public ILandObject GetNearestParcel(Vector3 pos)
         {
-            Vector3 pos = avatar.AbsolutePosition;
             pos.X = Util.Clamp<int>((int)pos.X, 0, 255);
             pos.Y = Util.Clamp<int>((int)pos.Y, 0, 255);
             return GetLandObject(pos.X, pos.Y);
         }
 
+        public ILandObject GetAvatarParcel(ScenePresence avatar)
+        {
+            return GetNearestParcel(avatar.AbsolutePosition);
+        }
+
         public void RefreshParcelInfo(IClientAPI remote_client, bool force)
         {
             ScenePresence avatar = m_scene.GetScenePresence(remote_client.AgentId);
-
             if (avatar != null)
             {
-                float zpos = avatar.AbsolutePosition.Z;
-                float prevzpos = avatar.lastKnownAllowedPosition.Z;
-                ILandObject parcel = GetAvatarParcel(avatar);
+                Vector3 pos = avatar.AbsolutePosition;
+                ILandObject parcel = GetLandObject(pos.X, pos.Y);   // use the real values, ignore parcel not found
                 if (parcel != null)
                 {
+                    SendOutNearestBanLine(remote_client);
+
+                    // Possibly entering the restricted zone of the parcel.
+                    ParcelPropertiesStatus reason;
+                    if ((pos.Z >= LandChannel.BAN_LINE_SAFETY_HEIGHT) || !parcel.DenyParcelAccess(avatar.UUID, out reason))
+                    {
+                        avatar.lastKnownAllowedPosition = pos;
+                    }
+
                     bool newParcel = (avatar.currentParcelUUID != parcel.landData.GlobalID);
                     if (newParcel)
+                    {
                         SendAvatarLandUpdate(avatar, parcel, force);
-//                    SendOutNearestBanLine(remote_client);
-                    if (newParcel || ((zpos < LandChannel.BAN_LINE_SAFETY_HEIGHT) && (prevzpos >= LandChannel.BAN_LINE_SAFETY_HEIGHT)))
-                    {
-                        // Either entering a new parcel from the side, or entering the restricted zone from above.
-                        handleAvatarChangingParcel(avatar, parcel.landData.LocalID, m_scene.RegionInfo.RegionID);
+                        m_scene.EventManager.TriggerAvatarEnteringNewParcel(avatar, parcel.landData.LocalID, m_scene.RegionInfo.RegionID);
                     }
-#if false
-// redundant parcel access check for the parcel we're already in, don't do group access lookups for every movement...
-                    else if (zpos < LandChannel.BAN_LINE_SAFETY_HEIGHT)
-                    {
-                        ParcelPropertiesStatus reason;
-                        if (parcel.DenyParcelAccess(avatar.UUID, out reason))
-                            SendNoEntryNotice(avatar,reason);
-                    }
-#endif
                 }
             }
         }
@@ -773,9 +780,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             return GetLandObject(x, y);
         }
 
-        #endregion
+#endregion
 
-        #region Parcel Modification
+#region Parcel Modification
 
         public void ResetAllLandPrimCounts()
         {
@@ -1070,9 +1077,9 @@ namespace OpenSim.Region.CoreModules.World.Land
             masterLandObject.sendLandUpdateToAvatarsOverParcel();
         }
 
-        #endregion
+#endregion
 
-        #region Parcel Updating
+#region Parcel Updating
 
         /// <summary>
         /// Where we send the ParcelOverlay packet to the client
@@ -1371,7 +1378,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
         }
-        #endregion
+#endregion
 
         // After receiving a land buy packet, first the data needs to
         // be validated. This method validates the right to buy the parcel.
@@ -1471,7 +1478,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         }
 
-        #region Land Object From Storage Functions
+#region Land Object From Storage Functions
 
         public void IncomingLandObjectsFromStorage(List<LandData> data)
         {
@@ -1517,7 +1524,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             ResetSimLandObjects();
         }
 
-        #endregion
+#endregion
 
         public void setParcelObjectMaxOverride(overrideParcelMaxPrimCountDelegate overrideDel)
         {
@@ -1534,7 +1541,7 @@ namespace OpenSim.Region.CoreModules.World.Land
         {
         }
 
-        #region CAPS handler
+#region CAPS handler
 
         private void OnRegisterCaps(UUID agentID, Caps caps)
         {
@@ -1567,7 +1574,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (!m_scene.TryGetClient(agentID, out client))
             {
                 m_log.WarnFormat("[LAND MANAGEMENT MODULE]: Unable to retrieve IClientAPI for {0}", agentID);
-                return LLSDHelpers.SerialiseLLSDReply(new LLSDEmpty());
+                return LLSDHelpers.SerializeLLSDReply(new LLSDEmpty());
             }
 
             ParcelPropertiesUpdateMessage properties = new ParcelPropertiesUpdateMessage();
@@ -1618,7 +1625,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 m_log.WarnFormat("[LAND MANAGEMENT MODULE]: Unable to find parcelID {0}", parcelID);
             }
-            return LLSDHelpers.SerialiseLLSDReply(new LLSDEmpty());
+            return LLSDHelpers.SerializeLLSDReply(new LLSDEmpty());
         }
 
 
@@ -1696,10 +1703,10 @@ namespace OpenSim.Region.CoreModules.World.Land
             response.parcel_id = parcelID;
             m_log.DebugFormat("[LAND]: got parcelID {0}", parcelID);
 
-            return LLSDHelpers.SerialiseLLSDReply(response);
+            return LLSDHelpers.SerializeLLSDReply(response);
         }
 
-        #endregion
+#endregion
 
         private void handleParcelDwell(int localID, IClientAPI remoteClient)
         {
@@ -1949,12 +1956,13 @@ namespace OpenSim.Region.CoreModules.World.Land
         }
 
         public void OnParcelEjectUser(IClientAPI client, UUID parcelowner, uint flags, UUID target)
-		{
-			// m_log.DebugFormat("OnParcelEjectUser: target {0} by {1} options {2}", target, parcelowner.ToString(), flags);
-			ScenePresence target_presence = m_scene.GetScenePresence(target); 
-			if (target_presence == null) return;
+        {
+            // m_log.DebugFormat("OnParcelEjectUser: target {0} by {1} options {2}", target, parcelowner.ToString(), flags);
+            ScenePresence target_presence = m_scene.GetScenePresence(target); 
+            if (target_presence == null) return;
 
-            ILandObject land = GetLandObject(target_presence.AbsolutePosition.X, target_presence.AbsolutePosition.Y);
+            Vector3 pos = target_presence.AbsolutePosition;
+            ILandObject land = GetLandObject(pos.X, pos.Y);
 
             if (m_scene.Permissions.CanEditParcel(client.AgentId, land, GroupPowers.LandEjectAndFreeze))
             {
@@ -1974,7 +1982,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     targetClient.Close();
                 }
             }
-		}
+        }
 
         private LandObject FindParcelByUUID(UUID parcelID)
         {

@@ -70,7 +70,7 @@ namespace InWorldz.Data.Assets.Stratus
 
         private IAssetReceiver _assetReceiver;
 
-        public void Initialise(ConfigSettings settings)
+        public void Initialize(ConfigSettings settings)
         {
             IConfig stratusConfig = settings.SettingsFile["InWorldz.Data.Assets.Stratus"];
             if (stratusConfig != null && stratusConfig.GetBoolean("enabled", true))
@@ -264,7 +264,7 @@ namespace InWorldz.Data.Assets.Stratus
             get { return "InWorldz.Data.Assets.Stratus.StratusAssetClient"; }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
         }
 

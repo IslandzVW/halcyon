@@ -83,7 +83,7 @@ namespace OpenSim.Region.CoreModules.World.Wind.Plugins
             get { return "ZephyrWind"; }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
             
         }

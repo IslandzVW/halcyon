@@ -67,7 +67,7 @@ namespace InWorldz.Testing
 
         public string ActiveGroupName
         {
-            get { return ""; }
+            get { return String.Empty; }
         }
 
         public ulong ActiveGroupPowers
@@ -629,7 +629,7 @@ namespace InWorldz.Testing
             
         }
 
-        public void SendChatMessage(string message, byte type, OpenMetaverse.Vector3 fromPos, string fromName, OpenMetaverse.UUID fromAgentID, byte source, byte audible)
+        public void SendChatMessage(string message, byte type, OpenMetaverse.Vector3 fromPos, string fromName, OpenMetaverse.UUID fromAgentID, OpenMetaverse.UUID ownerID, byte source, byte audible)
         {
             
         }
@@ -1134,7 +1134,7 @@ namespace InWorldz.Testing
 
         public string GetClientOption(string option)
         {
-            return "";
+            return String.Empty;
         }
 
         public void SendSetFollowCamProperties(OpenMetaverse.UUID objectID, Dictionary<int, float> parameters)

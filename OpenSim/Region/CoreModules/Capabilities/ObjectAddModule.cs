@@ -48,13 +48,13 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         #region IRegionModule Members
 
-        public void Initialise(Scene pScene, IConfigSource pSource)
+        public void Initialize(Scene pScene, IConfigSource pSource)
         {
             m_scene = pScene;
             m_scene.EventManager.OnRegisterCaps += RegisterCaps;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             
         }

@@ -121,7 +121,7 @@ namespace OpenSim.Framework
         private int _permsMask;
         private int _type = 0;
         private UUID _oldID;
-        private bool _hasControls = false;	// does not need to be serialized, reassigned on startup/rez
+        private bool _hasControls = false;    // does not need to be serialized, reassigned on startup/rez
 
         public bool ContainsMultipleItems
         {

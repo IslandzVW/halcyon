@@ -1570,7 +1570,7 @@ namespace PrimMesher
 
     public class PrimMesh
     {
-        public string errorMessage = "";
+        public string errorMessage = String.Empty;
         private const float twoPi = 2.0f * (float)Math.PI;
 
         public List<Coord> coords;
@@ -1619,7 +1619,7 @@ namespace PrimMesher
         /// <returns></returns>
         public string ParamsToDisplayString()
         {
-            string s = "";
+            string s = String.Empty;
             s += "sides..................: " + this.sides.ToString();
             s += "\nhollowSides..........: " + this.hollowSides.ToString();
             s += "\nprofileStart.........: " + this.profileStart.ToString();

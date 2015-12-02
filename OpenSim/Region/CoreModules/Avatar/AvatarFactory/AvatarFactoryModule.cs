@@ -92,7 +92,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             private bool CheckIfCOFExists(UUID _wearableInventoryItemID)
             {
-                CachedUserInfo userInfo = _scene.CommsManager.UserProfileCacheService.GetUserDetails(_avatarID);
+                CachedUserInfo userInfo = _scene.CommsManager.UserService.GetUserDetails(_avatarID);
 
                 if (userInfo == null)
                     return false;
@@ -178,7 +178,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             private void RemoveLink()
             {
-                CachedUserInfo userInfo = _scene.CommsManager.UserProfileCacheService.GetUserDetails(_avatarID);
+                CachedUserInfo userInfo = _scene.CommsManager.UserService.GetUserDetails(_avatarID);
 
                 if (userInfo == null)
                     return;
@@ -216,7 +216,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                         return;
                     }
 
-                    CachedUserInfo userInfo = _scene.CommsManager.UserProfileCacheService.GetUserDetails(_avatarID);
+                    CachedUserInfo userInfo = _scene.CommsManager.UserService.GetUserDetails(_avatarID);
 
                     if (userInfo != null)
                     {
@@ -273,7 +273,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             private void PrintCOF()
             {
-                CachedUserInfo userInfo = _scene.CommsManager.UserProfileCacheService.GetUserDetails(_avatarID);
+                CachedUserInfo userInfo = _scene.CommsManager.UserService.GetUserDetails(_avatarID);
 
                 if (userInfo == null)
                     return;
@@ -298,7 +298,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
         public bool TryGetAvatarAppearance(UUID avatarId, out AvatarAppearance appearance)
         {
-            CachedUserInfo profile = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(avatarId);
+            CachedUserInfo profile = m_scene.CommsManager.UserService.GetUserDetails(avatarId);
             //if ((profile != null) && (profile.RootFolder != null))
             if (profile != null)
             {
@@ -321,7 +321,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             return (new AvatarAppearance(avatarId));
         }
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             scene.RegisterModuleInterface<IAvatarFactory>(this);
             scene.EventManager.OnNewClient += NewClient;
@@ -342,7 +342,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             _appearanceUpdateTimer.Start();
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -445,7 +445,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             if (!_cofSyncEnabled) return;
 
             CachedUserInfo userInfo
-                = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                = m_scene.CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (userInfo == null)
                 return;
@@ -541,7 +541,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 return;
             }
 
-            CachedUserInfo profile = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(clientView.AgentId);
+            CachedUserInfo profile = m_scene.CommsManager.UserService.GetUserDetails(clientView.AgentId);
             if (profile != null)
             {
                 // we need to clean out the existing textures

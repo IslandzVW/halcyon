@@ -103,6 +103,7 @@ namespace OpenSim.Data
         /// <param name="user">UserProfile to add</param>
         void AddNewUserProfile(UserProfileData user);
 
+#if TEMP_PROFILE_SUPPORT
         /// <summary>
         /// Adds a temporary user profile.  A temporary userprofile is one that should exist only for the lifetime of
         /// the process.
@@ -116,7 +117,7 @@ namespace OpenSim.Data
         /// Reverses the effect of AddTemporaryUserProfile
         /// <param name="uuid">The UUID of the profile to remove.</param>
         void RemoveTemporaryUserProfile(UUID userid);
-
+#endif
         /// <summary>
         /// Updates an existing user profile
         /// </summary>
@@ -191,9 +192,9 @@ namespace OpenSim.Data
         bool InventoryTransferRequest(UUID from, UUID to, UUID inventory);
 
         /// <summary>
-        /// Initialises the plugin (artificial constructor)
+        /// Initializes the plugin (artificial constructor)
         /// </summary>
-        void Initialise(string connect);
+        void Initialize(string connect);
 
         /// <summary>
         /// Gets the user appearance
@@ -225,14 +226,14 @@ namespace OpenSim.Data
         UserPreferencesData RetrieveUserPreferences(UUID userId);
     }
 
-    public class UserDataInitialiser : PluginInitialiserBase
+    public class UserDataInitializer : PluginInitializerBase
     {
         private string connect;
-        public UserDataInitialiser (string s) { connect = s; }
-        public override void Initialise (IPlugin plugin)
+        public UserDataInitializer (string s) { connect = s; }
+        public override void Initialize (IPlugin plugin)
         {
             IUserDataPlugin p = plugin as IUserDataPlugin;
-            p.Initialise (connect);
+            p.Initialize (connect);
         }
     }
 }

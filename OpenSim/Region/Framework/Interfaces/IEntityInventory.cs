@@ -221,7 +221,7 @@ namespace OpenSim.Region.Framework.Interfaces
 
         uint MaskEffectivePermissions();
 
-		uint MaskEffectiveNextPermissions();	// same as above but NextOwner
+        uint MaskEffectiveNextPermissions();    // same as above but NextOwner
 
         void ApplyNextOwnerPermissions();
 

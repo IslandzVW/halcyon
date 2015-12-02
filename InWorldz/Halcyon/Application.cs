@@ -40,7 +40,7 @@ namespace OpenSim
     /// <summary>
     /// Starting class for the OpenSimulator Region
     /// </summary>
-    public class Application
+    public static class Application
     {
         /// <summary>
         /// Text Console Logger
@@ -60,7 +60,7 @@ namespace OpenSim
         /// <summary>
         /// Instance of the OpenSim class.  This could be OpenSim or OpenSimBackground depending on the configuration
         /// </summary>
-        protected static OpenSimBase m_sim = null;
+        private static OpenSimBase m_sim = null;
 
         //could move our main function into OpenSimMain and kill this class
         public static void Main(string[] args)
@@ -77,16 +77,16 @@ namespace OpenSim
             // Configure Log4Net
             configSource.AddSwitch("Startup", "logconfig");
             string logConfigFile = configSource.Configs["Startup"].GetString("logconfig", String.Empty);
-            if (logConfigFile != String.Empty)
+            if (!String.IsNullOrEmpty(logConfigFile))
             {
                 XmlConfigurator.Configure(new System.IO.FileInfo(logConfigFile));
-                m_log.InfoFormat("[OPENSIM MAIN]: configured log4net using \"{0}\" as configuration file", 
+                m_log.InfoFormat("[HALCYON MAIN]: configured log4net using \"{0}\" as configuration file", 
                                  logConfigFile);
             } 
             else
             {
                 XmlConfigurator.Configure();
-                m_log.Info("[OPENSIM MAIN]: configured log4net using default OpenSim.exe.config");
+                m_log.Info("[HALCYON MAIN]: configured log4net using default Halcyon.exe.config");
             }
 
             m_log.Info("Performing compatibility checks... ");

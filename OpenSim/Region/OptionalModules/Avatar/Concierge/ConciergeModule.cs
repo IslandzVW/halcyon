@@ -78,19 +78,19 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
         internal object m_syncy = new object();
 
         #region IRegionModule Members
-        public override void Initialise(Scene scene, IConfigSource config)
+        public override void Initialize(Scene scene, IConfigSource config)
         {
             try
             {
                 if ((m_config = config.Configs["Concierge"]) == null)
                 {
-                    //_log.InfoFormat("[Concierge]: no configuration section [Concierge] in OpenSim.ini: module not configured");
+                    //_log.InfoFormat("[Concierge]: no configuration section [Concierge] in Halcyon.ini: module not configured");
                     return;
                 }
 
                 if (!m_config.GetBoolean("enabled", false))
                 {
-                    //_log.InfoFormat("[Concierge]: module disabled by OpenSim.ini configuration");
+                    //_log.InfoFormat("[Concierge]: module disabled by Halcyon.ini configuration");
                     return;
                 }
             }
@@ -175,7 +175,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             m_log.InfoFormat("[Concierge]: initialized for {0}", scene.RegionInfo.RegionName);
         }
 
-        public override void PostInitialise()
+        public override void PostInitialize()
         {
         }
 
@@ -432,7 +432,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             updatePost.Method = "POST";
             updatePost.ContentType = "text/xml";
             updatePost.ContentLength = payload.Length;
-            updatePost.UserAgent = "OpenSim.Concierge";
+            updatePost.UserAgent = "Halcyon.Concierge";
 
 
             BrokerState bs = new BrokerState(uri, payload, updatePost);
@@ -593,7 +593,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             c.SenderUUID = UUID.Zero;
             c.Scene = agent.Scene;
 
-            agent.ControllingClient.SendChatMessage(msg, (byte) ChatTypeEnum.Say, PosOfGod, m_whoami, UUID.Zero, 
+            agent.ControllingClient.SendChatMessage(msg, (byte) ChatTypeEnum.Say, PosOfGod, m_whoami, UUID.Zero, UUID.Zero, 
                                                     (byte)ChatSourceType.Object, (byte)ChatAudibleLevel.Fully);
         }
 
@@ -625,7 +625,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
                     (string)requestData["password"] != m_xmlRpcPassword) throw new Exception("wrong password");
 
                 if (String.IsNullOrEmpty(m_welcomes))
-                    throw new Exception("welcome templates are not enabled, ask your OpenSim operator to set the \"welcomes\" option in the [Concierge] section of OpenSim.ini");
+                    throw new Exception("welcome templates are not enabled, ask your Halcyon operator to set the \"welcomes\" option in the [Concierge] section of Halcyon.ini");
 
                 string msg = (string)requestData["welcome"];
                 if (String.IsNullOrEmpty(msg))

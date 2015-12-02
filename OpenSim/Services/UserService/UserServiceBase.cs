@@ -47,7 +47,7 @@ namespace OpenSim.Services.UserService
             string dllName = userConfig.GetString("StorageProvider",
                     String.Empty);
 
-            if (dllName == String.Empty)
+            if (String.IsNullOrEmpty(dllName))
                 throw new Exception("No StorageProvider configured");
 
             string connString = userConfig.GetString("ConnectionString",
@@ -58,7 +58,7 @@ namespace OpenSim.Services.UserService
             if (m_Database == null)
                 throw new Exception("Could not find a storage interface in the given module");
 
-            m_Database.Initialise(connString);
+            m_Database.Initialize(connString);
         }
     }
 }

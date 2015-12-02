@@ -149,7 +149,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private Dictionary<UUID, Color> m_mapping;
 
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             m_scene = scene;
             // m_config = source; // not used currently

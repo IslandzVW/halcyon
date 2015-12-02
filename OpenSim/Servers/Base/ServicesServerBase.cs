@@ -238,7 +238,7 @@ namespace OpenSim.Servers.Base
                 }
             }
 
-            if (startupConfig.GetString("PIDFile", String.Empty) != String.Empty)
+            if (!String.IsNullOrEmpty(startupConfig.GetString("PIDFile", String.Empty)))
             {
                 CreatePIDFile(startupConfig.GetString("PIDFile"));
             }
@@ -266,7 +266,7 @@ namespace OpenSim.Servers.Base
             // Allow derived classes to perform initialization that
             // needs to be done after the console has opened
             //
-            Initialise();
+            Initialize();
         }
 
         public bool Running
@@ -288,7 +288,7 @@ namespace OpenSim.Servers.Base
                 }
             }
 
-            if (m_pidFile != String.Empty)
+            if (!String.IsNullOrEmpty(m_pidFile))
                 File.Delete(m_pidFile);
             return 0;
         }
@@ -323,7 +323,7 @@ namespace OpenSim.Servers.Base
                     string currentCommand;
                     while ((currentCommand = readFile.ReadLine()) != null)
                     {
-                        if (currentCommand != String.Empty)
+                        if (!String.IsNullOrEmpty(currentCommand))
                         {
                             m_log.Info("[COMMANDFILE]: Running '" + currentCommand + "'");
                             MainConsole.Instance.RunCommand(currentCommand);
@@ -338,7 +338,7 @@ namespace OpenSim.Servers.Base
         {
         }
 
-        protected virtual void Initialise()
+        protected virtual void Initialize()
         {
         }
 

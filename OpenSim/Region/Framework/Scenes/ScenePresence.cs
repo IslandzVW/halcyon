@@ -128,7 +128,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-		public static byte[] DefaultTexture;
+        public static byte[] DefaultTexture;
 
 //        internal static RegionSettings s_RegionSettings;
 
@@ -163,13 +163,13 @@ namespace OpenSim.Region.Framework.Scenes
         // rotation, prim cut, prim twist, prim taper, and prim shear. See mantis
         // issue #1716
         private bool ADJUST_SIT_TARGET = true;  // do it the old OpenSim way for content compatibility
-		private static readonly Vector3 m_sitTargetCorrectionOffset = new Vector3(0.1f, 0.0f, 0.3f);
+        private static readonly Vector3 m_sitTargetCorrectionOffset = new Vector3(0.1f, 0.0f, 0.3f);
         private float m_godlevel;
 
         private bool m_invulnerable = true;
 
         private Vector3 m_LastChildAgentUpdatePosition;
-//		private Vector3 m_lastChildAgentUpdateCamPosition;
+//        private Vector3 m_lastChildAgentUpdateCamPosition;
         private Vector3 m_LastRegionPosition = new Vector3(128, 128, 128);
 
         private int m_perfMonMS;
@@ -178,8 +178,8 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_setAlwaysRun;
 
         private string m_movementAnimation = "DEFAULT";
-		private string m_previousMovement = "";		// this doubles as our thread reentrancy lock (critical region) on anim updates
-		private long m_animPersistUntil = 0;
+        private string m_previousMovement = String.Empty;        // this doubles as our thread reentrancy lock (critical region) on anim updates
+        private long m_animPersistUntil = 0;
         private bool m_allowFalling = false;
         private bool m_useFlySlow = false;
         private bool m_usePreJump = false;
@@ -213,7 +213,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool IsRestrictedToRegion;
 
-        public string JID = string.Empty;
+        public string JID = String.Empty;
 
         // Agent moves with a PID controller causing a force to be exerted.
         private float m_health = 100f;
@@ -518,18 +518,33 @@ namespace OpenSim.Region.Framework.Scenes
         {
             Vector3 pos;
             Vector3 oldVelocity;
+
+            ILandObject parcel = Scene.LandChannel.GetLandObject(agentPos.X, agentPos.Y);   // outside the lock
+
             lock (m_posInfo)
             {
                 if ((!forced) && (IsInTransit) && (parent != m_posInfo.Parent))
                     return;
 
+                if (parent == null)
+                {
+                    // not seated
+                    if (parcel != null)
+                    {
+                        ParcelPropertiesStatus reason;
+                        if (agentPos.Z < Scene.LandChannel.GetBanHeight() && parcel.DenyParcelAccess(this.UUID, out reason))
+                        {
+                            if (!forced)
+                                return; // illegal position
+                        } else
+                            lastKnownAllowedPosition = agentPos;
+                    }
+                }
+
                 m_posInfo.Set(agentPos, parent, parentPos);
                 oldVelocity = m_velocity;
                 m_velocity = velocity;
                 ForceAgentPositionInRegion();
-                if (m_posInfo.Parent != null)
-                    if ((m_posInfo.Position.X >= 6.0f) || (m_posInfo.Position.Y >= 6.0f))
-                        m_log.Error("[SCENE PRESENCE]: SetAgentPositionInfo - unexpected position " + m_posInfo.Position.ToString());
                 pos = m_posInfo.Position;
             }
 
@@ -545,6 +560,121 @@ namespace OpenSim.Region.Framework.Scenes
             SetAgentPositionInfo(forced, agentPos, parent, parentPos, m_velocity);
         }
 
+        private Vector3 _GetPosition(bool checkParcelChange, bool updateFromPhysics)
+        {
+            bool inTransit;
+            EntityBase.PositionInfo posinfo;
+            SceneObjectPart parent = null;
+            PhysicsActor physActor = null;
+            Vector3 pos;
+            Vector3 ppos;
+            // Grab copies of self-referentially consistent data inside the lock.
+            lock (m_posInfo)
+            {
+                inTransit = IsInTransit; //IsInTransit takes a lock really far down so do this here for good measure
+                posinfo = GetPosInfo();
+                pos = posinfo.Position;
+                parent = posinfo.Parent;
+                physActor = m_physicsActor;
+                if (updateFromPhysics && (physActor != null))
+                    ppos = physActor.Position;   // this seems to be safe to call inside the posInfo lock
+                else
+                    ppos = pos;
+            }
+
+            if ((physActor != null) && !inTransit)
+            {
+                bool posForced = false;
+                if (IsBot && !Util.IsValidRegionXY(ppos))
+                {
+                    Util.ForceValidRegionXY(ref ppos);
+                    physActor.Velocity = Vector3.Zero;
+                    posForced = true;
+                }
+
+                if (checkParcelChange)
+                {
+                    ILandObject parcel = Scene.LandChannel.GetLandObject(ppos.X, ppos.Y);
+                    if (parcel != null)
+                    {
+                        ParcelPropertiesStatus reason;
+                        if ((ppos.Z < Scene.LandChannel.GetBanHeight()) && (parcel.DenyParcelAccess(this.UUID, out reason)))
+                        {
+                            bool enforce = false;
+                            if (parent == null)   // not seated
+                                enforce = true;
+                            else
+                            if (parent != null)   // seated
+                            {
+                                if (parent.PhysActor != null)
+                                    if (parent.PhysActor.IsPhysical)
+                                        enforce = true;
+                            }
+
+                            if (enforce)
+                            {
+                                Vector3 newpos = this.lastKnownAllowedPosition;   // force back into valid location
+                                Vector3 newvel = physActor.Velocity;
+                                // If not retreating from the parcel, bounce them on top of it.
+                                ILandObject parcel2 = Scene.LandChannel.GetLandObject(newpos.X, newpos.Y);
+                                if ((parcel2 != null) && (parcel2.landData.LocalID == parcel.landData.LocalID))
+                                {
+                                    // New parcel is the same parcel, still illegal
+                                    newpos.Z = Scene.LandChannel.GetBanHeight() + 20.0f;    // bounce
+                                    newvel.Z = -newvel.Z;
+                                }
+                                ppos = newpos;
+                                physActor.Velocity = newvel;
+                                posForced = true;
+                            }
+                        }
+                        else
+                            this.lastKnownAllowedPosition = ppos;
+                    }
+                }
+
+                if (updateFromPhysics)
+                {
+                    lock (m_posInfo)
+                    {
+                        m_posInfo.SetPosition(ppos.X, ppos.Y, ppos.Z);
+                        pos = m_posInfo.Position;
+                        if (posForced && m_physicsActor != null) // in case it changed
+                        {
+                            m_physicsActor.Position = pos;
+                        }
+                    }
+                }
+            }
+
+            lock (m_posInfo)
+            {
+                SceneObjectPart part = parent;
+                if (part != null)
+                {
+                    SceneObjectPart rootPart = part.ParentGroup.RootPart;
+
+                    pos *= part.RotationOffset;
+                    if (part != rootPart)
+                    {
+                        pos += part.OffsetPosition;   // already included in pos?
+                        pos *= rootPart.RotationOffset;
+                    }
+                    pos += rootPart.GetWorldPosition();
+                }
+
+                // Sanity "bear trap" test for debugging
+                if (!m_isChildAgent)
+                {
+                    float lower = -100.0f;
+                    float upper = 356.0f;
+                    if ((pos.X < lower) || (pos.Y < lower) || (pos.Y > upper) || (pos.X > upper))
+                        m_log.Error("[SCENE PRESENCE]: AbsolutePosition - Unexpected position " + pos.ToString());
+                }
+            }
+            return pos;
+        }
+
         /// <summary>
         /// Absolute position of this avatar in 'region cordinates'
         /// </summary>
@@ -552,53 +682,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                Vector3 pos = m_posInfo.Position;
-                bool inTransit = IsInTransit; //IsInTransit takes a lock really far down so do this here for good measure
-
-                lock (m_posInfo)
-                {
-                    if ((m_physicsActor != null) && !inTransit)
-                    {
-                        bool posForced = false;
-                        OpenMetaverse.Vector3 ppos = m_physicsActor.Position;   // this seems to be safe to call inside the posInfo lock
-                        if (IsBot && !Util.IsValidRegionXY(ppos))
-                        {
-                            Util.ForceValidRegionXY(ref ppos);
-                            posForced = true;
-                        }
-                        m_posInfo.SetPosition(ppos.X, ppos.Y, ppos.Z);
-                        pos = m_posInfo.Position;
-                        if (posForced)
-                        {
-                            m_physicsActor.Velocity = Vector3.Zero;
-                            m_physicsActor.Position = pos;
-                        }
-                    }
-
-                    SceneObjectPart part = m_posInfo.Parent;
-                    if (part != null)
-                    {
-                        SceneObjectPart rootPart = part.ParentGroup.RootPart;
-
-                        pos *= part.RotationOffset;
-                        if (part != rootPart)
-                        {
-                            pos += part.OffsetPosition;   // already included in pos?
-                            pos *= rootPart.RotationOffset;
-                        }
-                        pos += rootPart.GetWorldPosition();
-                    }
-
-                    // Sanity "bear trap" test for debugging
-                    if (!m_isChildAgent)
-                    {
-                        float lower = -100.0f;
-                        float upper = 356.0f;
-                        if ((pos.X < lower) || (pos.Y < lower) || (pos.Y > upper) || (pos.X > upper))
-                            m_log.Error("[SCENE PRESENCE]: AbsolutePosition - Unexpected position " + pos.ToString());
-                    }
-                    return pos;
-                }
+                return _GetPosition(false, false);  // quick position
             }
             set
             {
@@ -619,6 +703,7 @@ namespace OpenSim.Region.Framework.Scenes
             bool isSafe = false;
             lock (m_posInfo)
             {
+                Vector3 pos = _GetPosition(false, false);
                 isSafe = (!IsDeleted) && (!IsInTransit);
                 if (isSafe)
                     avpos = AbsolutePosition;
@@ -779,9 +864,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Constructor(s)
+#region Constructor(s)
 
         private ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo)
         {
@@ -812,7 +897,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             AbsolutePosition = m_controllingClient.StartPos;
 
-			m_animPersistUntil = 0;
+            m_animPersistUntil = 0;
             
             RegisterToEvents();
             SetDirectionVectors();
@@ -822,6 +907,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_connection = world.ConnectionManager.GetConnection(this.UUID);
             if (m_connection != null)   // can be null for bots which don't have a LLCV
                 m_connection.ScenePresence = this;
+
+            // Prime (cache) the user's group list.
+            m_scene.UserGroupsGet(this.UUID);
         }
 
         public ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo, AvatarAppearance appearance)
@@ -910,11 +998,11 @@ namespace OpenSim.Region.Framework.Scenes
             Dir_Vectors[2] = new Vector3(0, 1, 0); //LEFT
             Dir_Vectors[3] = new Vector3(0, -1, 0); //RIGHT
             Dir_Vectors[4] = new Vector3(0, 0, 1); //UP
-			Dir_Vectors[5] = new Vector3(0, 0, -1); //DOWN
+            Dir_Vectors[5] = new Vector3(0, 0, -1); //DOWN
             Dir_Vectors[6] = new Vector3(0, 0, 0.1f); //UP_Nudge
             Dir_Vectors[7] = new Vector3(0, 0, 0.05f); //DOWN_Nudge     -- Small positive improves landing from hover
-			Dir_Vectors[8] = new Vector3(2, 0, 0); //FORWARD*2
-			Dir_Vectors[9] = new Vector3(-2, 0, 0); //BACK
+            Dir_Vectors[8] = new Vector3(2, 0, 0); //FORWARD*2
+            Dir_Vectors[9] = new Vector3(-2, 0, 0); //BACK
             Dir_Vectors[10] = new Vector3(0, 6, 0); // LEFT_Nudge        -- Strafe nudge is faster than fwd/back nudges
             Dir_Vectors[11] = new Vector3(0, -6, 0); // RIGHT_Nudge     --
         }
@@ -933,22 +1021,22 @@ namespace OpenSim.Region.Framework.Scenes
             vector[4] = new Vector3(m_CameraAtAxis.Z, 0, m_CameraUpAxis.Z); //UP
             vector[5] = new Vector3(-m_CameraAtAxis.Z, 0, -m_CameraUpAxis.Z); //DOWN
             vector[6] = new Vector3(m_CameraAtAxis.Z, 0, m_CameraUpAxis.Z); //UP_Nudge
-			vector[7] = new Vector3(-m_CameraAtAxis.Z, 0, -m_CameraUpAxis.Z); //DOWN_Nudge
-			vector[8] = (new Vector3(m_CameraUpAxis.Z, 0f, -m_CameraAtAxis.Z) * 2); //FORWARD Nudge
-			vector[9] = new Vector3(-m_CameraUpAxis.Z, 0f, m_CameraAtAxis.Z); //BACK Nudge
+            vector[7] = new Vector3(-m_CameraAtAxis.Z, 0, -m_CameraUpAxis.Z); //DOWN_Nudge
+            vector[8] = (new Vector3(m_CameraUpAxis.Z, 0f, -m_CameraAtAxis.Z) * 2); //FORWARD Nudge
+            vector[9] = new Vector3(-m_CameraUpAxis.Z, 0f, m_CameraAtAxis.Z); //BACK Nudge
             vector[10] = new Vector3(0, 1, 0); //LEFT_Nudge
             vector[11] = new Vector3(0, -1, 0); //RIGHT_Nudge
-			return vector;
+            return vector;
         }
 
-        #endregion
+#endregion
 
         public uint GenerateClientFlags(UUID ObjectID)
         {
             return m_scene.Permissions.GenerateClientFlags(m_uuid, ObjectID);
         }
 
-        #region Status Methods
+#region Status Methods
 
         /// <summary>
         /// This turns a child agent, into a root agent
@@ -1016,7 +1104,7 @@ namespace OpenSim.Region.Framework.Scenes
                     SwapToRootAgent();
                     m_isChildAgent = false;
                     if (!IsBot)
-                        m_scene.CommsManager.UserService.AddLocalUser(m_uuid);
+                        m_scene.CommsManager.UserService.MakeLocalUser(m_uuid);
 
                     if (m_appearance != null)
                     {
@@ -1144,7 +1232,7 @@ namespace OpenSim.Region.Framework.Scenes
                     //Rotation = sitTargetOrient;
                     SetAgentPositionInfo(true, newPos, part, part.AbsolutePosition, Vector3.Zero);
                 }
-                //m_animPersistUntil = 0;	// abort any timed animation
+                //m_animPersistUntil = 0;    // abort any timed animation
 
                 // Avatar has arrived on prim
                 int avatarsRemainingOnPrim = part.ParentGroup.RidingAvatarArrivedFromOtherSim();
@@ -1211,7 +1299,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.SwapRootAgentCount(true);
                 currentParcelUUID = UUID.Zero;  // so that if the agent reenters this region, it recognizes it as a parcel change.
                 if (!IsBot)
-                    m_scene.CommsManager.UserService.RemoveLocalUser(m_uuid);
+                    m_scene.CommsManager.UserService.UnmakeLocalUser(m_uuid);
             }
             m_scene.EventManager.TriggerOnMakeChildAgent(this);
 
@@ -1253,11 +1341,11 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_physicsActor != null)
                 isFlying = m_physicsActor.Flying;
 
-            Velocity = Vector3.Zero;
             Box boundingBox = GetBoundingBox(false);
             float zmin = (float)Scene.Heightmap.CalculateHeightAt(pos.X, pos.Y);
             if (pos.Z < zmin + (boundingBox.Extent.Z / 2))
                 pos.Z = zmin + (boundingBox.Extent.Z / 2);
+            Velocity = Vector3.Zero;
             AbsolutePosition = pos;
 
             SendTerseUpdateToAllClients();
@@ -1287,14 +1375,14 @@ namespace OpenSim.Region.Framework.Scenes
             // and send a full object update.
             // There's no message to send the client to tell it to stop flying
 
-			m_animPersistUntil = 0;	// abort any timed animation
+            m_animPersistUntil = 0;    // abort any timed animation
             TrySetMovementAnimation("LAND");
             SceneView.SendFullUpdateToAllClients();
         }
 
-        #endregion
+#endregion
 
-        #region Event Handlers
+#region Event Handlers
 
         /// <summary>
         /// Sets avatar height in the phyiscs plugin
@@ -1346,7 +1434,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // Release the lock before calling PostProcessMakeRootAgent, it calls functions that use lock
                     PostProcessMakeRootAgent(parent, m_flying);
 
-                    if ((m_callbackURI != null) && !m_callbackURI.Equals(""))
+                    if ((m_callbackURI != null) && !m_callbackURI.Equals(String.Empty))
                     {
                         m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
                         Scene.SendReleaseAgent(m_rootRegionHandle, UUID, m_callbackURI);
@@ -1364,6 +1452,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     try
                     {
+                        Scene.CommsManager.UserService.GetUserProfile(this.UUID, true);  // force a cache refresh
                         IsFullyInRegion = true;
                         SendInitialData();
                         Scene.EventManager.TriggerOnCompletedMovementToNewRegion(this);
@@ -1516,7 +1605,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {   // sitting on a prim
                     if (part.ParentGroup.InTransit)
                     {
-                        m_log.Warn("[CROSSING]: AgentUpdate called during prim transit! Ignored.");
+                        // m_log.Warn("[CROSSING]: AgentUpdate called during prim transit! Ignored.");
                         return;
                     }
                 }
@@ -1635,8 +1724,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_SIT_ON_GROUND) != 0)
             {
-				m_animPersistUntil = 0;	// abort any timed animation
-				TrySetMovementAnimation("SIT_GROUND_CONSTRAINED");
+                m_animPersistUntil = 0;    // abort any timed animation
+                TrySetMovementAnimation("SIT_GROUND_CONSTRAINED");
                 m_sittingGround = true;
             }
             // In the future, these values might need to go global.
@@ -2226,7 +2315,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         if (!fromCrossing)
                         {
-                            m_animPersistUntil = 0;	// abort any timed animation
+                            m_animPersistUntil = 0;    // abort any timed animation
                             TrySetMovementAnimation("STAND");
                         }
                     }
@@ -2514,7 +2603,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // First, remove the physActor so it doesn't mess with anything that happens below
                 RemoveFromPhysicalScene();
                 Velocity = Vector3.Zero;
-                m_animPersistUntil = 0;	// abort any timed animation
+                m_animPersistUntil = 0;    // abort any timed animation
                 TrySetMovementAnimation(sitAnimation);
             }
         }
@@ -2672,39 +2761,39 @@ namespace OpenSim.Region.Framework.Scenes
             
             if (!m_isChildAgent)
             {
-				// disregard duplicate updates
-				lock (m_previousMovement)	// only one place (here) references m_previousMovement
-				{
-					if (anim == m_previousMovement)
-						return;
-//					m_log.DebugFormat(">>>> Thread {0} [{1}] changing {2} --> {3}", Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId.ToString(), m_previousMovement, anim);
-					m_previousMovement = anim;
+                // disregard duplicate updates
+                lock (m_previousMovement)    // only one place (here) references m_previousMovement
+                {
+                    if (anim == m_previousMovement)
+                        return;
+//                    m_log.DebugFormat(">>>> Thread {0} [{1}] changing {2} --> {3}", Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId.ToString(), m_previousMovement, anim);
+                    m_previousMovement = anim;
                     if (anim == "DEFAULT")
                         anim = (m_posInfo.Parent == null) ? "STAND" : "SIT";
-					m_movementAnimation = anim;
-				}
+                    m_movementAnimation = anim;
+                }
 
-				m_animations.TrySetDefaultAnimation(anim, m_controllingClient.NextAnimationSequenceNumber, UUID.Zero);
-				// other code can change the default anims, so don't check for changes before notifying the viewers
-				// for example, if anyone has called ResetDefaultAnimation() to stop an anim, when we call it above, it will return false.
-				if ((m_scriptEngines != null) && (!IsInTransit))
-				{
-					lock (m_attachments)
-					{
-						foreach (SceneObjectGroup grp in m_attachments)
-						{
+                m_animations.TrySetDefaultAnimation(anim, m_controllingClient.NextAnimationSequenceNumber, UUID.Zero);
+                // other code can change the default anims, so don't check for changes before notifying the viewers
+                // for example, if anyone has called ResetDefaultAnimation() to stop an anim, when we call it above, it will return false.
+                if ((m_scriptEngines != null) && (!IsInTransit))
+                {
+                    lock (m_attachments)
+                    {
+                        foreach (SceneObjectGroup grp in m_attachments)
+                        {
                             // Send CHANGED_ANIMATION to all attachment root prims
-							foreach (IScriptModule m in m_scriptEngines)
-							{
-								if (m == null) // No script engine loaded
-									continue;
-//								m_log.DebugFormat(">>>> Thread {0} [{1}] sending changed({2})", Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId.ToString(), anim);
+                            foreach (IScriptModule m in m_scriptEngines)
+                            {
+                                if (m == null) // No script engine loaded
+                                    continue;
+//                                m_log.DebugFormat(">>>> Thread {0} [{1}] sending changed({2})", Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId.ToString(), anim);
                                 m.PostObjectEvent(grp.RootPart.LocalId, "changed", new Object[] { (int)Changed.ANIMATION }); // CHANGED_ANIMATION
-							}
-						}
-					}
-				}
-				SendAnimPack();
+                            }
+                        }
+                    }
+                }
+                SendAnimPack();
             }
         }
 
@@ -2720,223 +2809,223 @@ namespace OpenSim.Region.Framework.Scenes
 
             }
             else if ((m_posInfo.Parent != null) || IsInTransitOnPrim || m_sittingGround)
-			{
-				//We are sitting on something, so we don't want our existing state to change
+            {
+                //We are sitting on something, so we don't want our existing state to change
                 if (m_movementAnimation == "DEFAULT")
                     return "SIT";
-				return m_movementAnimation;
-			}
-			else if (m_movementflag != 0)
-			{
-				//We're moving
-				m_allowFalling = true;
-				if (PhysicsActor != null && PhysicsActor.IsColliding)
-				{
-					//And colliding. Can you guess what it is yet?
-					if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0)
-					{
-						//Down key is being pressed.
-						if (PhysicsActor.Flying)
-						{
-							return "LAND";
-						}
-						else
-							if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG) + (m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) != 0)
-							{
-								return "CROUCHWALK";
-							}
-							else
-							{
-								return "CROUCH";
-							}
-					}
-					else if (m_movementAnimation == "PREJUMP")
-					{
+                return m_movementAnimation;
+            }
+            else if (m_movementflag != 0)
+            {
+                //We're moving
+                m_allowFalling = true;
+                if (PhysicsActor != null && PhysicsActor.IsColliding)
+                {
+                    //And colliding. Can you guess what it is yet?
+                    if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0)
+                    {
+                        //Down key is being pressed.
+                        if (PhysicsActor.Flying)
+                        {
+                            return "LAND";
+                        }
+                        else
+                            if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG) + (m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) != 0)
+                            {
+                                return "CROUCHWALK";
+                            }
+                            else
+                            {
+                                return "CROUCH";
+                            }
+                    }
+                    else if (m_movementAnimation == "PREJUMP")
+                    {
                         // m_log.DebugFormat("[SCENE PRESENCE]: GetMovementAnimation: PREJUMP");
-						return "PREJUMP";
-					}
-					else
-						if (PhysicsActor.Flying)
-						{
+                        return "PREJUMP";
+                    }
+                    else
+                        if (PhysicsActor.Flying)
+                        {
                             // if (m_movementAnimation != "FLY") m_log.DebugFormat("[SCENE PRESENCE]: GetMovementAnimation: {0} --> FLY", m_movementAnimation);
-							return "FLY";
-						}
-						else
-							if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0)
-							{
+                            return "FLY";
+                        }
+                        else
+                            if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0)
+                            {
                                 // if (m_movementAnimation != "JUMP") m_log.DebugFormat("[SCENE PRESENCE]: GetMovementAnimation: {0} --> JUMP", m_movementAnimation);
-								return "JUMP";
-							}
-							else if (m_setAlwaysRun)
-							{
-								return "RUN";
-							}
-							else
-							{
+                                return "JUMP";
+                            }
+                            else if (m_setAlwaysRun)
+                            {
+                                return "RUN";
+                            }
+                            else
+                            {
                                 // if (m_movementAnimation != "WALK") m_log.DebugFormat("[SCENE PRESENCE]: GetMovementAnimation: {0} --> WALK", m_movementAnimation);
-								return "WALK";
-							}
-				}
-				else
-				{
-					//We're not colliding. Colliding isn't cool these days.
-					if (PhysicsActor != null && PhysicsActor.Flying)
-					{
-						//Are we moving forwards or backwards?
-						if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) != 0 || (m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG) != 0)
-						{
-							//Then we really are flying
-							if (m_setAlwaysRun)
-							{
-								return "FLY";
-							}
-							else
-							{
-								if (m_useFlySlow == false)
-								{
-									return "FLY";
-								}
-								else
-								{
-									return "FLYSLOW";
-								}
-							}
-						}
-						else
-						{
-							if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0)
-							{
-								return "HOVER_UP";
-							}
-							else
-							{
-								return "HOVER_DOWN";
-							}
-						}
+                                return "WALK";
+                            }
+                }
+                else
+                {
+                    //We're not colliding. Colliding isn't cool these days.
+                    if (PhysicsActor != null && PhysicsActor.Flying)
+                    {
+                        //Are we moving forwards or backwards?
+                        if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) != 0 || (m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG) != 0)
+                        {
+                            //Then we really are flying
+                            if (m_setAlwaysRun)
+                            {
+                                return "FLY";
+                            }
+                            else
+                            {
+                                if (m_useFlySlow == false)
+                                {
+                                    return "FLY";
+                                }
+                                else
+                                {
+                                    return "FLYSLOW";
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0)
+                            {
+                                return "HOVER_UP";
+                            }
+                            else
+                            {
+                                return "HOVER_DOWN";
+                            }
+                        }
 
-					}
-					else if (m_movementAnimation == "JUMP")
-					{
-						//If we were already jumping, continue to jump until we collide
-						return "JUMP";
-					}
-					else if (m_movementAnimation == "PREJUMP" && (m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) == 0)
-					{
-						//If we were in a prejump, and the UP key is no longer being held down
-						//then we're not going to fly, so we're jumping
-						return "JUMP";
+                    }
+                    else if (m_movementAnimation == "JUMP")
+                    {
+                        //If we were already jumping, continue to jump until we collide
+                        return "JUMP";
+                    }
+                    else if (m_movementAnimation == "PREJUMP" && (m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) == 0)
+                    {
+                        //If we were in a prejump, and the UP key is no longer being held down
+                        //then we're not going to fly, so we're jumping
+                        return "JUMP";
 
-					}
-					else if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0)
-					{
-						//They're pressing up, so we're either going to fly or jump
-						return "PREJUMP";
-					}
-					else
-					{
-						//If we're moving and not flying and not jumping and not colliding..
+                    }
+                    else if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0)
+                    {
+                        //They're pressing up, so we're either going to fly or jump
+                        return "PREJUMP";
+                    }
+                    else
+                    {
+                        //If we're moving and not flying and not jumping and not colliding..
 
-						if (m_movementAnimation == "WALK" || m_movementAnimation == "RUN")
-						{
-							//Let's not enter a FALLDOWN state here, since we're probably
-							//not colliding because we're going down hill.
-							return m_movementAnimation;
-						}
+                        if (m_movementAnimation == "WALK" || m_movementAnimation == "RUN")
+                        {
+                            //Let's not enter a FALLDOWN state here, since we're probably
+                            //not colliding because we're going down hill.
+                            return m_movementAnimation;
+                        }
 
-						//Record the time we enter this state so we know whether to "land" or not
-						if (m_movementAnimation != "FALLDOWN")
-							m_animPersistUntil = DateTime.Now.Ticks;
-						return "FALLDOWN";
+                        //Record the time we enter this state so we know whether to "land" or not
+                        if (m_movementAnimation != "FALLDOWN")
+                            m_animPersistUntil = DateTime.Now.Ticks;
+                        return "FALLDOWN";
 
-					}
-				}
-			}
-			else
-			{
-				//We're not moving.
-				if (PhysicsActor != null && PhysicsActor.IsColliding)
-				{
-					//But we are colliding.
-					if (m_movementAnimation == "FALLDOWN")
-					{
-						//We're re-using the m_animPersistUntil value here to see how long we've been falling
-						if ((DateTime.Now.Ticks - m_animPersistUntil) > TimeSpan.TicksPerSecond)
-						{
-							//Make sure we don't change state for a bit
-							if (m_movementAnimation != "LAND")
-								m_animPersistUntil = DateTime.Now.Ticks + TimeSpan.TicksPerSecond;
-							return "LAND";
-						}
-						else
-						{
-							//We haven't been falling very long, we were probably just walking down hill
-							return "STAND";
-						}
-					}
-					else if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0)
-					{
-						return "PREJUMP";
-					}
-					else if (m_movementAnimation == "JUMP" || m_movementAnimation == "HOVER_DOWN")
-					{
-						//Make sure we don't change state for a bit
-						if (m_movementAnimation != "SOFT_LAND")
-							m_animPersistUntil = DateTime.Now.Ticks + (1 * TimeSpan.TicksPerSecond);
-						return "SOFT_LAND";
+                    }
+                }
+            }
+            else
+            {
+                //We're not moving.
+                if (PhysicsActor != null && PhysicsActor.IsColliding)
+                {
+                    //But we are colliding.
+                    if (m_movementAnimation == "FALLDOWN")
+                    {
+                        //We're re-using the m_animPersistUntil value here to see how long we've been falling
+                        if ((DateTime.Now.Ticks - m_animPersistUntil) > TimeSpan.TicksPerSecond)
+                        {
+                            //Make sure we don't change state for a bit
+                            if (m_movementAnimation != "LAND")
+                                m_animPersistUntil = DateTime.Now.Ticks + TimeSpan.TicksPerSecond;
+                            return "LAND";
+                        }
+                        else
+                        {
+                            //We haven't been falling very long, we were probably just walking down hill
+                            return "STAND";
+                        }
+                    }
+                    else if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0)
+                    {
+                        return "PREJUMP";
+                    }
+                    else if (m_movementAnimation == "JUMP" || m_movementAnimation == "HOVER_DOWN")
+                    {
+                        //Make sure we don't change state for a bit
+                        if (m_movementAnimation != "SOFT_LAND")
+                            m_animPersistUntil = DateTime.Now.Ticks + (1 * TimeSpan.TicksPerSecond);
+                        return "SOFT_LAND";
 
-					}
-					else if (PhysicsActor != null && PhysicsActor.Flying)
-					{
-						m_allowFalling = true;
-						if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0)
-						{
-							return "HOVER_UP";
-						}
-						else if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0)
-						{
-							return "HOVER_DOWN";
-						}
-						else
-						{
-							return "HOVER";
-						}
-					}
-					else
-					{
-						return "STAND";
-					}
+                    }
+                    else if (PhysicsActor != null && PhysicsActor.Flying)
+                    {
+                        m_allowFalling = true;
+                        if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0)
+                        {
+                            return "HOVER_UP";
+                        }
+                        else if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0)
+                        {
+                            return "HOVER_DOWN";
+                        }
+                        else
+                        {
+                            return "HOVER";
+                        }
+                    }
+                    else
+                    {
+                        return "STAND";
+                    }
 
-				}
-				else
-				{
-					//We're not colliding.
-					if (PhysicsActor != null && PhysicsActor.Flying)
-					{
+                }
+                else
+                {
+                    //We're not colliding.
+                    if (PhysicsActor != null && PhysicsActor.Flying)
+                    {
 
-						return "HOVER";
+                        return "HOVER";
 
-					}
-					else if ((m_movementAnimation == "JUMP" || m_movementAnimation == "PREJUMP") && (m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) == 0)
-					{
+                    }
+                    else if ((m_movementAnimation == "JUMP" || m_movementAnimation == "PREJUMP") && (m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) == 0)
+                    {
 
-						return "JUMP";
+                        return "JUMP";
 
-					}
-					else if ((m_movementAnimation == "STAND") || (m_movementAnimation == "LAND"))
-					{
-						// Sometimes PhysicsActor.IsColliding returns false when standing on the ground.
-						// Try to recognize that by not falling from STAND until you move.
-						return m_movementAnimation;
-					}
-					else
-					{
-						//Record the time we enter this state so we know whether to "land" or not
-						if (m_movementAnimation != "FALLDOWN")
-							m_animPersistUntil = DateTime.Now.Ticks;
-						return "FALLDOWN";
-					}
-				}
-			}
+                    }
+                    else if ((m_movementAnimation == "STAND") || (m_movementAnimation == "LAND"))
+                    {
+                        // Sometimes PhysicsActor.IsColliding returns false when standing on the ground.
+                        // Try to recognize that by not falling from STAND until you move.
+                        return m_movementAnimation;
+                    }
+                    else
+                    {
+                        //Record the time we enter this state so we know whether to "land" or not
+                        if (m_movementAnimation != "FALLDOWN")
+                            m_animPersistUntil = DateTime.Now.Ticks;
+                        return "FALLDOWN";
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -2948,23 +3037,23 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             string movementAnimation = GetMovementAnimation();
-			// if we ignore this calculated movementAnimation, we need to also clear m_animPersistUntil
+            // if we ignore this calculated movementAnimation, we need to also clear m_animPersistUntil
         
             if (movementAnimation == "FALLDOWN" && m_allowFalling == false)
-			{	// don't update m_movementAnimation
-				movementAnimation = m_movementAnimation;	// save *current* anim
-				m_animPersistUntil = 0;	// overriding movementAnimation, so abort any calculated timed animation
-			}
-
-			if (movementAnimation == "PREJUMP" && m_usePreJump == false)
-            {
-                //This was the previous behavior before PREJUMP
-				m_animPersistUntil = 0;	// overriding movementAnimation, so abort any calculated timed animation
-				movementAnimation = "JUMP";
+            {    // don't update m_movementAnimation
+                movementAnimation = m_movementAnimation;    // save *current* anim
+                m_animPersistUntil = 0;    // overriding movementAnimation, so abort any calculated timed animation
             }
 
-			// now set it to whatever that all worked out to
-			TrySetMovementAnimation(movementAnimation);
+            if (movementAnimation == "PREJUMP" && m_usePreJump == false)
+            {
+                //This was the previous behavior before PREJUMP
+                m_animPersistUntil = 0;    // overriding movementAnimation, so abort any calculated timed animation
+                movementAnimation = "JUMP";
+            }
+
+            // now set it to whatever that all worked out to
+            TrySetMovementAnimation(movementAnimation);
         }
 
         /// <summary>
@@ -3003,7 +3092,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 direc.Z = Math.Max(direc.Z, 2.8f);
                             m_shouldJump = false;
                             direc.Z *= 3;
-                            m_animPersistUntil = 0;	// abort any timed animation
+                            m_animPersistUntil = 0;    // abort any timed animation
                             if (m_movementAnimation != "JUMP")
                                 TrySetMovementAnimation("PREJUMP");
                             TrySetMovementAnimation("JUMP");
@@ -3020,9 +3109,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene.StatsReporter.AddAgentTime(Environment.TickCount - m_perfMonMS);
         }
 
-        #endregion
+#endregion
 
-        #region Overridden Methods
+#region Overridden Methods
 
         public override void Update()
         {
@@ -3048,9 +3137,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region Update Client(s)
+#region Update Client(s)
 
         /// <summary>
         /// Sends a location update to the client connected to this scenePresence
@@ -3179,9 +3268,9 @@ namespace OpenSim.Region.Framework.Scenes
                         if (avatar.IsInTransit || avatar.IsDeleted)
                             continue;
                         SceneObjectPart sop = avatar.m_posInfo.Parent;
-                        if (sop != null)	// is seated?
-                            if (sop.ParentGroup.InTransit)	// and in transit
-                                continue;		// skip this one since we don't have a reliable position
+                        if (sop != null)    // is seated?
+                            if (sop.ParentGroup.InTransit)    // and in transit
+                                continue;        // skip this one since we don't have a reliable position
 
                         CoarseLocations.Add(avatar.AbsolutePosition);
                     }
@@ -3261,7 +3350,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes());
         }
 
-        private void InitialAttachmentRez(CachedUserInfo userInfo)
+        private void InitialAttachmentRez()
         {
             //retrieve all attachments
             List<AvatarAttachment> attachments = m_appearance.GetAttachments();
@@ -3290,7 +3379,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-		/// <summary>
+        /// <summary>
         /// Set appearance data (textureentry and slider settings) received from the client
         /// </summary>
         /// <param name="texture"></param>
@@ -3336,7 +3425,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (Interlocked.CompareExchange(ref _attachmentRezCalled, 1, 0) == 0)
             {
                 //retrieve all attachments
-                CachedUserInfo userInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(m_uuid);
+                CachedUserInfo userInfo = m_scene.CommsManager.UserService.GetUserDetails(m_uuid);
                 if (userInfo == null)
                     return;
                 // If this is after a login in this region and not done yet, add the initial attachments
@@ -3346,7 +3435,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         ControllingClient.RunAttachmentOperation(() =>
                         {
-                            this.InitialAttachmentRez(userInfo);
+                            this.InitialAttachmentRez();
                         });
                     }
                 }
@@ -3411,16 +3500,17 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
 
-        #endregion
+#endregion
 
-        #region Significant Movement Method
+#region Significant Movement Method
 
         /// <summary>
         /// This checks for a significant movement and sends a courselocationchange update
         /// </summary>
         protected void CheckForSignificantMovement()
         {
-            Vector3 pos = AbsolutePosition;
+            Vector3 pos = _GetPosition(true, true); // check for parcel changes and updates from physics
+
             if (Util.GetDistanceTo(pos, posLastSignificantMove) > 0.5)
             {
                 posLastSignificantMove = pos;
@@ -3489,8 +3579,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
-        #region Border Crossing Methods
+#endregion
+#region Border Crossing Methods
 
         /// <summary>
         /// Checks to see if the avatar is in range of a border and calls CrossToNewRegion
@@ -3721,7 +3811,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Disabling the draw distance based visibility until the algorithm handles proper tiling path rules for region visibility.
             // e.g. Diagonal regions (i.e. checkerboard region layouts) are not supposed to be visible without a horizontal/vertical connection region.
-#if false   
+#if false
             // region offset, e.g. (1002, 999) viewing (1000,1000) would be diffX=-2, diffY=1 (left 2, up 1)
             int diffX = (int)regionX - (int)fromX;
             int diffY = (int)regionY - (int)fromY;
@@ -3751,7 +3841,7 @@ namespace OpenSim.Region.Framework.Scenes
 #endif
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// This allows the Sim owner the abiility to kick users from their sim currently.
@@ -3764,9 +3854,9 @@ namespace OpenSim.Region.Framework.Scenes
                 // For now, assign god level 200 to anyone
                 // who is granted god powers, but has no god level set.
                 //
-                CachedUserInfo profile = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(agentID);
-                if (profile.UserProfile.GodLevel > 0)
-                    m_godlevel = profile.UserProfile.GodLevel;
+                UserProfileData profile = m_scene.CommsManager.UserService.GetUserProfile(agentID);
+                if (profile.GodLevel > 0)
+                    m_godlevel = profile.GodLevel;
                 else
                     m_godlevel = 200;
             }
@@ -3778,7 +3868,7 @@ namespace OpenSim.Region.Framework.Scenes
             ControllingClient.SendAdminResponse(token, (uint)m_godlevel);
         }
 
-        #region Child Agent Updates
+#region Child Agent Updates
 
         public void ChildAgentDataUpdate(AgentData cAgentData)
         {
@@ -4026,7 +4116,7 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        #endregion Child Agent Updates
+#endregion Child Agent Updates
 
         /// <summary>
         /// Handles part of the PID controller function for moving an avatar.
@@ -4313,7 +4403,7 @@ namespace OpenSim.Region.Framework.Scenes
             RemoveFromPhysicalScene();
 
             if (!IsBot)
-                m_scene.CommsManager.UserService.RemoveLocalUser(m_uuid); 
+                m_scene.CommsManager.UserService.UnmakeLocalUser(m_uuid); 
             
             m_closed = true;
 

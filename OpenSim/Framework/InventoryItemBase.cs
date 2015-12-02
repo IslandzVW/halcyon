@@ -136,7 +136,7 @@ namespace OpenSim.Framework
         }
         protected UUID m_creatorIdAsUuid = UUID.Zero;
 
-        protected string m_creatorData = string.Empty;
+        protected string m_creatorData = String.Empty;
         public string CreatorData // = <profile url>;<name>
         {
             get { return m_creatorData; }
@@ -152,16 +152,16 @@ namespace OpenSim.Framework
         {
             get
             {
-                if (m_creatorData != null && m_creatorData != string.Empty)
+                if (m_creatorData != null && m_creatorData != String.Empty)
                     return m_creatorId + ';' + m_creatorData;
                 else
                     return m_creatorId;
             }
             set
             {
-                if ((value == null) || (value != null && value == string.Empty))
+                if ((value == null) || (value != null && value == String.Empty))
                 {
-                    m_creatorData = string.Empty;
+                    m_creatorData = String.Empty;
                     return;
                 }
 

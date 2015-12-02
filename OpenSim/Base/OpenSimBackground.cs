@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Reflection;
 using System.Threading;
 using log4net;
@@ -46,7 +47,7 @@ namespace OpenSim
         }
 
         /// <summary>
-        /// Performs initialisation of the scene, such as loading configuration from disk.
+        /// Performs initialization of the scene, such as loading configuration from disk.
         /// </summary>
         public override void Startup()
         {
@@ -54,8 +55,8 @@ namespace OpenSim
 
             base.Startup();
 
-            m_log.InfoFormat("[OPENSIM MAIN]: Startup complete, serving {0} region{1}",
-                             m_clientServers.Count.ToString(), m_clientServers.Count > 1 ? "s" : "");
+            m_log.InfoFormat("[HALCYON MAIN]: Startup complete, serving {0} region{1}",
+                             m_clientServers.Count.ToString(), m_clientServers.Count > 1 ? "s" : String.Empty);
 
             WorldHasComeToAnEnd.WaitOne();
             WorldHasComeToAnEnd.Close();
@@ -67,7 +68,7 @@ namespace OpenSim
         public override void Shutdown()
         {
             WorldHasComeToAnEnd.Set();
-            m_log.Info("[OPENSIM MAIN]: World has come to an end");
+            m_log.Info("[HALCYON MAIN]: World has come to an end");
             base.Shutdown();
         }
     }

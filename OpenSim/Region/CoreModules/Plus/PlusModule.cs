@@ -56,24 +56,24 @@ namespace OpenSim.Region.CoreModules.Plus
         ///
         /// POST to "http://regionIP:regionPort/plus/claim_parcel"
         /// {
-        ///	  “user_id”:”[user_uuid]”
-        ///	  “parcel_id:”[parcel_uuid]”
-        ///	}
-        ///	
+        ///      “user_id”:”[user_uuid]”
+        ///      “parcel_id:”[parcel_uuid]”
+        ///    }
+        ///    
         /// POST to "http://regionIP:regionPort/plus/abandon_parcel"
         /// {
-        ///	  “user_id”:”[user_uuid]”
-        ///	  “parcel_id:”[parcel_uuid]”
-        ///	}
-        ///	
+        ///      “user_id”:”[user_uuid]”
+        ///      “parcel_id:”[parcel_uuid]”
+        ///    }
+        ///    
         /// The response to both requests will be in the following format:
         /// 
         /// CommandReply [ regionhost -> app ] (REPLY TO HTTP POST)
         ///
         /// {
-        ///	  "status":"OK"|"UNAUTHORIZED"
-        ///	  “parcel_id:”[actual parcel ID]”
-        ///	  “user_id”:”[actual parcel ownerID]”
+        ///      "status":"OK"|"UNAUTHORIZED"
+        ///      “parcel_id:”[actual parcel ID]”
+        ///      “user_id”:”[actual parcel ownerID]”
         /// }
 
     public class PlusParcelModule : ISharedRegionModule
@@ -105,11 +105,11 @@ namespace OpenSim.Region.CoreModules.Plus
 
         #region INonSharedRegionModule members
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -170,7 +170,7 @@ namespace OpenSim.Region.CoreModules.Plus
             int x = (int)Math.Floor(posx);
             int y = (int)Math.Floor(posy);
             int z = (int)Math.Floor(posz);
-            string prefix = includePrefix ? "http://places.inworldz.com/" : "";
+            string prefix = includePrefix ? "http://places.inworldz.com/" : String.Empty;
 
             return prefix + Util.EscapeUriDataStringRfc3986(region) + "/" + x.ToString() + "/" + y.ToString() + "/" + z.ToString();
         }

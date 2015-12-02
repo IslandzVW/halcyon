@@ -48,7 +48,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
     ///     Backend = FileBackend
     ///     File    = Chat.log
     /// 
-    /// into OpenSim.ini.
+    /// into Halcyon.ini.
     /// </summary>
     public class InworldzChatLogMessageFileBackend : IApplicationPlugin, IChatMessageLogBackend
     {
@@ -65,12 +65,12 @@ namespace InWorldz.ApplicationPlugins.ChatLog
 
         #region IApplicationPlugin Members
 
-        public void Initialise(OpenSimBase openSim)
+        public void Initialize(OpenSimBase openSim)
         {
             IConfig config = openSim.ConfigSource.Source.Configs["ChatLogModule"];
             if (config == null) return;
 
-            m_enabled = config.GetString("Backend", "") == "FileBackend";
+            m_enabled = config.GetString("Backend", String.Empty) == "FileBackend";
             m_fileName = config.GetString("File", m_fileName);
 
             if (m_enabled)
@@ -80,7 +80,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -94,7 +94,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
             get { return "InworldzChatLogMessageFileBackend"; }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
         }
 

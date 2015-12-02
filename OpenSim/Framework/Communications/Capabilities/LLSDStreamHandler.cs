@@ -58,13 +58,13 @@ namespace OpenSim.Framework.Communications.Capabilities
 
             Hashtable hash = (Hashtable) LLSD.LLSDDeserialize(request);
             TRequest llsdRequest = new TRequest();
-            LLSDHelpers.DeserialiseOSDMap(hash, llsdRequest);
+            LLSDHelpers.DeserializeOSDMap(hash, llsdRequest);
 
             TResponse response = m_method(llsdRequest);
 
             Encoding encoding = new UTF8Encoding(false);
 
-            return encoding.GetBytes(LLSDHelpers.SerialiseLLSDReply(response));
+            return encoding.GetBytes(LLSDHelpers.SerializeLLSDReply(response));
         }
     }
 }

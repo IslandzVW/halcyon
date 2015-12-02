@@ -66,21 +66,21 @@ namespace OpenSim.ApplicationPlugins.LoadRegions
 
         protected OpenSimBase m_openSim;
 
-        public void Initialise()
+        public void Initialize()
         {
             m_log.Error("[LOADREGIONS]: " + Name + " cannot be default-initialized!");
-            throw new PluginNotInitialisedException(Name);
+            throw new PluginNotInitializedException(Name);
         }
 
-        public void Initialise(OpenSimBase openSim)
+        public void Initialize(OpenSimBase openSim)
         {
             m_openSim = openSim;
             m_openSim.ApplicationRegistry.RegisterInterface<IRegionCreator>(this);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
-            //m_log.Info("[LOADREGIONS]: Load Regions addin being initialised");
+            //m_log.Info("[LOADREGIONS]: Load Regions addin being initialized");
 
             IRegionLoader regionLoader;
             if (m_openSim.ConfigSource.Source.Configs["Startup"].GetString("region_info_source", "filesystem") == "filesystem")
@@ -128,7 +128,7 @@ namespace OpenSim.ApplicationPlugins.LoadRegions
                 }
             }
 
-            m_openSim.ModuleLoader.PostInitialise();
+            m_openSim.ModuleLoader.PostInitialize();
             m_openSim.ModuleLoader.ClearCache();
 
             foreach (var region in loadedRegions)

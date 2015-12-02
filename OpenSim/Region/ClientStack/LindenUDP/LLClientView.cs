@@ -163,7 +163,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private int m_animationSequenceNumber = 1;
 
-        private readonly byte[] m_channelVersion = Utils.StringToBytes("OpenSimulator Server"); // Dummy value needed by libSL
+        private readonly byte[] m_channelVersion = Utils.StringToBytes(VersionInfo.SoftwareChannel); // Dummy value needed by libSL
 
         private static readonly Dictionary<string, UUID> s_defaultAnimations = new Dictionary<string, UUID>();
 
@@ -303,7 +303,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private bool m_frozenUser = false;
         private UUID m_frozenBy = UUID.Zero;
-        private string m_frozenByName = "";
+        private string m_frozenByName = String.Empty;
 
         protected uint m_agentFOVCounter;
 
@@ -955,8 +955,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             else
             {
                 //there is not a local handler so see if there is a Global handler
-//				m_log.DebugFormat("Packet(Global): {0}", packet.ToString());
-				bool found;
+//                m_log.DebugFormat("Packet(Global): {0}", packet.ToString());
+                bool found;
                 PacketMethod method;
                 lock (PacketHandlers)
                 {
@@ -1207,7 +1207,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event UpdateAvatarProperties OnUpdateAvatarProperties;
         public event CreateNewInventoryItem OnCreateNewInventoryItem;
         public event LinkInventoryItem OnLinkInventoryItem;
-		public event CreateInventoryFolder OnCreateNewInventoryFolder;
+        public event CreateInventoryFolder OnCreateNewInventoryFolder;
         public event UpdateInventoryFolder OnUpdateInventoryFolder;
         public event MoveInventoryFolder OnMoveInventoryFolder;
         public event FetchInventoryDescendents OnFetchInventoryDescendents;
@@ -1486,8 +1486,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(mov, ThrottleOutPacketType.Unknown);
         }
 
-        public void SendChatMessage(string message, byte type, Vector3 fromPos, string fromName,
-                                    UUID fromAgentID, byte source, byte audible)
+        public void SendChatMessage(string message, byte type, Vector3 fromPos, string fromName, 
+                                    UUID fromAgentID, UUID ownerID, byte source, byte audible)
         {
             ChatFromSimulatorPacket reply = (ChatFromSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.ChatFromSimulator);
             reply.ChatData.Audible = audible;
@@ -1496,7 +1496,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             reply.ChatData.SourceType = source;
             reply.ChatData.Position = fromPos;
             reply.ChatData.FromName = Util.StringToBytes256(fromName);
-            reply.ChatData.OwnerID = fromAgentID;
+            reply.ChatData.OwnerID = ownerID;
             reply.ChatData.SourceID = fromAgentID;
 
             OutPacket(reply, ThrottleOutPacketType.Task);
@@ -3872,11 +3872,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             //pack.Region = //stats.RegionBlock;
             pack.Stat = stats.StatsBlock;
             pack.RegionInfo = 
-				new SimStatsPacket.RegionInfoBlock[1]
+                new SimStatsPacket.RegionInfoBlock[1]
                 {
-                	new SimStatsPacket.RegionInfoBlock()
+                    new SimStatsPacket.RegionInfoBlock()
                     {
-						RegionFlagsExtended =  stats.RegionFlags
+                        RegionFlagsExtended =  stats.RegionFlags
                     }
                 };
 
@@ -3967,20 +3967,20 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             if (OwnerUUID == this.AgentId)
             {
                 if ((FoldedOwnerMask & (uint)PermissionMask.Copy) == (uint)PermissionMask.Copy)
-                    aggregatePerms |= 0x00000003;   // 00000011b 	Copy
+                    aggregatePerms |= 0x00000003;   // 00000011b     Copy
                 if ((FoldedOwnerMask & (uint)PermissionMask.Modify) == (uint)PermissionMask.Modify)
-                    aggregatePerms |= 0x0000000C;   // 00001100b 	Modify
+                    aggregatePerms |= 0x0000000C;   // 00001100b     Modify
                 if ((FoldedOwnerMask & (uint)PermissionMask.Transfer) == (uint)PermissionMask.Transfer)
-                    aggregatePerms |= 0x00000030;   // 00110000b 	Transfer
+                    aggregatePerms |= 0x00000030;   // 00110000b     Transfer
             }
             else
             {
                 if ((FoldedNextOwnerMask & (uint)PermissionMask.Copy) == (uint)PermissionMask.Copy)
-                    aggregatePerms |= 0x00000003;   // 00000011b 	Copy
+                    aggregatePerms |= 0x00000003;   // 00000011b     Copy
                 if ((FoldedNextOwnerMask & (uint)PermissionMask.Modify) == (uint)PermissionMask.Modify)
-                    aggregatePerms |= 0x0000000C;   // 00001100b 	Modify
+                    aggregatePerms |= 0x0000000C;   // 00001100b     Modify
                 if ((FoldedNextOwnerMask & (uint)PermissionMask.Transfer) == (uint)PermissionMask.Transfer)
-                    aggregatePerms |= 0x00000030;   // 00110000b 	Transfer
+                    aggregatePerms |= 0x00000030;   // 00110000b     Transfer
             }
             proper.ObjectData[0].AggregatePerms = aggregatePerms;
             //            proper.ObjectData[0].AggregatePerms = 53;
@@ -4260,7 +4260,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             updateMessage.AuctionID = landData.AuctionID;
             updateMessage.AuthBuyerID = landData.AuthBuyerID;
             updateMessage.Bitmap = landData.Bitmap;
-            updateMessage.Desc = Util.TruncateString(landData.Description == null ? "" : landData.Description, 254);
+            updateMessage.Desc = Util.TruncateString(landData.Description == null ? String.Empty : landData.Description, 254);
             updateMessage.Category = landData.Category;
             updateMessage.ClaimDate = Util.UnixToLocalDateTime(landData.ClaimDate);
             updateMessage.ClaimPrice = landData.ClaimPrice;
@@ -4318,17 +4318,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             updateMessage.ObscureMusic = landData.ObscureMusic;
             updateMessage.ObscureMedia = landData.ObscureMedia;
 
-#if false
-            if (landData.SimwideArea > 0)
-            {
-                int simulatorCapacity = (int)(((float)landData.SimwideArea / 65536.0f) * (float)m_scene.RegionInfo.ObjectCapacity * (float)m_scene.RegionInfo.RegionSettings.ObjectBonus);
-                updateMessage.SimWideMaxPrims = simulatorCapacity;
-            }
-            else
-            {
-                updateMessage.SimWideMaxPrims = 0;
-            }
-#endif
             updateMessage.SimWideMaxPrims = simObjectCapacity;
 
             updateMessage.OwnerPrims = landData.OwnerPrims;
@@ -5740,7 +5729,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             LLUDPServer.LogPacketHeader(false, m_circuitCode, 0, packet.Type, (ushort)packet.Length);
             #endregion BinaryStats
 
-			DebugPacket("<<< OUT <<<", packet);
+            DebugPacket("<<< OUT <<<", packet);
             OutPacket(packet, throttlePacketType, true);
         }
 
@@ -5817,8 +5806,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="Pack">OpenMetaverse.packet</param>
         public void ProcessInPacket(Packet Pack)
         {
-			DebugPacket(">>> IN >>>", Pack);
-			if (IsActive)
+            DebugPacket(">>> IN >>>", Pack);
+            if (IsActive)
             {
                 if (m_debugPacketLevel >= 255)
                     m_log.DebugFormat("[CLIENT]: Packet IN {0}", Pack.Type);
@@ -8457,7 +8446,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             else
             {
-                SendUserInfoReply(false, true, "");
+                SendUserInfoReply(false, true, String.Empty);
             }
             return true;
 
@@ -9727,7 +9716,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             return true;
         }
-		
+        
         private bool HandleLinkInventoryItem(IClientAPI sender, Packet Pack)
         {
             LinkInventoryItemPacket createLink = (LinkInventoryItemPacket)Pack;
@@ -9758,8 +9747,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             return true;
-        }		
-		
+        }        
+        
         private bool HandleFetchInventory(IClientAPI sender, Packet Pack)
         {
             if (OnFetchInventory != null)
@@ -11082,8 +11071,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     {
                         UUID invoice = messagePacket.MethodData.Invoice;
                         UUID sessionID = messagePacket.AgentData.SessionID;
-                        string Message = "";
-                        string SenderName = "";
+                        string Message = String.Empty;
+                        string SenderName = String.Empty;
                         UUID SenderID = UUID.Zero;
                         if (messagePacket.ParamList.Length < 5)
                         {
@@ -11138,7 +11127,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         handlerLandStatRequest = OnLandStatRequest;
                         if (handlerLandStatRequest != null)
                         {
-                            handlerLandStatRequest(0, 1, 0, "", this);
+                            handlerLandStatRequest(0, 1, 0, String.Empty, this);
                         }
                     }
                     return true;
@@ -11148,7 +11137,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         handlerLandStatRequest = OnLandStatRequest;
                         if (handlerLandStatRequest != null)
                         {
-                            handlerLandStatRequest(0, 0, 0, "", this);
+                            handlerLandStatRequest(0, 0, 0, String.Empty, this);
                         }
                     }
                     return true;
@@ -11941,7 +11930,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             "[CLIENT]: {0} requested asset {1} in prim {2} but prim does not exist", Name, requestID, taskID);
                         return true;
                     }
-                    //						m_log.DebugFormat("HandleTransferRequest: Request for {0} in {1}", itemID, taskID);
+                    //                        m_log.DebugFormat("HandleTransferRequest: Request for {0} in {1}", itemID, taskID);
                     TaskInventoryItem tii = part.Inventory.GetInventoryItem(itemID);
                     if (tii == null)
                     {
@@ -11974,13 +11963,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                         if ((part.OwnerMask & (uint)PermissionMask.Modify) == 0)
                         {
-                            //								m_log.WarnFormat( "[CLIENT]: {0} requested asset {1} from item {2} in prim {3} but modify permissions are not set", Name, requestID, itemID, taskID);
+                            //                                m_log.WarnFormat( "[CLIENT]: {0} requested asset {1} from item {2} in prim {3} but modify permissions are not set", Name, requestID, itemID, taskID);
                             return true;
                         }
 
                         if (tii.OwnerID != AgentId)
                         {
-                            //								m_log.WarnFormat( "[CLIENT]: {0} requested asset {1} from item {2} in prim {3} but the item is owned by {4}", Name, requestID, itemID, taskID, tii.OwnerID);
+                            //                                m_log.WarnFormat( "[CLIENT]: {0} requested asset {1} from item {2} in prim {3} but the item is owned by {4}", Name, requestID, itemID, taskID, tii.OwnerID);
                             return true;
                         }
 
@@ -11988,25 +11977,25 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             tii.CurrentPermissions & ((uint)PermissionMask.Modify | (uint)PermissionMask.Copy | (uint)PermissionMask.Transfer))
                                 != ((uint)PermissionMask.Modify | (uint)PermissionMask.Copy | (uint)PermissionMask.Transfer))
                         {
-                            //								m_log.WarnFormat( "[CLIENT]: {0} requested asset {1} from item {2} in prim {3} but item permissions are not modify/copy/transfer", Name, requestID, itemID, taskID);
+                            //                                m_log.WarnFormat( "[CLIENT]: {0} requested asset {1} from item {2} in prim {3} but item permissions are not modify/copy/transfer", Name, requestID, itemID, taskID);
                             return true;
                         }
 
                         if (tii.AssetID != requestID)
                         {
-                            //								m_log.WarnFormat("[CLIENT]: {0} requested asset {1} from item {2} in prim {3} but this does not match item's asset {4}", Name, requestID, itemID, taskID, tii.AssetID);
+                            //                                m_log.WarnFormat("[CLIENT]: {0} requested asset {1} from item {2} in prim {3} but this does not match item's asset {4}", Name, requestID, itemID, taskID, tii.AssetID);
                             return true;
                         }
                     }
                 }
                 else // Agent
                 {
-                    CachedUserInfo userInfo = ((Scene)m_scene).CommsManager.UserProfileCacheService.GetUserDetails(AgentId);
+                    CachedUserInfo userInfo = ((Scene)m_scene).CommsManager.UserService.GetUserDetails(AgentId);
 
                     InventoryItemBase assetRequestItem = userInfo.FindItem(itemID);
                     if (assetRequestItem == null)
                     {
-                        assetRequestItem = ((Scene)m_scene).CommsManager.UserProfileCacheService.LibraryRoot.FindItem(itemID);
+                        assetRequestItem = ((Scene)m_scene).CommsManager.LibraryRoot.FindItem(itemID);
                         if (assetRequestItem == null)
                         {
                             return true;
@@ -12253,7 +12242,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             reply.Data.OwnerID = land.OwnerID;
             reply.Data.Name = Utils.StringToBytes(land.Name);
             // Viewer has an off-by-one overflow/corruption problem if you send 255 characters.
-            string viewerDesc = Util.TruncateString(land.Description == null ? "" : land.Description, 254);
+            string viewerDesc = Util.TruncateString(land.Description == null ? String.Empty : land.Description, 254);
             reply.Data.Desc = Utils.StringToBytes(viewerDesc);
             reply.Data.ActualArea = land.Area;
             reply.Data.BillableArea = land.Area; // TODO: what is this?
@@ -12310,7 +12299,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 default:
                     break;
             }
-            return string.Empty;
+            return String.Empty;
         }
 
         public void SendDirPlacesReply(UUID queryID, DirPlacesReplyData[] data)
@@ -13138,7 +13127,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 } else {
                     SendAgentAlertMessage(whoName + " has unfrozen you. You are free to move and interact again.",true);
                     m_frozenBy = UUID.Zero;
-                    m_frozenByName = "";
+                    m_frozenByName = String.Empty;
                     m_log.WarnFormat("{0} has unfrozen {1} [{2}].", this.Name, whoName, whoKey);
                 }
             }
@@ -13146,12 +13135,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public string Report()
         {
-            return "";
+            return String.Empty;
         }
         
         public string XReport(string uptime, string version) 
         {
-            return  "";
+            return  String.Empty;
         }
 
         #region IClientIPEndpoint Members

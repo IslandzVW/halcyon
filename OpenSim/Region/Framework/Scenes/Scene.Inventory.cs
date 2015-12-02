@@ -44,11 +44,11 @@ using OpenSim.Framework.Geom;
 
 namespace OpenSim.Region.Framework.Scenes
 {
-	public class ScenePermBits
-	{
-		public const uint SLAM = 0x00000008;
-		public const uint BASEMASK = 0x7fffff0;
-	}
+    public class ScenePermBits
+    {
+        public const uint SLAM = 0x00000008;
+        public const uint BASEMASK = 0x7fffff0;
+    }
 
     public partial class Scene
     {
@@ -80,7 +80,7 @@ namespace OpenSim.Region.Framework.Scenes
         public bool AddInventoryItemReturned(UUID AgentId, InventoryItemBase item)
         {
             CachedUserInfo userInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(AgentId);
+                = CommsManager.UserService.GetUserDetails(AgentId);
             if (userInfo != null)
             {
                 userInfo.AddItem(item);
@@ -98,7 +98,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void AddInventoryItem(UUID AgentID, InventoryItemBase item)
         {
             CachedUserInfo userInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(AgentID);
+                = CommsManager.UserService.GetUserDetails(AgentID);
 
             if (userInfo != null)
             {
@@ -123,7 +123,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void AddInventoryItem(IClientAPI remoteClient, InventoryItemBase item)
         {
             CachedUserInfo userInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (userInfo != null)
             {
@@ -147,7 +147,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public virtual UpdateItemResponse CapsUpdateInventoryItemAsset(IClientAPI remoteClient, UUID itemID, byte[] data)
         {
-            CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
             if (userInfo != null)
             {
                 InventoryItemBase item = userInfo.FindItem(itemID);
@@ -465,19 +465,19 @@ namespace OpenSim.Region.Framework.Scenes
         public void UpdateInventoryItemAsset(IClientAPI remoteClient, UUID transactionID,
                                              UUID itemID, InventoryItemBase itemUpd)
         {
-            CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
-			if (userInfo == null)
-			{
-				m_log.Error("[AGENT INVENTORY]: Agent ID " + remoteClient.AgentId + " inventory not found for item update.");
+            CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
+            if (userInfo == null)
+            {
+                m_log.Error("[AGENT INVENTORY]: Agent ID " + remoteClient.AgentId + " inventory not found for item update.");
                 return;
-			}
+            }
 
             InventoryItemBase item = userInfo.FindItem(itemID);
             if (item == null)
             {
-				m_log.Error("[AGENTINVENTORY]: Item ID " + itemID + " not found for an inventory item update.");
+                m_log.Error("[AGENTINVENTORY]: Item ID " + itemID + " not found for an inventory item update.");
                 return;
-			}
+            }
 
             //make sure we actually OWN the item
             if (item.Owner != remoteClient.AgentId)
@@ -488,7 +488,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-			// Update the item with the changes passed to us from the viewer
+            // Update the item with the changes passed to us from the viewer
             item.Name = itemUpd.Name;
             item.Description = itemUpd.Description;
 
@@ -531,12 +531,12 @@ namespace OpenSim.Region.Framework.Scenes
                 item.NextPermissions = itemUpd.NextPermissions;
                 if (item.InvType == (int)InventoryType.Object)
                 {
-                    item.CurrentPermissions |= ScenePermBits.SLAM;			// Slam!
-                    item.Flags |= (uint)InventoryItemFlags.ObjectSlamPerm;	// Tell the viewer we are going to slam this
+                    item.CurrentPermissions |= ScenePermBits.SLAM;            // Slam!
+                    item.Flags |= (uint)InventoryItemFlags.ObjectSlamPerm;    // Tell the viewer we are going to slam this
                 }
             }
 
-			item.GroupID = itemUpd.GroupID;
+            item.GroupID = itemUpd.GroupID;
             item.GroupOwned = itemUpd.GroupOwned;
             item.CreationDate = itemUpd.CreationDate;
             // The client sends zero if its newly created?
@@ -552,13 +552,13 @@ namespace OpenSim.Region.Framework.Scenes
             item.SaleType = itemUpd.SaleType;
             item.Flags = itemUpd.Flags;
 
-			// Check if the viewer has passed us a transaction to use
-			if (UUID.Zero != transactionID) {
-				IAgentAssetTransactions agentTransactions = this.RequestModuleInterface<IAgentAssetTransactions>();
-				if (agentTransactions != null)
-					if (agentTransactions.HandleItemUpdateFromTransaction(remoteClient, transactionID, item))
-						return;  // great, this one has been handled (as a transaction update)
-			}
+            // Check if the viewer has passed us a transaction to use
+            if (UUID.Zero != transactionID) {
+                IAgentAssetTransactions agentTransactions = this.RequestModuleInterface<IAgentAssetTransactions>();
+                if (agentTransactions != null)
+                    if (agentTransactions.HandleItemUpdateFromTransaction(remoteClient, transactionID, item))
+                        return;  // great, this one has been handled (as a transaction update)
+            }
 
             remoteClient.HandleWithInventoryWriteThread(() =>
                 {
@@ -608,7 +608,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // delivery from group notice to user - always apply next owner perms
                 applyNextPerms = true;
-                recipientUserInfo = CommsManager.UserProfileCacheService.GetUserDetails(recipientId);
+                recipientUserInfo = CommsManager.UserService.GetUserDetails(recipientId);
                 if (recipientUserInfo == null)
                 {
                     m_log.ErrorFormat("[GROUPS]: Group notice attachment could not be delivered - unknown user {0}", recipientId);
@@ -665,7 +665,7 @@ namespace OpenSim.Region.Framework.Scenes
             InventoryItemBase item = null;
 
             // Retrieve the item from the sender
-            senderUserInfo = CommsManager.UserProfileCacheService.GetUserDetails(senderId);
+            senderUserInfo = CommsManager.UserService.GetUserDetails(senderId);
             if (senderUserInfo == null)
             {
                 m_log.ErrorFormat(
@@ -697,13 +697,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void CalcItemPermsFromInvItem(InventoryItemBase itemCopy, InventoryItemBase item, bool isOwnerTransfer)
         {
-			if (isOwnerTransfer && Permissions.PropagatePermissions())
+            if (isOwnerTransfer && Permissions.PropagatePermissions())
             {
                 // on a transferbase is limited to the next perms
-				itemCopy.BasePermissions = item.BasePermissions & item.NextPermissions;
+                itemCopy.BasePermissions = item.BasePermissions & item.NextPermissions;
                 itemCopy.NextPermissions = item.NextPermissions;
-				itemCopy.EveryOnePermissions = 0;
-				itemCopy.GroupPermissions = 0;
+                itemCopy.EveryOnePermissions = 0;
+                itemCopy.GroupPermissions = 0;
 
                 // Apply next perms to the inventory item copy
                 itemCopy.CurrentPermissions = item.CurrentPermissions & item.NextPermissions;
@@ -712,13 +712,13 @@ namespace OpenSim.Region.Framework.Scenes
                     // Preserve SLAM, may have been cleared by & with NextPermissions above
                     if ((item.CurrentPermissions & ScenePermBits.SLAM) != 0)
                     {
-                        itemCopy.CurrentPermissions |= ScenePermBits.SLAM;			// Slam!
-                        itemCopy.Flags |= (uint)InventoryItemFlags.ObjectSlamPerm;	// Tell the viewer we are going to slam this
+                        itemCopy.CurrentPermissions |= ScenePermBits.SLAM;            // Slam!
+                        itemCopy.Flags |= (uint)InventoryItemFlags.ObjectSlamPerm;    // Tell the viewer we are going to slam this
                     }
                 }
-			}
-			else
-			{
+            }
+            else
+            {
                 itemCopy.BasePermissions = item.BasePermissions;
                 itemCopy.CurrentPermissions = item.CurrentPermissions;
             }
@@ -740,13 +740,13 @@ namespace OpenSim.Region.Framework.Scenes
 
         public virtual void CalcItemPermsFromTaskItem(InventoryItemBase itemCopy, TaskInventoryItem item, bool isOwnerTransfer)
         {
-			if (isOwnerTransfer && Permissions.PropagatePermissions())
+            if (isOwnerTransfer && Permissions.PropagatePermissions())
             {
                 // on a transferbase is limited to the next perms
-				itemCopy.BasePermissions = item.BasePermissions & item.NextPermissions;
+                itemCopy.BasePermissions = item.BasePermissions & item.NextPermissions;
                 itemCopy.NextPermissions = item.NextPermissions;
-				itemCopy.EveryOnePermissions = 0;
-				itemCopy.GroupPermissions = 0;
+                itemCopy.EveryOnePermissions = 0;
+                itemCopy.GroupPermissions = 0;
 
                 // Apply next perms to the inventory item copy
                 itemCopy.CurrentPermissions = item.CurrentPermissions & item.NextPermissions;
@@ -755,13 +755,13 @@ namespace OpenSim.Region.Framework.Scenes
                     // Preserve SLAM, may have been cleared by & with NextPermissions above
                     if ((item.CurrentPermissions & ScenePermBits.SLAM) != 0)
                     {
-                        itemCopy.CurrentPermissions |= ScenePermBits.SLAM;			// Slam!
-                        itemCopy.Flags |= (uint)InventoryItemFlags.ObjectSlamPerm;	// Tell the viewer we are going to slam this
+                        itemCopy.CurrentPermissions |= ScenePermBits.SLAM;            // Slam!
+                        itemCopy.Flags |= (uint)InventoryItemFlags.ObjectSlamPerm;    // Tell the viewer we are going to slam this
                     }
                 }
-			}
-			else
-			{
+            }
+            else
+            {
                 itemCopy.BasePermissions = item.BasePermissions;
                 itemCopy.CurrentPermissions = item.CurrentPermissions;
             }
@@ -786,7 +786,7 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual InventoryItemBase DeliverItem(InventoryItemBase item, UUID recipientId, UUID recipientFolderId, UUID senderId, CachedUserInfo senderUserInfo)
         {
             CachedUserInfo recipientUserInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(recipientId);
+                = CommsManager.UserService.GetUserDetails(recipientId);
 
             if (recipientUserInfo != null)
             {
@@ -859,7 +859,7 @@ namespace OpenSim.Region.Framework.Scenes
             InventoryItemBase item = null;
 
             // Retrieve the item from the sender
-            senderUserInfo = CommsManager.UserProfileCacheService.GetUserDetails(senderId);
+            senderUserInfo = CommsManager.UserService.GetUserDetails(senderId);
             if (senderUserInfo == null)
             {
                 m_log.ErrorFormat(
@@ -907,7 +907,7 @@ namespace OpenSim.Region.Framework.Scenes
             UUID recipientId, UUID senderId, UUID folderId, UUID recipientParentFolderId)
         {
             // Retrieve the folder from the sender
-            CachedUserInfo senderUserInfo = CommsManager.UserProfileCacheService.GetUserDetails(senderId);
+            CachedUserInfo senderUserInfo = CommsManager.UserService.GetUserDetails(senderId);
 
             if (null == senderUserInfo)
             {
@@ -937,7 +937,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             CachedUserInfo recipientUserInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(recipientId);
+                = CommsManager.UserService.GetUserDetails(recipientId);
 
             if (null == recipientUserInfo)
             {
@@ -991,11 +991,11 @@ namespace OpenSim.Region.Framework.Scenes
         public void CopyInventoryItem(IClientAPI remoteClient, uint callbackID, UUID oldAgentID, UUID oldItemID,
                                       UUID newFolderID, string newName)
         {
-            InventoryItemBase item = CommsManager.UserProfileCacheService.LibraryRoot.FindItem(oldItemID);
+            InventoryItemBase item = CommsManager.LibraryRoot.FindItem(oldItemID);
 
             if (item == null)
             {
-                CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(oldAgentID);
+                CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(oldAgentID);
                 if (userInfo == null)
                 {
                     m_log.Error("[AGENT INVENTORY]: Failed to find user " + oldAgentID.ToString());
@@ -1025,7 +1025,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             m_log.DebugFormat("[AGENT INVENTORY]: CopyInventoryItem {0} '{1}' asset {2}", oldItemID, item.Name, item.AssetID);
-            if (newName == String.Empty)
+            if (String.IsNullOrEmpty(newName))
             {
                 newName = item.Name;
             }
@@ -1081,7 +1081,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.DebugFormat(
                     "[AGENT INVENTORY]: Moving item {0} to {1} for {2}", itemID, folderID, remoteClient.AgentId);
 
-                CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
                 if (userInfo == null)
                 {
@@ -1090,7 +1090,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
                 }
 
-                if (newName != String.Empty)
+                if (!String.IsNullOrEmpty(newName))
                 {
                     InventoryItemBase item = userInfo.FindItem(itemID);
 
@@ -1137,7 +1137,7 @@ namespace OpenSim.Region.Framework.Scenes
                 remoteClient, folderID, name, flags, callbackID, assetId, assetType, description, invType,
                 baseMask, currentMask, everyoneMask, nextOwnerMask, groupMask, creationDate, creatorID);
         }
-		
+        
         /// <summary>
         /// Create a new Inventory Item
         /// </summary>
@@ -1153,7 +1153,7 @@ namespace OpenSim.Region.Framework.Scenes
             sbyte invType, uint baseMask, uint currentMask, uint everyoneMask, uint nextOwnerMask, uint groupMask, int creationDate, string creatorID)
         {
             CachedUserInfo userInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (userInfo != null)
             {
@@ -1312,10 +1312,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (transactionID == UUID.Zero)
             {
-                CachedUserInfo userInfo
-                    = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                UserProfileData profile = CommsManager.UserService.GetUserProfile(remoteClient.AgentId);
 
-                if (userInfo != null)
+                if (profile != null)
                 {
                     ScenePresence presence;
                     TryGetAvatar(remoteClient.AgentId, out presence);
@@ -1351,7 +1350,7 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                 {
                     m_log.ErrorFormat(
-                        "userInfo for agent uuid {0} unexpectedly null in CreateNewInventoryItem",
+                        "CreateNewInventoryItem could not load profile for agent {0}",
                         remoteClient.AgentId);
                 }
             }
@@ -1366,9 +1365,9 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
         }
-		
-		
-		        /// <summary>
+        
+        
+                /// <summary>
         /// Link an inventory item to an existing item.
         /// </summary>
         /// <remarks>
@@ -1434,18 +1433,18 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
 
-		
-		
+        
+        
         /// <summary>
         /// Remove an inventory item for the client's inventory
-		/// If "forceDelete" is true, this is an internal system operation, not a user operation
+        /// If "forceDelete" is true, this is an internal system operation, not a user operation
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="itemID"></param>
-		private void RemoveInventoryItem(IClientAPI remoteClient, UUID itemID, bool forceDelete)
+        private void RemoveInventoryItem(IClientAPI remoteClient, UUID itemID, bool forceDelete)
         {
             CachedUserInfo userInfo
-                = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             if (userInfo == null)
             {
@@ -1587,16 +1586,16 @@ namespace OpenSim.Region.Framework.Scenes
         public InventoryItemBase MoveTaskInventoryItem(UUID AgentId, IClientAPI remoteClient, UUID folderId, SceneObjectPart part, UUID itemId,
             bool silent)
         {
-			if (part == null)
-				return null;
+            if (part == null)
+                return null;
 
-			TaskInventoryItem taskItem = part.Inventory.GetInventoryItem(itemId);
-			if (taskItem == null)
-				return null;
+            TaskInventoryItem taskItem = part.Inventory.GetInventoryItem(itemId);
+            if (taskItem == null)
+                return null;
 
             if (remoteClient == null)
             {
-                CachedUserInfo profile = CommsManager.UserProfileCacheService.GetUserDetails(AgentId);
+                UserProfileData profile = CommsManager.UserService.GetUserProfile(AgentId);
                 if (profile == null)
                 {
                     m_log.ErrorFormat(
@@ -1608,7 +1607,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
 
-			InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(AgentId, part, itemId);
+            InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(AgentId, part, itemId);
             if (agentItem == null)
                 return null;
 
@@ -1623,11 +1622,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
             
 
-			// if the Contents item is no-copy, dragging it out removes the one there
-			if ((taskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
-				part.Inventory.RemoveInventoryItem(itemId);
+            // if the Contents item is no-copy, dragging it out removes the one there
+            if ((taskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                part.Inventory.RemoveInventoryItem(itemId);
 
-			return agentItem;
+            return agentItem;
         }
 
         /// <summary>
@@ -1769,10 +1768,10 @@ namespace OpenSim.Region.Framework.Scenes
                             srcTaskItem.NextPermissions;
                     if (destTaskItem.InvType == (int)InventoryType.Object)
                     {
-                        destTaskItem.CurrentPermissions |= ScenePermBits.SLAM;			// Slam!
-                        destTaskItem.Flags |= (uint)InventoryItemFlags.ObjectSlamPerm;	// Tell the viewer we are going to slam this
+                        destTaskItem.CurrentPermissions |= ScenePermBits.SLAM;            // Slam!
+                        destTaskItem.Flags |= (uint)InventoryItemFlags.ObjectSlamPerm;    // Tell the viewer we are going to slam this
                     }
-				}
+                }
             }
 
             destTaskItem.Description = srcTaskItem.Description;
@@ -1800,7 +1799,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             ScenePresence avatar;
             IClientAPI remoteClient = null;
-            CachedUserInfo profile = CommsManager.UserProfileCacheService.GetUserDetails(AgentID);
+            CachedUserInfo profile = CommsManager.UserService.GetUserDetails(AgentID);
             if (profile == null)
             {
                 m_log.ErrorFormat(
@@ -1836,22 +1835,22 @@ namespace OpenSim.Region.Framework.Scenes
             return newFolderID;
         }
 
-		// Limits itemInfo, applying any limits in currentItem
-		private void LimitItemUpdate(TaskInventoryItem itemInfo, TaskInventoryItem currentItem)
-		{
-			itemInfo.BasePermissions		&= currentItem.BasePermissions;
-			itemInfo.CurrentPermissions		&= currentItem.BasePermissions;
-			itemInfo.NextPermissions		&= currentItem.BasePermissions;
-			itemInfo.GroupPermissions		&= currentItem.BasePermissions;
-			itemInfo.EveryonePermissions	&= currentItem.BasePermissions;
+        // Limits itemInfo, applying any limits in currentItem
+        private void LimitItemUpdate(TaskInventoryItem itemInfo, TaskInventoryItem currentItem)
+        {
+            itemInfo.BasePermissions        &= currentItem.BasePermissions;
+            itemInfo.CurrentPermissions        &= currentItem.BasePermissions;
+            itemInfo.NextPermissions        &= currentItem.BasePermissions;
+            itemInfo.GroupPermissions        &= currentItem.BasePermissions;
+            itemInfo.EveryonePermissions    &= currentItem.BasePermissions;
 
-			itemInfo.OwnerID = currentItem.OwnerID;
-			itemInfo.CreatorID = currentItem.CreatorID;
-			itemInfo.CreationDate = currentItem.CreationDate;
+            itemInfo.OwnerID = currentItem.OwnerID;
+            itemInfo.CreatorID = currentItem.CreatorID;
+            itemInfo.CreationDate = currentItem.CreationDate;
 
             itemInfo.InvType = currentItem.InvType;
             itemInfo.Type = currentItem.Type;
-		}
+        }
 
         /// <summary>
         /// Update an item in a prim (task) inventory.
@@ -1888,7 +1887,7 @@ namespace OpenSim.Region.Framework.Scenes
                     UUID copyID = UUID.Random();
                     if (itemID != UUID.Zero)
                     {
-                        CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                        CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
                         if (userInfo != null)
                         {
@@ -1898,7 +1897,7 @@ namespace OpenSim.Region.Framework.Scenes
                             // XXX clumsy, possibly should be one call
                             if (null == item)
                             {
-                                item = CommsManager.UserProfileCacheService.LibraryRoot.FindItem(itemID);
+                                item = CommsManager.LibraryRoot.FindItem(itemID);
                             }
 
                             if (item != null)
@@ -1932,17 +1931,17 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else // Updating existing item with new perms etc
                 {
-					// Enforce the item update contents (fixes exploit, Mantis #611)
-					LimitItemUpdate(itemInfo, currentItem);
-					if (transactionID != UUID.Zero)
-					{
-						IAgentAssetTransactions agentTransactions = this.RequestModuleInterface<IAgentAssetTransactions>();
-						if (agentTransactions != null)
-						{
-							agentTransactions.HandleTaskItemUpdateFromTransaction(
-								remoteClient, part, transactionID, currentItem);
-						}
-					}
+                    // Enforce the item update contents (fixes exploit, Mantis #611)
+                    LimitItemUpdate(itemInfo, currentItem);
+                    if (transactionID != UUID.Zero)
+                    {
+                        IAgentAssetTransactions agentTransactions = this.RequestModuleInterface<IAgentAssetTransactions>();
+                        if (agentTransactions != null)
+                        {
+                            agentTransactions.HandleTaskItemUpdateFromTransaction(
+                                remoteClient, part, transactionID, currentItem);
+                        }
+                    }
                     if (part.Inventory.UpdateTaskInventoryItemFromItem(itemInfo))
                         part.GetProperties(remoteClient);
                 }
@@ -1969,7 +1968,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (itemID != UUID.Zero)  // transferred from an avatar inventory to the prim's inventory
             {
-                CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
                 if (userInfo != null)
                 {
@@ -1979,7 +1978,7 @@ namespace OpenSim.Region.Framework.Scenes
                     bool fromLibrary = false;
                     if (null == item)
                     {
-                        item = CommsManager.UserProfileCacheService.LibraryRoot.FindItem(itemID);
+                        item = CommsManager.LibraryRoot.FindItem(itemID);
                         fromLibrary = true;
                     }
 
@@ -2026,15 +2025,15 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
 
                 if (part.OwnerID != remoteClient.AgentId)
-		        {
-		            // Group permissions
-		            if ( (part.GroupID == UUID.Zero) || (remoteClient.GetGroupPowers(part.GroupID) == 0) || ((part.GroupMask & (uint)PermissionMask.Modify) == 0) )
-			        return;
+                {
+                    // Group permissions
+                    if ( (part.GroupID == UUID.Zero) || (remoteClient.GetGroupPowers(part.GroupID) == 0) || ((part.GroupMask & (uint)PermissionMask.Modify) == 0) )
+                    return;
 
-		        } else {
-		            if ((part.OwnerMask & (uint)PermissionMask.Modify) == 0)
-			        return;
-		        }
+                } else {
+                    if ((part.OwnerMask & (uint)PermissionMask.Modify) == 0)
+                    return;
+                }
 
                 if (!Permissions.CanCreateObjectInventory(
                     itemBase.InvType, part.ParentGroup.UUID, remoteClient.AgentId))
@@ -2113,18 +2112,18 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.ErrorFormat("[PRIM INVENTORY]: Could not find target part {0} to load script into.", destId);
                 return "Could not find target prim to load script.";
             }
-	    
+        
             // Must own the object, and have modify rights
             if (srcPart.OwnerID != destPart.OwnerID)
-	        {
-		        // Group permissions
-		        if ( (destPart.GroupID == UUID.Zero) || (destPart.GroupID != srcPart.GroupID) ||
-		        ((destPart.GroupMask & (uint)PermissionMask.Modify) == 0) )
-		            return "Ownership mismatch or lack of Modify permission.";
-	        } else {
-		        if ((destPart.OwnerMask & (uint)PermissionMask.Modify) == 0)
+            {
+                // Group permissions
+                if ( (destPart.GroupID == UUID.Zero) || (destPart.GroupID != srcPart.GroupID) ||
+                ((destPart.GroupMask & (uint)PermissionMask.Modify) == 0) )
+                    return "Ownership mismatch or lack of Modify permission.";
+            } else {
+                if ((destPart.OwnerMask & (uint)PermissionMask.Modify) == 0)
                     return "Destination lacks Modify permission.";
-	        }
+            }
 
             if ((destPart.ScriptAccessPin == 0) || (destPart.ScriptAccessPin != pin))
             {
@@ -2166,10 +2165,10 @@ namespace OpenSim.Region.Framework.Scenes
                             srcTaskItem.NextPermissions;
                     if (destTaskItem.InvType == (int)InventoryType.Object)
                     {
-                        destTaskItem.CurrentPermissions |= ScenePermBits.SLAM;			// Slam!
-                        destTaskItem.Flags |= (uint)InventoryItemFlags.ObjectSlamPerm;	// Tell the viewer we are going to slam this
+                        destTaskItem.CurrentPermissions |= ScenePermBits.SLAM;            // Slam!
+                        destTaskItem.Flags |= (uint)InventoryItemFlags.ObjectSlamPerm;    // Tell the viewer we are going to slam this
                     }
-				}
+                }
             }
 
             destTaskItem.Description = srcTaskItem.Description;
@@ -2183,7 +2182,7 @@ namespace OpenSim.Region.Framework.Scenes
             ReplaceItemArgs replaceArgs = new ReplaceItemArgs(destTaskItem, running, start_param);
             destPart.Inventory.AddReplaceInventoryItem(destTaskItem, false, true, replaceArgs);
 
-            return string.Empty;    // success, no error
+            return String.Empty;    // success, no error
         }
 
         /// <summary>
@@ -2714,7 +2713,7 @@ namespace OpenSim.Region.Framework.Scenes
             //for each owner, determine the correct folder for the item and serialize
             foreach (KeyValuePair<UUID, List<SceneObjectGroup>> ownerObjects in owners)
             {
-                CachedUserInfo uInfo = CommsManager.UserProfileCacheService.GetUserDetails(ownerObjects.Key);
+                CachedUserInfo uInfo = CommsManager.UserService.GetUserDetails(ownerObjects.Key);
 
                 InventoryFolderBase destinationFolder;
 
@@ -2742,19 +2741,19 @@ namespace OpenSim.Region.Framework.Scenes
             //for each owner, all items go to lost and founds
             foreach (KeyValuePair<UUID, List<SceneObjectGroup>> ownerObjects in owners)
             {
-				// If the owner of ownerObjects is a group, the previous user owners may be different.
-				foreach (SceneObjectGroup SOG in ownerObjects.Value)
-				{
+                // If the owner of ownerObjects is a group, the previous user owners may be different.
+                foreach (SceneObjectGroup SOG in ownerObjects.Value)
+                {
                     // Find the calculated owner based on the dictionary key value
-					CachedUserInfo uInfo = CommsManager.UserProfileCacheService.GetUserDetails(ownerObjects.Key);
-					if (uInfo == null)
-					{
+                    CachedUserInfo uInfo = CommsManager.UserService.GetUserDetails(ownerObjects.Key);
+                    if (uInfo == null)
+                    {
                         // The problem here is this is an async function with no failure case, so we need to do something with the object.
                         // We can't fail it, skip/ignore it, unless the desired behavior is to lose the items.  Return it to the user doing the return.
-						uInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                        uInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
                         if (uInfo != null)
-                        	m_log.WarnFormat("Return patched: Owner {0} not found for object '{1}' {2}, returning to {3} instead.", SOG.RootPart.LastOwnerID, SOG.Name, SOG.UUID, remoteClient.Name);
-					}
+                            m_log.WarnFormat("Return patched: Owner {0} not found for object '{1}' {2}, returning to {3} instead.", SOG.RootPart.LastOwnerID, SOG.Name, SOG.UUID, remoteClient.Name);
+                    }
                     if (uInfo == null)
                     {
                         // Complete failure to look up any users.
@@ -2771,7 +2770,7 @@ namespace OpenSim.Region.Framework.Scenes
                         // their L&F if multiple objects were selected, but at least no data loss.
                         this.CopyItemsToFolder(uInfo, destinationFolder.ID, items, remoteClient, true);
                     }
-				}
+                }
             }
         }
 
@@ -2783,7 +2782,7 @@ namespace OpenSim.Region.Framework.Scenes
             //for each owner, all items go to the object folder for this client who has been authenticated as a god
             foreach (KeyValuePair<UUID, List<SceneObjectGroup>> ownerObjects in owners)
             {
-                CachedUserInfo uInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                CachedUserInfo uInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
                 InventoryFolderBase destinationFolder = uInfo.FindFolderForType((int)AssetType.Object);
 
                 this.CopyItemsToFolder(uInfo, destinationFolder.ID, ownerObjects.Value, remoteClient, false);
@@ -2793,7 +2792,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void PerformSaveToExistingUserInventoryItem(UUID folderId, IEnumerable<SceneObjectGroup> objectGroups,
             IClientAPI remoteClient)
         {
-            CachedUserInfo uInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo uInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             //there should only be one item
             foreach (SceneObjectGroup group in objectGroups)
@@ -2879,7 +2878,7 @@ namespace OpenSim.Region.Framework.Scenes
         private void PerformTake(UUID clientPreferredFolderId, IEnumerable<SceneObjectGroup> objectGroups,
             IClientAPI remoteClient, bool stopScripts)
         {
-            CachedUserInfo uInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo uInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
             //creating this objectGroups list sucks, but no way to fix it as everything else
             //comes in enumerable
@@ -3048,7 +3047,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             byte[] sceneObjectXml = this.DoSerializeSingleGroup(objectGroup, SerializationFlags.StopScripts);
 
-            CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(agentID);
+            CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(agentID);
 
             if (userInfo != null)
             {
@@ -3106,7 +3105,7 @@ namespace OpenSim.Region.Framework.Scenes
                 byte[] sceneObjectData = this.DoSerializeSingleGroup(grp, SerializationFlags.None);
 
                 CachedUserInfo userInfo =
-                    CommsManager.UserProfileCacheService.GetUserDetails(AgentId);
+                    CommsManager.UserService.GetUserDetails(AgentId);
                 
                 if (userInfo != null)
                 {
@@ -3245,7 +3244,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return true;
             }
 
-            string reason = "";
+            string reason = String.Empty;
             bool allowed = true;
             int landImpactNeeded = group.LandImpact;
 
@@ -3391,16 +3390,16 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (Permissions.PropagatePermissions())
                 {
-					if ((itemPermissions.CurrentPermissions & ScenePermBits.SLAM) != 0)
-					{	// enforce slam bit, apply item perms to the group parts
+                    if ((itemPermissions.CurrentPermissions & ScenePermBits.SLAM) != 0)
+                    {    // enforce slam bit, apply item perms to the group parts
                         foreach (SceneObjectPart part in partList)
                         {
-							part.EveryoneMask = item.EveryOnePermissions;
-							part.NextOwnerMask = item.NextPermissions;
-							part.GroupMask = 0; // DO NOT propagate here
-						}
+                            part.EveryoneMask = item.EveryOnePermissions;
+                            part.NextOwnerMask = item.NextPermissions;
+                            part.GroupMask = 0; // DO NOT propagate here
+                        }
                     }
-					group.ApplyNextOwnerPermissions();
+                    group.ApplyNextOwnerPermissions();
                 }
             }
 
@@ -3415,7 +3414,7 @@ namespace OpenSim.Region.Framework.Scenes
                     part.Inventory.ChangeInventoryOwner(item.Owner);
                     ownerChanged = true;
                 }
-				else if (((itemPermissions.CurrentPermissions & ScenePermBits.SLAM) != 0) && (!attachment)) // Slam!
+                else if (((itemPermissions.CurrentPermissions & ScenePermBits.SLAM) != 0) && (!attachment)) // Slam!
                 {
                     part.EveryoneMask = itemPermissions.EveryOnePermissions;
                     part.NextOwnerMask = itemPermissions.NextPermissions;
@@ -3465,8 +3464,8 @@ namespace OpenSim.Region.Framework.Scenes
                         remoteClient.SendInventoryItemCreateUpdate(ib, 0);
                     }
                 }
-				return null;
-			}
+                return null;
+            }
 
             return rootPart.ParentGroup;
         }
@@ -3492,7 +3491,7 @@ namespace OpenSim.Region.Framework.Scenes
                                     int startParam)
         {
             // Rez object
-            CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
             if (userInfo != null)
             {
                 InventoryItemBase item = userInfo.FindItem(itemID);
@@ -4235,7 +4234,7 @@ namespace OpenSim.Region.Framework.Scenes
                         }
                         part.ParentGroup.DetachToGround();
                         CachedUserInfo userInfo =
-                            CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                            CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
                         if (userInfo != null)
                         {
                             userInfo.CheckedDeleteItem(remoteClient.AgentId, inventoryID);

@@ -73,18 +73,18 @@ namespace OpenSim.ApplicationPlugins.CreateCommsManager
 
         protected IRegionCreator m_regionCreator;
 
-        public void Initialise()
+        public void Initialize()
         {
             m_log.Info("[LOADREGIONS]: " + Name + " cannot be default-initialized!");
-            throw new PluginNotInitialisedException(Name);
+            throw new PluginNotInitializedException(Name);
         }
 
-        public void Initialise(OpenSimBase openSim)
+        public void Initialize(OpenSimBase openSim)
         {
             m_openSim = openSim;
             m_httpServer = openSim.HttpServer;
 
-            InitialiseCommsManager(openSim);
+            InitializeCommsManager(openSim);
             if (m_commsManager != null)
             {
                 m_openSim.ApplicationRegistry.RegisterInterface<IUserService>(m_commsManager.UserService);
@@ -93,7 +93,7 @@ namespace OpenSim.ApplicationPlugins.CreateCommsManager
 
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (m_openSim.ApplicationRegistry.TryGet<IRegionCreator>(out m_regionCreator))
             {
@@ -115,51 +115,34 @@ namespace OpenSim.ApplicationPlugins.CreateCommsManager
             }
         }
 
-        protected void InitialiseCommsManager(OpenSimBase openSim)
+        protected void InitializeCommsManager(OpenSimBase openSim)
         {
             LibraryRootFolder libraryRootFolder = new LibraryRootFolder(m_openSim.ConfigurationSettings.LibrariesXMLFile);
 
-            InitialiseStandardServices(libraryRootFolder);
+            InitializeStandardServices(libraryRootFolder);
 
             openSim.CommunicationsManager = m_commsManager;
         }
 
-        /*
-        protected void InitialiseHGServices(OpenSimBase openSim, LibraryRootFolder libraryRootFolder)
+        protected void InitializeStandardServices(LibraryRootFolder libraryRootFolder)
         {
             // Standalone mode is determined by !startupConfig.GetBoolean("gridmode", false)
             if (m_openSim.ConfigurationSettings.Standalone)
             {
-                InitialiseHGStandaloneServices(libraryRootFolder);
+                InitializeStandaloneServices(libraryRootFolder);
             }
             else
             {
                 // We are in grid mode
-                InitialiseHGGridServices(libraryRootFolder);
-            }
-            HGCommands.HGServices = HGServices;
-        }
-        */
-
-        protected void InitialiseStandardServices(LibraryRootFolder libraryRootFolder)
-        {
-            // Standalone mode is determined by !startupConfig.GetBoolean("gridmode", false)
-            if (m_openSim.ConfigurationSettings.Standalone)
-            {
-                InitialiseStandaloneServices(libraryRootFolder);
-            }
-            else
-            {
-                // We are in grid mode
-                InitialiseGridServices(libraryRootFolder);
+                InitializeGridServices(libraryRootFolder);
             }
         }
 
         /// <summary>
-        /// Initialises the backend services for standalone mode, and registers some http handlers
+        /// Initializes the backend services for standalone mode, and registers some http handlers
         /// </summary>
         /// <param name="libraryRootFolder"></param>
-        protected virtual void InitialiseStandaloneServices(LibraryRootFolder libraryRootFolder)
+        protected virtual void InitializeStandaloneServices(LibraryRootFolder libraryRootFolder)
         {
             m_commsManager
                 = new CommunicationsLocal(
@@ -169,7 +152,7 @@ namespace OpenSim.ApplicationPlugins.CreateCommsManager
             CreateGridInfoService();
         }
 
-        protected virtual void InitialiseGridServices(LibraryRootFolder libraryRootFolder)
+        protected virtual void InitializeGridServices(LibraryRootFolder libraryRootFolder)
         {
             m_commsManager
                 = new CommunicationsOGS1(m_openSim.NetServersInfo, m_httpServer, m_openSim.AssetCache, libraryRootFolder,
@@ -177,44 +160,9 @@ namespace OpenSim.ApplicationPlugins.CreateCommsManager
 
             m_httpServer.AddStreamHandler(new OpenSim.SimStatusHandler());
             m_httpServer.AddStreamHandler(new OpenSim.XSimStatusHandler(m_openSim));
-            if (m_openSim.userStatsURI != String.Empty )
+            if (!String.IsNullOrEmpty(m_openSim.userStatsURI))
                 m_httpServer.AddStreamHandler(new OpenSim.UXSimStatusHandler(m_openSim));
         }
-
-        /*
-        protected virtual void InitialiseHGStandaloneServices(LibraryRootFolder libraryRootFolder)
-        {    
-            HGGridServicesStandalone gridService 
-                = new HGGridServicesStandalone(
-                    m_openSim.NetServersInfo, m_httpServer, m_openSim.AssetCache, m_openSim.SceneManager);                         
-
-            m_commsManager 
-                = new HGCommunicationsStandalone(
-                    m_openSim.ConfigurationSettings, m_openSim.NetServersInfo, m_httpServer, m_openSim.AssetCache,
-                    gridService, 
-                    libraryRootFolder, m_openSim.ConfigurationSettings.DumpAssetsToFile);                        
-            
-            HGServices = gridService;
-
-            CreateGridInfoService();
-        }
-
-        
-        protected virtual void InitialiseHGGridServices(LibraryRootFolder libraryRootFolder)
-        {
-            m_commsManager 
-                = new HGCommunicationsGridMode(
-                    m_openSim.NetServersInfo, m_httpServer, 
-                    m_openSim.AssetCache, m_openSim.SceneManager, libraryRootFolder);
-
-            HGServices = ((HGCommunicationsGridMode) m_commsManager).HGServices;
-
-            m_httpServer.AddStreamHandler(new OpenSim.SimStatusHandler());
-            m_httpServer.AddStreamHandler(new OpenSim.XSimStatusHandler(m_openSim));
-            if (m_openSim.userStatsURI != String.Empty )
-                m_httpServer.AddStreamHandler(new OpenSim.UXSimStatusHandler(m_openSim));
-        }
-        */
 
         private void CreateGridInfoService()
         {

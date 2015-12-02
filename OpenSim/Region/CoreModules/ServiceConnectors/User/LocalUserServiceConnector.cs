@@ -56,25 +56,25 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.User
             get { return null; }
         }
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
             {
-                string name = moduleConfig.GetString("UserServices", "");
+                string name = moduleConfig.GetString("UserServices", String.Empty);
                 if (name == Name)
                 {
                     IConfig userConfig = source.Configs["UserService"];
                     if (userConfig == null)
                     {
-                        m_log.Error("[USER CONNECTOR]: UserService missing from OpenSim.ini");
+                        m_log.Error("[USER CONNECTOR]: UserService missing from Halcyon.ini");
                         return;
                     }
 
                     string serviceDll = userConfig.GetString("LocalServiceModule",
                             String.Empty);
 
-                    if (serviceDll == String.Empty)
+                    if (String.IsNullOrEmpty(serviceDll))
                     {
                         m_log.Error("[USER CONNECTOR]: No LocalServiceModule named in section UserService");
                         return;
@@ -96,7 +96,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.User
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (!m_Enabled)
                 return;

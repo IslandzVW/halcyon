@@ -73,7 +73,7 @@ namespace OpenSim.Client.Linden
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource source)
+        public void Initialize(Scene scene, IConfigSource source)
         {
             if (m_firstScene == null)
             {
@@ -88,23 +88,23 @@ namespace OpenSim.Client.Linden
                 if (m_enabled)
                 {
                     bool authenticate = true;
-                    string welcomeMessage = "Welcome to InWorldz", mapServerURI = "";
+                    string welcomeMessage = "Welcome to InWorldz", mapServerURI = String.Empty;
                     IConfig standaloneConfig = source.Configs["StandAlone"];
                     if (standaloneConfig != null)
                     {
                         authenticate = standaloneConfig.GetBoolean("accounts_authenticate", true);
                         welcomeMessage = standaloneConfig.GetString("welcome_message");
-                        mapServerURI = standaloneConfig.GetString("map_server_uri", "");
+                        mapServerURI = standaloneConfig.GetString("map_server_uri", String.Empty);
                     }
 
                     //TODO: fix casting.
                     LibraryRootFolder rootFolder 
-                        = m_firstScene.CommsManager.UserProfileCacheService.LibraryRoot as LibraryRootFolder;
+                        = m_firstScene.CommsManager.LibraryRoot as LibraryRootFolder;
                    
                     IHttpServer httpServer = m_firstScene.CommsManager.HttpServer;
 
                     //TODO: fix the casting of the user service, maybe by registering the userManagerBase with scenes, or refactoring so we just need a IUserService reference
-                    m_loginService = new LLStandaloneLoginService((UserManagerBase)m_firstScene.CommsManager.UserAdminService, mapServerURI, welcomeMessage, m_firstScene.CommsManager.NetworkServersInfo, authenticate, rootFolder, this);
+                    m_loginService = new LLStandaloneLoginService((UserProfileManager)m_firstScene.CommsManager.UserAdminService, mapServerURI, welcomeMessage, m_firstScene.CommsManager.NetworkServersInfo, authenticate, rootFolder, this);
 
                     httpServer.AddXmlRPCHandler("login_to_simulator", m_loginService.XmlRpcLoginMethod);
 
@@ -122,7 +122,7 @@ namespace OpenSim.Client.Linden
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
 
         }

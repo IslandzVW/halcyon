@@ -65,7 +65,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
 
 //        private IConfigSource profileConfig;
         private List<Scene> m_Scenes = new List<Scene>();
-        //private string m_SearchServer = "";
+        //private string m_SearchServer = String.Empty;
         private bool m_Enabled = true;
 
         // NOTE: RDB-related code is all grouped here and is copied in LandManagementModule (for now).
@@ -85,7 +85,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
 
         // status flags embedded in search replay messages of classifieds, events, groups, and places.
         // Places
-        private const uint STATUS_SEARCH_PLACES_NONE				= 0x0;
+        private const uint STATUS_SEARCH_PLACES_NONE                = 0x0;
         private const uint STATUS_SEARCH_PLACES_BANNEDWORD = 0x1 << 0;
         private const uint STATUS_SEARCH_PLACES_SHORTSTRING = 0x1 << 1;
         private const uint STATUS_SEARCH_PLACES_FOUNDNONE = 0x1 << 2;
@@ -108,7 +108,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
         private const uint STATUS_SEARCH_CLASSIFIEDS_FOUNDNONE = 0x1 << 2;
         private const uint STATUS_SEARCH_CLASSIFIEDS_SEARCHDISABLED = 0x1 << 3;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (!m_Enabled)
                 return;
@@ -206,7 +206,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
             Dictionary<string, string> best = null;
             RDBConnectionQuery bestDB = null;
             float bestValue = 0f;
-            string bestText = "";
+            string bestText = String.Empty;
 
             foreach (RDBConnectionQuery rdb in rdbQueries)
             {
@@ -317,7 +317,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                 // Initialize the RDB connection and initial results lists
 
                 ConnectionFactory rdbFactory;
-                if ((++whichDB == 1) || (_rdbConnectionTemplateDebug.Trim() == String.Empty))
+                if ((++whichDB == 1) || String.IsNullOrWhiteSpace(_rdbConnectionTemplateDebug))
                     rdbFactory = new ConnectionFactory("MySQL", String.Format(_rdbConnectionTemplate, host));
                 else  // Special debugging support for multiple RDBs on one machine ("inworldz_rdb2", etc)
                     rdbFactory = new ConnectionFactory("MySQL", String.Format(_rdbConnectionTemplateDebug, host, whichDB));
@@ -359,7 +359,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
         }
         // NOTE: END OF RDB-related code copied in LandManagementModule (for now).
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (!m_Enabled)
                 return;
@@ -437,7 +437,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
 
             queryText = queryText.Trim();   // newer viewers sometimes append a space
 
-            string query = "";
+            string query = String.Empty;
 
             //string newQueryText = "%" + queryText + "%";
             Dictionary<string, object> parms = new Dictionary<string, object>();
@@ -544,11 +544,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                 int queryStart)
         {
             //m_log.DebugFormat("[LAND SEARCH]: In Land Search, queryFlag = " + queryFlags.ToString("X"));
-            string query = "";
+            string query = String.Empty;
             int count = MAX_RESULTS + 1;    // +1 so that the viewer knows to enable the NEXT button (it seems)
             int queryEnd = queryStart + count - 1;  // 0-based
             int i = 0;
-            string sqlTerms = "";
+            string sqlTerms = String.Empty;
 
             if ((queryFlags & ((uint)DirFindFlags.NameSort|(uint)DirFindFlags.AreaSort|(uint)DirFindFlags.PricesSort|(uint)DirFindFlags.PerMeterSort)) == 0)
             {
@@ -606,7 +606,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                 if (maturities > 0) sqlTerms += " or ";
                 sqlTerms += "regionsettings.maturity='1'";
                 maturities++;
-			}
+            }
             if (checkAdultFlag)
             {
                 if (maturities > 0) sqlTerms += " or ";
@@ -715,7 +715,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                 data[i].agentID = item.AvatarID;
                 data[i].firstName = item.firstName;
                 data[i].lastName = item.lastName;
-                data[i].group = "";
+                data[i].group = String.Empty;
                 data[i].online = false;
                 data[i].reputation = 0;
                 i++;
@@ -730,9 +730,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
             // We also know text comes in 3 segments X|Y|Text where X is the day difference from 
             // the current day, Y is the category to search, Text is the user input for search string
             // so let's 'split up the queryText to get our values we need first off
-            string eventTime = "";
-            string eventCategory = "";
-            string userText = "";
+            string eventTime = String.Empty;
+            string eventCategory = String.Empty;
+            string userText = String.Empty;
 
             queryText = queryText.Trim();   // newer viewers sometimes append a space
 
@@ -748,7 +748,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
             }
 
             // Ok we have values, now we need to do something with all this lovely information
-            string query = "";
+            string query = String.Empty;
             string searchStart = Convert.ToString(queryStart);
             int count = 100;
             DirEventsReplyData[] data = new DirEventsReplyData[count];
@@ -760,7 +760,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
             int unixEventDateToCheckMidnight = 0;
             int unixEventEndDateToCheckMidnight = 0;
 
-            string sqlAddTerms = "";
+            string sqlAddTerms = String.Empty;
 
             DateTime saveNow = DateTime.Now;
             int startDateCheck;
@@ -836,7 +836,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                 sqlAddTerms += " AND category=?category";
             }
 
-            if(userText != "")
+            if(!String.IsNullOrEmpty(userText))
             {
                 sqlAddTerms += " AND (description LIKE ?userText OR name LIKE ?userText)";
             }
@@ -844,7 +844,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
             // Events results should come back sorted by date
             sqlAddTerms += " order by dateUTC ASC";
 
-             query = "select owneruuid, name, eventid, dateUTC, eventflags from events" + sqlAddTerms + " limit " + searchStart + ", " + searchEnd + "";
+             query = "select owneruuid, name, eventid, dateUTC, eventflags from events" + sqlAddTerms + " limit " + searchStart + ", " + searchEnd + String.Empty;
 
              Dictionary<string, object> parms = new Dictionary<string, object>();
              parms.Add("?startDateCheck", Convert.ToString(startDateCheck));
@@ -883,8 +883,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                 int queryStart)
         {
             // This is pretty straightforward here, get the input, set up the query, run it through, send back to viewer.
-            string query = "";
-            string sqlAddTerms = "";
+            string query = String.Empty;
+            string sqlAddTerms = String.Empty;
             string userText = queryText.Trim(); // newer viewers sometimes append a space
 
             string searchStart = Convert.ToString(queryStart);
@@ -896,7 +896,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
             //  parcel information is never displayed correctly within in the classified ad.
 
             //stop blank queries here before they explode mysql
-            if (userText == "")
+            if (String.IsNullOrEmpty(userText))
             {
                 remoteClient.SendDirClassifiedReply(queryID, new DirClassifiedReplyData[0]);
                 return;
@@ -922,7 +922,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
              //        "where name LIKE '" + userText + "' OR description LIKE '" + userText + "' " + sqlAddTerms;
 
             query = "select classifieduuid, name, classifiedflags, creationdate, expirationdate, priceforlisting from classifieds " +
-                    "where (description REGEXP ?userText OR name REGEXP ?userText) " +sqlAddTerms + " order by priceforlisting DESC limit " + searchStart + ", " + searchEnd + "";
+                    "where (description REGEXP ?userText OR name REGEXP ?userText) " +sqlAddTerms + " order by priceforlisting DESC limit " + searchStart + ", " + searchEnd + String.Empty;
 
             using (ISimpleDB db = _connFactory.GetConnection())
             {
@@ -965,25 +965,25 @@ namespace OpenSim.Region.CoreModules.Avatar.Search
                     // real string value so it shows correctly
                     if (row["category"] == "18")
                         data.category = "Discussion";
-		            if (row["category"] == "19")
+                    if (row["category"] == "19")
                         data.category = "Sports";
-		            if (row["category"] == "20")
+                    if (row["category"] == "20")
                         data.category = "Live Music";
-		            if (row["category"] == "22")
+                    if (row["category"] == "22")
                         data.category = "Commercial";
-		            if (row["category"] == "23")
+                    if (row["category"] == "23")
                         data.category = "Nightlife/Entertainment";
-		            if (row["category"] == "24")
+                    if (row["category"] == "24")
                         data.category = "Games/Contests";
-		            if (row["category"] == "25")
+                    if (row["category"] == "25")
                         data.category = "Pageants";
-		            if (row["category"] == "26")
+                    if (row["category"] == "26")
                         data.category = "Education";
-		            if (row["category"] == "27")
+                    if (row["category"] == "27")
                         data.category = "Arts and Culture";
-		            if (row["category"] == "28")
+                    if (row["category"] == "28")
                         data.category = "Charity/Support Groups";
-		            if (row["category"] == "29")
+                    if (row["category"] == "29")
                         data.category = "Miscellaneous";
 
                     data.description = row["description"].ToString();

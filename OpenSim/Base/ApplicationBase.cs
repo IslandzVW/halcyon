@@ -28,6 +28,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+
 namespace OpenSim
 {
     public class ApplicationBase
@@ -35,6 +37,6 @@ namespace OpenSim
         /// <summary>
         /// Path to the main ini Configuration file
         /// </summary>
-        public static string iniFilePath = "";
+        public static string iniFilePath = String.Empty;
     }
 }

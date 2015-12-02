@@ -849,6 +849,14 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public Vector3 GroupPositionNoUpdate
+        {
+            get
+            {
+                return m_groupPosition;
+            }
+        }
+
         /// <summary>
         /// The local position of this group according to the parent coordinate system
         /// Like GroupPosition except never based on the attached avatar position.
@@ -1423,9 +1431,9 @@ namespace OpenSim.Region.Framework.Scenes
                 if (IsAttachment)
                     return GroupPosition;
 
-				return GetWorldPosition();
+                return GetWorldPosition();
             }
-		}
+        }
 
         public UUID ObjectCreator
         {
@@ -1601,8 +1609,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         public PrimFlags Flags
         {
-			get { return _flags; }
-			set { _flags = value; }
+            get { return _flags; }
+            set { _flags = value; }
         }
 
         [XmlIgnore]
@@ -1682,14 +1690,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Public Methods
 
-		public bool IsRootPart()
-		{
-			if (m_parentGroup == null)
-				return true;	// no parent group...consider this root
-			if (m_parentGroup.RootPart == null)
-				return true;	// no parent part... consider this root
-			return (m_parentGroup.RootPart == this);	// matches?
-		}
+        public bool IsRootPart()
+        {
+            if (m_parentGroup == null)
+                return true;    // no parent group...consider this root
+            if (m_parentGroup.RootPart == null)
+                return true;    // no parent part... consider this root
+            return (m_parentGroup.RootPart == this);    // matches?
+        }
 
         public static readonly uint LEGACY_BASEMASK = 0x7FFFFFF0;
         public static bool IsLegacyBasemask(uint basemask)
@@ -1707,7 +1715,7 @@ namespace OpenSim.Region.Framework.Scenes
             // PrimFlags prevflag = Flags;
             if ((ObjectFlags & (uint) flag) == 0)
             {
-		        _flags |= flag;
+                _flags |= flag;
 
                 if (flag == PrimFlags.TemporaryOnRez)
                     ResetExpire();
@@ -2930,7 +2938,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         public void ScriptSetPhysicsStatus(bool UsePhysics)
-        {	
+        {    
             if (m_parentGroup == null)
                 AdjustPhysactorDynamics(UsePhysics, false);
             else

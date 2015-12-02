@@ -48,7 +48,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
     /// [ChatLogModule]
     ///     Enabled = true
     /// 
-    /// into OpenSim.ini.
+    /// into Halcyon.ini.
     /// </summary>
     public class InWorldzChatLogModule : INonSharedRegionModule
     {
@@ -72,7 +72,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
             get { return null; }
         }
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             IConfig config = source.Configs[Name];
             if (config == null) return;
@@ -110,7 +110,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
         void EventManager_OnChatToClient(string message, UUID fromID, UUID toID, UUID regionID, 
             uint timestamp, ChatToClientType type)
         {
-            if (message == "" || toID == fromID) return;
+            if (String.IsNullOrEmpty(message) || toID == fromID) return;
 
             //Create the log, then pass it to the backend
             ChatMessageLog log = new ChatMessageLog()

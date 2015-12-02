@@ -200,9 +200,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="filename"></param>
         public void SaveCurrentSceneToXml(string filename)
         {
-            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
-            if (serialiser != null)            
-                serialiser.SavePrimsToXml(CurrentOrFirstScene, filename);
+            IRegionSerializerModule serializer = CurrentOrFirstScene.RequestModuleInterface<IRegionSerializerModule>();
+            if (serializer != null)            
+                serializer.SavePrimsToXml(CurrentOrFirstScene, filename);
         }
 
         /// <summary>
@@ -213,9 +213,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="loadOffset"></param>
         public void LoadCurrentSceneFromXml(string filename, bool generateNewIDs, Vector3 loadOffset)
         {
-            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
-            if (serialiser != null)            
-                serialiser.LoadPrimsFromXml(CurrentOrFirstScene, filename, generateNewIDs, loadOffset);
+            IRegionSerializerModule serializer = CurrentOrFirstScene.RequestModuleInterface<IRegionSerializerModule>();
+            if (serializer != null)            
+                serializer.LoadPrimsFromXml(CurrentOrFirstScene, filename, generateNewIDs, loadOffset);
         }
 
         /// <summary>
@@ -224,16 +224,16 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="filename"></param>
         public void SaveCurrentSceneToXml2(string filename)
         {
-            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
-            if (serialiser != null)            
-                serialiser.SavePrimsToXml2(CurrentOrFirstScene, filename);
+            IRegionSerializerModule serializer = CurrentOrFirstScene.RequestModuleInterface<IRegionSerializerModule>();
+            if (serializer != null)            
+                serializer.SavePrimsToXml2(CurrentOrFirstScene, filename);
         }
 
         public void SaveNamedPrimsToXml2(string primName, string filename)
         {
-            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
-            if (serialiser != null)               
-                serialiser.SaveNamedPrimsToXml2(CurrentOrFirstScene, primName, filename);
+            IRegionSerializerModule serializer = CurrentOrFirstScene.RequestModuleInterface<IRegionSerializerModule>();
+            if (serializer != null)               
+                serializer.SaveNamedPrimsToXml2(CurrentOrFirstScene, primName, filename);
         }
 
         /// <summary>
@@ -241,9 +241,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void LoadCurrentSceneFromXml2(string filename)
         {
-            IRegionSerialiserModule serialiser = CurrentOrFirstScene.RequestModuleInterface<IRegionSerialiserModule>();
-            if (serialiser != null)              
-                serialiser.LoadPrimsFromXml2(CurrentOrFirstScene, filename);
+            IRegionSerializerModule serializer = CurrentOrFirstScene.RequestModuleInterface<IRegionSerializerModule>();
+            if (serializer != null)              
+                serializer.LoadPrimsFromXml2(CurrentOrFirstScene, filename);
         }
 
         /// <summary>
@@ -573,7 +573,7 @@ namespace OpenSim.Region.Framework.Scenes
                     case BlacklistOp.User:
                     case BlacklistOp.Owner:
                         // accepts either UUID or First Last
-                        if (param2 == string.Empty)
+                        if (param2 == String.Empty)
                         {
                             if (!UUID.TryParse(param, out targetID))
                             {
@@ -609,7 +609,7 @@ namespace OpenSim.Region.Framework.Scenes
                     case BlacklistOp.Remove:
                         if (UUID.TryParse(param, out targetID))
                         {
-                            targetName = string.Empty;
+                            targetName = String.Empty;
                         }
                         else
                         {
@@ -651,7 +651,7 @@ namespace OpenSim.Region.Framework.Scenes
                             scene.AddBlacklistedUser(targetID);
                             break;
                         case BlacklistOp.Remove:
-                            if (targetName != string.Empty)
+                            if (targetName != String.Empty)
                                 scene.BlacklistRemove(targetName);
                             else
                                 scene.BlacklistRemove(targetID);
@@ -1031,7 +1031,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         private static string OarStatusNameFromRegionName(string regionName)
         {
-            return regionName.Replace(" ", "").Replace("\'", "") + ".oarstatus";
+            return regionName.Replace(" ", String.Empty).Replace("\'", String.Empty) + ".oarstatus";
         }
 
         public Scene FindSceneByName(string name)

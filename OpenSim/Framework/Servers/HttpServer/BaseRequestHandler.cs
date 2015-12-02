@@ -26,37 +26,49 @@
  */
 
 using System;
+using System.IO;
 
 namespace OpenSim.Framework.Servers.HttpServer
 {
     public abstract class BaseRequestHandler
     {
+        protected readonly string m_httpMethod;
+
+        protected readonly string m_path;
+        protected readonly string m_name;
+        protected readonly string m_description;
+
+        protected BaseRequestHandler(string httpMethod, string path, string name, string description)
+        {
+            m_httpMethod = httpMethod;
+            m_path = path;
+            m_name = name;
+            m_description = description;
+        }
+
+        protected BaseRequestHandler(string httpMethod, string path) : 
+        this(httpMethod, path, null, null) 
+        {
+        }
+
         public virtual string ContentType
         {
             get { return "application/xml"; }
         }
-
-        private readonly string m_httpMethod;
 
         public virtual string HttpMethod
         {
             get { return m_httpMethod; }
         }
 
-        private readonly string m_path;
+        public virtual string Name 
+        { 
+            get { return m_name; }
+        }
 
-        public string Name { get; private set; }
-
-        public string Description { get; private set; }
-
-        protected BaseRequestHandler(string httpMethod, string path) : this(httpMethod, path, null, null) {}
-
-        protected BaseRequestHandler(string httpMethod, string path, string name, string description)
-        {
-            Name = name;
-            Description = description;
-            m_httpMethod = httpMethod;
-            m_path = path;
+        public virtual string Description
+        { 
+            get { return m_description; }
         }
 
         public virtual string Path
@@ -64,12 +76,19 @@ namespace OpenSim.Framework.Servers.HttpServer
             get { return m_path; }
         }
 
-        public string GetParam(string path)
+        public string GetBodyAsString(Stream request)
+        {
+            StreamReader sr = new StreamReader(request);
+            string body = sr.ReadToEnd();
+            sr.Close();
+            body = body.Trim();
+            return body;
+        }
+
+        protected string GetParam(string path)
         {
             if (CheckParam(path))
-            {
                 return path.Substring(m_path.Length);
-            }
 
             return String.Empty;
         }
@@ -77,18 +96,15 @@ namespace OpenSim.Framework.Servers.HttpServer
         protected bool CheckParam(string path)
         {
             if (String.IsNullOrEmpty(path))
-            {
                 return false;
-            }
-
+            
             return path.StartsWith(Path);
         }
 
-        public string[] SplitParams(string path)
+        protected string[] SplitParams(string path)
         {
             string param = GetParam(path);
-
-            return param.Split(new char[] { '/', '?', '&' }, StringSplitOptions.RemoveEmptyEntries);
+            return param.Split(new char[] {'/', '?', '&'}, StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }

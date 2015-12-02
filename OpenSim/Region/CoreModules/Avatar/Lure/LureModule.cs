@@ -45,7 +45,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
 
         private IMessageTransferModule m_TransferModule = null;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (config.Configs["Messaging"] != null)
             {
@@ -74,7 +74,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
             client.OnTeleportLureRequest += OnTeleportLureRequest;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             m_TransferModule =
                 m_scenes[0].RequestModuleInterface<IMessageTransferModule>();
@@ -109,12 +109,10 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
 
             Scene scene = (Scene)(client.Scene);
             ScenePresence presence = scene.GetScenePresence(client.AgentId);
-
+            Vector3 pos = presence.AbsolutePosition;
             UUID dest = Util.BuildFakeParcelID(
                     scene.RegionInfo.RegionHandle,
-                    (uint)presence.AbsolutePosition.X,
-                    (uint)presence.AbsolutePosition.Y,
-                    (uint)presence.AbsolutePosition.Z);
+                    (uint)pos.X, (uint)pos.Y, (uint)pos.Z);
 
             m_log.DebugFormat("TP invite with message {0}", message);
 

@@ -52,7 +52,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
     ///     SeedNode3 = x.host.com
     ///     SeedNode4 = x.host.com
     ///     
-    /// into OpenSim.ini.
+    /// into Halcyon.ini.
     /// </summary>
     public class InworldzChatLogMessageCassandra12Backend : IApplicationPlugin, IChatMessageLogBackend
     {
@@ -80,12 +80,12 @@ namespace InWorldz.ApplicationPlugins.ChatLog
 
         #region IApplicationPlugin Members
 
-        public void Initialise(OpenSimBase openSim)
+        public void Initialize(OpenSimBase openSim)
         {
             IConfig config = openSim.ConfigSource.Source.Configs["ChatLogModule"];
             if (config == null) return;
 
-            m_enabled = config.GetBoolean("Enabled", false) && config.GetString("Backend", "") == "Cassandra12Backend";
+            m_enabled = config.GetBoolean("Enabled", false) && config.GetString("Backend", String.Empty) == "Cassandra12Backend";
             m_debug = config.GetBoolean("Debug", m_debug);
             m_ttl = config.GetInt("TTL", m_ttl);
 
@@ -125,7 +125,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -139,7 +139,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
             get { return "InworldzChatLogMessageCassandra12Backend"; }
         }
 
-        public void Initialise()
+        public void Initialize()
         {
         }
 
@@ -159,13 +159,13 @@ namespace InWorldz.ApplicationPlugins.ChatLog
         {
             /*
              *  CREATE TABLE messages (
-	         *       message_id uuid PRIMARY KEY,
-	         *       from_agent uuid,
-	         *       to_agent uuid,
-	         *       region_id uuid,
-	         *       chat_type int,
-	         *       sent_on int,
-	         *       sent_on_day timestamp, 
+             *       message_id uuid PRIMARY KEY,
+             *       from_agent uuid,
+             *       to_agent uuid,
+             *       region_id uuid,
+             *       chat_type int,
+             *       sent_on int,
+             *       sent_on_day timestamp, 
              *       message text
              *   );
              */

@@ -100,7 +100,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
 
         public event ObjectPaid OnObjectPaid;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             IConfig economyConfig = config.Configs["Economy"];
             // Adding the line from Profile in order to get the connection string
@@ -255,7 +255,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 transInfo.ItemDescription = Util.StringToBytes256(transDesc);
 
                 string message;
-                if ((transDesc == null) || (transDesc == String.Empty))
+                if (String.IsNullOrEmpty(transDesc))
                     message = "You paid $" + transAmount.ToString() + ".";
                 else
                     message = "You paid $" + transAmount.ToString() + " for " + transDesc + ".";
@@ -284,7 +284,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             return transID;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -478,7 +478,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
         // Send a pure balance notification only.
         private void SendMoneyBalance(IClientAPI client)
         {
-            SendMoneyBalanceTransaction(client, UUID.Zero, true, string.Empty, null);
+            SendMoneyBalanceTransaction(client, UUID.Zero, true, String.Empty, null);
         }
 
         public bool ObjectGiveMoney(UUID objectID, UUID sourceAvatarID, UUID destAvatarID, int amount)
@@ -616,8 +616,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             int transAmount = e.amount;
             IClientAPI sourceAvatarClient;
             IClientAPI destAvatarClient;
-            string sourceText = "";
-            string destText = "";
+            string sourceText = String.Empty;
+            string destText = String.Empty;
 
             TransactionInfoBlock transInfo = new TransactionInfoBlock();
             transInfo.Amount = transAmount;
@@ -738,7 +738,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 int avatarFunds = getCurrentBalance(e.mBuyerID);
                 if (avatarFunds < costToApply)
                 {
-                    string costText = "";
+                    string costText = String.Empty;
                     if (e.mOrigPrice != 0) // this is an updated classified
                         costText = "increase ";
                     remoteClient.SendAgentAlertMessage("The classified price " + costText + " (I'z$" + costToApply.ToString() + ") exceeds your current balance (" + avatarFunds.ToString() + ").", true);
@@ -780,7 +780,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             IClientAPI sourceAvatarClient = LocateClientObject(remoteClient.AgentId);
             if (sourceAvatarClient == null)
             {
-				sourceAvatarClient.SendAgentAlertMessage("Purchase failed. No Controlling client found for sourceAvatar!", false);
+                sourceAvatarClient.SendAgentAlertMessage("Purchase failed. No Controlling client found for sourceAvatar!", false);
                 return;
             }
 
@@ -790,29 +790,29 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             SceneObjectPart objectPart = s.GetSceneObjectPart(localID);
             if (objectPart == null)
             {
-				sourceAvatarClient.SendAgentAlertMessage("Purchase failed. The object was not found.", false);
+                sourceAvatarClient.SendAgentAlertMessage("Purchase failed. The object was not found.", false);
                 return;
             }
 
-			/////  Prevent purchase spoofing, as well as viewer bugs.  /////
-			// Verify that the object is actually for sale
-			if (objectPart.ObjectSaleType == (byte)SaleType.Not)
-			{
-				remoteClient.SendAgentAlertMessage("Purchase failed. The item is not for sale.", false);
-				return;
-			}
-			// Verify that the viewer sale type actually matches the correct sale type of the object
-			if (saleType != objectPart.ObjectSaleType)
-			{
-				remoteClient.SendAgentAlertMessage("Purchase failed.  The sale type does not match.", false);
-				return;
-			}
-			// Verify that the buyer is paying the correct amount
-			if (salePrice != objectPart.SalePrice)
-			{
-				remoteClient.SendAgentAlertMessage("Purchase failed.  The payment price does not match the sale price.", false);
-				return;
-			}
+            /////  Prevent purchase spoofing, as well as viewer bugs.  /////
+            // Verify that the object is actually for sale
+            if (objectPart.ObjectSaleType == (byte)SaleType.Not)
+            {
+                remoteClient.SendAgentAlertMessage("Purchase failed. The item is not for sale.", false);
+                return;
+            }
+            // Verify that the viewer sale type actually matches the correct sale type of the object
+            if (saleType != objectPart.ObjectSaleType)
+            {
+                remoteClient.SendAgentAlertMessage("Purchase failed.  The sale type does not match.", false);
+                return;
+            }
+            // Verify that the buyer is paying the correct amount
+            if (salePrice != objectPart.SalePrice)
+            {
+                remoteClient.SendAgentAlertMessage("Purchase failed.  The payment price does not match the sale price.", false);
+                return;
+            }
 
             string objName = objectPart.ParentGroup.RootPart.Name;
             Vector3 pos = objectPart.AbsolutePosition;
@@ -841,7 +841,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 // we'll let them test the buy, but nothing happens money wise.
                 if (!s.PerformObjectBuy(remoteClient, categoryID, localID, saleType))
                     return;
-                sourceAvatarClient.SendBlueBoxMessage(agentID, "", sourceAlertText);
+                sourceAvatarClient.SendBlueBoxMessage(agentID, String.Empty, sourceAlertText);
             }
             else
             {
@@ -960,14 +960,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             if (sourceClient != null)
             {
                 string destName = resolveAgentName(destClientID);
-                if (destName == String.Empty) destName = "a group (or unknown user)";
+                if (String.IsNullOrEmpty(destName)) destName = "a group (or unknown user)";
                 string sourceText = "You paid Iz$" + transAmount + " to " + destName + " for a parcel of land.";
                 SendMoneyBalanceTransaction(sourceClient, transID, true, sourceText, transInfo);
             }
             if (destClient != null)
             {
                 string destName = resolveAgentName(sourceClientID);
-                if (destName == String.Empty) destName = "a group (or unknown user)";
+                if (String.IsNullOrEmpty(destName)) destName = "a group (or unknown user)";
                 string destText = "You were paid Iz$" + transAmount + " by " + destName + " for a parcel of land.";
                 SendMoneyBalanceTransaction(destClient, transID, true, destText, transInfo);
             }
@@ -1035,20 +1035,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
         {
             // try avatar username surname
             Scene scene = GetRandomScene();
-            CachedUserInfo profile = scene.CommsManager.UserProfileCacheService.GetUserDetails(agentID);
-            if (profile != null && profile.UserProfile != null)
-            {
-                string avatarname = profile.UserProfile.FirstName + " " + profile.UserProfile.SurName;
-                return avatarname;
-            }
-            else
-            {
-                m_log.ErrorFormat(
-                    "[MONEY]: Could not resolve user {0}",
-                    agentID);
-            }
+            string name = scene.CommsManager.UserService.Key2Name(agentID,false);
+            if (String.IsNullOrEmpty(name))
+                m_log.ErrorFormat("[MONEY]: Could not resolve user {0}", agentID);
 
-            return String.Empty;
+            return name;
         }
 
         public Scene GetRandomScene()
@@ -1116,7 +1107,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
 
 /*
 +class MoneyTransactionType(object):
-+    """ Money transaction type constants """
++    String.Empty" Money transaction type constants String.Empty"
 +
 +    Null                   = 0
 +

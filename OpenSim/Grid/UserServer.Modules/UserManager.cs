@@ -63,12 +63,12 @@ namespace OpenSim.Grid.UserServer.Modules
             m_userDataBaseService = userDataBaseService;
         }
 
-        public void Initialise(IGridServiceCore core)
+        public void Initialize(IGridServiceCore core)
         {
 
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
 
         }
@@ -195,7 +195,7 @@ namespace OpenSim.Grid.UserServer.Modules
             // any Unicode character, excluding the surrogate blocks, FFFE, and FFFF.
             // string re = @"[^\x09\x0A\x0D\x20-\xD7FF\xE000-\xFFFD\x10000-x10FFFF]";
             string re = @"[^a-zA-Z0-9\s\p{P}]";
-            return Regex.Replace(text, re, "");
+            return Regex.Replace(text, re, String.Empty);
         }
 
         /// <summary>
@@ -376,8 +376,7 @@ namespace OpenSim.Grid.UserServer.Modules
                 if (avatarUUID != UUID.Zero)
                 {
                     // Force a refresh for this due to Commit below.
-                    m_userDataBaseService.PurgeUserFromCaches(avatarUUID);
-                    UserProfileData userProfile = m_userDataBaseService.GetUserProfile(avatarUUID);
+                    UserProfileData userProfile = m_userDataBaseService.GetUserProfile(avatarUUID,true);
                     userProfile.CurrentAgent.Region = regionUUID;
                     userProfile.CurrentAgent.Handle = (ulong)Convert.ToInt64((string)requestData["region_handle"]);
                     //userProfile.CurrentAgent.
@@ -491,7 +490,7 @@ namespace OpenSim.Grid.UserServer.Modules
                     return Util.CreateUnknownUserErrorResponse();
                 }
 
-                UserAgentData agentData = m_userDataBaseService.GetAgentByUUID(guess);
+                UserAgentData agentData = m_userDataBaseService.GetUserAgent(guess);
 
                 if (agentData == null)
                 {
@@ -767,8 +766,7 @@ namespace OpenSim.Grid.UserServer.Modules
         public void HandleAgentLocation(UUID agentID, UUID regionID, ulong regionHandle)
         {
             // Force a refresh for this due to Commit below.
-            m_userDataBaseService.PurgeUserFromCaches(agentID);
-            UserProfileData userProfile = m_userDataBaseService.GetUserProfile(agentID);
+            UserProfileData userProfile = m_userDataBaseService.GetUserProfile(agentID, true);
             if (userProfile != null)
             {
                 userProfile.CurrentAgent.AgentOnline = true;
@@ -780,8 +778,8 @@ namespace OpenSim.Grid.UserServer.Modules
 
         public void HandleAgentLeaving(UUID agentID, UUID regionID, ulong regionHandle)
         {
-            m_userDataBaseService.PurgeUserFromCaches(agentID); // force a refresh due to Commit below
-            UserProfileData userProfile = m_userDataBaseService.GetUserProfile(agentID);
+            // force a refresh due to Commit below
+            UserProfileData userProfile = m_userDataBaseService.GetUserProfile(agentID, true);
             if (userProfile != null)
             {
                 if (userProfile.CurrentAgent.Region == regionID)

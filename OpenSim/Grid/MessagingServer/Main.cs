@@ -63,8 +63,6 @@ namespace OpenSim.Grid.MessagingServer
 
         private InWorldz.RemoteAdmin.RemoteAdmin m_radmin;
 
-        // private UUID m_lastCreatedUser = UUID.Random();
-
         public static void Main(string[] args)
         {
             ServicePointManager.DefaultConnectionLimit = 12;
@@ -167,7 +165,7 @@ namespace OpenSim.Grid.MessagingServer
             {
                 m_log.ErrorFormat("[RADMIN] Shutdown: failed: {0}", e.Message);
                 m_log.DebugFormat("[RADMIN] Shutdown: failed: {0}", e.ToString());
-                throw e;
+                throw;
             }
 
             m_log.Info("[RADMIN]: Shutdown Administrator Request complete");
@@ -197,19 +195,19 @@ namespace OpenSim.Grid.MessagingServer
            // RegisterInterface<UserDataBaseService>(m_userDataBaseService);
 
             m_userServerModule = new InterMessageUserServerModule(Cfg, this);
-            m_userServerModule.Initialise();
+            m_userServerModule.Initialize();
 
             msgsvc = new MessageService(Cfg, this, m_userDataBaseService);
-            msgsvc.Initialise();
+            msgsvc.Initialize();
 
             m_regionModule = new MessageRegionModule(Cfg, this);
-            m_regionModule.Initialise();
+            m_regionModule.Initialize();
 
             registerWithUserServer();
 
-            m_userServerModule.PostInitialise();
-            msgsvc.PostInitialise();
-            m_regionModule.PostInitialise();
+            m_userServerModule.PostInitialize();
+            msgsvc.PostInitialize();
+            m_regionModule.PostInitialize();
 
             m_log.Info("[SERVER]: Messageserver 0.5 - Startup complete");
 
@@ -222,34 +220,6 @@ namespace OpenSim.Grid.MessagingServer
             m_console.Commands.AddCommand("messageserver", false, "register",
                     "register",
                     "Re-register with user server(s)", HandleRegister);
-        }
-
-        public void do_create(string what)
-        {
-            //switch (what)
-            //{
-            //    case "user":
-            //        try
-            //        {
-            //            //userID =
-            //                //m_userManager.AddUserProfile(tempfirstname, templastname, tempMD5Passwd, regX, regY);
-            //        } catch (Exception ex)
-            //        {
-            //            m_console.Error("[SERVER]: Error creating user: {0}", ex.ToString());
-            //        }
-
-            //        try
-            //        {
-            //            //RestObjectPoster.BeginPostObject<Guid>(m_userManager._config.InventoryUrl + "CreateInventory/",
-            //                                                   //userID.Guid);
-            //        }
-            //        catch (Exception ex)
-            //        {
-            //            m_console.Error("[SERVER]: Error creating inventory for user: {0}", ex.ToString());
-            //        }
-            //        // m_lastCreatedUser = userID;
-            //        break;
-            //}
         }
 
         private void HandleClearCache(string module, string[] cmd)

@@ -170,9 +170,7 @@ namespace OpenSim.Region.Physics.Manager
                         {
                             if (!pluginType.IsAbstract)
                             {
-                                Type physTypeInterface = pluginType.GetInterface("IPhysicsPlugin", true);
-
-                                if (physTypeInterface != null)
+                                if (typeof(IPhysicsPlugin).IsAssignableFrom(pluginType))
                                 {
                                     IPhysicsPlugin plug =
                                         (IPhysicsPlugin)Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
@@ -184,9 +182,7 @@ namespace OpenSim.Region.Physics.Manager
                                     }
                                 }
 
-                                Type meshTypeInterface = pluginType.GetInterface("IMeshingPlugin", true);
-
-                                if (meshTypeInterface != null)
+                                if (typeof(IMeshingPlugin).IsAssignableFrom(pluginType))
                                 {
                                     IMeshingPlugin plug =
                                         (IMeshingPlugin)Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));
@@ -196,9 +192,6 @@ namespace OpenSim.Region.Physics.Manager
                                         m_log.Info("[PHYSICS]: Added meshing engine: " + plug.GetName());
                                     }
                                 }
-
-                                physTypeInterface = null;
-                                meshTypeInterface = null;
                             }
                         }
                     }

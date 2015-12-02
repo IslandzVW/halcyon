@@ -57,12 +57,12 @@ namespace OpenSim.Grid.UserServer.Modules
             m_userDataBaseService = userDataBaseService;
         }
 
-        public void Initialise(IGridServiceCore core)
+        public void Initialize(IGridServiceCore core)
         {
 
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
 
         }
@@ -121,7 +121,7 @@ namespace OpenSim.Grid.UserServer.Modules
             if (requestData.Contains("ownerID") && requestData.Contains("friendID") &&
                 requestData.Contains("friendPerms"))
             {
-                // UserManagerBase.AddNewuserFriend
+                // UserManager.AddNewuserFriend
                 m_userDataBaseService.AddNewUserFriend(new UUID((string)requestData["ownerID"]),
                                  new UUID((string)requestData["friendID"]),
                                  (uint)Convert.ToInt32((string)requestData["friendPerms"]));
@@ -146,7 +146,7 @@ namespace OpenSim.Grid.UserServer.Modules
 
             if (requestData.Contains("ownerID") && requestData.Contains("friendID"))
             {
-                // UserManagerBase.AddNewuserFriend
+                // UserManager.AddNewuserFriend
                 m_userDataBaseService.RemoveUserFriend(new UUID((string)requestData["ownerID"]),
                                  new UUID((string)requestData["friendID"]));
                 returnString = "TRUE";
@@ -170,10 +170,10 @@ namespace OpenSim.Grid.UserServer.Modules
             if (requestData.Contains("ownerID") && requestData.Contains("friendID") &&
                 requestData.Contains("friendPerms"))
             {
+                // UserManager.UpdateUserFriendPerms
                 m_userDataBaseService.UpdateUserFriendPerms(new UUID((string)requestData["ownerID"]),
                                       new UUID((string)requestData["friendID"]),
                                       (uint)Convert.ToInt32((string)requestData["friendPerms"]));
-                // UserManagerBase.
                 returnString = "TRUE";
             }
             responseData["returnString"] = returnString;

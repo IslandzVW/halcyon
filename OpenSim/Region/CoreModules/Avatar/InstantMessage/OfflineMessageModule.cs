@@ -58,7 +58,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         private List<Scene> m_SceneList = new List<Scene>();
         private string m_RestURL = String.Empty;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (!enabled)
                 return;
@@ -81,8 +81,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             {
                 if (m_SceneList.Count == 0)
                 {
-                    m_RestURL = cnf.GetString("OfflineMessageURL", "");
-                    if (m_RestURL == "")
+                    m_RestURL = cnf.GetString("OfflineMessageURL", String.Empty);
+                    if (String.IsNullOrEmpty(m_RestURL))
                     {
                         m_log.Error("[OFFLINE MESSAGING]: Module was enabled, but no URL is given, disabling");
                         enabled = false;
@@ -96,7 +96,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (!enabled)
                 return;

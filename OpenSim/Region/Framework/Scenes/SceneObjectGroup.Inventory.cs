@@ -349,11 +349,11 @@ namespace OpenSim.Region.Framework.Scenes
                     perms &= part.Inventory.MaskEffectiveNextPermissions();
             }
 
-			if ((nextOwnerMask & (uint)PermissionMask.Modify) == 0)
+            if ((nextOwnerMask & (uint)PermissionMask.Modify) == 0)
                 perms &= ~(uint)PermissionMask.Modify;
-			if ((nextOwnerMask & (uint)PermissionMask.Copy) == 0)
+            if ((nextOwnerMask & (uint)PermissionMask.Copy) == 0)
                 perms &= ~(uint)PermissionMask.Copy;
-			if ((nextOwnerMask & (uint)PermissionMask.Transfer) == 0)
+            if ((nextOwnerMask & (uint)PermissionMask.Transfer) == 0)
                 perms &= ~(uint)PermissionMask.Transfer;
 
             return perms;
@@ -375,28 +375,28 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             if (states.Count < 1)
-                return "";
+                return String.Empty;
 
             XmlDocument xmldoc = new XmlDocument();
 
             XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                    String.Empty, String.Empty);
 
             xmldoc.AppendChild(xmlnode);
-            XmlElement rootElement = xmldoc.CreateElement("", "PhloxScriptData", "");
+            XmlElement rootElement = xmldoc.CreateElement(String.Empty, "PhloxScriptData", String.Empty);
             
             xmldoc.AppendChild(rootElement);
 
-            XmlElement wrapper = xmldoc.CreateElement("", "PhloxSS",
-                    "");
+            XmlElement wrapper = xmldoc.CreateElement(String.Empty, "PhloxSS",
+                    String.Empty);
             
             rootElement.AppendChild(wrapper);
 
             foreach (KeyValuePair<UUID, string> state in states)
             {
-                XmlElement stateData = xmldoc.CreateElement("", "State", "");
+                XmlElement stateData = xmldoc.CreateElement(String.Empty, "State", String.Empty);
 
-                XmlAttribute stateID = xmldoc.CreateAttribute("", "UUID", "");
+                XmlAttribute stateID = xmldoc.CreateAttribute(String.Empty, "UUID", String.Empty);
                 stateID.Value = state.Key.ToString();
                 stateData.Attributes.Append(stateID);
 
@@ -409,7 +409,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SetState(string objXMLData, UUID RegionID)
         {
-            if (objXMLData == String.Empty)
+            if (String.IsNullOrEmpty(objXMLData))
                 return;
 
             XmlDocument doc = new XmlDocument();

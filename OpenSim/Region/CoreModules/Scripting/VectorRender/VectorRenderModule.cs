@@ -111,7 +111,7 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (m_scene == null)
             {
@@ -119,7 +119,7 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             m_textureManager = m_scene.RequestModuleInterface<IDynamicTextureManager>();
             if (m_textureManager != null)
@@ -166,8 +166,8 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
             foreach (string pair in nvps)
             {
                 string[] nvp = pair.Split(nvpDelimiter);
-                string name = "";
-                string value = "";
+                string name = String.Empty;
+                string value = String.Empty;
                 
                 if (nvp[0] != null)
                 {    
@@ -567,7 +567,7 @@ namespace OpenSim.Region.CoreModules.Scripting.VectorRender
                 x = Convert.ToSingle(xVal, CultureInfo.InvariantCulture);
                 y = Convert.ToSingle(yVal, CultureInfo.InvariantCulture);
 
-                line = "";
+                line = String.Empty;
                 for (int i = 2; i < parts.Length; i++)
                 {
                     line = line + parts[i].Trim();

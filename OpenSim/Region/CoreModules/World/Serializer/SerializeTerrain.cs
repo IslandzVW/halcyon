@@ -29,11 +29,11 @@ using OpenSim.Region.CoreModules.World.Terrain;
 using OpenSim.Region.CoreModules.World.Terrain.FileLoaders;
 using OpenSim.Region.Framework.Scenes;
 
-namespace OpenSim.Region.CoreModules.World.Serialiser
+namespace OpenSim.Region.CoreModules.World.Serializer
 {
-    internal class SerialiseTerrain : IFileSerialiser
+    internal class SerializeTerrain : IFileSerializer
     {
-        #region IFileSerialiser Members
+        #region IFileSerializer Members
 
         public string WriteToFile(Scene scene, string dir)
         {

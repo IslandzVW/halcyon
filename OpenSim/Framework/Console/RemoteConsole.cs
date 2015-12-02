@@ -154,7 +154,7 @@ namespace OpenSim.Framework.Console
                 if (m_InputData.Count == 0)
                 {
                     m_DataEvent.Reset();
-                    return "";
+                    return String.Empty;
                 }
 
                 cmdinput = m_InputData[0];
@@ -247,7 +247,7 @@ namespace OpenSim.Framework.Console
             Hashtable post = DecodePostString(request["body"].ToString());
             Hashtable reply = new Hashtable();
 
-            reply["str_response_string"] = "";
+            reply["str_response_string"] = String.Empty;
             reply["int_response_code"] = 401;
             reply["content_type"] = "text/plain";
 
@@ -255,7 +255,7 @@ namespace OpenSim.Framework.Console
             string password = post["PASS"].ToString();
             
             // Validate the username/password pair
-            if (Util.AuthenicateAsSystemUser(username, password) == false)
+            if (Util.AuthenticateAsSystemUser(username, password) == false)
                 return reply;
 
             ConsoleConnection c = new ConsoleConnection();
@@ -274,19 +274,19 @@ namespace OpenSim.Framework.Console
             m_Server.AddStreamHandler(handler);
 
             XmlDocument xmldoc = new XmlDocument();
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, "", "");
+            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, String.Empty, String.Empty);
 
             xmldoc.AppendChild(xmlnode);
-            XmlElement rootElement = xmldoc.CreateElement("", "ConsoleSession", "");
+            XmlElement rootElement = xmldoc.CreateElement(String.Empty, "ConsoleSession", String.Empty);
 
             xmldoc.AppendChild(rootElement);
 
-            XmlElement id = xmldoc.CreateElement("", "SessionID", "");
+            XmlElement id = xmldoc.CreateElement(String.Empty, "SessionID", String.Empty);
             id.AppendChild(xmldoc.CreateTextNode(sessionID.ToString()));
 
             rootElement.AppendChild(id);
 
-            XmlElement prompt = xmldoc.CreateElement("", "Prompt", "");
+            XmlElement prompt = xmldoc.CreateElement(String.Empty, "Prompt", String.Empty);
             prompt.AppendChild(xmldoc.CreateTextNode(DefaultPrompt));
 
             rootElement.AppendChild(prompt);
@@ -308,7 +308,7 @@ namespace OpenSim.Framework.Console
             Hashtable post = DecodePostString(request["body"].ToString());
             Hashtable reply = new Hashtable();
 
-            reply["str_response_string"] = "";
+            reply["str_response_string"] = String.Empty;
             reply["int_response_code"] = 404;
             reply["content_type"] = "text/plain";
 
@@ -336,14 +336,14 @@ namespace OpenSim.Framework.Console
             }
 
             XmlDocument xmldoc = new XmlDocument();
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, "", "");
+            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, String.Empty, String.Empty);
 
             xmldoc.AppendChild(xmlnode);
-            XmlElement rootElement = xmldoc.CreateElement("", "ConsoleSession", "");
+            XmlElement rootElement = xmldoc.CreateElement(String.Empty, "ConsoleSession", String.Empty);
 
             xmldoc.AppendChild(rootElement);
 
-            XmlElement res = xmldoc.CreateElement("", "Result", "");
+            XmlElement res = xmldoc.CreateElement(String.Empty, "Result", String.Empty);
             res.AppendChild(xmldoc.CreateTextNode("OK"));
 
             rootElement.AppendChild(res);
@@ -363,7 +363,7 @@ namespace OpenSim.Framework.Console
             Hashtable post = DecodePostString(request["body"].ToString());
             Hashtable reply = new Hashtable();
 
-            reply["str_response_string"] = "";
+            reply["str_response_string"] = String.Empty;
             reply["int_response_code"] = 404;
             reply["content_type"] = "text/plain";
 
@@ -390,14 +390,14 @@ namespace OpenSim.Framework.Console
             }
 
             XmlDocument xmldoc = new XmlDocument();
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, "", "");
+            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, String.Empty, String.Empty);
 
             xmldoc.AppendChild(xmlnode);
-            XmlElement rootElement = xmldoc.CreateElement("", "ConsoleSession", "");
+            XmlElement rootElement = xmldoc.CreateElement(String.Empty, "ConsoleSession", String.Empty);
 
             xmldoc.AppendChild(rootElement);
 
-            XmlElement res = xmldoc.CreateElement("", "Result", "");
+            XmlElement res = xmldoc.CreateElement(String.Empty, "Result", String.Empty);
             res.AppendChild(xmldoc.CreateTextNode("OK"));
 
             rootElement.AppendChild(res);
@@ -544,10 +544,10 @@ namespace OpenSim.Framework.Console
             Hashtable result = new Hashtable();
 
             XmlDocument xmldoc = new XmlDocument();
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, "", "");
+            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, String.Empty, String.Empty);
 
             xmldoc.AppendChild(xmlnode);
-            XmlElement rootElement = xmldoc.CreateElement("", "ConsoleSession", "");
+            XmlElement rootElement = xmldoc.CreateElement(String.Empty, "ConsoleSession", String.Empty);
 
             if (c.newConnection)
             {
@@ -564,7 +564,7 @@ namespace OpenSim.Framework.Console
 
                 for (long i = sendStart; i < m_LineNumber; i++)
                 {
-                    XmlElement res = xmldoc.CreateElement("", "Line", "");
+                    XmlElement res = xmldoc.CreateElement(String.Empty, "Line", String.Empty);
                     long line = i + 1;
                     res.SetAttribute("Number", line.ToString());
                     res.AppendChild(xmldoc.CreateTextNode(m_Scrollback[(int)(i - startLine)]));
@@ -592,10 +592,10 @@ namespace OpenSim.Framework.Console
             Hashtable result = new Hashtable();
 
             XmlDocument xmldoc = new XmlDocument();
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,  "", "");
+            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,  String.Empty, String.Empty);
 
             xmldoc.AppendChild(xmlnode);
-            XmlElement rootElement = xmldoc.CreateElement("", "ConsoleSession", "");
+            XmlElement rootElement = xmldoc.CreateElement(String.Empty, "ConsoleSession", String.Empty);
 
             xmldoc.AppendChild(rootElement);
 

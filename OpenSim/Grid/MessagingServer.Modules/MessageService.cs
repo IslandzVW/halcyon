@@ -73,11 +73,11 @@ namespace OpenSim.Grid.MessagingServer.Modules
             uc.DatabaseProvider = cfg.DatabaseProvider;
         }
 
-        public void Initialise()
+        public void Initialize()
         {
         }
   
-        public void PostInitialise()
+        public void PostInitialize()
         {
             IInterServiceUserService messageUserServer;
             if (m_messageCore.TryGet<IInterServiceUserService>(out messageUserServer))
@@ -545,7 +545,7 @@ namespace OpenSim.Grid.MessagingServer.Modules
             }
             catch(Exception e) {
                 m_log.Error("[PRESENCE]: Got exception:", e);
-                throw e;
+                throw;
             }
         }
 

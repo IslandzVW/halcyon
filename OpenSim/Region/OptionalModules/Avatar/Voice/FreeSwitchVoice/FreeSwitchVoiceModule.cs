@@ -104,7 +104,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
 
         private IConfig m_config;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
 
             m_config = config.Configs["FreeSwitchVoice"];
@@ -251,7 +251,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
             }
         }
         
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -286,7 +286,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         //
         // Note that OnRegisterCaps is called here via a closure
         // delegate containing the scene of the respective region (see
-        // Initialise()).
+        // Initialize()).
         // </summary>
         public void OnRegisterCaps(Scene scene, UUID agentID, Caps caps)
         {
@@ -376,7 +376,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                                                 String.Format("http://{0}:{1}{2}/", m_openSimWellKnownHTTPAddress, 
                                                               m_freeSwitchServicePort, m_freeSwitchAPIPrefix)); 
 
-                string r = LLSDHelpers.SerialiseLLSDReply(voiceAccountResponse);
+                string r = LLSDHelpers.SerializeLLSDReply(voiceAccountResponse);
 
                 m_log.DebugFormat("[FreeSwitchVoice][PROVISIONVOICE]: avatar \"{0}\": {1}", avatarName, r);
 
@@ -457,7 +457,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                 creds["channel_uri"] = channelUri;
 
                 parcelVoiceInfo = new LLSDParcelVoiceInfoResponse(scene.RegionInfo.RegionName, land.LocalID, creds);
-                string r = LLSDHelpers.SerialiseLLSDReply(parcelVoiceInfo);
+                string r = LLSDHelpers.SerializeLLSDReply(parcelVoiceInfo);
 
                 m_log.DebugFormat("[FreeSwitchVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": {4}", 
                                   scene.RegionInfo.RegionName, land.Name, land.LocalID, avatarName, r);
@@ -501,7 +501,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
             m_log.Debug("[PROXYING]: -------------------------------proxying request");
             Hashtable response = new Hashtable();
             response["content_type"] = "text/xml";
-            response["str_response_string"] = "";
+            response["str_response_string"] = String.Empty;
             response["int_response_code"] = 200;
 
             string forwardaddress = "https://www.bhr.vivox.com/api2/";
@@ -509,11 +509,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
             string method = (string) request["http-method"];
             string contenttype = (string) request["content-type"];
             string uri = (string) request["uri"];
-            uri = uri.Replace("/api/", "");
+            uri = uri.Replace("/api/", String.Empty);
             forwardaddress += uri;
 
 
-            string fwdresponsestr = "";
+            string fwdresponsestr = String.Empty;
             int fwdresponsecode = 200;
             string fwdresponsecontenttype = "text/xml";
             
@@ -574,7 +574,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                 m_freeSwitchRealm, m_freeSwitchSIPProxy, m_freeSwitchAttemptUseSTUN,
                 m_freeSwitchSTUNServer, m_freeSwitchEchoServer, m_freeSwitchEchoPort,
                 m_freeSwitchDefaultWellKnownIP, m_freeSwitchDefaultTimeout, 
-                m_freeSwitchUrlResetPassword, "");
+                m_freeSwitchUrlResetPassword, String.Empty);
             
             response["int_response_code"] = 200;
 
@@ -586,7 +586,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
         {
             Hashtable response = new Hashtable();
             response["int_response_code"] = 200;
-            response["str_response_string"] = string.Empty;
+            response["str_response_string"] = String.Empty;
             response["content-type"] = "text/xml";
 
             Hashtable requestBody = parseRequestBody((string)request["body"]);
@@ -666,7 +666,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
             //string pwd = (string) requestBody["pwd"];
             string userid = (string) requestBody["userid"];
 
-            string avatarName = string.Empty;
+            string avatarName = String.Empty;
             int pos = -1;
             lock (m_UUIDName)
             {
@@ -720,7 +720,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
             m_log.DebugFormat("[FreeSwitchVoice] FreeSwitchConfigHTTPHandler called with {0}", (string)request["body"]);
             
             Hashtable response = new Hashtable();
-            response["str_response_string"] = string.Empty;
+            response["str_response_string"] = String.Empty;
             // all the params come as NVPs in the request body
             Hashtable requestBody = parseRequestBody((string) request["body"]);
 
@@ -737,12 +737,12 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
             // XXX: re-generate dialplan: 
             //      - conf == region UUID
             //      - conf number = region port
-            //      -> TODO Initialise(): keep track of regions via events
+            //      -> TODO Initialize(): keep track of regions via events
             //      re-generate accounts for all avatars 
-            //      -> TODO Initialise(): keep track of avatars via events
+            //      -> TODO Initialize(): keep track of avatars via events
             Regex normalizeEndLines = new Regex(@"\r\n", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.Multiline);
 
-            m_log.DebugFormat("[FreeSwitchVoice] FreeSwitchConfigHTTPHandler return {0}",normalizeEndLines.Replace(((string)response["str_response_string"]), ""));
+            m_log.DebugFormat("[FreeSwitchVoice] FreeSwitchConfigHTTPHandler return {0}",normalizeEndLines.Replace(((string)response["str_response_string"]), String.Empty));
             return response;
         }
         
@@ -754,7 +754,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
 
             foreach (string s in nvps) {
     
-                if (s.Trim() != "")
+                if (!String.IsNullOrWhiteSpace(s))
                 {
                     string [] nvp = s.Split(new Char [] {'='});
                     bodyParams.Add(HttpUtility.UrlDecode(nvp[0]), HttpUtility.UrlDecode(nvp[1]));
