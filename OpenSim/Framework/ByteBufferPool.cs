@@ -69,6 +69,14 @@ namespace OpenSim.Framework
         private List<KeyValuePair<int, LocklessQueue<ImmutableTimestampedItem<byte[]>>>> _storage 
             = new List<KeyValuePair<int, LocklessQueue<ImmutableTimestampedItem<byte[]>>>>();
 
+        public int AllocatedBytes
+        {
+            get
+            {
+                return _currAllocatedBytes;
+            }
+        }
+
         /// <summary>
         /// Creates a new buffer pool with the given levels
         /// </summary>
@@ -83,7 +91,7 @@ namespace OpenSim.Framework
         /// </summary>
         /// <param name="maxAllocatedBytes">Maximum bytes to allow to be allocated total for all pools</param>
         /// <param name="bufferSizes">List of buffer sizes in bytes to split the pool by</param>
-        /// <param name="idleBufferMaxAge">The maximum age of a buffer before </param>
+        /// <param name="idleBufferMaxAge">The maximum age a buffer (in ms) can sit idle before it will be purged</param>
         public ByteBufferPool(int maxAllocatedBytes, int[] bufferSizes, ulong idleBufferMaxAge)
         {
             _maxAllocatedBytes = maxAllocatedBytes;
@@ -91,7 +99,9 @@ namespace OpenSim.Framework
 
             foreach (int bufferSz in bufferSizes)
             {
-                _storage.Add(new KeyValuePair<int, LocklessQueue<ImmutableTimestampedItem<byte[]>>>());
+                _storage.Add(
+                    new KeyValuePair<int, LocklessQueue<ImmutableTimestampedItem<byte[]>>>(
+                        bufferSz, new LocklessQueue<ImmutableTimestampedItem<byte[]>>()));
             }
         }
 
@@ -191,8 +201,9 @@ namespace OpenSim.Framework
 
                 //dequeue and requeue until we get false back (no items)
                 //or we hit an item we've already seen
+
                 //it would be nice if we could just rely on the implicit queue 
-                //ordering to allow us to stop early, but the way this loop
+                //FIFO ordering to allow us to stop early, but the way this loop
                 //works with enqueue/dequeue, it actually breaks the time sorted
                 //ordering so we can't just rely on it to break out of the loop early
                 ImmutableTimestampedItem<byte[]> item;
@@ -211,6 +222,11 @@ namespace OpenSim.Framework
                         knownBuffers.Add(item.Item);
                         //put the item back
                         queue.Enqueue(item);
+                    }
+                    else
+                    {
+                        // this buffer is too old. mark it as deallocated
+                        Interlocked.Add(ref _currAllocatedBytes, -item.Item.Length);
                     }
                 }
             }
