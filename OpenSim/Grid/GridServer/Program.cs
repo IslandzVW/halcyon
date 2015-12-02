@@ -30,7 +30,7 @@ using log4net.Config;
 
 namespace OpenSim.Grid.GridServer
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {

@@ -429,7 +429,7 @@ namespace OpenSim.Region.Framework.Scenes
 //            return false;   // for testing failures
             int count = 100;
 
-            int now = NextTickCheck(0, ""); 
+            int now = NextTickCheck(0, String.Empty); 
             lock (m_agentsInTransit)
             {
                 now = NextTickCheck(now, "[SCENE COMM]: WaitForCallback - lock (m_agentsInTransit)");

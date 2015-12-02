@@ -545,7 +545,7 @@ namespace OpenSim.Grid.MessagingServer.Modules
             }
             catch(Exception e) {
                 m_log.Error("[PRESENCE]: Got exception:", e);
-                throw e;
+                throw;
             }
         }
 

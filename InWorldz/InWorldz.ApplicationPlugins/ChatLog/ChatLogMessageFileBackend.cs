@@ -70,7 +70,7 @@ namespace InWorldz.ApplicationPlugins.ChatLog
             IConfig config = openSim.ConfigSource.Source.Configs["ChatLogModule"];
             if (config == null) return;
 
-            m_enabled = config.GetString("Backend", "") == "FileBackend";
+            m_enabled = config.GetString("Backend", String.Empty) == "FileBackend";
             m_fileName = config.GetString("File", m_fileName);
 
             if (m_enabled)

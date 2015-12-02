@@ -504,7 +504,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         public void OfferFriendship(UUID fromUserId, IClientAPI toUserClient, string offerMessage)
         {
             string name = m_initialScene.CommsManager.UserService.Key2Name(fromUserId,false);
-            if (name != String.Empty)
+            if (!String.IsNullOrEmpty(name))
             {
                 GridInstantMessage msg = new GridInstantMessage(
                     toUserClient.Scene, fromUserId, name, toUserClient.AgentId,
@@ -564,7 +564,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             // 1.20 protocol sends an UUID in the message field, instead of the friendship offer text.
             // For interoperability, we have to clear that
-            if (Util.isUUID(im.message)) im.message = "";
+            if (Util.isUUID(im.message)) im.message = String.Empty;
 
             // be sneeky and use the initiator-UUID as transactionID. This means we can be stateless.
             // we have to look up the agent name on friendship-approval, though.
@@ -733,7 +733,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 string name = m_initialScene.CommsManager.UserService.Key2Name(friendID,false);
 
                 // create calling card
-                if (name != String.Empty)
+                if (!String.IsNullOrEmpty(name))
                     CreateCallingCard(client, friendID, callingCardFolders[0], name);
 
                 // Compose (remote) response to friend.
@@ -860,7 +860,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             item.CreationDate = Util.UnixTimeSinceEpoch();
             item.CreatorId = creator.ToString();
             item.CurrentPermissions = item.BasePermissions;
-            item.Description = "";
+            item.Description = String.Empty;
             item.EveryOnePermissions = (uint)PermissionMask.None;
             item.Flags = 0;
             item.Folder = folder;

@@ -224,7 +224,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain.PaintBrushes
                             }
                         }
 
-                        double T = nConst / ((map.Width + map.Height) / 2);
+                        double T = nConst / ((map.Width + map.Height) / 2); // Assuming the width and height are both nonzero positive powers of two, and therefore are even numbers, the integer div/2 never loses precision.
                         // Apply results
                         if (0 < max && max <= T)
                         {

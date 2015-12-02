@@ -440,7 +440,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (slope.Z == 0.0f)
                 slope.Z = 1.0f;
             else
-                slope.Z = (float)(((normal.X * normal.X) + (normal.Y * normal.Y)) / (-1.0f * normal.Z));
+                slope.Z = ((normal.X * normal.X) + (normal.Y * normal.Y)) / (-1.0f * normal.Z);
             return slope;
         }
 

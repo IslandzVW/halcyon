@@ -88,7 +88,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             {
                 m_useAperture = true;
                 m_apPort = startupConfig.GetString("aperture_server_port", "8000");
-                m_apToken = startupConfig.GetString("aperture_server_caps_token", "");
+                m_apToken = startupConfig.GetString("aperture_server_caps_token", String.Empty);
             }
             else
             {
@@ -291,7 +291,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             {
                 string externalBaseURL = caps.HostName + ":" + m_apPort;
                 string externalURL = caps.CapsHandlers[which].ExternalHandlerURL;
-                string capuuid = externalURL.Replace(externalBaseURL + "/CAPS/HTT/", "");
+                string capuuid = externalURL.Replace(externalBaseURL + "/CAPS/HTT/", String.Empty);
                 UUID capID = UUID.Zero;
 
                 // parse the path and search for the avatar with it registered

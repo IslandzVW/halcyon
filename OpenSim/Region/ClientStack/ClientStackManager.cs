@@ -54,9 +54,7 @@ namespace OpenSim.Region.ClientStack
                 {
                     if (pluginType.IsPublic)
                     {
-                        Type typeInterface = pluginType.GetInterface("IClientNetworkServer", true);
-
-                        if (typeInterface != null)
+                        if (typeof(IClientNetworkServer).IsAssignableFrom(pluginType))
                         {
                             m_log.Info("[CLIENTSTACK]: Added IClientNetworkServer Interface");
                             plugin = pluginType;
@@ -64,13 +62,14 @@ namespace OpenSim.Region.ClientStack
                         }
                     }
                 }
-            } catch (ReflectionTypeLoadException e)
+            }
+            catch (ReflectionTypeLoadException e)
             {
                 foreach (Exception e2 in e.LoaderExceptions)
                 {
                     m_log.Error(e2.ToString());
                 }
-                throw e;
+                throw;
             }
         }
         

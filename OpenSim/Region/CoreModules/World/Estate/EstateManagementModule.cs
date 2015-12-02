@@ -1327,7 +1327,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
             Telehub telehub = m_scene.StorageManager.EstateDataStore.FindTelehub(client.Scene.RegionInfo.RegionID);
             if (telehub == null)
             {
-                client.SendTelehubInfo(Vector3.Zero, Quaternion.Identity, new List<Vector3>(), UUID.Zero, "");
+                client.SendTelehubInfo(Vector3.Zero, Quaternion.Identity, new List<Vector3>(), UUID.Zero, String.Empty);
             }
             else
             {

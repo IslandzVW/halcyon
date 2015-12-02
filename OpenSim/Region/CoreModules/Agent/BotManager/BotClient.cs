@@ -313,7 +313,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             int x = (int)Math.Floor(posx);
             int y = (int)Math.Floor(posy);
             int z = (int)Math.Floor(posz);
-            string prefix = includePrefix ? "http://places.inworldz.com/" : "";
+            string prefix = includePrefix ? "http://places.inworldz.com/" : String.Empty;
 
             return prefix + Util.EscapeUriDataStringRfc3986(m_scene.RegionInfo.RegionName) + "/" + x.ToString() + "/" + y.ToString() + "/" + z.ToString();
         }
@@ -332,7 +332,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 return;
 
             // check if destination is an avatar
-            if (m_scene.CommsManager.UserService.Key2Name(destId, false) != String.Empty)
+            if (!String.IsNullOrEmpty(m_scene.CommsManager.UserService.Key2Name(destId, false)))
             {
                 if (m_scene.GetScenePresence(destId) == null || m_scene.GetScenePresence(destId).IsChildAgent)
                     return;//Only allow giving items to users in the sim
@@ -399,7 +399,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public string ActiveGroupName
         {
-            get { return ""; }
+            get { return String.Empty; }
         }
 
         public ulong ActiveGroupPowers
@@ -973,7 +973,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             agentData.AgentID = AgentId;
             // agentData.Appearance
             // agentData.BaseFolder
-            agentData.CapsPath = "";
+            agentData.CapsPath = String.Empty;
             agentData.child = false;
             agentData.CircuitCode = m_circuitCode;
             agentData.ClientVersion = "Bot";
@@ -1371,7 +1371,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public string GetClientOption(string option)
         {
-            return "";
+            return String.Empty;
         }
 
         public void SendSetFollowCamProperties(OpenMetaverse.UUID objectID, Dictionary<int, float> parameters)

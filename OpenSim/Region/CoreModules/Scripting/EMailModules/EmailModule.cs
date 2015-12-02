@@ -50,12 +50,12 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
         // Module vars
         //
         private IConfigSource m_Config;
-        private string m_HostName = string.Empty;
-        //private string m_RegionName = string.Empty;
-        private string SMTP_SERVER_HOSTNAME = string.Empty;
+        private string m_HostName = String.Empty;
+        //private string m_RegionName = String.Empty;
+        private string SMTP_SERVER_HOSTNAME = String.Empty;
         private int SMTP_SERVER_PORT = 25;
-        private string SMTP_SERVER_LOGIN = string.Empty;
-        private string SMTP_SERVER_PASSWORD = string.Empty;
+        private string SMTP_SERVER_LOGIN = String.Empty;
+        private string SMTP_SERVER_PASSWORD = String.Empty;
 
         private Dictionary<UUID, DateTime> m_LastGetEmailCall = new Dictionary<UUID, DateTime>();
         private TimeSpan m_QueueTimeout = new TimeSpan(2, 0, 0); // 2 hours without llGetNextEmail drops the queue
@@ -186,7 +186,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                     }
                 }
             }
-            ObjectRegionName = string.Empty;
+            ObjectRegionName = String.Empty;
             return null;
         }
 
@@ -226,7 +226,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
         public void SendEmail(UUID objectID, string address, string subject, string body)
         {
             //Check if address is empty
-            if (address == string.Empty)
+            if (address == String.Empty)
                 return;
 
             //FIXED:Check the email is correct form in REGEX
@@ -243,9 +243,9 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 return;
             }
 
-            string LastObjectName = string.Empty;
-            string LastObjectPosition = string.Empty;
-            string LastObjectRegionName = string.Empty;
+            string LastObjectName = String.Empty;
+            string LastObjectPosition = String.Empty;
+            string LastObjectRegionName = String.Empty;
 
             resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName);
 
@@ -278,7 +278,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 SmtpServer smtpServer=new SmtpServer(SMTP_SERVER_HOSTNAME,SMTP_SERVER_PORT);
                 // Add authentication only when requested
                 //
-                if (SMTP_SERVER_LOGIN != String.Empty && SMTP_SERVER_PASSWORD != String.Empty)
+                if (!(String.IsNullOrEmpty(SMTP_SERVER_LOGIN) || String.IsNullOrEmpty(SMTP_SERVER_PASSWORD)))
                 {
                     //Authentication
                     smtpServer.SmtpAuthToken=new SmtpAuthToken(SMTP_SERVER_LOGIN, SMTP_SERVER_PASSWORD);

@@ -1025,7 +1025,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             m_log.DebugFormat("[AGENT INVENTORY]: CopyInventoryItem {0} '{1}' asset {2}", oldItemID, item.Name, item.AssetID);
-            if (newName == String.Empty)
+            if (String.IsNullOrEmpty(newName))
             {
                 newName = item.Name;
             }
@@ -1090,7 +1090,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
                 }
 
-                if (newName != String.Empty)
+                if (!String.IsNullOrEmpty(newName))
                 {
                     InventoryItemBase item = userInfo.FindItem(itemID);
 
@@ -2173,7 +2173,7 @@ namespace OpenSim.Region.Framework.Scenes
             ReplaceItemArgs replaceArgs = new ReplaceItemArgs(destTaskItem, running, start_param);
             destPart.Inventory.AddReplaceInventoryItem(destTaskItem, false, true, replaceArgs);
 
-            return string.Empty;    // success, no error
+            return String.Empty;    // success, no error
         }
 
         /// <summary>
@@ -3235,7 +3235,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return true;
             }
 
-            string reason = "";
+            string reason = String.Empty;
             bool allowed = true;
             int landImpactNeeded = group.LandImpact;
 

@@ -84,7 +84,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
     public class GroupRequestID
     {
         public UUID AgentID = UUID.Zero;
-        public string UserServiceURL = string.Empty;
+        public string UserServiceURL = String.Empty;
         public UUID SessionID = UUID.Zero;
     }
 }

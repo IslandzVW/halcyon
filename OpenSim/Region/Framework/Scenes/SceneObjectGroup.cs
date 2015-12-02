@@ -205,7 +205,7 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 if (RootPart == null)
-                    return "";
+                    return String.Empty;
                 return RootPart.Name;
             }
             set { RootPart.Name = value; }
@@ -2354,7 +2354,7 @@ namespace OpenSim.Region.Framework.Scenes
                         coords.Add(target.X.ToString());
                         coords.Add(target.Y.ToString());
                         coords.Add(target.Z.ToString());
-                        avatar.DoMoveToPosition(avatar, "", coords);
+                        avatar.DoMoveToPosition(avatar, String.Empty, coords);
                     }
                 }
                 else
@@ -4317,8 +4317,8 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual void ExtraFromXmlString(string xmlstr)
         {
             string id = xmlstr.Substring(xmlstr.IndexOf("<ExtraFromAssetID>"));
-            id = xmlstr.Replace("<ExtraFromAssetID>", "");
-            id = id.Replace("</ExtraFromAssetID>", "");
+            id = xmlstr.Replace("<ExtraFromAssetID>", String.Empty);
+            id = id.Replace("</ExtraFromAssetID>", String.Empty);
 
             UUID uuid = UUID.Zero;
             UUID.TryParse(id, out uuid);

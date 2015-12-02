@@ -389,7 +389,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
         {
             List<SceneObjectGroup> results = new List<SceneObjectGroup>();
 
-            string target = "";
+            string target = String.Empty;
             UUID targetID;
             if (!UUID.TryParse(name, out targetID))
             {
@@ -633,7 +633,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
         private void ShowUpdates(IClientAPI client, string[] args)
         {
-            string[] inArgs = { "", args[2] };
+            string[] inArgs = { String.Empty, args[2] };
             foreach (Scene scene in m_scenes)
             {
                 string output = scene.GetTopUpdatesOutput(inArgs);

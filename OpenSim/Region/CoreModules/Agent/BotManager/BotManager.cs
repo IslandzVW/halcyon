@@ -142,7 +142,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
                 AvatarAppearance appearance;
                 UUID originalOwner = UUID.Zero;
-                string ownerName = "";
+                string ownerName = String.Empty;
                 bool isSavedOutfit = !string.IsNullOrEmpty(outfitName);
 
                 if (!isSavedOutfit)
@@ -157,7 +157,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                             return UUID.Zero;
                         }
                         ownerName = m_scene.CommsManager.UserService.Key2Name(owner,false);
-                        if (ownerName == String.Empty)
+                        if (String.IsNullOrEmpty(ownerName))
                         {
                             reason = "Owner could not be found.";
                             return UUID.Zero;
@@ -185,7 +185,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         return UUID.Zero;
                     }
                     ownerName = m_scene.CommsManager.UserService.Key2Name(owner, false);
-                    if (ownerName == String.Empty)
+                    if (String.IsNullOrEmpty(ownerName))
                     {
                         reason = "Owner could not be found.";
                         return UUID.Zero;
@@ -213,7 +213,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     BaseFolder = UUID.Zero,
                     child = false,
                     CircuitCode = client.CircuitCode,
-                    ClientVersion = "",
+                    ClientVersion = String.Empty,
                     FirstName = client.FirstName,
                     InventoryFolder = UUID.Zero,
                     LastName = client.LastName,
@@ -237,14 +237,14 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         AboutText = defaultAbout,
                         Created = Util.ToUnixTime(client.TimeCreated),
                         CustomType = "Bot",
-                        Email = "",
+                        Email = String.Empty,
                         FirstLifeAboutText = defaultAbout,
                         FirstLifeImage = UUID.Zero,
                         FirstName = client.FirstName,
                         GodLevel = 0,
                         ID = client.AgentID,
                         Image = UUID.Zero,
-                        ProfileURL = "",
+                        ProfileURL = String.Empty,
                         SurName = client.LastName,
                     });
 
@@ -411,7 +411,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
             IBot bot;
             if ((bot = GetBot(botID)) == null)
-                return "";
+                return String.Empty;
 
             return bot.Name;
         }

@@ -50,8 +50,8 @@ namespace OpenSim.Framework.Communications.Services
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected string m_welcomeMessage = "Welcome to InWorldz";
-        protected string m_MapServerURI = "";
-        protected string m_ProfileServerURI = "";
+        protected string m_MapServerURI = String.Empty;
+        protected string m_ProfileServerURI = String.Empty;
         protected int m_minLoginLevel = 0;
         protected UserProfileManager m_userManager = null;
 
@@ -90,7 +90,7 @@ namespace OpenSim.Framework.Communications.Services
                     while ((line = file.ReadLine()) != null)
                     {
                         line = line.Trim();
-                        if ((line != "") && !line.StartsWith(";") && !line.StartsWith("//"))
+                        if (!String.IsNullOrEmpty(line) && !line.StartsWith(";") && !line.StartsWith("//"))
                         {
                             theList.Add(line);
                             m_log.InfoFormat("[LOGINSERVICE] Added {0} {1}", desc, line);
@@ -113,9 +113,9 @@ namespace OpenSim.Framework.Communications.Services
             m_userManager = userManager;
             m_libraryRootFolder = libraryRootFolder;
 
-            if (welcomeMess != String.Empty)
+            if (!String.IsNullOrEmpty(welcomeMess))
                 m_welcomeMessage = welcomeMess;
-            if (mapServerURI != String.Empty)
+            if (!String.IsNullOrEmpty(mapServerURI))
                 m_MapServerURI = mapServerURI;
             if (profileServerURI != String.Empty)
                 m_ProfileServerURI = profileServerURI;
@@ -1002,7 +1002,7 @@ namespace OpenSim.Framework.Communications.Services
                 }
 
                 // StartLocation not available, send him to a nearby region instead
-                // regionInfo = m_gridService.RequestClosestRegion("");
+                // regionInfo = m_gridService.RequestClosestRegion(String.Empty);
                 //m_log.InfoFormat("[LOGIN]: StartLocation not available sending to region {0}", regionInfo.regionName);
 
                 // Normal login failed, try to find a default region from the list

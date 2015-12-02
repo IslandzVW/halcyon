@@ -742,7 +742,7 @@ namespace OpenSim.Framework
                 m_log.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
 
                 // Still going to throw the exception on for now, since this was what was happening in the first place
-                throw e;
+                throw;
             }
 
             foreach (IPAddress host in hosts)
@@ -1033,7 +1033,7 @@ namespace OpenSim.Framework
             }
             catch (Exception)
             {
-                return "";
+                return String.Empty;
             }
         }
 
@@ -1500,7 +1500,7 @@ namespace OpenSim.Framework
             // Glob
 
             path = vol;
-            if (vol != String.Empty)
+            if (!String.IsNullOrEmpty(vol))
                 path += new String(new char[] { Path.VolumeSeparatorChar, Path.DirectorySeparatorChar });
             else
                 path = new String(new char[] { Path.DirectorySeparatorChar });
@@ -1541,14 +1541,14 @@ namespace OpenSim.Framework
 
         public static string ServerURI(string uri)
         {
-            if (uri == string.Empty)
-                return string.Empty;
+            if (uri == String.Empty)
+                return String.Empty;
 
             // Get rid of eventual slashes at the end
             uri = uri.TrimEnd('/');
 
             IPAddress ipaddr1 = null;
-            string port1 = "";
+            string port1 = String.Empty;
             try
             {
                 ipaddr1 = Util.GetHostFromURL(uri);
@@ -1568,7 +1568,7 @@ namespace OpenSim.Framework
         public static string XmlRpcRequestPrefix(string methodName)
         {
             string prefix = "/xmlrpc";
-            if ((methodName != null) && (methodName != ""))
+            if (!String.IsNullOrEmpty(methodName))
                 prefix += ("/" + methodName);
             return (prefix);
         }
@@ -2142,7 +2142,7 @@ namespace OpenSim.Framework
             int y = (int)pos.Y;
             int z = (int)pos.Z;
             string region;
-            if (regionName == String.Empty)
+            if (String.IsNullOrEmpty(regionName))
             {
                 region = String.Empty;
                 return x.ToString() + separator + y.ToString() + separator + z.ToString();
@@ -2221,7 +2221,7 @@ namespace OpenSim.Framework
                     if (i == retryCount)
                     {
                         //cant retry anymore. rethrow
-                        throw e;
+                        throw;
                     }
 
                     if (passthroughExceptions != null)
@@ -2263,7 +2263,7 @@ namespace OpenSim.Framework
                     if (i == retryCount)
                     {
                         //cant retry anymore. rethrow
-                        throw e;
+                        throw;
                     }
 
                     if (passthroughExceptions != null)

@@ -437,7 +437,7 @@ namespace OpenSim.Framework
             h["physics_asset"] = wearable.AssetID.ToString();
 
             string attachments = GetAttachmentsString();
-            if (attachments != String.Empty)
+            if (!String.IsNullOrEmpty(attachments))
                 h["attachments"] = attachments;
 
             return h;

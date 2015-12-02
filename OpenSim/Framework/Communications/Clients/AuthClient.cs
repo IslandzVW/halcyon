@@ -55,12 +55,12 @@ namespace OpenSim.Framework.Communications.Clients
             catch (Exception e)
             {
                 System.Console.WriteLine("[HGrid]: Failed to get new key. Reason: " + e.Message);
-                return string.Empty;
+                return String.Empty;
             }
 
             if (!reply.IsFault)
             {
-                string newKey = string.Empty;
+                string newKey = String.Empty;
                 if (reply.Value != null)
                     newKey = (string)reply.Value;
 
@@ -69,7 +69,7 @@ namespace OpenSim.Framework.Communications.Clients
             else
             {
                 System.Console.WriteLine("[HGrid]: XmlRpc request to get auth key failed with message {0}" + reply.FaultString + ", code " + reply.FaultCode);
-                return string.Empty;
+                return String.Empty;
             }
 
         }

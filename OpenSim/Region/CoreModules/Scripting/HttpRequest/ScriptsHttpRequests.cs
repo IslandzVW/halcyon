@@ -130,8 +130,8 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
         /// </summary>
         private const int PRIORITY_TIMEOUT_SECS = 600;
 
-        private string m_proxyurl = "";
-        private string m_proxyexcepts = "";
+        private string m_proxyurl = String.Empty;
+        private string m_proxyexcepts = String.Empty;
 
         // <request id, HttpRequestClass>
         private Dictionary<UUID, HttpRequestObject> m_pendingRequests;
@@ -254,7 +254,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             if (RequestQueueFreeSpacePercentage == 0.0f) return UUID.Zero;
 
             // fast exit for the common case of scripter error passing an empty URL
-            if (url == String.Empty) return UUID.Zero;
+            if (String.IsNullOrEmpty(url)) return UUID.Zero;
 
             if (BlockedByBlacklist(url)) return UUID.Zero;
 
@@ -664,9 +664,9 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 if (config == null)
                     return;
 
-                string hostBlacklist = config.GetString("HostBlacklist", "");
-                string portBlacklist = config.GetString("PortBlacklist", "");
-                string hostnameAndPortBlacklist = config.GetString("HostnameAndPortBlacklist", "");
+                string hostBlacklist = config.GetString("HostBlacklist", String.Empty);
+                string portBlacklist = config.GetString("PortBlacklist", String.Empty);
+                string hostnameAndPortBlacklist = config.GetString("HostnameAndPortBlacklist", String.Empty);
 
                 if (!string.IsNullOrEmpty(hostBlacklist))
                 {

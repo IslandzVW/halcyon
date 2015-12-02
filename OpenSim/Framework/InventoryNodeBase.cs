@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using OpenMetaverse;
 
 namespace OpenSim.Framework
@@ -58,7 +59,7 @@ namespace OpenSim.Framework
                  
             }
         } 
-        private string m_name = string.Empty;
+        private string m_name = String.Empty;
         
         /// <summary>
         /// A UUID containing the ID for the inventory node itself

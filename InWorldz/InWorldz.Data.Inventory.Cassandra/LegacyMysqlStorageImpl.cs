@@ -107,15 +107,15 @@ namespace InWorldz.Data.Inventory.Cassandra
         /// <returns></returns>
         public List<InventoryItemBase> getItemsInFolders(IEnumerable<InventoryFolderBase> folders)
         {
-            string inList = "";
+            string inList = String.Empty;
 
             foreach (InventoryFolderBase folder in folders)
             {
-                if (inList != "") inList += ",";
+                if (!String.IsNullOrEmpty(inList)) inList += ",";
                 inList += "'" + folder.ID.ToString() + "'";
             }
 
-            if (inList == "") return new List<InventoryItemBase>();
+            if (String.IsNullOrEmpty(inList)) return new List<InventoryItemBase>();
 
             string query = "SELECT * FROM inventoryitems WHERE parentFolderID IN (" + inList + ");";
 

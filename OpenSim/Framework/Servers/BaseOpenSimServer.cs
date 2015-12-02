@@ -359,7 +359,7 @@ namespace OpenSim.Framework.Servers
         /// <param name="helpArgs"></param>
         protected virtual void ShowHelp(string[] helpArgs)
         {
-            Notice("");
+            Notice(String.Empty);
             
             if (helpArgs.Length == 0)
             {
@@ -372,7 +372,7 @@ namespace OpenSim.Framework.Servers
                 Notice("show threads - list tracked threads");
                 Notice("show uptime - show server startup time and uptime.");
                 Notice("show version - show server version.");
-                Notice("");
+                Notice(String.Empty);
 
                 return;
             }
@@ -491,7 +491,7 @@ namespace OpenSim.Framework.Servers
            
         protected void RemovePIDFile()
         {
-            if (m_pidFile != String.Empty)
+            if (!String.IsNullOrEmpty(m_pidFile))
             {
                 try
                 {

@@ -122,17 +122,17 @@ namespace OpenSim.Region.CoreModules
                 m_scene.AddCommand(this, String.Empty, "wind", "Usage: wind <plugin> <param> [value] - Get or Update Wind paramaters", null);
                 
                 // This one enables the ability to type just the base command without any parameters
-                m_scene.AddCommand(this, "wind", "", "", HandleConsoleCommand);
+                m_scene.AddCommand(this, "wind", String.Empty, String.Empty, HandleConsoleCommand);
 
                 // Get a list of the parameters for each plugin
                 foreach (IWindModelPlugin windPlugin in m_availableWindPlugins.Values)
                 {
-                    m_scene.AddCommand(this, String.Format("wind base wind_plugin {0}", windPlugin.Name), String.Format("{0} - {1}", windPlugin.Name, windPlugin.Description), "", HandleConsoleBaseCommand);
-                    m_scene.AddCommand(this, String.Format("wind base wind_update_rate"), "Change the wind update rate.", "", HandleConsoleBaseCommand);
+                    m_scene.AddCommand(this, String.Format("wind base wind_plugin {0}", windPlugin.Name), String.Format("{0} - {1}", windPlugin.Name, windPlugin.Description), String.Empty, HandleConsoleBaseCommand);
+                    m_scene.AddCommand(this, String.Format("wind base wind_update_rate"), "Change the wind update rate.", String.Empty, HandleConsoleBaseCommand);
                     
                     foreach (KeyValuePair<string, string> kvp in windPlugin.WindParams())
                     {
-                        m_scene.AddCommand(this, String.Format("wind {0} {1}", windPlugin.Name, kvp.Key), String.Format("{0} : {1} - {2}", windPlugin.Name, kvp.Key, kvp.Value), "", HandleConsoleParamCommand);
+                        m_scene.AddCommand(this, String.Format("wind {0} {1}", windPlugin.Name, kvp.Key), String.Format("{0} : {1} - {2}", windPlugin.Name, kvp.Key, kvp.Value), String.Empty, HandleConsoleParamCommand);
                     }
                 }
 
