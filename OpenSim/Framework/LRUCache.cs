@@ -25,20 +25,6 @@ namespace OpenSim.Framework
         public delegate void ItemPurgedDelegate(T item);
         public event ItemPurgedDelegate OnItemPurged;
 
-        /// <summary>
-        /// The default value to use for the expiration timer if no value
-        /// is specified or its <= 0 and maxAge was set > 0).
-        /// </summary>
-        ///
-        public const int DEFAULT_EXPIRATION_TIMER_INTERVAL = 1 * 60 * 1000;
-
-        /// <summary>
-        /// The default value to use for the max age time if no value is specified.
-        /// </summary>
-        ///
-        public const int DEFAULT_MAX_AGE = 5 * 60 * 1000;
-
-
         private class KVPComparer<CK, CT> : IEqualityComparer<KeyValuePair<CK, CT>> 
         {
             public bool Equals(KeyValuePair<CK, CT> x, KeyValuePair<CK, CT> y)
@@ -63,7 +49,6 @@ namespace OpenSim.Framework
          /// <summary>
          /// A system timer and interval values used to age the cache;
          /// </summary>
-        private System.Threading.Timer _expireTimer = null;
         private Dictionary<K, DateTime> _lastAccessedTime = null;
         private int _minSize;
         private int _maxAge;
@@ -78,7 +63,7 @@ namespace OpenSim.Framework
         /// <param name="maxAge">The maximum age in milliseconds an an entry should live in cache 
         ///     before it's a candidate to be removed.</param>
         /// <param name="expireInterval">Time in milliseconds between checks for expired entries.</param>
-        public LRUCache(int capacity, bool useSizing = false, int minSize = 0, int maxAge = 0, int expireInterval = 0)
+        public LRUCache(int capacity, bool useSizing = false, int minSize = 0, int maxAge = 0)
         {
             _storage = new C5.HashedLinkedList<KeyValuePair<K, T>>(new KVPComparer<K, T>());
             _capacity = capacity;
@@ -92,20 +77,23 @@ namespace OpenSim.Framework
 
             _maxAge = maxAge;
             _minSize = (minSize <= 0 ? 0 : minSize);
-            _expireInterval = (expireInterval > 0 ? expireInterval : DEFAULT_EXPIRATION_TIMER_INTERVAL);
             _lastAccessedTime = null;
 
             if (_maxAge > 0)
             {
                 _lastAccessedTime = new Dictionary<K, DateTime>();
-                _expireTimer = new Timer(OnTimedEvent, null, _expireInterval, Timeout.Infinite);
             }
         }
 
         #region TimerDrivenAging
 
-        private void OnTimedEvent(Object state)
+        /// <summary>
+        /// Removes items that have not been accessed in maxAge from the list
+        /// </summary>
+        public void Maintain()
         {
+            if (_maxAge == 0) return;
+
             lock (_storage)
             {
                 var entries = new List<KeyValuePair<K, T>>();
@@ -146,8 +134,6 @@ namespace OpenSim.Framework
                     }
                 }
             }
-
-            _expireTimer.Change(_expireInterval, Timeout.Infinite);
         }
 
         #endregion
