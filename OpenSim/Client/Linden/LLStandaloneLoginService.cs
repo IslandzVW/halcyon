@@ -58,10 +58,10 @@ namespace OpenSim.Client.Linden
         protected ILoginServiceToRegionsConnector m_regionsConnector;
 
         public LLStandaloneLoginService(
-            UserProfileManager userManager, string welcomeMess, string mapServerURI,
+            UserProfileManager userManager, string welcomeMess, string mapServerURI, string profileServerURI,
             NetworkServersInfo serversInfo,
             bool authenticate, LibraryRootFolder libraryRootFolder, ILoginServiceToRegionsConnector regionsConnector)
-            : base(userManager, libraryRootFolder, welcomeMess, mapServerURI)
+            : base(userManager, libraryRootFolder, welcomeMess, mapServerURI, profileServerURI)
         {
             this.m_serversInfo = serversInfo;
             m_defaultHomeX = this.m_serversInfo.DefaultHomeLocX;

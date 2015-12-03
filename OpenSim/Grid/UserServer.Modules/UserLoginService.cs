@@ -113,9 +113,9 @@ namespace OpenSim.Grid.UserServer.Modules
 
         public UserLoginService(
             OpenSim.Framework.Communications.UserProfileManager userManager,
-            LibraryRootFolder libraryRootFolder, string mapServerURI,
+            LibraryRootFolder libraryRootFolder, string mapServerURI, string profileServerURI,
             UserConfig config, string welcomeMess, IRegionProfileRouter regionProfileService)
-            : base(userManager, libraryRootFolder, welcomeMess, mapServerURI)
+            : base(userManager, libraryRootFolder, welcomeMess, mapServerURI, profileServerURI)
         {
             m_config = config;
             m_defaultHomeX = m_config.DefaultX;

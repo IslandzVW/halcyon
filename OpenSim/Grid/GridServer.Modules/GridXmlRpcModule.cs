@@ -503,7 +503,7 @@ namespace OpenSim.Grid.GridServer.Modules
             if (requestData.ContainsKey("region_secret"))
             {
                 string regionsecret = (string)requestData["region_secret"];
-                if (regionsecret.Length > 0)
+                if (!String.IsNullOrEmpty(regionsecret))
                     sim.regionSecret = regionsecret;
                 else
                     sim.regionSecret = m_config.SimRecvKey;

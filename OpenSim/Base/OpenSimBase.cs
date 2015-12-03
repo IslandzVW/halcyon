@@ -418,7 +418,7 @@ namespace OpenSim
             
             regionInfo.osSecret = m_osSecret;
             
-            if ((proxyUrl.Length > 0) && (portadd_flag))
+            if (!String.IsNullOrEmpty(proxyUrl) && (portadd_flag))
             {
                 // set proxy url to RegionInfo
                 regionInfo.proxyUrl = proxyUrl;
@@ -793,7 +793,7 @@ namespace OpenSim
         /// </summary>
         public override void ShutdownSpecific()
         {
-            if (proxyUrl.Length > 0)
+            if (!String.IsNullOrEmpty(proxyUrl))
             {
                 Util.XmlRpcCommand(proxyUrl, "Stop");
             }

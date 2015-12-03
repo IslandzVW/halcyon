@@ -74,7 +74,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
                  eventCallingFunction = "sofia_reg_parse_auth";
              }
 
-             if (eventCallingFunction.Length == 0)
+            if (String.IsNullOrEmpty(eventCallingFunction))
              {
                  eventCallingFunction = "sofia_reg_parse_auth";
              }

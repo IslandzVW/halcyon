@@ -383,7 +383,7 @@ namespace OpenSim.Framework
                 args["wearables"] = wears;
             }
 
-            if ((CallbackURI != null) && (!CallbackURI.Equals(String.Empty)))
+            if (!String.IsNullOrEmpty(CallbackURI))
                 args["callback_uri"] = OSD.FromString(CallbackURI);
 
             if (SatOnGroup != UUID.Zero)

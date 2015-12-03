@@ -667,7 +667,7 @@ namespace OpenSim.Framework
 
             if (printable)
             {
-                if (fieldName.Length > 0)
+                if (!String.IsNullOrEmpty(fieldName))
                 {
                     output.Append(fieldName);
                     output.Append(": ");
@@ -681,7 +681,7 @@ namespace OpenSim.Framework
                 {
                     if (i != 0)
                         output.Append(Environment.NewLine);
-                    if (fieldName.Length > 0)
+                    if (!String.IsNullOrEmpty(fieldName))
                     {
                         output.Append(fieldName);
                         output.Append(": ");
@@ -993,8 +993,8 @@ namespace OpenSim.Framework
 
         public static string CleanString(string input)
         {
-            if (input.Length == 0)
-                return input;
+            if (String.IsNullOrEmpty(input))
+                return String.Empty;
 
             int clip = input.Length;
 
@@ -1541,7 +1541,7 @@ namespace OpenSim.Framework
 
         public static string ServerURI(string uri)
         {
-            if (uri == String.Empty)
+            if (String.IsNullOrEmpty(uri))
                 return String.Empty;
 
             // Get rid of eventual slashes at the end

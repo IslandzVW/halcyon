@@ -477,7 +477,7 @@ namespace OpenSim.Region.Physics.Meshing
             primMesh = new PrimMesh(sides, profileBegin, profileEnd, profileHollow, hollowSides);
 
             if (primMesh.errorMessage != null)
-                if (primMesh.errorMessage.Length > 0)
+            if (!String.IsNullOrEmpty(primMesh.errorMessage))
                     m_log.Error("[ERROR] " + primMesh.errorMessage);
 
             primMesh.topShearX = pathShearX;

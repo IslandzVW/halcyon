@@ -1243,7 +1243,7 @@ namespace OpenSim.Region.ScriptEngine.Shared
 
             static public implicit operator Boolean(key k)
             {
-                if (k.value.Length == 0)
+                if (String.IsNullOrEmpty(k.value))
                 {
                     return false;
                 }
@@ -1336,7 +1336,7 @@ namespace OpenSim.Region.ScriptEngine.Shared
             #region Operators
             static public implicit operator Boolean(LSLString s)
             {
-                if (s.m_string.Length == 0)
+                if (String.IsNullOrEmpty(s.m_string))
                 {
                     return false;
                 }

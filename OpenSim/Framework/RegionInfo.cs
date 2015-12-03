@@ -1013,7 +1013,7 @@ namespace OpenSim.Framework
         {
             OSDMap args = new OSDMap();
             args["region_id"] = OSD.FromUUID(RegionID);
-            if ((RegionName != null) && !RegionName.Equals(String.Empty))
+            if (!String.IsNullOrEmpty(RegionName))
                 args["region_name"] = OSD.FromString(RegionName);
             args["external_host_name"] = OSD.FromString(ExternalHostName);
             args["http_port"] = OSD.FromString(HttpPort.ToString());
@@ -1021,11 +1021,11 @@ namespace OpenSim.Framework
             args["region_yloc"] = OSD.FromString(RegionLocY.ToString());
             args["internal_ep_address"] = OSD.FromString(InternalEndPoint.Address.ToString());
             args["internal_ep_port"] = OSD.FromString(InternalEndPoint.Port.ToString());
-            if ((RemotingAddress != null) && !RemotingAddress.Equals(String.Empty))
+            if (!String.IsNullOrEmpty(RemotingAddress))
                 args["remoting_address"] = OSD.FromString(RemotingAddress);
             args["remoting_port"] = OSD.FromString(RemotingPort.ToString());
             args["allow_alt_ports"] = OSD.FromBoolean(m_allow_alternate_ports);
-            if ((proxyUrl != null) && !proxyUrl.Equals(String.Empty))
+            if (!String.IsNullOrEmpty(proxyUrl))
                 args["proxy_url"] = OSD.FromString(proxyUrl);
 
             if (OutsideIP != null) args["outside_ip"] = OSD.FromString(OutsideIP);
@@ -1085,7 +1085,7 @@ namespace OpenSim.Framework
             string outsideIp)
         {
             RegionInfo regionInfo;
-            IPEndPoint neighbourInternalEndPoint = new IPEndPoint(Util.GetHostFromDNS(externalHostName), (int)simPort);                    
+            IPEndPoint neighbourInternalEndPoint = new IPEndPoint(Util.GetHostFromDNS(externalHostName), (int)simPort);
             regionInfo = new RegionInfo(regX, regY, neighbourInternalEndPoint, externalHostName);
             regionInfo.RemotingPort = remotingPort;
             regionInfo.RemotingAddress = externalHostName;
