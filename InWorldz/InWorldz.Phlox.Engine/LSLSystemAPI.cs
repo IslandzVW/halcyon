@@ -2103,17 +2103,7 @@ namespace InWorldz.Phlox.Engine
 
         private void SetTexture(SceneObjectPart part, string texture, int face)
         {
-            UUID textureID = new UUID();
-            textureID = InventoryKey(texture, (int)AssetType.Texture);
-            if (textureID == UUID.Zero)
-            {
-                UUID.TryParse(texture, out textureID);
-            }
-            
-            //if (!UUID.TryParse(texture, out textureID))
-            //{
-            //    textureID = InventoryKey(texture, (int)AssetType.Texture);
-            //}
+            UUID textureID = KeyOrName(texture);
 
             if (textureID == UUID.Zero)
                 return;
@@ -9631,12 +9621,7 @@ namespace InWorldz.Phlox.Engine
                         if (remain < 1)
                             return;
                         tex = rules.Data[idx++].ToString();
-                        UUID textureID = new UUID();
-                        textureID = InventoryKey(tex, (int)AssetType.Texture);
-                        if (textureID == UUID.Zero)
-                        {
-                            UUID.TryParse(tex, out textureID);
-                        }
+                        UUID textureID = KeyOrName(tex);
 
                         if (textureID != UUID.Zero)
                             foreach (SceneObjectPart part in parts)
