@@ -667,27 +667,27 @@ namespace InWorldz.Phlox.Engine
         }
 
         /// <summary>
-        /// accepts a valid UUID, -or- a name of an inventory item.
-        /// Returns a valid UUID or UUID.Zero if key invalid and item not found
-        /// in prim inventory.
+        /// Accepts a valid UUID, -or- a name of an inventory item.
+        /// Returns a valid UUID or UUID.Zero if the item was not found in prim inventory and the key is invalid.
+        ///
+        /// Checks the inventory first as otherwise someone could exploit the system by naming their inventory object a UUID.
         /// </summary>
-        /// <param name="k"></param>
-        /// <returns></returns>
+        /// <param name="k">The name of an inventory item or a UUID string.</param>
+        /// <returns>either the UUID of the inventory item, UUID parsed from the string, or UUID.Zero.</returns>
         private UUID KeyOrName(string k)
         {
-            UUID key = UUID.Zero;
+            UUID key = InventoryKey(k);
 
-            // if we can parse the string as a key, use it.
-            if (Util.isUUID(k) && UUID.TryParse(k, out key))
+            // Try to locate the name in inventory of object first. If found return the key.
+            // Doing this first means that no-one can name an inventory item with a UUID string and have this code return the UUID in the name instead of the inventory item's UUID!
+            // If not, then if we can parse the string as a key, use it instead.
+            if (key != UUID.Zero || UUID.TryParse(k, out key))
             {
                 return key;
             }
-            // else try to locate the name in inventory of object. found returns key,
-            // not found returns UUID.Zero which will translate to the default particle texture
-            else
-            {
-                return InventoryKey(k);
-            }
+
+            // Not found returns UUID.Zero which will translate to the default particle texture if this was a call about textures.
+            return UUID.Zero;
         }
 
         // convert a LSL_Rotation to a Quaternion
