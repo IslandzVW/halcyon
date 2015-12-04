@@ -91,7 +91,7 @@ namespace OpenSim.Grid.Framework
             string param = GetParam(path);
 
             UUID assetId;
-            if (!String.IsNullOrEmpty(param.Length))
+            if (!String.IsNullOrEmpty(param))
                 UUID.TryParse(param, out assetId);
             // byte[] txBuffer = new byte[4096];
 

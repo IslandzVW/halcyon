@@ -917,7 +917,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         // First log file or time has expired, start writing to a new log file
                         PacketLog = new PacketLogger();
                         PacketLog.StartTime = now;
-                        PacketLog.Path = (!String.IsNullOrEmpty(binStatsDir.Length) ? binStatsDir + System.IO.Path.DirectorySeparatorChar.ToString() : String.Empty)
+                        PacketLog.Path = (!String.IsNullOrEmpty(binStatsDir) ? binStatsDir + System.IO.Path.DirectorySeparatorChar.ToString() : String.Empty)
                                 + String.Format("packets-{0}.log", now.ToString("yyyyMMddHHmmss"));
                         PacketLog.Log = new BinaryWriter(File.Open(PacketLog.Path, FileMode.Append, FileAccess.Write));
                     }

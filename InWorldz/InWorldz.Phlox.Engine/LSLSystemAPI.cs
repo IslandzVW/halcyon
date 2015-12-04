@@ -15750,7 +15750,7 @@ namespace InWorldz.Phlox.Engine
             //Return a cryptographic hash
             public static string Hash(string str, string nonce, string inCodec, string outCodec)
             {
-                if (!String.IsNullOrEmpty(nonce.Length)) str = str + ":" + nonce;
+                if (!String.IsNullOrEmpty(nonce)) str = str + ":" + nonce;
                 byte[] bytes = null;
                 byte[] inBytes = Encoding.UTF8.GetBytes(str);
                 switch (inCodec)
@@ -15920,7 +15920,7 @@ namespace InWorldz.Phlox.Engine
                             switch (k)
                             {
                                 case "salt":
-                                    if(String.IsNullOrEmpty(val.Length)) {
+                                    if(String.IsNullOrEmpty(val)) {
                                         LSLError("Salt for AES encryption key cannot be blank.");
                                         return String.Empty;
                                     }
