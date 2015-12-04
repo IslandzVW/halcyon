@@ -907,7 +907,7 @@ namespace OpenSim.Region.Framework.Scenes
             else
                 m_log.Warn("[SCENE PRESENCE]: Failed to create a scene view");
 
-            AbsolutePosition = m_controllingClient.StartPos;
+            SetAgentPositionInfo(null, true, m_controllingClient.StartPos, null, Vector3.Zero, m_velocity);
 
             m_animPersistUntil = 0;
             
@@ -1103,10 +1103,7 @@ namespace OpenSim.Region.Framework.Scenes
                     pos.Z = newPosZ;
                 }
 
-                // m_posInfo must not be locked for the GetLandObject call.
-                ILandObject parcel = Scene.LandChannel.GetLandObject(pos.X, pos.Y);
-
-                SetAgentPositionInfo(parcel, true, pos, null, Vector3.Zero, m_velocity);
+                SetAgentPositionInfo(null, true, pos, null, Vector3.Zero, m_velocity);
 
                 // get a new localid
                 SwapToRootAgent();
@@ -1236,7 +1233,7 @@ namespace OpenSim.Region.Framework.Scenes
                     newPos += m_sitTargetCorrectionOffset;
                     m_bodyRot = sitTargetOrient;
                     //Rotation = sitTargetOrient;
-                    SetAgentPositionInfo(true, newPos, part, part.AbsolutePosition, Vector3.Zero);
+                    SetAgentPositionInfo(null, true, newPos, part, part.AbsolutePosition, Vector3.Zero);
                 }
                 //m_animPersistUntil = 0;    // abort any timed animation
 
@@ -1431,7 +1428,7 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             parent = Scene.GetSceneObjectPart(m_requestedSitTargetID);
                             // now make it all consistent with updated parent ID while inside the lock
-                            SetAgentPositionInfo(true, m_sitTargetCorrectionOffset, parent, pos);
+                            SetAgentPositionInfo(null, true, m_sitTargetCorrectionOffset, parent, pos, m_velocity);
                         }
 
                         parent = MakeRootAgent(pos);
@@ -1605,43 +1602,38 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             SceneObjectPart part = m_posInfo.Parent;
-            lock (m_posInfo)
-            {
-                if (part != null)
-                {   // sitting on a prim
-                    if (part.ParentGroup.InTransit)
-                    {
-                        // m_log.Warn("[CROSSING]: AgentUpdate called during prim transit! Ignored.");
-                        return;
-                    }
-                }
-
-                if (!m_posInfo.Position.IsFinite())
+            EntityBase.PositionInfo posInfo = GetPosInfo();
+            if (part != null)
+            {   // sitting on a prim
+                if (part.ParentGroup.InTransit)
                 {
-                    RemoveFromPhysicalScene();
-                    m_log.Error("[SCENE PRESENCE]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error# 9999902");
+                    // m_log.Warn("[CROSSING]: AgentUpdate called during prim transit! Ignored.");
+                    return;
+                }
+            }
 
-                    if (m_LastFinitePos.IsFinite())
-                    {
-                        SetAgentPositionInfo(false, m_LastFinitePos, m_posInfo.Parent, Vector3.Zero, Vector3.Zero);
-                    }
-                    else
-                    {
-                        Vector3 emergencyPos = new Vector3(127.0f, 127.0f, 127.0f);
-                        SetAgentPositionInfo(false, emergencyPos, m_posInfo.Parent, Vector3.Zero, Vector3.Zero);
-                        m_log.Error("[SCENE PRESENCE]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error# 9999903");
-                    }
+            if (!posInfo.Position.IsFinite())
+            {
+                RemoveFromPhysicalScene();
+                m_log.Error("[SCENE PRESENCE]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error# 9999902");
 
-                    recoverPhysActor = true;    // defer this until outside the posInfo lock
+                if (m_LastFinitePos.IsFinite())
+                {
+                    SetAgentPositionInfo(false, m_LastFinitePos, posInfo.Parent, Vector3.Zero, Vector3.Zero);
                 }
                 else
                 {
-                    m_LastFinitePos = m_posInfo.Position;
+                    Vector3 emergencyPos = new Vector3(127.0f, 127.0f, 127.0f);
+                    SetAgentPositionInfo(false, emergencyPos, posInfo.Parent, Vector3.Zero, Vector3.Zero);
+                    m_log.Error("[SCENE PRESENCE]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error# 9999903");
                 }
-            }
-            // Now handle deferred physActor add
-            if (recoverPhysActor)
+
                 AddToPhysicalScene(false);
+            }
+            else
+            {
+                m_LastFinitePos = m_posInfo.Position;
+            }
 
             m_perfMonMS = Environment.TickCount;
 
@@ -2088,7 +2080,7 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 m_requestedSitTargetUUID = UUID.Zero;
                                 m_requestedSitTargetID = 0;
-                                SetAgentPositionInfo(false, part.AbsolutePosition, null, Vector3.Zero);
+                                SetAgentPositionInfo(null, false, part.AbsolutePosition, null, Vector3.Zero, m_velocity);
                             }
                         }
                         SceneView.SendFullUpdateToAllClients();
@@ -2478,8 +2470,7 @@ namespace OpenSim.Region.Framework.Scenes
                 lock (m_posInfo)
                 {
                     // Update these together
-                    Velocity = Vector3.Zero;
-                    SetAgentPositionInfo(true, avSitPos, part, part.AbsolutePosition, Vector3.Zero);
+                    SetAgentPositionInfo(null, true, avSitPos, part, part.AbsolutePosition, Vector3.Zero);
                     // now update the part to reflect the new avatar
                     part.SetAvatarOnSitTarget(UUID, true);
                     // Now update the SP.Rotation with the sit rotation
