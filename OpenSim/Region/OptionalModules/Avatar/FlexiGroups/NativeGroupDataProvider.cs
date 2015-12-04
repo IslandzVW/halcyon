@@ -220,7 +220,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                     query += " osgroup.GroupID = ?groupID ";
                     parms.Add("?groupID", GroupID);
                 }
-                else if ((GroupName != null) && (GroupName != String.Empty))
+                else if (!String.IsNullOrEmpty(GroupName))
                 {
                     query += " osgroup.Name = ?groupName ";
                     parms.Add("?groupName", GroupName);

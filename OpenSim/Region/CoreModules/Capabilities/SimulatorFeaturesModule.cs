@@ -85,7 +85,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             if (config != null)
             {
                 m_MapImageServerURL = config.GetString("MapImageServerURI", String.Empty);
-                if (m_MapImageServerURL != String.Empty)
+                if (!String.IsNullOrEmpty(m_MapImageServerURL))
                 {
                     m_MapImageServerURL = m_MapImageServerURL.Trim();
                     if (!m_MapImageServerURL.EndsWith("/"))
@@ -171,9 +171,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
     
                 // Extra information for viewers that want to use it
                 OSDMap opensimFeatures = new OSDMap();
-                if (m_MapImageServerURL != String.Empty)
+                if (!String.IsNullOrEmpty(m_MapImageServerURL))
                     opensimFeatures["map-server-url"] = OSD.FromString(m_MapImageServerURL);
-                if (m_SearchURL != String.Empty)
+                if (!String.IsNullOrEmpty(m_SearchURL))
                     opensimFeatures["search-server-url"] = OSD.FromString(m_SearchURL);
                 opensimFeatures["ExportSupported"] = m_ExportSupported;
                 opensimFeatures["whisper-range"] = m_whisperdistance;

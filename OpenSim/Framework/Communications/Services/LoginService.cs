@@ -51,6 +51,7 @@ namespace OpenSim.Framework.Communications.Services
 
         protected string m_welcomeMessage = "Welcome to InWorldz";
         protected string m_MapServerURI = String.Empty;
+        protected string m_ProfileServerURI = String.Empty;
         protected int m_minLoginLevel = 0;
         protected UserProfileManager m_userManager = null;
 
@@ -107,7 +108,7 @@ namespace OpenSim.Framework.Communications.Services
         /// <param name="libraryRootFolder"></param>
         /// <param name="welcomeMess"></param>
         public LoginService(UserProfileManager userManager, LibraryRootFolder libraryRootFolder,
-                            string welcomeMess, string mapServerURI)
+                            string welcomeMess, string mapServerURI, string profileServerURI)
         {
             m_userManager = userManager;
             m_libraryRootFolder = libraryRootFolder;
@@ -116,6 +117,8 @@ namespace OpenSim.Framework.Communications.Services
                 m_welcomeMessage = welcomeMess;
             if (!String.IsNullOrEmpty(mapServerURI))
                 m_MapServerURI = mapServerURI;
+            if (!String.IsNullOrEmpty(profileServerURI))
+                m_ProfileServerURI = profileServerURI;
 
             // For new users' first-time logins
             LoadDefaultLoginsFromFile(DEFAULT_LOGINS_FILE);
@@ -152,7 +155,7 @@ namespace OpenSim.Framework.Communications.Services
         // For new users' first-time logins
         public void LoadDefaultLoginsFromFile(string fileName)
         {
-            if (fileName.Length == 0)
+            if (String.IsNullOrEmpty(fileName))
                 DumpRegionsList(_DefaultLoginsList, "Default login locations for new users");
             else
                 _DefaultLoginsList = LoadRegionsFromFile(fileName, "Default login locations for new users");
@@ -160,7 +163,7 @@ namespace OpenSim.Framework.Communications.Services
         // For returning users' where the preferred region is down
         public void LoadDefaultRegionsFromFile(string fileName)
         {
-            if (fileName.Length == 0)
+            if (String.IsNullOrEmpty(fileName))
                 DumpRegionsList(_DefaultRegionsList, "Default region locations");
             else
                 _DefaultRegionsList = LoadRegionsFromFile(fileName, "Default region locations");
@@ -372,6 +375,7 @@ namespace OpenSim.Framework.Communications.Services
                         logResponse.SecureSessionID = userProfile.CurrentAgent.SecureSessionID;
                         logResponse.Message = GetMessage();
                         logResponse.MapServerURI = m_MapServerURI;
+                        logResponse.ProfileServerURI = m_ProfileServerURI;
                         logResponse.BuddList = ConvertFriendListItem(m_userManager.GetUserFriendList(agentID));
                         logResponse.StartLocation = startLocationRequest;
 //                        m_log.WarnFormat("[LOGIN END]: >>> Login response for {0} SSID={1}", logResponse.AgentID, logResponse.SecureSessionID);

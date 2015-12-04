@@ -573,7 +573,7 @@ namespace OpenSim.Region.Framework.Scenes
                     case BlacklistOp.User:
                     case BlacklistOp.Owner:
                         // accepts either UUID or First Last
-                        if (param2 == String.Empty)
+                        if (String.IsNullOrEmpty(param2))
                         {
                             if (!UUID.TryParse(param, out targetID))
                             {
@@ -651,7 +651,7 @@ namespace OpenSim.Region.Framework.Scenes
                             scene.AddBlacklistedUser(targetID);
                             break;
                         case BlacklistOp.Remove:
-                            if (targetName != String.Empty)
+                            if (!String.IsNullOrEmpty(targetName))
                                 scene.BlacklistRemove(targetName);
                             else
                                 scene.BlacklistRemove(targetID);

@@ -1275,7 +1275,7 @@
       <Reference name="OpenSim.Framework.Statistics"/>
       <Reference name="OpenSim.Region.Physics.Manager"/>
       <Reference name="Mono.Addins" path="../../../bin/"/>
-      <Reference name="MySQL.Data"/>
+      <Reference name="MySql.Data"/>
 
       <!-- For scripting in funny languages by default -->
       <!--

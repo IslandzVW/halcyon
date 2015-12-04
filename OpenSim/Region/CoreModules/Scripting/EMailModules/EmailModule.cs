@@ -226,7 +226,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
         public void SendEmail(UUID objectID, string address, string subject, string body)
         {
             //Check if address is empty
-            if (address == String.Empty)
+            if (String.IsNullOrWhiteSpace(address))
                 return;
 
             //FIXED:Check the email is correct form in REGEX

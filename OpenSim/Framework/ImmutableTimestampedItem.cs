@@ -30,59 +30,58 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Exception thrown when an inventory storage interface can not retrieve
-    /// or store an item
+    /// Encapsulates an item that has a timestamp associated with it.
+    /// For timestamp uses where this stamp may be created and destroyed
+    /// rapidly. For these uses, this class being a struct may help 
+    /// prevent excessive garbage generation
     /// </summary>
-    public class InventoryStorageException : Exception
+    /// <typeparam name="T"></typeparam>
+    public struct ImmutableTimestampedItem<T>
     {
-        private string _details = String.Empty;
+        private ulong _timeStamp;
+        private T _item;
 
-        public string ErrorDetails
-        {
-            get { return _details; }
-        }
-
-        public InventoryStorageException(string message)
-            : base(message)
-        {
-        }
-
-        public InventoryStorageException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
-
-        public InventoryStorageException(string message, string errorDetails)
-            : base(message)
-        {
-            _details = errorDetails;
-        }
-
-        public InventoryStorageException(string message, string errorDetails, Exception innerException)
-            : base(message, innerException)
-        {
-            _details = errorDetails;
-        }
-
-        public override string Message
+        public T Item
         {
             get
             {
-                if (String.IsNullOrEmpty(_details))
-                {
-                    return base.Message;
-                }
-                else
-                {
-                    return base.Message + " [" + _details + "]";
-                }
+                return _item;
             }
+        }
+
+        public int ElapsedSeconds
+        {
+            get
+            {
+                ulong diff = Util.GetLongTickCount() - _timeStamp;
+                return (int) diff / 1000;
+            }
+        }
+
+        public ulong ElapsedMilliseconds
+        {
+            get
+            {
+                ulong diff = Util.GetLongTickCount() - _timeStamp;
+                return diff;
+            }
+        }
+
+        public ImmutableTimestampedItem(T item)
+        {
+            _item = item;
+            _timeStamp = Util.GetLongTickCount();
+        }
+
+        public ImmutableTimestampedItem(T item, ulong timeStamp)
+        {
+            _item = item;
+            _timeStamp = timeStamp;
         }
     }
 }

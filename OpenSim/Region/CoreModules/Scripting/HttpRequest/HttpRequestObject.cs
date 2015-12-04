@@ -163,7 +163,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 }
 
                 // Encode outbound data
-                if (OutboundBody.Length > 0)
+                if (!String.IsNullOrEmpty(OutboundBody))
                 {
                     byte[] data = Encoding.UTF8.GetBytes(OutboundBody);
 

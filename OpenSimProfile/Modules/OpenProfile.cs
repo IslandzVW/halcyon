@@ -729,7 +729,7 @@ namespace OpenSimProfile.Modules.OpenProfile
                 parms.Add("?notes", notes);
 
                 string query;
-                if (notes == String.Empty)
+                if (String.IsNullOrEmpty(notes))
                     query = "DELETE FROM usernotes WHERE useruuid=?avatarID AND targetuuid=?targetID";
                 else
                     query = "INSERT INTO usernotes(useruuid, targetuuid, notes) VALUES(?avatarID,?targetID,?notes) ON DUPLICATE KEY UPDATE notes=?notes";

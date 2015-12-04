@@ -152,14 +152,14 @@ namespace OpenSim.Framework
         {
             get
             {
-                if (m_creatorData != null && m_creatorData != String.Empty)
+                if (!String.IsNullOrEmpty(m_creatorData))
                     return m_creatorId + ';' + m_creatorData;
                 else
                     return m_creatorId;
             }
             set
             {
-                if ((value == null) || (value != null && value == String.Empty))
+                if (String.IsNullOrEmpty(value))
                 {
                     m_creatorData = String.Empty;
                     return;

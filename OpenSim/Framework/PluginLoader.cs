@@ -304,7 +304,7 @@ namespace OpenSim.Framework
                 if (typeobj != null)
                     return typeobj;
 
-                if (type.Length == 0)
+                if (String.IsNullOrEmpty(type))
                     throw new InvalidOperationException("Type name not specified.");
 
                 return typeobj = Addin.GetType(type, true);

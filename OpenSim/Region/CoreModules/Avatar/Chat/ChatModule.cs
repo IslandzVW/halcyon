@@ -395,7 +395,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             {
                 targetID = UUID.Zero;
                 target = name.Trim().ToLower();
-                if (target.Length == 0)
+                if (String.IsNullOrEmpty(target))
                     return results;
             }
 

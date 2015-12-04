@@ -921,7 +921,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             bool LegacyLLSDLoginLibOMV = (requestBody.Contains("passwd") && requestBody.Contains("mac") && requestBody.Contains("viewer_digest"));
 
-            if (requestBody.Length == 0)
+            if (String.IsNullOrEmpty(requestBody))
             // Get Request
             {
                 requestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><llsd><map><key>request</key><string>get</string></map></llsd>";
@@ -1531,7 +1531,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         {
             lock (m_HTTPHandlers)
             {
-                if (httpMethod != null && httpMethod.Length == 0)
+                if (String.IsNullOrEmpty(httpMethod))
                 {
                     m_HTTPHandlers.Remove(path);
                     return;

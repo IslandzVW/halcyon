@@ -78,7 +78,7 @@ namespace OpenSim
             String xmlPath = Path.Combine(Util.configDir(), "Halcyon.xml");
 
             //check for master .INI file (name passed in command line, no default), or XML over http
-            if (masterFileName.Length > 0) // If a master file name is given ...
+            if (!String.IsNullOrEmpty(masterFileName)) // If a master file name is given ...
             {
                 m_log.InfoFormat("[CONFIG] Reading config master file {0}", masterfilePath);
 
