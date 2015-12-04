@@ -988,7 +988,7 @@ namespace OpenSim.Framework
                 return _projectionFOV;
             }
             set {
-                _projectionFOV = Math.Max(0.0f, Math.Min(3.0f, value));
+                _projectionFOV = Util.Clip(value, 0.0f, 3.0f);
             }
         }
 
