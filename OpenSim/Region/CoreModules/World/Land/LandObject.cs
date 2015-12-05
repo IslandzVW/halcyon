@@ -1125,29 +1125,31 @@ namespace OpenSim.Region.CoreModules.World.Land
         public List<SceneObjectGroup> GetPrimsOverByOwner(UUID targetID, bool scriptedOnly)
         {
             List<SceneObjectGroup> prims = new List<SceneObjectGroup>();
+            List<SceneObjectGroup> myPrims;
 
             lock (primsOverMe)
             {
-                foreach (SceneObjectGroup obj in primsOverMe)
+                myPrims = new List<SceneObjectGroup>(primsOverMe);
+            }
+            foreach (SceneObjectGroup obj in myPrims)
+            {
+                if (obj.OwnerID == targetID)
                 {
-                    if (obj.OwnerID == targetID)
+                    if (scriptedOnly)
                     {
-                        if (scriptedOnly)
+                        bool containsScripts = false;
+                        foreach (SceneObjectPart part in obj.Children.Values)
                         {
-                            bool containsScripts = false;
-                            foreach (SceneObjectPart part in obj.Children.Values)
+                            if (part.Inventory.ContainsScripts())
                             {
-                                if (part.Inventory.ContainsScripts())
-                                {
-                                    containsScripts = true;
-                                    break;
-                                }
+                                containsScripts = true;
+                                break;
                             }
-                            if (!containsScripts)
-                                continue;
                         }
-                        prims.Add(obj);
+                        if (!containsScripts)
+                            continue;
                     }
+                    prims.Add(obj);
                 }
             }
             return prims;
