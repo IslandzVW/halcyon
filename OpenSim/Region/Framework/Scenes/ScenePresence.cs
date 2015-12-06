@@ -572,6 +572,7 @@ namespace OpenSim.Region.Framework.Scenes
             SetAgentPositionInfo(forced, agentPos, parent, parentPos, m_velocity);
         }
 
+        private Vector3 _prevPosition = new Vector3(-1.0f, -1.0f, -1.0f);   // any invalid position
         private Vector3 _GetPosition(bool checkParcelChange, bool updateFromPhysics)
         {
             bool inTransit;
@@ -604,7 +605,7 @@ namespace OpenSim.Region.Framework.Scenes
                     posForced = true;
                 }
 
-                if (checkParcelChange)
+                if (checkParcelChange && ((ppos.X != _prevPosition.X) || (ppos.Y != _prevPosition.Y)))    // needs re-check
                 {
                     ILandObject parcel = Scene.LandChannel.GetLandObject(ppos.X, ppos.Y);
                     if (parcel != null)
@@ -644,6 +645,7 @@ namespace OpenSim.Region.Framework.Scenes
                             this.lastKnownAllowedPosition = ppos;
                     }
                 }
+                _prevPosition = ppos;
 
                 if (updateFromPhysics)
                 {
