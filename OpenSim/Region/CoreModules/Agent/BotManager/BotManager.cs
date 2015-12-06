@@ -732,7 +732,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 return false;
 
             if (sp.PhysicsActor != null)
-                sp.AbsolutePosition = sp.AbsolutePosition + new Vector3(0, 0, 0.001f);
+            {
+                EntityBase.PositionInfo posInfo = sp.GetPosInfo();
+                posInfo.m_pos.Z += 0.001f;
+                sp.SetAgentPositionInfo(null, false, posInfo.m_pos, posInfo.m_parent, Vector3.Zero, sp.Velocity);
+            }
             sp.Rotation = rotation;
             sp.SendTerseUpdateToAllClients();
             return true;

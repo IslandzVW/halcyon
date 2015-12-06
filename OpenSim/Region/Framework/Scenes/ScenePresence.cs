@@ -514,12 +514,12 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         // This function updates AbsolutePosition (m_pos) even during transit
-        public void SetAgentPositionInfo(bool forced, Vector3 agentPos, SceneObjectPart parent, Vector3 parentPos, Vector3 velocity)
+        // Call this version if you already have m_posInfo locked!
+        // You must either supply the parcel at agentPos, supply a non-null parent, or call the other variant without a parcel and WITHOUT m_posInfo locked.
+        public void SetAgentPositionInfo(ILandObject parcel, bool forced, Vector3 agentPos, SceneObjectPart parent, Vector3 parentPos, Vector3 velocity)
         {
             Vector3 pos;
             Vector3 oldVelocity;
-
-            ILandObject parcel = Scene.LandChannel.GetLandObject(agentPos.X, agentPos.Y);   // outside the lock
 
             lock (m_posInfo)
             {
@@ -536,7 +536,8 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (!forced)
                                 return; // illegal position
-                        } else
+                        }
+                        else
                             lastKnownAllowedPosition = agentPos;
                     }
                 }
@@ -555,6 +556,17 @@ namespace OpenSim.Region.Framework.Scenes
                 m_physicsActor.Position = pos;
             }
         }
+
+        // You must only call this variant if m_posInfo is NOT already locked!
+        // If it is locked you must call the other variant with a parcel above.
+        public void SetAgentPositionInfo(bool forced, Vector3 agentPos, SceneObjectPart parent, Vector3 parentPos, Vector3 velocity)
+        {
+            ILandObject parcel = Scene.LandChannel.GetLandObject(agentPos.X, agentPos.Y);   // outside the lock
+
+            SetAgentPositionInfo(parcel, forced, agentPos, parent, parentPos, velocity);
+        }
+        // You must only call this variant if m_posInfo is NOT already locked!
+        // If it is locked you must call the other variant with a parcel above.
         public void SetAgentPositionInfo(bool forced, Vector3 agentPos, SceneObjectPart parent, Vector3 parentPos)
         {
             SetAgentPositionInfo(forced, agentPos, parent, parentPos, m_velocity);
@@ -895,7 +907,7 @@ namespace OpenSim.Region.Framework.Scenes
             else
                 m_log.Warn("[SCENE PRESENCE]: Failed to create a scene view");
 
-            AbsolutePosition = m_controllingClient.StartPos;
+            SetAgentPositionInfo(null, true, m_controllingClient.StartPos, null, Vector3.Zero, m_velocity);
 
             m_animPersistUntil = 0;
             
@@ -1046,90 +1058,81 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public SceneObjectPart MakeRootAgent(Vector3 pos)
         {
-            SceneObjectPart parent = null;
-
-            // Lookup the part outside the posInfo lock
             SceneObjectPart part = null;
             if (m_requestedSitTargetUUID != UUID.Zero)
                 part = m_scene.GetSceneObjectPart(m_requestedSitTargetUUID);
 
-            lock (m_posInfo)
+            DumpDebug("MakeRootAgent", "n/a");
+            m_log.DebugFormat(
+                "[SCENE]: Upgrading child to root agent for {0} in {1}",
+                Name, m_scene.RegionInfo.RegionName);
+
+            //m_log.DebugFormat("[SCENE]: known regions in {0}: {1}", Scene.RegionInfo.RegionName, KnownChildRegionHandles.Count);
+
+            m_scene.SetRootAgentScene(m_uuid);
+
+            if (m_requestedSitTargetID == 0)
             {
-                DumpDebug("MakeRootAgent", "n/a");
-                m_log.DebugFormat(
-                    "[SCENE]: Upgrading child to root agent for {0} in {1}",
-                    Name, m_scene.RegionInfo.RegionName);
-
-                //m_log.DebugFormat("[SCENE]: known regions in {0}: {1}", Scene.RegionInfo.RegionName, KnownChildRegionHandles.Count);
-
-                m_scene.SetRootAgentScene(m_uuid);        
-
-                if (m_requestedSitTargetID == 0)
+                //interpolate
+                if (_childAgentUpdateTime != 0)
                 {
-                    //interpolate
-                    if (_childAgentUpdateTime != 0)
-                    {
-                        const float MAX_CROSSING_INTERP_SECS = 3f;
+                    const float MAX_CROSSING_INTERP_SECS = 3f;
 
-                        float timePassed = Math.Min((Util.GetLongTickCount() - _childAgentUpdateTime) / 1000.0f, MAX_CROSSING_INTERP_SECS);
+                    float timePassed = Math.Min((Util.GetLongTickCount() - _childAgentUpdateTime) / 1000.0f, MAX_CROSSING_INTERP_SECS);
 
-                        pos = pos + (Velocity * timePassed);
-                        _childAgentUpdateTime = 0;
-                        Util.ForceValidRegionXYZ(ref pos);  // don't let interpolation initiate a second crossing
-                    }
+                    pos = pos + (Velocity * timePassed);
+                    _childAgentUpdateTime = 0;
+                    Util.ForceValidRegionXYZ(ref pos);  // don't let interpolation initiate a second crossing
+                }
 
-                    if (!Util.IsValidRegionXYZ(pos))
-                    {
-                        Vector3 emergencyPos = new Vector3(128, 128, 128);
+                if (!Util.IsValidRegionXYZ(pos))
+                {
+                    Vector3 emergencyPos = new Vector3(128, 128, 128);
 
-                        m_log.WarnFormat(
-                            "[SCENE PRESENCE]: MakeRootAgent() was given an illegal position of {0} for avatar {1}, {2}.  Substituting {3}",
-                            pos, Name, UUID, emergencyPos);
+                    m_log.WarnFormat(
+                        "[SCENE PRESENCE]: MakeRootAgent() was given an illegal position of {0} for avatar {1}, {2}.  Substituting {3}",
+                        pos, Name, UUID, emergencyPos);
 
-                        pos = emergencyPos;
-                    }
+                    pos = emergencyPos;
+                }
 
-                    float posZLimit = (float)m_scene.Heightmap[(int)pos.X, (int)pos.Y];
-                    float newPosZ = posZLimit + m_avHeight / 2;
-                    if (posZLimit >= (pos.Z - (m_avHeight / 2)) && !(Single.IsInfinity(newPosZ) || Single.IsNaN(newPosZ)))
-                    {
-                        pos.Z = newPosZ;
-                    }
+                float posZLimit = (float)m_scene.Heightmap[(int)pos.X, (int)pos.Y];
+                float newPosZ = posZLimit + m_avHeight / 2;
+                if (posZLimit >= (pos.Z - (m_avHeight / 2)) && !(Single.IsInfinity(newPosZ) || Single.IsNaN(newPosZ)))
+                {
+                    pos.Z = newPosZ;
+                }
 
-                    
+                SetAgentPositionInfo(null, true, pos, null, Vector3.Zero, m_velocity);
 
-                    SetAgentPositionInfo(true, pos, m_posInfo.Parent, Vector3.Zero);
+                // get a new localid
+                SwapToRootAgent();
+                m_isChildAgent = false;
+                if (!IsBot)
+                    m_scene.CommsManager.UserService.MakeLocalUser(m_uuid);
 
-                    // get a new localid
-                    SwapToRootAgent();
-                    m_isChildAgent = false;
-                    if (!IsBot)
-                        m_scene.CommsManager.UserService.MakeLocalUser(m_uuid);
-
-                    if (m_appearance != null)
-                    {
-                        if (m_appearance.AvatarHeight > 0)
-                            SetHeight(m_appearance.AvatarHeight);
-                    }
-                    else
-                    {
-                        m_log.ErrorFormat("[SCENE PRESENCE]: null appearance in MakeRoot in {0}", Scene.RegionInfo.RegionName);
-                        // emergency; this really shouldn't happen
-                        m_appearance = new AvatarAppearance(UUID);
-                    }
+                if (m_appearance != null)
+                {
+                    if (m_appearance.AvatarHeight > 0)
+                        SetHeight(m_appearance.AvatarHeight);
                 }
                 else
                 {
-                    // get a new localid
-                    SwapToRootAgent();
-
-                    //avatar is coming in sitting on a group
-                    ContinueSitAsRootAgent(m_controllingClient, part, m_requestedSitTargetOffset);
+                    m_log.ErrorFormat("[SCENE PRESENCE]: null appearance in MakeRoot in {0}", Scene.RegionInfo.RegionName);
+                    // emergency; this really shouldn't happen
+                    m_appearance = new AvatarAppearance(UUID);
                 }
-                parent = m_posInfo.Parent;
+            }
+            else
+            {
+                // get a new localid
+                SwapToRootAgent();
+
+                //avatar is coming in sitting on a group
+                ContinueSitAsRootAgent(m_controllingClient, part, m_requestedSitTargetOffset);
             }
 
-            return parent;
+            return m_posInfo.Parent;
         }
 
         /// <summary>
@@ -1230,7 +1233,7 @@ namespace OpenSim.Region.Framework.Scenes
                     newPos += m_sitTargetCorrectionOffset;
                     m_bodyRot = sitTargetOrient;
                     //Rotation = sitTargetOrient;
-                    SetAgentPositionInfo(true, newPos, part, part.AbsolutePosition, Vector3.Zero);
+                    SetAgentPositionInfo(null, true, newPos, part, part.AbsolutePosition, Vector3.Zero);
                 }
                 //m_animPersistUntil = 0;    // abort any timed animation
 
@@ -1425,7 +1428,7 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             parent = Scene.GetSceneObjectPart(m_requestedSitTargetID);
                             // now make it all consistent with updated parent ID while inside the lock
-                            SetAgentPositionInfo(true, m_sitTargetCorrectionOffset, parent, pos);
+                            SetAgentPositionInfo(null, true, m_sitTargetCorrectionOffset, parent, pos, m_velocity);
                         }
 
                         parent = MakeRootAgent(pos);
@@ -1599,43 +1602,38 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             SceneObjectPart part = m_posInfo.Parent;
-            lock (m_posInfo)
-            {
-                if (part != null)
-                {   // sitting on a prim
-                    if (part.ParentGroup.InTransit)
-                    {
-                        // m_log.Warn("[CROSSING]: AgentUpdate called during prim transit! Ignored.");
-                        return;
-                    }
-                }
-
-                if (!m_posInfo.Position.IsFinite())
+            EntityBase.PositionInfo posInfo = GetPosInfo();
+            if (part != null)
+            {   // sitting on a prim
+                if (part.ParentGroup.InTransit)
                 {
-                    RemoveFromPhysicalScene();
-                    m_log.Error("[SCENE PRESENCE]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error# 9999902");
+                    // m_log.Warn("[CROSSING]: AgentUpdate called during prim transit! Ignored.");
+                    return;
+                }
+            }
 
-                    if (m_LastFinitePos.IsFinite())
-                    {
-                        SetAgentPositionInfo(false, m_LastFinitePos, m_posInfo.Parent, Vector3.Zero, Vector3.Zero);
-                    }
-                    else
-                    {
-                        Vector3 emergencyPos = new Vector3(127.0f, 127.0f, 127.0f);
-                        SetAgentPositionInfo(false, emergencyPos, m_posInfo.Parent, Vector3.Zero, Vector3.Zero);
-                        m_log.Error("[SCENE PRESENCE]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error# 9999903");
-                    }
+            if (!posInfo.Position.IsFinite())
+            {
+                RemoveFromPhysicalScene();
+                m_log.Error("[SCENE PRESENCE]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error# 9999902");
 
-                    recoverPhysActor = true;    // defer this until outside the posInfo lock
+                if (m_LastFinitePos.IsFinite())
+                {
+                    SetAgentPositionInfo(false, m_LastFinitePos, posInfo.Parent, Vector3.Zero, Vector3.Zero);
                 }
                 else
                 {
-                    m_LastFinitePos = m_posInfo.Position;
+                    Vector3 emergencyPos = new Vector3(127.0f, 127.0f, 127.0f);
+                    SetAgentPositionInfo(false, emergencyPos, posInfo.Parent, Vector3.Zero, Vector3.Zero);
+                    m_log.Error("[SCENE PRESENCE]: NonFinite Avatar position detected... Reset Position. Mantis this please. Error# 9999903");
                 }
-            }
-            // Now handle deferred physActor add
-            if (recoverPhysActor)
+
                 AddToPhysicalScene(false);
+            }
+            else
+            {
+                m_LastFinitePos = m_posInfo.Position;
+            }
 
             m_perfMonMS = Environment.TickCount;
 
@@ -2082,7 +2080,7 @@ namespace OpenSim.Region.Framework.Scenes
                             {
                                 m_requestedSitTargetUUID = UUID.Zero;
                                 m_requestedSitTargetID = 0;
-                                SetAgentPositionInfo(false, part.AbsolutePosition, null, Vector3.Zero);
+                                SetAgentPositionInfo(null, false, part.AbsolutePosition, null, Vector3.Zero, m_velocity);
                             }
                         }
                         SceneView.SendFullUpdateToAllClients();
@@ -2472,8 +2470,7 @@ namespace OpenSim.Region.Framework.Scenes
                 lock (m_posInfo)
                 {
                     // Update these together
-                    Velocity = Vector3.Zero;
-                    SetAgentPositionInfo(true, avSitPos, part, part.AbsolutePosition, Vector3.Zero);
+                    SetAgentPositionInfo(null, true, avSitPos, part, part.AbsolutePosition, Vector3.Zero);
                     // now update the part to reflect the new avatar
                     part.SetAvatarOnSitTarget(UUID, true);
                     // Now update the SP.Rotation with the sit rotation
