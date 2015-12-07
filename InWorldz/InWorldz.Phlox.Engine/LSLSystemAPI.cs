@@ -10730,6 +10730,21 @@ namespace InWorldz.Phlox.Engine
                         }
                         break;
 
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR:
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            if (shape.ProjectionEntry)
+                                res.Add((int)(1));              // active
+                            else
+                                res.Add((int)(0));
+                            res.Add(ConditionalTextureNameOrUUID(part, shape.ProjectionTextureUUID));
+                            res.Add((float)(shape.ProjectionFOV));
+                            res.Add((float)(shape.ProjectionFocus));
+                            res.Add((float)(shape.ProjectionAmbiance));
+                        }
+                        break;
+
                     case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_ENABLED:
                         foreach (SceneObjectPart part in parts)
                         {
