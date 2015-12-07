@@ -9597,6 +9597,33 @@ namespace InWorldz.Phlox.Engine
                             SetPointLight(part, light, lightcolor, intensity, radius, falloff);
                         break;
 
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR:
+                        if (remain < 5)
+                            return;
+                        bool enabled = rules.GetLSLIntegerItem(idx++) == 1;
+                        UUID texID = KeyOrName(rules.Data[idx++].ToString());
+                        float field_of_view = rules.GetLSLFloatItem(idx++);
+                        float ford = rules.GetLSLFloatItem(idx++);
+                        float ambience = rules.GetLSLFloatItem(idx++);
+
+                        if (texID == UUID.Zero)
+                        {
+                            ScriptShoutError("The second argument of IW_PRIM_PROJECTOR must not be NULL_KEY.");
+                        }
+                        else
+                            foreach (SceneObjectPart part in parts)
+                            {
+                                PrimitiveBaseShape shape = part.Shape;
+                                shape.ProjectionEntry = enabled;
+                                shape.ProjectionTextureUUID = texID;
+                                shape.ProjectionFOV = field_of_view;
+                                shape.ProjectionFocus = ford;
+                                shape.ProjectionAmbiance = ambience;
+                                part.ParentGroup.HasGroupChanged = true;
+                                part.ScheduleFullUpdate();
+                            }
+                        break;
+
                     case ScriptBaseClass.IW_PRIM_PROJECTOR_ENABLED:
                         if (remain < 1)
                             return;
@@ -9616,7 +9643,11 @@ namespace InWorldz.Phlox.Engine
                         tex = rules.Data[idx++].ToString();
                         UUID textureID = KeyOrName(tex);
 
-                        if (textureID != UUID.Zero)
+                        if (textureID == UUID.Zero)
+                        {
+                            ScriptShoutError("The argument of IW_PRIM_PROJECTOR_TEXTURE must not be NULL_KEY.");
+                        }
+                        else
                             foreach (SceneObjectPart part in parts)
                             {
                                 PrimitiveBaseShape shape = part.Shape;

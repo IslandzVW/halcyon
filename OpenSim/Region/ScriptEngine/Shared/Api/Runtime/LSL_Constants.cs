@@ -347,16 +347,18 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int PRIM_ALPHA_MODE = 38;
         // large out of normal range value unlikely to conflict with future LL values
         public const int IW_PRIM_ALPHA = 11001;
+        /// Get or set all the projector properties in one shot. bool, uuid, float, float, float
+        public const int IW_PRIM_PROJECTOR          = 11100;
         /// Whether or not the projector portion of the light source is active. Boolean.
-        public const int IW_PRIM_PROJECTOR_ENABLED  = 11100;
+        public const int IW_PRIM_PROJECTOR_ENABLED  = 11101;
         /// The texture the projector emits. UUID.
-        public const int IW_PRIM_PROJECTOR_TEXTURE  = 11101;
+        public const int IW_PRIM_PROJECTOR_TEXTURE  = 11102;
         /// The Field of View, in radians, the projector emits. float, between 0.0 and 3.0 inclusive.
-        public const int IW_PRIM_PROJECTOR_FOV      = 11102;
+        public const int IW_PRIM_PROJECTOR_FOV      = 11103;
         /// The distance at which the projected texture starts to blur. float.
-        public const int IW_PRIM_PROJECTOR_FOCUS    = 11103;
+        public const int IW_PRIM_PROJECTOR_FOCUS    = 11104;
         /// The amount of testure-controlled light to put on all faces with the FOV and range of the light. float, values >= 0.0.
-        public const int IW_PRIM_PROJECTOR_AMBIENCE = 11104;
+        public const int IW_PRIM_PROJECTOR_AMBIENCE = 11105;
 
         public const int PRIM_TEXGEN_DEFAULT = 0;
         public const int PRIM_TEXGEN_PLANAR = 1;
