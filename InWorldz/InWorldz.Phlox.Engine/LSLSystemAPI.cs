@@ -667,27 +667,27 @@ namespace InWorldz.Phlox.Engine
         }
 
         /// <summary>
-        /// accepts a valid UUID, -or- a name of an inventory item.
-        /// Returns a valid UUID or UUID.Zero if key invalid and item not found
-        /// in prim inventory.
+        /// Accepts a valid UUID, -or- a name of an inventory item.
+        /// Returns a valid UUID or UUID.Zero if the item was not found in prim inventory and the key is invalid.
+        ///
+        /// Checks the inventory first as otherwise someone could exploit the system by naming their inventory object a UUID.
         /// </summary>
-        /// <param name="k"></param>
-        /// <returns></returns>
+        /// <param name="k">The name of an inventory item or a UUID string.</param>
+        /// <returns>either the UUID of the inventory item, UUID parsed from the string, or UUID.Zero.</returns>
         private UUID KeyOrName(string k)
         {
-            UUID key = UUID.Zero;
+            UUID key = InventoryKey(k);
 
-            // if we can parse the string as a key, use it.
-            if (Util.isUUID(k) && UUID.TryParse(k, out key))
+            // Try to locate the name in inventory of object first. If found return the key.
+            // Doing this first means that no-one can name an inventory item with a UUID string and have this code return the UUID in the name instead of the inventory item's UUID!
+            // If not, then if we can parse the string as a key, use it instead.
+            if (key != UUID.Zero || UUID.TryParse(k, out key))
             {
                 return key;
             }
-            // else try to locate the name in inventory of object. found returns key,
-            // not found returns UUID.Zero which will translate to the default particle texture
-            else
-            {
-                return InventoryKey(k);
-            }
+
+            // Not found returns UUID.Zero which will translate to the default particle texture if this was a call about textures.
+            return UUID.Zero;
         }
 
         // convert a LSL_Rotation to a Quaternion
@@ -2103,17 +2103,7 @@ namespace InWorldz.Phlox.Engine
 
         private void SetTexture(SceneObjectPart part, string texture, int face)
         {
-            UUID textureID = new UUID();
-            textureID = InventoryKey(texture, (int)AssetType.Texture);
-            if (textureID == UUID.Zero)
-            {
-                UUID.TryParse(texture, out textureID);
-            }
-            
-            //if (!UUID.TryParse(texture, out textureID))
-            //{
-            //    textureID = InventoryKey(texture, (int)AssetType.Texture);
-            //}
+            UUID textureID = KeyOrName(texture);
 
             if (textureID == UUID.Zero)
                 return;
@@ -9607,6 +9597,105 @@ namespace InWorldz.Phlox.Engine
                             SetPointLight(part, light, lightcolor, intensity, radius, falloff);
                         break;
 
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR:
+                        if (remain < 5)
+                            return;
+                        bool enabled = rules.GetLSLIntegerItem(idx++) == 1;
+                        UUID texID = KeyOrName(rules.Data[idx++].ToString());
+                        float field_of_view = rules.GetLSLFloatItem(idx++);
+                        float ford = rules.GetLSLFloatItem(idx++);
+                        float ambience = rules.GetLSLFloatItem(idx++);
+
+                        if (texID == UUID.Zero)
+                        {
+                            ScriptShoutError("The second argument of IW_PRIM_PROJECTOR must not be NULL_KEY.");
+                        }
+                        else
+                            foreach (SceneObjectPart part in parts)
+                            {
+                                PrimitiveBaseShape shape = part.Shape;
+                                shape.ProjectionEntry = enabled;
+                                shape.ProjectionTextureUUID = texID;
+                                shape.ProjectionFOV = field_of_view;
+                                shape.ProjectionFocus = ford;
+                                shape.ProjectionAmbiance = ambience;
+                                part.ParentGroup.HasGroupChanged = true;
+                                part.ScheduleFullUpdate();
+                            }
+                        break;
+
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR_ENABLED:
+                        if (remain < 1)
+                            return;
+                        bool projector = rules.GetLSLIntegerItem(idx++) == 1;
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            shape.ProjectionEntry = projector;
+                            part.ParentGroup.HasGroupChanged = true;
+                            part.ScheduleFullUpdate();
+                        }
+                        break;
+
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR_TEXTURE:
+                        if (remain < 1)
+                            return;
+                        tex = rules.Data[idx++].ToString();
+                        UUID textureID = KeyOrName(tex);
+
+                        if (textureID == UUID.Zero)
+                        {
+                            ScriptShoutError("The argument of IW_PRIM_PROJECTOR_TEXTURE must not be NULL_KEY.");
+                        }
+                        else
+                            foreach (SceneObjectPart part in parts)
+                            {
+                                PrimitiveBaseShape shape = part.Shape;
+                                shape.ProjectionTextureUUID = textureID;
+                                part.ParentGroup.HasGroupChanged = true;
+                                part.ScheduleFullUpdate();
+                            }
+                        break;
+
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR_FOV:
+                        if (remain < 1)
+                            return;
+                        float fov = rules.GetLSLFloatItem(idx++);
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            shape.ProjectionFOV = fov;
+                            part.ParentGroup.HasGroupChanged = true;
+                            part.ScheduleFullUpdate();
+                        }
+                        break;
+
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR_FOCUS:
+                        if (remain < 1)
+                            return;
+                        float focus = rules.GetLSLFloatItem(idx++);
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            shape.ProjectionFocus = focus;
+                            part.ParentGroup.HasGroupChanged = true;
+                            part.ScheduleFullUpdate();
+                        }
+                        break;
+
+                    case ScriptBaseClass.IW_PRIM_PROJECTOR_AMBIENCE:
+                        if (remain < 1)
+                            return;
+                        float amb = rules.GetLSLFloatItem(idx++);
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            shape.ProjectionAmbiance = amb;
+                            part.ParentGroup.HasGroupChanged = true;
+                            part.ScheduleFullUpdate();
+                        }
+                        break;
+
                     case (int)ScriptBaseClass.PRIM_GLOW:
                         if (remain < 2)
                             return;
@@ -10638,6 +10727,49 @@ namespace InWorldz.Phlox.Engine
                             res.Add((float)(shape.LightIntensity)); // intensity
                             res.Add((float)(shape.LightRadius));    // radius
                             res.Add((float)(shape.LightFalloff));   // falloff
+                        }
+                        break;
+
+                    case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_ENABLED:
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            if (shape.ProjectionEntry)
+                                res.Add((int)(1));              // active
+                            else
+                                res.Add((int)(0));
+                        }
+                        break;
+
+                    case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_TEXTURE:
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            res.Add(ConditionalTextureNameOrUUID(part, shape.ProjectionTextureUUID));
+                        }
+                        break;
+
+                    case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_FOV:
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            res.Add((float)(shape.ProjectionFOV));
+                        }
+                        break;
+
+                    case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_FOCUS:
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            res.Add((float)(shape.ProjectionFocus));
+                        }
+                        break;
+
+                    case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_AMBIENCE:
+                        foreach (SceneObjectPart part in parts)
+                        {
+                            PrimitiveBaseShape shape = part.Shape;
+                            res.Add((float)(shape.ProjectionAmbiance));
                         }
                         break;
 
