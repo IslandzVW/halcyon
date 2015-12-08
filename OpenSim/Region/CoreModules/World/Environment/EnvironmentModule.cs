@@ -167,8 +167,8 @@ namespace OpenSim.Region.CoreModules.World.LightShare
             m_log.WarnFormat("[{0}]: Environment GET handler for agentID {1}", Name, agentID);
 
             string response = String.Empty;
-            bool error = false;
 
+            // Check if we have cached the environment settings.
             if (environString == null)
             {
                 // We'll need to fetch it from the db.
@@ -181,17 +181,16 @@ namespace OpenSim.Region.CoreModules.World.LightShare
                     m_log.ErrorFormat("[{0}]: Unable to load region environment settings, exception: {1} - {2}",
                         Name, e.Message, e.StackTrace);
                     response = String.Empty;
-                    error = true;
                 }
+                environString = response;
             }
 
-            if (String.IsNullOrEmpty(response))
-                response = EnvironmentSettings.EmptySettings(UUID.Zero, regionID);
+            // Do we have environment settings, from storage or from cache?
+            if (!String.IsNullOrEmpty(environString))
+                return environString;
 
-            if (!error)
-                environString = response;
-
-            return response;
+            // No environment settings.
+            return EnvironmentSettings.EmptySettings(UUID.Zero, regionID);
         }
 
         private string SetEnvironmentSettings(string request, UUID agentID)
@@ -224,8 +223,7 @@ namespace OpenSim.Region.CoreModules.World.LightShare
                 setResponse.fail_reason = String.Format("Environment settings for '{0}' could not be saved.", m_scene.RegionInfo.RegionName);
             }
 
-            string response = LLSDHelpers.SerializeLLSDReply(setResponse);
-            return response;
+            return LLSDHelpers.SerializeLLSDReply(setResponse);
         }
     }
 }

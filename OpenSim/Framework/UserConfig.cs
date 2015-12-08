@@ -144,7 +144,7 @@ namespace OpenSim.Framework
             m_configMember.addConfigurationOption("map_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                 "Map server URI?", String.Empty, false);
             m_configMember.addConfigurationOption("profile_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
-                                                "URI for the server and page responsible for handling web profiles?", "https://my.secondlife.com/[AGENT_NAME]", false); // That's what the viewer currently defaults to and makes an excellent example.
+                                                "URI for the server and page responsible for handling web profiles?", "", true); // That's what the viewer currently defaults to and makes an excellent example.
 
             m_configMember.addConfigurationOption("enable_hg_login", ConfigurationOption.ConfigurationTypes.TYPE_BOOLEAN,
                                                 "Enable Hypergrid login support [Currently used by GridSurfer-proxied clients]? true/false", true.ToString(), false);
