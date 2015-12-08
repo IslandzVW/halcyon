@@ -90,7 +90,7 @@ namespace OpenSim.Framework.Communications.Clients
             ulong regionHandle = GetRegionHandle(region.RegionHandle);
             args["destination_handle"] = OSD.FromString(regionHandle.ToString());
 
-            string strBuffer = "";
+            string strBuffer = String.Empty;
             byte[] buffer = new byte[1];
             try
             {
@@ -197,7 +197,7 @@ namespace OpenSim.Framework.Communications.Clients
             ulong regionHandle = GetRegionHandle(regionInfo.RegionHandle);
             args["destination_handle"] = OSD.FromString(regionHandle.ToString());
 
-            string strBuffer = "";
+            string strBuffer = String.Empty;
             byte[] buffer = new byte[1];
             try
             {
@@ -267,7 +267,7 @@ namespace OpenSim.Framework.Communications.Clients
 
                     // check for old style response
                     if (response.ToLower().StartsWith("true"))
-                        return Tuple.Create(true, "");
+                        return Tuple.Create(true, String.Empty);
 
                     return Tuple.Create(false, "exception on reply of DoCreateChildAgentCall");
                 }
@@ -313,7 +313,7 @@ namespace OpenSim.Framework.Communications.Clients
             ulong regionHandle = GetRegionHandle(region.RegionHandle);
             args["destination_handle"] = OSD.FromString(regionHandle.ToString());
 
-            string strBuffer = "";
+            string strBuffer = String.Empty;
             byte[] buffer = new byte[1];
             try
             {
@@ -478,11 +478,11 @@ namespace OpenSim.Framework.Communications.Clients
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
             request.Method = "GET";
             request.Timeout = 10000;
-            //request.Headers.Add("authorization", ""); // coming soon
+            //request.Headers.Add("authorization", String.Empty); // coming soon
             request.Headers["authorization"] = GenerateAuthorization();
 
             HttpWebResponse webResponse = null;
-            string reply = string.Empty;
+            string reply = String.Empty;
             try
             {
                 webResponse = (HttpWebResponse)request.GetResponse();
@@ -640,7 +640,7 @@ namespace OpenSim.Framework.Communications.Clients
         }
 
         public CreateObject2Ret DoCreateObject2Call(RegionInfo region, UUID sogId, byte[] sogBytes, bool allowScriptCrossing,
-            Vector3 pos, bool isAttachment, int numAvatarsToExpect, long nonceID)
+            Vector3 pos, bool isAttachment, long nonceID, List<UUID> avatars)
         {
             ulong regionHandle = GetRegionHandle(region.RegionHandle);
             string uri = "http://" + region.ExternalHostName + ":" + region.HttpPort + "/object2/" + sogId + "/" + regionHandle.ToString() + "/";
@@ -653,7 +653,18 @@ namespace OpenSim.Framework.Communications.Clients
             objectCreateRequest.Headers["authorization"] = GenerateAuthorization();
             objectCreateRequest.Headers["x-nonce-id"] = nonceID.ToString();
 
-            ObjectPostMessage message = new ObjectPostMessage { NumAvatars = numAvatarsToExpect, Pos = pos, Sog = sogBytes };
+            Guid[] avatarsArray;
+            if (avatars == null)
+                avatarsArray = null;
+            else
+            {
+                int count = 0;
+                avatarsArray = new Guid[avatars.Count];
+                foreach (UUID id in avatars)
+                    avatarsArray[count++] = id.Guid;
+            }
+
+            ObjectPostMessage message = new ObjectPostMessage { NumAvatars = avatarsArray.Length, Pos = pos, Sog = sogBytes, Avatars = avatarsArray };
 
             try
             { 
@@ -791,7 +802,7 @@ namespace OpenSim.Framework.Communications.Clients
 
             // Fill it in
             OSDMap args = new OSDMap();
-            string strBuffer = "";
+            string strBuffer = String.Empty;
             byte[] buffer = new byte[1];
             try
             {

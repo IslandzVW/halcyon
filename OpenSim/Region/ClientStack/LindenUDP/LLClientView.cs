@@ -163,7 +163,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private int m_animationSequenceNumber = 1;
 
-        private readonly byte[] m_channelVersion = Utils.StringToBytes(VersionInfo.SoftwareName); // Dummy value needed by libSL
+        private readonly byte[] m_channelVersion = Utils.StringToBytes(VersionInfo.SoftwareChannel); // Dummy value needed by libSL
 
         private static readonly Dictionary<string, UUID> s_defaultAnimations = new Dictionary<string, UUID>();
 
@@ -303,7 +303,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private bool m_frozenUser = false;
         private UUID m_frozenBy = UUID.Zero;
-        private string m_frozenByName = "";
+        private string m_frozenByName = String.Empty;
 
         protected uint m_agentFOVCounter;
 
@@ -1486,8 +1486,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(mov, ThrottleOutPacketType.Unknown);
         }
 
-        public void SendChatMessage(string message, byte type, Vector3 fromPos, string fromName,
-                                    UUID fromAgentID, byte source, byte audible)
+        public void SendChatMessage(string message, byte type, Vector3 fromPos, string fromName, 
+                                    UUID fromAgentID, UUID ownerID, byte source, byte audible)
         {
             ChatFromSimulatorPacket reply = (ChatFromSimulatorPacket)PacketPool.Instance.GetPacket(PacketType.ChatFromSimulator);
             reply.ChatData.Audible = audible;
@@ -1496,7 +1496,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             reply.ChatData.SourceType = source;
             reply.ChatData.Position = fromPos;
             reply.ChatData.FromName = Util.StringToBytes256(fromName);
-            reply.ChatData.OwnerID = fromAgentID;
+            reply.ChatData.OwnerID = ownerID;
             reply.ChatData.SourceID = fromAgentID;
 
             OutPacket(reply, ThrottleOutPacketType.Task);
@@ -4260,7 +4260,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             updateMessage.AuctionID = landData.AuctionID;
             updateMessage.AuthBuyerID = landData.AuthBuyerID;
             updateMessage.Bitmap = landData.Bitmap;
-            updateMessage.Desc = Util.TruncateString(landData.Description == null ? "" : landData.Description, 254);
+            updateMessage.Desc = Util.TruncateString(landData.Description == null ? String.Empty : landData.Description, 254);
             updateMessage.Category = landData.Category;
             updateMessage.ClaimDate = Util.UnixToLocalDateTime(landData.ClaimDate);
             updateMessage.ClaimPrice = landData.ClaimPrice;
@@ -8446,7 +8446,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             else
             {
-                SendUserInfoReply(false, true, "");
+                SendUserInfoReply(false, true, String.Empty);
             }
             return true;
 
@@ -11069,8 +11069,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     {
                         UUID invoice = messagePacket.MethodData.Invoice;
                         UUID sessionID = messagePacket.AgentData.SessionID;
-                        string Message = "";
-                        string SenderName = "";
+                        string Message = String.Empty;
+                        string SenderName = String.Empty;
                         UUID SenderID = UUID.Zero;
                         if (messagePacket.ParamList.Length < 5)
                         {
@@ -11125,7 +11125,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         handlerLandStatRequest = OnLandStatRequest;
                         if (handlerLandStatRequest != null)
                         {
-                            handlerLandStatRequest(0, 1, 0, "", this);
+                            handlerLandStatRequest(0, 1, 0, String.Empty, this);
                         }
                     }
                     return true;
@@ -11135,7 +11135,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         handlerLandStatRequest = OnLandStatRequest;
                         if (handlerLandStatRequest != null)
                         {
-                            handlerLandStatRequest(0, 0, 0, "", this);
+                            handlerLandStatRequest(0, 0, 0, String.Empty, this);
                         }
                     }
                     return true;
@@ -11988,12 +11988,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 else // Agent
                 {
-                    CachedUserInfo userInfo = ((Scene)m_scene).CommsManager.UserProfileCacheService.GetUserDetails(AgentId);
+                    CachedUserInfo userInfo = ((Scene)m_scene).CommsManager.UserService.GetUserDetails(AgentId);
 
                     InventoryItemBase assetRequestItem = userInfo.FindItem(itemID);
                     if (assetRequestItem == null)
                     {
-                        assetRequestItem = ((Scene)m_scene).CommsManager.UserProfileCacheService.LibraryRoot.FindItem(itemID);
+                        assetRequestItem = ((Scene)m_scene).CommsManager.LibraryRoot.FindItem(itemID);
                         if (assetRequestItem == null)
                         {
                             return true;
@@ -12240,7 +12240,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             reply.Data.OwnerID = land.OwnerID;
             reply.Data.Name = Utils.StringToBytes(land.Name);
             // Viewer has an off-by-one overflow/corruption problem if you send 255 characters.
-            string viewerDesc = Util.TruncateString(land.Description == null ? "" : land.Description, 254);
+            string viewerDesc = Util.TruncateString(land.Description == null ? String.Empty : land.Description, 254);
             reply.Data.Desc = Utils.StringToBytes(viewerDesc);
             reply.Data.ActualArea = land.Area;
             reply.Data.BillableArea = land.Area; // TODO: what is this?
@@ -12297,7 +12297,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 default:
                     break;
             }
-            return string.Empty;
+            return String.Empty;
         }
 
         public void SendDirPlacesReply(UUID queryID, DirPlacesReplyData[] data)
@@ -13125,7 +13125,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 } else {
                     SendAgentAlertMessage(whoName + " has unfrozen you. You are free to move and interact again.",true);
                     m_frozenBy = UUID.Zero;
-                    m_frozenByName = "";
+                    m_frozenByName = String.Empty;
                     m_log.WarnFormat("{0} has unfrozen {1} [{2}].", this.Name, whoName, whoKey);
                 }
             }
@@ -13133,12 +13133,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public string Report()
         {
-            return "";
+            return String.Empty;
         }
         
         public string XReport(string uptime, string version) 
         {
-            return  "";
+            return  String.Empty;
         }
 
         #region IClientIPEndpoint Members

@@ -42,7 +42,7 @@ using OpenSim.Framework.Communications.Clients;
 
 namespace OpenSim.Region.Communications.OGS1
 {        
-    public class OGS1UserServices : UserManagerBase
+    public class OGS1UserServices : UserProfileManager
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         
@@ -54,7 +54,7 @@ namespace OpenSim.Region.Communications.OGS1
         public override void ClearUserAgent(UUID avatarID)
         {
             // TODO: implement
-            // It may be possible to use the UserManagerBase implementation.
+            // It may be possible to use the UserManager implementation.
         }
         
         protected virtual string GetUserServerURL(UUID userID)

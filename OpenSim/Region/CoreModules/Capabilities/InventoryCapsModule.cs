@@ -180,7 +180,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 m_assetCache = m_Scene.CommsManager.AssetCache;
                 m_inventoryProviderSelector = ProviderRegistry.Instance.Get<IInventoryProviderSelector>();
                 m_checkedStorageProvider = m_inventoryProviderSelector.GetCheckedProvider(m_Caps.AgentID);
-                m_libraryFolder = m_Scene.CommsManager.UserProfileCacheService.LibraryRoot;
+                m_libraryFolder = m_Scene.CommsManager.LibraryRoot;
 
                 m_inventoryPool.Name = "Inventory Caps " + agentID; 
             }
@@ -428,7 +428,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     if ((m_SimulatorFeatures == null) || (m_SimulatorFeatures.MeshEnabled == false))
                     {
                         OSDMap errorResponse = new OSDMap();
-                        errorResponse["uploader"] = "";
+                        errorResponse["uploader"] = String.Empty;
                         errorResponse["state"] = "error";
                         return (errorResponse);
                     }
@@ -451,7 +451,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
 
                     OSDMap errorResponse = new OSDMap();
-                    errorResponse["uploader"] = "";
+                    errorResponse["uploader"] = String.Empty;
                     errorResponse["state"] = "error";
                     return OSDParser.SerializeLLSDXmlString(errorResponse);
                 }
@@ -502,7 +502,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 catch (Exception)
                 {
                     OSDMap errorResponse = new OSDMap();
-                    errorResponse["uploader"] = "";
+                    errorResponse["uploader"] = String.Empty;
                     errorResponse["state"] = "error";
                     return OSDParser.SerializeLLSDXmlString(errorResponse);
                 }
@@ -650,7 +650,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 List<UUID> textures = new List<UUID>();
                 for (int i = 0; i < texture_list.Count; i++)
                 {
-                    AssetBase textureAsset = new AssetBase(UUID.Random(), assetName, (sbyte)AssetType.Texture, "");
+                    AssetBase textureAsset = new AssetBase(UUID.Random(), assetName, (sbyte)AssetType.Texture, String.Empty);
                     textureAsset.Data = texture_list[i].AsBinary();
 
                     try
@@ -737,7 +737,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     }
                     pbs.Textures = textureEntry;
 
-                    AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, (sbyte)AssetType.Mesh, "");
+                    AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, (sbyte)AssetType.Mesh, String.Empty);
                     meshAsset.Data = mesh_data;
 
                     try
@@ -780,7 +780,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     SceneObjectPart prim = new SceneObjectPart(owner_id, pbs, position, Quaternion.Identity, Vector3.Zero, false);
 
                     prim.Name = assetName;
-                    prim.Description = "";
+                    prim.Description = String.Empty;
 
                     rotations.Add(rotation);
                     positions.Add(position);
@@ -869,7 +869,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                             }
 
                             byte[] ret = this.FetchInventoryDescendentsRequest((string)req.RequestData["body"],
-                                (string)req.RequestData["uri"], "", req.HttpRequest, req.HttpResponse);
+                                (string)req.RequestData["uri"], String.Empty, req.HttpRequest, req.HttpResponse);
 
                             var respData = new Hashtable();
                             respData["response_binary"] = ret;
@@ -1281,7 +1281,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 Hashtable response = new Hashtable();
                 response["int_response_code"] = 404;
                 response["content_type"] = "text/plain";
-                response["str_response_string"] = "";
+                response["str_response_string"] = String.Empty;
 
                 IClientAPI client = null;
                 m_Scene.TryGetClient(m_Caps.AgentID, out client); 
@@ -1384,7 +1384,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 Hashtable response = new Hashtable();
                 response["int_response_code"] = 404;
                 response["content_type"] = "text/plain";
-                response["str_response_string"] = ""; 
+                response["str_response_string"] = String.Empty; 
                 
                 OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
                 UUID folder_id = map["folder_id"].AsUUID();

@@ -898,10 +898,10 @@ namespace OpenSim.Region.ScriptEngine.Shared
 
             public string ToCSV()
             {
-                string ret = "";
+                string ret = String.Empty;
                 foreach (object o in this.Data)
                 {
-                    if (ret == "")
+                    if (String.IsNullOrEmpty(ret))
                     {
                         ret = o.ToString();
                     }
@@ -1243,7 +1243,7 @@ namespace OpenSim.Region.ScriptEngine.Shared
 
             static public implicit operator Boolean(key k)
             {
-                if (k.value.Length == 0)
+                if (String.IsNullOrEmpty(k.value))
                 {
                     return false;
                 }
@@ -1336,7 +1336,7 @@ namespace OpenSim.Region.ScriptEngine.Shared
             #region Operators
             static public implicit operator Boolean(LSLString s)
             {
-                if (s.m_string.Length == 0)
+                if (String.IsNullOrEmpty(s.m_string))
                 {
                     return false;
                 }
@@ -1484,7 +1484,7 @@ namespace OpenSim.Region.ScriptEngine.Shared
             public LSLInteger(string s)
             {
                 //if string begins with + remove it (fixes mantis 522)
-                if (s != String.Empty && s[0] == '+')
+                if (!String.IsNullOrEmpty(s) && s[0] == '+')
                 {
                     s = s.Remove(0, 1);
                 }
@@ -1493,7 +1493,7 @@ namespace OpenSim.Region.ScriptEngine.Shared
                 Match m = r.Match(s);
                 string v = m.Groups[0].Value;
 
-                if (v == String.Empty)
+                if (String.IsNullOrEmpty(v))
                 {
                     value = 0;
                 }
@@ -1782,7 +1782,7 @@ namespace OpenSim.Region.ScriptEngine.Shared
             public LSLFloat(string s)
             {
                 //if string begins with + remove it (fixes mantis 522)
-                if (s != String.Empty && s[0] == '+')
+                if (!String.IsNullOrEmpty(s) && s[0] == '+')
                 {
                     s = s.Remove(0, 1);
                 }
@@ -1793,7 +1793,7 @@ namespace OpenSim.Region.ScriptEngine.Shared
 
                 v = v.Trim();
 
-                if (v == String.Empty || v == null)
+                if (String.IsNullOrEmpty(v))
                     v = "0.0";
                 else
                     if (!v.Contains(".") && !v.ToLower().Contains("e"))

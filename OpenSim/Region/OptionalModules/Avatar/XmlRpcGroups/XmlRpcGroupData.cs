@@ -49,23 +49,22 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_serviceURL = string.Empty;
+        private string m_serviceURL = String.Empty;
 
         private bool m_disableKeepAlive = false;
 
-        private string m_groupReadKey  = string.Empty;
-        private string m_groupWriteKey = string.Empty;
+        private string m_groupReadKey  = String.Empty;
+        private string m_groupWriteKey = String.Empty;
 
         public XmlRpcGroupDataProvider(string serviceURL, bool disableKeepAlive, string groupReadKey, string groupWriteKey)
         {
-            m_serviceURL = serviceURL.Trim();
-            m_disableKeepAlive = disableKeepAlive;
-
-            if ((serviceURL == null) ||
-                (serviceURL == string.Empty))
+            if (String.IsNullOrWhiteSpace(serviceURL))
             {
                 throw new Exception("Please specify a valid ServiceURL for XmlRpcGroupDataProvider in Halcyon.ini, [Groups], XmlRpcServiceURL");
             }
+
+            m_serviceURL = serviceURL.Trim();
+            m_disableKeepAlive = disableKeepAlive;
 
             m_groupReadKey = groupReadKey;
             m_groupWriteKey = groupWriteKey;
@@ -184,7 +183,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             {
                 param["GroupID"] = GroupID.ToString();
             }
-            if ((GroupName != null) && (GroupName != string.Empty))
+            if (!String.IsNullOrEmpty(GroupName))
             {
                 param["Name"] = GroupName.ToString();
             }
@@ -674,14 +673,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
 
             if (data.Message == null)
             {
-                data.Message = string.Empty;
+                data.Message = String.Empty;
             }
 
             return data;
         }
         public void AddGroupNotice(GroupRequestID requestID, UUID groupID, UUID noticeID, string fromName, string subject, string message, byte[] binaryBucket)
         {
-            string binBucket = OpenMetaverse.Utils.BytesToHexString(binaryBucket, "");
+            string binBucket = OpenMetaverse.Utils.BytesToHexString(binaryBucket, String.Empty);
 
             Hashtable param = new Hashtable();
             param["GroupID"] = groupID.ToString();
@@ -797,7 +796,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
     {
         public GroupNoticeData noticeData = new GroupNoticeData();
         public UUID GroupID = UUID.Zero;
-        public string Message = string.Empty;
+        public string Message = String.Empty;
         public byte[] BinaryBucket = new byte[0];
     }
 }

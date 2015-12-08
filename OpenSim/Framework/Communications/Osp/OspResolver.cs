@@ -57,9 +57,10 @@ namespace OpenSim.Framework.Communications.Osp
         /// <returns>The OSPA.  Null if a user with the given UUID could not be found.</returns>
         public static string MakeOspa(UUID userId, CommunicationsManager commsManager)
         {
-            CachedUserInfo userInfo = commsManager.UserProfileCacheService.GetUserDetails(userId);
-            if (userInfo != null)
-                return MakeOspa(userInfo.UserProfile.FirstName, userInfo.UserProfile.SurName);
+            string firstName;
+            string lastName;
+            if (commsManager.UserService.Key2Names(userId, false, out firstName, out lastName))
+                return MakeOspa(firstName, lastName);
 
             return null;
         }
@@ -149,10 +150,10 @@ namespace OpenSim.Framework.Communications.Osp
             
             string firstName = name.Remove(nameSeparatorIndex).TrimEnd();
             string lastName = name.Substring(nameSeparatorIndex + 1).TrimStart();
-            
-            CachedUserInfo userInfo = commsManager.UserProfileCacheService.GetUserDetails(firstName, lastName);
-            if (userInfo != null)
-                return userInfo.UserProfile.ID;
+
+            UUID uuid = commsManager.UserService.Name2Key(firstName, lastName);
+            if (uuid != UUID.Zero)
+                return uuid;
                         
             UserProfileData tempUserProfile = new UserProfileData();
             tempUserProfile.FirstName = firstName;

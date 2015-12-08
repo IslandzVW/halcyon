@@ -63,13 +63,11 @@ namespace OpenSim.Region.Framework.Scenes
 
     public partial class Scene : SceneBase
     {
-        #if _WIN32
-            [DllImport("kernel32.dll")]
-            static extern bool SetThreadPriority(IntPtr hThread, ThreadPriorityLevel nPriority);
+        [DllImport("kernel32.dll")]
+        static extern bool SetThreadPriority(IntPtr hThread, ThreadPriorityLevel nPriority);
 
-            [DllImport("kernel32.dll")]
-            static extern IntPtr GetCurrentThread();
-        #endif
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetCurrentThread();
 
         /// <summary>
         /// The lowest an object can fall/travel before being considered off world
@@ -593,7 +591,7 @@ namespace OpenSim.Region.Framework.Scenes
                     while ((line = file.ReadLine()) != null)
                     {
                         line = line.Trim();
-                        if ((line != "") && !line.StartsWith(";") && !line.StartsWith("//"))
+                        if (!String.IsNullOrEmpty(line) && !line.StartsWith(";") && !line.StartsWith("//"))
                         {
                             theList.Add(line);
                         }
@@ -849,14 +847,23 @@ namespace OpenSim.Region.Framework.Scenes
 
         public string GetEnv(string name)
         {
-            string ret = "";
-            switch (name)
+            IConfig config = null;
+            string ret = String.Empty;
+
+            // NOTE: All case values in must be lowercase for case-insensitive compare.
+            switch (name.ToLower())
             {
-                case "sim_channel":     // Get the region's channel string, for example "Second Life Server". Does not change across grids as this is about the simulator software.
-                    ret = VersionInfo.SoftwareName;
+                case "sim_channel":     // Get the region's channel string, for example "Halcyon Server" or "Second Life Server". Does not change across grids as this is about the simulator software.
+                    ret = VersionInfo.SoftwareChannel;
                     break;
-                case "sim_version":     // Get the region's version number string, for example "10.11.30.215699". Does not change across grids as this is about the simulator software.
+                case "sim_version":     // Get the region's version.revision number string, for example "0.9.18.9999". Does not change across grids as this is about the simulator software.
                     ret = VersionInfo.Version;
+                    break;
+                case "short_version":     // Get the region's version text, such as "Halcyon 1.2.3", without revision info.
+                    ret = VersionInfo.ShortVersion;
+                    break;
+                case "long_version":     // Get the region's full version text, with revision info, such as "Halcyon 1.2.3 R9999".
+                    ret = VersionInfo.FullVersion;
                     break;
                 case "frame_number":    // (integer) Get the frame number of the simulator, for example "42042".
                     ret = m_frame.ToString();
@@ -867,14 +874,24 @@ namespace OpenSim.Region.Framework.Scenes
                 case "dynamic_pathfinding": // (integer) Get the region's dynamic_pathfinding status, "1" or "0".
                     ret = "disabled";
                     break;
-                case "InWorldz": // (integer) Is this an InWorldz server? "1" or "0".
-                    ret = "1";  // always true in InWorldz
+                case "inworldz": // (integer) Is this an InWorldz server? "1" or String.Empty.
+                    config = m_config.Configs["GridInfo"];
+                    ret = (config.GetString("gridmanagement", VersionInfo.DefaultGrid).Trim() == "InWorldz") ? "1" : String.Empty;
+                    break;
+                case "halcyon": // (integer) Is this a Halcyon server? "1" or String.Empty.
+                    ret = (VersionInfo.SoftwareName == "Halcyon") ? "1" : String.Empty;
+                    break;
+                case "script_engine":
+                    ret = "Phlox";  // always Phlox in Halcyon
                     break;
                 case "iw_physics_fps":
                     ret = PhysicsScene.SimulationFPS.ToString();
                     break;
-                case "simulator_hostname":
+                case "simulator_netname":
                     ret = System.Environment.MachineName;
+                    break;
+                case "simulator_hostname":
+                    ret = RegionInfo.ExternalHostName;
                     break;
                 case "agent_limit":
                     ret = m_regInfo.RegionSettings.AgentLimit.ToString();
@@ -934,6 +951,21 @@ namespace OpenSim.Region.Framework.Scenes
                 case "region_start_time":
                     ret = m_regionStartTime.ToString();
                     break;
+                case "platform":
+                    config = m_config.Configs["GridInfo"];    // Halcyon, OpenSim, SecondLife
+                    return (config == null) ? String.Empty : config.GetString("platform", VersionInfo.SoftwareName).Trim();
+                case "grid_management":
+                    config = m_config.Configs["GridInfo"];    // InWorldz, ARL, LindenLab, etc.
+                    return (config == null) ? String.Empty : config.GetString("gridmanagement", VersionInfo.DefaultGrid).Trim();
+                case "grid_nick":
+                    config = m_config.Configs["GridInfo"];    // InWorldz, InWorldzBeta, SecondLife, etc.
+                    return (config == null) ? String.Empty : config.GetString("gridnick", VersionInfo.DefaultGrid).Trim();
+                case "grid_name":
+                    config = m_config.Configs["GridInfo"];    // InWorldz, InWorldz Beta, Second Life, etc.
+                    return (config == null) ? String.Empty : config.GetString("gridname", VersionInfo.DefaultGrid).Trim();
+                case "shard":
+                    config = m_config.Configs["Network"];    // "InWorldz", "Beta", "Some Other Grid", "Testing", etc.
+                    return (config == null) ? String.Empty : config.GetString("shard", VersionInfo.DefaultGrid).Trim();
             }
             return ret;
         }
@@ -1144,10 +1176,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         void DoTiming()
         {
-            #if _WIN32
+            if (Util.IsWindows)
+            {
                 IntPtr thrdHandle = GetCurrentThread();
                 SetThreadPriority(thrdHandle, ThreadPriorityLevel.TimeCritical);
-            #endif
+            }
+            
             // This thread is already assigned ThreadPriority.Highest, shouldn't that be enough for most people?
 
             byte tickNum = 0;
@@ -1633,10 +1667,10 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         if (RegionInfo.AllowPartnerRez)
                         {
-                            CachedUserInfo parcelOwnerInfo = CommsManager.UserProfileCacheService.GetUserDetails(parcel.landData.OwnerID);
-                            if ((parcelOwnerInfo == null) || (ret.Group.OwnerID == parcelOwnerInfo.UserProfile.Partner))
+                            UserProfileData parcelOwner = CommsManager.UserService.GetUserProfile(parcel.landData.OwnerID);
+                            if ((parcelOwner == null) || (ret.Group.OwnerID == parcelOwner.Partner))
                             {
-                                if (parcelOwnerInfo == null)
+                                if (parcelOwner == null)
                                     m_log.WarnFormat("[LAND]: Could not fetch user profile for parcel {0}:'{1}', owner [{2}], auto-return incomplete.",
                                                                 parcel.landData.LocalID, parcel.landData.Name, parcel.landData.OwnerID);
                                 returnedGroups.Add(currNode);
@@ -2249,7 +2283,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
 
-            reason = "";
+            reason = String.Empty;
             return true;
         }
 
@@ -2271,7 +2305,7 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                     return REZ_NOT_PERMITTED;
             }
-            string reason = string.Empty;
+            string reason = String.Empty;
             ILandObject parcel = LandChannel.GetLandObject(pos.X, pos.Y);
             if (parcel == null)
                 return REZ_NO_LAND_PARCEL;
@@ -2292,7 +2326,7 @@ namespace OpenSim.Region.Framework.Scenes
                                        byte RayEndIsIntersection, IClientAPI remoteClient)
         {
             Vector3 pos = GetNewRezLocation(RayStart, RayEnd, RayTargetID, rot, bypassRaycast, RayEndIsIntersection, true, new Vector3(0.5f, 0.5f, 0.5f), false, remoteClient.AgentId);
-            string reason = "";
+            string reason = String.Empty;
             int landImpact = 1;
 
             if (IsBadUser(ownerID))
@@ -2722,6 +2756,11 @@ namespace OpenSim.Region.Framework.Scenes
 
                 grp.AvatarsToExpect = grp.NumAvatarsSeated();
                 List<ScenePresence> avatars = grp.GetSittingAvatars();
+                List<UUID> avatarIDs = new List<UUID>();
+                foreach (var avatar in avatars)
+                {
+                    avatarIDs.Add(avatar.UUID);
+                }
 
                 //marks the sitting avatars in transit, and waits for this group to be sent
                 //before sending the avatars over to the neighbor region
@@ -2730,7 +2769,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!grp.IsAttachment)
                     m_log.InfoFormat("{0}: Sending create for prim group {1} {2} {3} with {4} users", RegionInfo.RegionName, grp.Name, grp.UUID, grp.LocalId, grp.AvatarsToExpect);
 
-                success = m_interregionCommsOut.SendCreateObject(newRegionHandle, grp, true, posInOtherRegion, isAttachment);
+                success = m_interregionCommsOut.SendCreateObject(newRegionHandle, grp, avatarIDs, true, posInOtherRegion, isAttachment);
 
                 if (success)
                 {
@@ -2847,7 +2886,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public bool IncomingCreateObject(ISceneObject sog)
+        public bool IncomingCreateObject(ISceneObject sog, List<UUID> avatars)
         {
             SceneObjectGroup newObject;
             try
@@ -2863,7 +2902,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             string reason = "error";
             // Check this *before* calling TriggerIncomingAvatarsOnGroup
-            if (!this.AuthorizeUserObject(newObject.OwnerID, newObject, out reason))
+            if (!this.AuthorizeUserObject(newObject, avatars, out reason))
             {
                 newObject.AvatarsToExpect = 0;
                 m_log.ErrorFormat("[SCENE]: Denied adding scene object {0} in {1}: {2}", sog.UUID.ToString(), RegionInfo.RegionName, reason);
@@ -2958,16 +2997,16 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         // At least this call is limited to restricted regions only,
                         // and we'll cache this for immediate re-use.
-                        CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(sceneObject.OwnerID);
-                        if (userInfo != null)
-                            if (m_regInfo.UserHasProductAccess(userInfo.UserProfile))
+                        UserProfileData profile = CommsManager.UserService.GetUserProfile(sceneObject.OwnerID);
+                        if (profile != null)
+                            if (m_regInfo.UserHasProductAccess(profile))
                                 allowed = true;
                     }
 
                     if (!allowed)
                     {
                         // We failed to gain access to this restricted region via product access
-                        m_log.WarnFormat("[CONNECTION BEGIN]: Denied prim crossing to {0} because region is restricted", RegionInfo.RegionName);
+                        m_log.WarnFormat("[SCENE]: Denied prim crossing to {0} because region is restricted", RegionInfo.RegionName);
                         return false;
                     }
                 }
@@ -3099,7 +3138,7 @@ namespace OpenSim.Region.Framework.Scenes
                     "[SCENE]: Adding new child agent for {0} in {1}",
                     client.Name, RegionInfo.RegionName);
 
-                CommsManager.UserProfileCacheService.AddNewUser(client.AgentId);
+                CommsManager.UserService.CacheUser(client.AgentId);
 
                 CreateAndAddScenePresence(client);
             }
@@ -3210,7 +3249,7 @@ namespace OpenSim.Region.Framework.Scenes
             UserPreferencesData prefs = CommsManager.UserService.RetrieveUserPreferences(client.AgentId);
             if (prefs != null)
             {
-                client.SendUserInfoReply(prefs.ReceiveIMsViaEmail, prefs.ListedInDirectory, "");
+                client.SendUserInfoReply(prefs.ReceiveIMsViaEmail, prefs.ListedInDirectory, String.Empty);
             }
         }
 
@@ -3364,6 +3403,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                         // stick in offset format from the original prim
                         pos = pos - target.ParentGroup.AbsolutePosition;
+
                         if (CopyRotates)
                         {
                             Quaternion worldRot = target2.GetWorldRotation();
@@ -3412,10 +3452,10 @@ namespace OpenSim.Region.Framework.Scenes
             UUID EstateOwner = RegionInfo.EstateSettings.EstateOwner;
             if (EstateOwner == UUID.Zero)
                 EstateOwner = RegionInfo.MasterAvatarAssignedUUID;
-            CachedUserInfo profile = CommsManager.UserProfileCacheService.GetUserDetails(EstateOwner);
+            UserProfileData profile = CommsManager.UserService.GetUserProfile(EstateOwner);
             if (profile == null)
                 return false;   // error
-            return userId == profile.UserProfile.Partner;
+            return userId == profile.Partner;
         }
 
         public bool IsEstateManager(UUID user)
@@ -3559,12 +3599,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if ((avatar != null) && (!avatar.IsBot))
                 {
-                    if (avatar.Scene.NeedSceneCacheClear(agentID))
-                    {
-                        CommsManager.UserProfileCacheService.RemoveUser(agentID);
-                    }
-
-                    CommsManager.UserService.RemoveLocalUser(agentID);
+                    CommsManager.UserService.UnmakeLocalUser(agentID);
 
                     if (!avatar.IsChildAgent)
                     {
@@ -3782,7 +3817,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Don't disable this log message - it's too helpful
                 m_log.InfoFormat(
-                    "[CONNECTION BEGIN]: Incoming {0} agent {1} {2} {3} (circuit code {4}): {5}",
+                    "[SCENE]: Incoming {0} agent {1} {2} {3} (circuit code {4}): {5}",
                     (agent.child ? "child" : "root"), agent.FirstName, agent.LastName,
                     agent.AgentID, agent.CircuitCode, agent.ClientVersion);
 
@@ -3790,9 +3825,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (isInitialLogin)
                 {
-                    if (!AuthorizeUser(agent.AgentID, agent.FirstName, agent.LastName, agent.ClientVersion, out reason))
+                    if (!AuthorizeUserInRegion(agent.AgentID, agent.FirstName, agent.LastName, agent.ClientVersion, out reason))
                     {
-                        m_log.WarnFormat("[CONNECTION BEGIN]: Region {0} not authorizing incoming {1} agent {2} {3} {4}: {5}",
+                        m_log.WarnFormat("[SCENE]: Region {0} not authorizing incoming {1} agent {2} {3} {4}: {5}",
                                             RegionInfo.RegionName, (agent.child ? "child" : "root"),
                                             agent.FirstName, agent.LastName, agent.AgentID, reason);
                         return false;
@@ -3800,7 +3835,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 m_log.InfoFormat(
-                    "[CONNECTION BEGIN]: Region {0} authorized incoming {1} agent {2} {3} {4} (circuit code {5})",
+                    "[SCENE]: Region {0} authorized incoming {1} agent {2} {3} {4} (circuit code {5})",
                     RegionInfo.RegionName, (agent.child ? "child" : "root"), agent.FirstName, agent.LastName,
                     agent.AgentID, agent.CircuitCode);
 
@@ -3827,7 +3862,7 @@ namespace OpenSim.Region.Framework.Scenes
                             }
                             //                      agent.startpos.Z = LandChannel.GetBanHeight() + 50.0f;
                             // Fail the new startpos (connection to this parcel/region)
-                            m_log.WarnFormat("[CONNECTION BEGIN]: Region {0} refusing incoming {1} agent {2} {3} {4}: {5}",
+                            m_log.WarnFormat("[SCENE]: Region {0} refusing incoming {1} agent {2} {3} {4}: {5}",
                                                 RegionInfo.RegionName, (agent.child ? "child" : "root"),
                                                 agent.FirstName, agent.LastName, agent.AgentID, reason);
                             return false;
@@ -3849,34 +3884,33 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 catch (Connection.ConnectionAlreadyEstablishedException e)
                 {
-                    m_log.WarnFormat("[CONNECTION BEGIN]: Agent {0} is already connected, forcing disconnect", agent.FullName);
+                    m_log.WarnFormat("[SCENE]: Agent {0} is already connected, forcing disconnect", agent.FullName);
                     e.ExistingConnection.Terminate(true);
 
                     //this should now succeed
                     m_connectionManager.NewConnection(agent, by);
                 }
 
-
                 // rewrite session_id
-                CachedUserInfo userinfo = CommsManager.UserProfileCacheService.GetUserDetails(agent.AgentID);
+                CachedUserInfo userinfo = CommsManager.UserService.GetUserDetails(agent.AgentID);
                 if (userinfo != null)
                 {
                     userinfo.SessionID = agent.SessionID;
                     // If this is a login operation, store that in the user info for the initial attachment rez.
                     if (isInitialLogin && !agent.child)
                     {
-                        m_log.Debug("[CONNECTION BEGIN]: SetNeedsInitialAttachmentRez TRUE");
+                        m_log.Debug("[SCENE]: SetNeedsInitialAttachmentRez TRUE");
                         ScenePresence.SetNeedsInitialAttachmentRez(agent.AgentID);
                     }
                     else
                     {
-                        m_log.Debug("[CONNECTION BEGIN]: SetNeedsInitialAttachmentRez FALSE");
+                        m_log.Debug("[SCENE]: SetNeedsInitialAttachmentRez FALSE");
                         ScenePresence.SetNoLongerNeedsInitialAttachmentRez(agent.AgentID);
                     }
                 }
                 else
                 {
-                    m_log.WarnFormat("[CONNECTION BEGIN]: Region {0} could not find profile for incoming {1} agent {2} {3} {4}",
+                    m_log.WarnFormat("[SCENE]: Region {0} could not find profile for incoming {1} agent {2} {3} {4}",
                                         RegionInfo.RegionName, (agent.child ? "child" : "root"),
                                         agent.FirstName, agent.LastName, agent.AgentID);
                 }
@@ -3894,106 +3928,222 @@ namespace OpenSim.Region.Framework.Scenes
             reason = String.Empty;
 
             bool result = CommsManager.UserService.VerifySession(agent.AgentID, agent.SessionID);
-            m_log.Debug("[CONNECTION BEGIN]: User authentication returned " + result);
+            m_log.Debug("[SCENE]: User authentication returned " + result);
             if (!result)
                 reason = String.Format("Failed to authenticate user {0} {1}, access denied.", agent.FirstName, agent.LastName);
 
             return result;
         }
 
-        public virtual bool AuthorizeUserObject(UUID agentID, SceneObjectGroup sog, out string reason)
+        private class UserMembershipInfo
         {
-            reason = String.Empty;
+            private static readonly TimeSpan EXPIRY = new TimeSpan(0, 0, 30);
 
-            if (!m_strictAccessControl) return true;
+            private List<UUID> mGroupList = null;
+            private DateTime mTimeStamp = DateTime.MinValue;
 
-            try
+            public UserMembershipInfo()
             {
-                if (Permissions.IsGod(agentID)) return true;
             }
-            catch (UserProfileException e)
+            public UserMembershipInfo(List<UUID> groups)
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Object owned by {0} was denied access to the region due to an exception {1}", agentID, e);
-                reason = String.Format("Unable to load your user profile/inventory. Try again later.");
-                return false;
+                Memberships = groups;
             }
 
-            if (IsBlacklistedUser(agentID))
+            public List<UUID> Memberships
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} is blacklisted", RegionInfo.RegionName, agentID);
-                reason = String.Format("Object owner is blacklisted on that region.");
-                return false;
-            }
-
-            if (m_regInfo.EstateSettings.IsBanned(agentID))
-            {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} is banned", RegionInfo.RegionName, agentID);
-                reason = "Object owner is banned from that region.";
-                return false;
-            }
-
-            // Avoid the profile lookup when we don't need it.
-            if (m_regInfo.ProductAccess != ProductAccessUse.Anyone)
-            {
-                bool allowed = false;
-                // Region has access restricted to certain user types, i.e. Plus
-                if (IsGodUser(agentID))
-                    allowed = true;
-                else
-                if (m_regInfo.ProductAccessAllowed(ProductAccessUse.PlusOnly))
+                get
                 {
-                    // At least this call is limited to restricted regions only,
-                    // and we'll cache this for immediate re-use.
-                    CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(agentID);
-                    if (userInfo != null)
-                        if (m_regInfo.UserHasProductAccess(userInfo.UserProfile))
-                            allowed = true;
+                    lock (this)
+                    {
+                        return new List<UUID>(mGroupList);
+                    }
                 }
-
-                if (!allowed)
+                set
                 {
-                    // We failed to gain access to this restricted region via product access
-                    m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because region is restricted", RegionInfo.RegionName);
-                    reason = "Object owner is not authorized for that region.";
-                    return false;
+                    lock (this)
+                    {
+                        mGroupList = new List<UUID>(value);
+                        mTimeStamp = DateTime.Now;
+                    }
                 }
             }
 
-            if (m_regInfo.EstateSettings.PublicAccess)
-                return true;
-
-            if (m_regInfo.EstateSettings.HasAccess(agentID))
-                return true;
-
-            IGroupsModule gm = RequestModuleInterface<IGroupsModule>();
-            if (gm == null)
-                return false;
-
-            foreach (UUID groupId in m_regInfo.EstateSettings.EstateGroups)
+            public bool IsExpired
             {
-                // check agent.Id in group
-                if (gm.IsAgentInGroup(agentID, groupId))
-                    return true;
+                get
+                {
+                    lock (this)
+                    {
+                        return (DateTime.Now > mTimeStamp + EXPIRY);
+                    }
+                }
             }
-
-            m_log.WarnFormat("[CONNECTION BEGIN]: Object denied access at {0} because user {1} does not have access to the region", RegionInfo.RegionName, agentID);
-            reason = String.Format("Object owner is not on the access list for that region.");
-            return false;
         }
 
-        public virtual bool AuthorizeUser(UUID agentID, string firstName, string lastName, string clientVersion, out string reason)
+        // This is a cache for IsGroupMember, to ensure FastConfirmGroupMember is fast even if there's no client.
+        private Dictionary<UUID, UserMembershipInfo> _UserGroups = new Dictionary<UUID, UserMembershipInfo>();
+
+        private void UserGroupsSet(UUID agentId, List<UUID> memberships)
+        {
+            lock (_UserGroups)
+            {
+                _UserGroups[agentId] = new UserMembershipInfo(memberships);
+            }
+        }
+
+        public void UserGroupsInvalidate(UUID agentId)
+        {
+            lock (_UserGroups)
+            {
+                _UserGroups.Remove(agentId);
+            }
+        }
+
+        // Dictionary<UUID, List<UUID>> _UserGroups = new Dictionary<UUID, List<UUID>>();
+        public List<UUID> UserGroupsGet(UUID agentId)
+        {
+            List<UUID> groups = null;
+            bool asyncUpdate = false;
+            lock (_UserGroups)
+            {
+                if (!_UserGroups.ContainsKey(agentId))
+                {
+                    // do it the slow hard way
+                    IGroupsModule gm = RequestModuleInterface<IGroupsModule>();
+                    if (gm != null)
+                        groups = gm.GetAgentGroupList(agentId);
+                    if (groups != null)
+                        UserGroupsSet(agentId, groups); 
+                } else
+                {
+                    UserMembershipInfo membership = _UserGroups[agentId];
+                    groups = membership.Memberships;
+                    asyncUpdate = membership.IsExpired;
+                }
+            }
+
+            // Check for async update, but use the current data this time.
+            if (asyncUpdate)
+            {
+                Util.FireAndForget((o) =>
+                {
+                    IGroupsModule gm = RequestModuleInterface<IGroupsModule>();
+                    if (gm != null)
+                    {
+                        groups = gm.GetAgentGroupList(agentId);
+                        if (groups != null) // not error
+                            UserGroupsSet(agentId, groups);
+                    }
+                });
+            }
+            return groups;
+        }
+
+        // Just a quick check to see if it's already cached/known.
+        public bool UserGroupsKnown(UUID agentId)
+        {
+            lock (_UserGroups)
+            {
+                return _UserGroups.ContainsKey(agentId);
+            }
+        }
+
+        // Must pass either an LLCV client, or an agent UUID.
+        public bool FastConfirmGroupMember(IClientAPI client, UUID agentId, UUID groupId)
+        {
+            if (client != null)
+            {
+                // use the optimized group membership test
+                return client.IsGroupMember(groupId);
+            }
+
+            List<UUID> groups = UserGroupsGet(agentId);
+            return (groups == null) ? false : groups.Contains(groupId);
+        }
+
+        public bool FastConfirmGroupMember(UUID agentId, UUID groupId)
+        {
+            ScenePresence sp = GetScenePresence(agentId);
+            IClientAPI client = (sp == null) ? null : sp.ControllingClient;
+
+            return FastConfirmGroupMember(client, agentId, groupId);
+        }
+
+        public bool FastConfirmGroupMember(ScenePresence sp, UUID groupId)
+        {
+            if (sp == null) // must not be null
+                return false;
+
+            return FastConfirmGroupMember(sp.ControllingClient, sp.UUID, groupId);
+        }
+
+        public virtual bool AuthorizeUserObject(SceneObjectGroup sog, List<UUID> avatars, out string reason)
         {
             reason = String.Empty;
+            if (!m_strictAccessControl) return true;
+
+            if (!AuthorizeUserInRegion(sog.OwnerID, String.Empty, String.Empty, null, out reason))
+            {
+                m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} does not have region access.", RegionInfo.RegionName, sog.OwnerID);
+                reason = String.Format("Object owner does not have access to {0}.", RegionInfo.RegionName);
+                return false;
+            }
+
+            Vector3 pos = sog.AbsolutePosition;
+            ILandObject land = LandChannel.GetLandObject(pos.X, pos.Y);
+            if (!AuthorizeUserInParcel(sog.OwnerID, String.Empty, String.Empty, land, pos, out reason))
+            {
+                m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} does not have parcel access.", RegionInfo.RegionName, sog.OwnerID);
+                reason = String.Format("Object owner {0} does not have access to that parcel.", sog.OwnerID);
+                return false;
+            }
+
+            if (avatars != null)
+            {
+                foreach (UUID agentID in avatars)
+                {
+                    // optimization for case where the owner is one of the sitters
+                    if (agentID == sog.OwnerID)
+                        continue;   // we already checked above
+
+                    if (!AuthorizeUserInRegion(agentID, String.Empty, String.Empty, null, out reason))
+                    {
+                        m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} does not have region access.", RegionInfo.RegionName, agentID);
+                        reason = String.Format("User {0} does not have access to {1}.", agentID, RegionInfo.RegionName);
+                        return false;
+                    }
+
+                    if (!AuthorizeUserInParcel(agentID, String.Empty, String.Empty, land, pos, out reason))
+                    {
+                        m_log.WarnFormat("[SCENE]: Object denied entry at {0} because user {1} {2}", RegionInfo.RegionName, agentID, reason);
+                        reason = String.Format("Object entry denied: user {0} {1}", agentID, reason);
+                        return false;
+                    }
+                }
+            }
+
+            // If we make it here, the object and all sitters are authorized
+            return true;
+        }
+
+        // If it helps for higher performance beyond logins, pass null for firstName, lastName and clientversion.
+        public virtual bool AuthorizeUserInRegion(UUID agentId, string firstName, string lastName, string clientVersion, out string reason)
+        {
+            reason = String.Empty;
+            string userName = "user";
+            if ((firstName != null) && (lastName != null))
+                userName = firstName + " " + lastName;
 
             if (!m_strictAccessControl) return true;
 
             try
             {
-                if (Permissions.IsGod(agentID)) return true;
+                if (Permissions.IsGod(agentId)) return true;
             }
             catch (UserProfileException e)
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: User {0} ({1} {2}) was denied access to the region due to an exception {3}", agentID, firstName, lastName, e);
+                m_log.WarnFormat("[SCENE]: User {0} ({1}) was denied access to the region due to an exception {2}", agentId, userName, e);
 
                 reason = String.Format("Unable to load your user profile/inventory. Try again later.");
                 return false;
@@ -4001,33 +4151,36 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (this.m_sceneGraph.GetRootAgentCount() + 1 > m_maxRootAgents)
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: User {0} ({1} {2}) was denied access to the region because it was full", agentID, firstName, lastName);
+                m_log.WarnFormat("[SCENE]: User {0} ({1}) was denied access to the region because it was full", agentId, userName);
                 reason = "Region is full";
                 return false;
             }
 
-            if (IsBlacklistedUser(agentID))
+            if (IsBlacklistedUser(agentId))
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because the user is blacklisted",
-                                    agentID, firstName, lastName, RegionInfo.RegionName);
-                reason = String.Format("{0} {1} is blacklisted on that region", firstName, lastName);
+                m_log.WarnFormat("[SCENE]: Denied access to: {0} ({1}) at {2} because the user is blacklisted",
+                                    agentId, userName, RegionInfo.RegionName);
+                reason = String.Format("{0} is blacklisted on that region", userName);
                 return false;
             }
 
-            if (m_regInfo.EstateSettings.IsBanned(agentID))
+            if (m_regInfo.EstateSettings.IsBanned(agentId))
             {
-                m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because the user is on the banlist",
-                                agentID, firstName, lastName, RegionInfo.RegionName);
-                reason = String.Format("{0} {1} is banned from that region", firstName, lastName);
+                m_log.WarnFormat("[SCENE]: Denied access to: {0} ({1}) at {2} because the user is on the banlist",
+                                agentId, userName, RegionInfo.RegionName);
+                reason = String.Format("{0} is banned from that region", userName);
                 return false;
             }
 
-            if (!EventManager.TriggerOnAuthorizeUser(agentID, firstName, lastName, clientVersion, ref reason))
+            if (clientVersion != null)  // if authorizing for login, not crossing
             {
-                //module denied entry
-                m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because of a module: {4}",
-                                agentID, firstName, lastName, RegionInfo.RegionName, reason);
-                return false;
+                if (!EventManager.TriggerOnAuthorizeUser(agentId, firstName, lastName, clientVersion, ref reason))
+                {
+                    //module denied entry
+                    m_log.WarnFormat("[SCENE]: Denied access to: {0} ({1} {2}) at {3} because of a module: {4}",
+                                    agentId, firstName, lastName, RegionInfo.RegionName, reason);
+                    return false;
+                }
             }
 
             // Avoid the profile lookup when we don't need it.
@@ -4035,24 +4188,24 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 bool allowed = false;
                 // Region has access restricted to certain user types, i.e. Plus
-                if (IsGodUser(agentID))
+                if (IsGodUser(agentId))
                     allowed = true;
                 else
                 if (m_regInfo.ProductAccessAllowed(ProductAccessUse.PlusOnly))
                 {
                     // At least this call is limited to restricted regions only,
                     // and we'll cache this for immediate re-use.
-                    CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(agentID);
-                    if (userInfo != null)
-                        if (m_regInfo.UserHasProductAccess(userInfo.UserProfile))
+                    UserProfileData profile = CommsManager.UserService.GetUserProfile(agentId);
+                    if (profile != null)
+                        if (m_regInfo.UserHasProductAccess(profile))
                             allowed = true;
                 }
 
                 if (!allowed)
                 {
                     // We failed to gain access to this restricted region via product access
-                    m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because region is restricted.",
-                            agentID, firstName, lastName, RegionInfo.RegionName, reason);
+                    m_log.WarnFormat("[SCENE]: Denied access to: {0} ({1} {2}) at {3} because region is restricted.",
+                            agentId, userName, RegionInfo.RegionName, reason);
                     reason = String.Format("Access to {0} is restricted", RegionInfo.RegionName);
                     return false;
                 }
@@ -4061,29 +4214,60 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_regInfo.EstateSettings.PublicAccess)
                 return true;
 
-            if (m_regInfo.EstateSettings.HasAccess(agentID))
+            if (m_regInfo.EstateSettings.HasAccess(agentId))
                 return true;
 
             IGroupsModule gm = RequestModuleInterface<IGroupsModule>();
             if (gm == null)
             {
                 reason = "Groups module error";
-                m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3}: {4}",
-                                agentID, firstName, lastName, RegionInfo.RegionName, reason);
+                m_log.WarnFormat("[SCENE]: Denied access to: {0} ({1} {2}) at {3}: {4}",
+                                agentId, firstName, lastName, RegionInfo.RegionName, reason);
                 return false;
             }
 
+            ScenePresence sp = GetScenePresence(agentId);
+            IClientAPI client = (sp != null) ? sp.ControllingClient : null;
             foreach (UUID groupId in m_regInfo.EstateSettings.EstateGroups)
             {
                 // check agent.Id in group
-                if (gm.IsAgentInGroup(agentID, groupId))
+                if (FastConfirmGroupMember(client, agentId, groupId))
                     return true;
             }
 
-            m_log.WarnFormat("[CONNECTION BEGIN]: Denied access to: {0} ({1} {2}) at {3} because the user does not have region access",
-                            agentID, firstName, lastName, RegionInfo.RegionName);
+            m_log.WarnFormat("[SCENE]: Denied access to: {0} ({1} {2}) at {3} because the user does not have region access",
+                            agentId, firstName, lastName, RegionInfo.RegionName);
             reason = String.Format("{0} {1} does not have access to region: {2}", firstName, lastName, RegionInfo.RegionName);
             return false;
+        }
+
+        // If it helps for higher performance beyond logins, pass null for firstName and lastName.
+        // This does not check region entry access.  (Call AuthorizeUserInRegion separately.)
+        public virtual bool AuthorizeUserInParcel(UUID agentID, string firstName, string lastName, ILandObject land, Vector3 pos, out string reason)
+        {
+            reason = String.Empty;
+            string userName = "user";
+            if ((firstName != null) && (lastName != null))
+                userName = firstName + " " + lastName;
+
+            // Check land parcel access
+            if (land != null)
+            {
+                ParcelPropertiesStatus denyReason;
+                if ((pos.Z < LandChannel.GetBanHeight()) && (land.DenyParcelAccess(agentID, out denyReason)))
+                {
+                    string who;
+                    if ((firstName != null) && (lastName != null))
+                        who = firstName + " " + lastName;
+                    else
+                        who = agentID.ToString();
+
+                    reason = String.Format("{0} denied access to destination parcel", who);
+                    m_log.WarnFormat("[SCENE]: {0}", reason);
+                    return false;
+                }
+            }
+            return true;
         }
 
         public void HandleLogOffUserFromGrid(UUID AvatarID, UUID RegionSecret, string message)
@@ -4223,11 +4407,31 @@ namespace OpenSim.Region.Framework.Scenes
                     return ChildAgentUpdate2Response.Error;
                 }
 
-                if (!AuthorizeUser(data.AgentID, SP.Firstname, SP.Lastname, null, out reason))
+                if (!SP.IsChildAgent)
+                {
+                    // Just ignore it (but no error)
+                    reason = "authorized";
+                    return ChildAgentUpdate2Response.Ok;
+                }
+
+                if (!AuthorizeUserInRegion(data.AgentID, SP.Firstname, SP.Lastname, null, out reason))
                 {
                     SP.ControllingClient.SendAlertMessage("Could not enter region '" + RegionInfo.RegionName + "': " + reason);
                     return ChildAgentUpdate2Response.AccessDenied;
                 }
+
+                if (data.SatOnGroup == null)
+                {
+                    // In this case, data.Position is good.
+                    ILandObject land = LandChannel.GetLandObject(data.Position.X, data.Position.Y);
+                    if (!AuthorizeUserInParcel(data.AgentID, SP.Firstname, SP.Lastname, land, data.Position, out reason))
+                    {
+                        SP.ControllingClient.SendAlertMessage("Could not enter region '" + RegionInfo.RegionName + "': " + reason);
+                        return ChildAgentUpdate2Response.AccessDenied;
+                    }
+                }
+                // else data.Position is no good when seated, would use this:
+                // Vector3 pos = GetSceneObjectPart(data.SatOnPrim).AbsolutePosition + data.SatOnPrimOffset;
 
                 reason = "authorized";
                 SP.ChildAgentDataUpdate2(data);
@@ -4640,9 +4844,9 @@ namespace OpenSim.Region.Framework.Scenes
             m_sceneGridService.SendChildAgentDataUpdate(cadu, presence);
         }
 
-        #endregion
+#endregion
 
-        #region Other Methods
+#region Other Methods
 
         public void SetObjectCapacity(int objects)
         {
@@ -4680,7 +4884,7 @@ namespace OpenSim.Region.Framework.Scenes
         public virtual void StoreUpdateFriendship(UUID ownerID, UUID friendID, uint perms)
         {
             m_sceneGridService.UpdateUserFriendPerms(ownerID, friendID, perms);
-            CommsManager.UserProfileCacheService.UpdateUserFriendPerms(ownerID, friendID, perms);
+            CommsManager.UserService.UpdateUserFriendPerms(ownerID, friendID, perms);
         }
 
         public virtual void StoreRemoveFriendship(UUID ownerID, UUID ExfriendID)
@@ -4688,7 +4892,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_sceneGridService.RemoveUserFriend(ownerID, ExfriendID);
         }
 
-        #endregion
+#endregion
 
         public void HandleObjectPermissionsUpdate(IClientAPI controller, UUID agentID, UUID sessionID, byte field, uint localId, uint mask, byte set)
         {
@@ -4783,7 +4987,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #region Script Handling Methods
+#region Script Handling Methods
 
         /// <summary>
         /// Console command handler to send script command to script engine.
@@ -4823,18 +5027,18 @@ namespace OpenSim.Region.Framework.Scenes
             return m_sceneGridService.RequestClosestRegion(name);
         }
 
-        #endregion
+#endregion
 
-        #region Script Engine
+#region Script Engine
 
-        private List<ScriptEngineInterface> ScriptEngines = new List<ScriptEngineInterface>();
+        private List<IScriptEngineInterface> ScriptEngines = new List<IScriptEngineInterface>();
         private AvatarTransit.AvatarTransitController m_transitController;
 
         /// <summary>
         ///
         /// </summary>
         /// <param name="scriptEngine"></param>
-        public void AddScriptEngine(ScriptEngineInterface scriptEngine)
+        public void AddScriptEngine(IScriptEngineInterface scriptEngine)
         {
             ScriptEngines.Add(scriptEngine);
             scriptEngine.InitializeEngine(this);
@@ -4923,9 +5127,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        #endregion
+#endregion
 
-        #region SceneGraph wrapper methods
+#region SceneGraph wrapper methods
 
         /// <summary>
         ///
@@ -5158,7 +5362,7 @@ namespace OpenSim.Region.Framework.Scenes
             return m_sceneGraph.GetEntities();
         }
 
-        #endregion
+#endregion
 
         public void RegionHandleRequest(IClientAPI client, UUID regionID)
         {
@@ -5210,29 +5414,29 @@ namespace OpenSim.Region.Framework.Scenes
             if (client.AgentId != part.OwnerID)    // prevent spoofing/hacking
                 return;
 
-            part = part.ParentGroup.RootPart;
+            SceneObjectGroup group = part.ParentGroup;
+            part = group.RootPart;  // force the part to refer to the root part
+            uint eperms = group.GetEffectivePermissions(true);
 
-            //check to make sure the sale type is valid
-
-            if ((int)SaleType.Copy == saleType)
+            // Check to make sure the sale type is valid. Since some viewers 
+            // (including SL and IW3 viewers) don't have an Apply button, we can't
+            // just outright reject the change, we need to allow it 
+            // so that they can change the sale type, but we can warn them.
+            switch (saleType)
             {
-                //make sure the person can actually copy and transfer this object
-                if ((part.OwnerMask & (int)PermissionMask.Copy) == 0 ||
-                    (part.OwnerMask & (int)PermissionMask.Transfer) == 0)
-                {
-                    part.GetProperties(client);
-                    return;
-                }
-            }
+                case (byte)SaleType.Copy:
+                    //make sure the person can actually copy and transfer this object
+                    if ((eperms & (uint)PermissionMask.Copy) == 0)
+                        client.SendAlertMessage("Warning: Cannot sell a copy of this object which is no-copy or has no-copy Contents.");
+                    if ((eperms & (uint)PermissionMask.Transfer) == 0)
+                        client.SendAlertMessage("Warning: Cannot transfer this object which is no-transfer or has no-transfer Contents.");
+                    break;
 
-            if ((int)SaleType.Original == saleType)
-            {
-                //make sure the person can actually transfer this object
-                if ((part.OwnerMask & (int)PermissionMask.Transfer) == 0)
-                {
-                    part.GetProperties(client);
-                    return;
-                }
+                case (byte)SaleType.Original:
+                    //make sure the person can actually transfer this object
+                    if ((eperms & (uint)PermissionMask.Transfer) == 0)
+                        client.SendAlertMessage("Warning: Cannot transfer this object which is no-transfer or has no-transfer Contents.");
+                    break;
             }
 
             part.ObjectSaleType = saleType;
@@ -5270,7 +5474,7 @@ namespace OpenSim.Region.Framework.Scenes
                     byte[] sceneObjectBytes = this.DoSerializeSingleGroup(group, SerializationFlags.None);// SceneObjectSerializer.ToOriginalXmlFormat(group, false);
 
                     CachedUserInfo userInfo =
-                        CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                        CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
 
                     if (userInfo != null)
                     {

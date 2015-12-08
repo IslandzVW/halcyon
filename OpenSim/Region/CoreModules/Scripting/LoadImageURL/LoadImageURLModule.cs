@@ -47,8 +47,8 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
         private Scene m_scene;
         private IDynamicTextureManager m_textureManager;
 
-        private string m_proxyurl = "";
-        private string m_proxyexcepts = "";
+        private string m_proxyurl = String.Empty;
+        private string m_proxyexcepts = String.Empty;
 
         #region IDynamicTextureRender Members
 
@@ -139,9 +139,9 @@ namespace OpenSim.Region.CoreModules.Scripting.LoadImageURL
         {
             WebRequest request = HttpWebRequest.Create(url);
             
-            if (m_proxyurl != null && m_proxyurl.Length > 0) 
+            if (!String.IsNullOrEmpty(m_proxyurl))
             {
-                if (m_proxyexcepts != null && m_proxyexcepts.Length > 0) 
+                if (!String.IsNullOrEmpty(m_proxyexcepts))
                 {
                     string[] elist = m_proxyexcepts.Split(';');
                     request.Proxy = new WebProxy(m_proxyurl, true, elist);

@@ -331,7 +331,7 @@ namespace OpenSim.Framework
         /// <returns>null if the folder is not found</returns>
         public InventoryFolderImpl FindFolderByPath(string path)
         {
-            if (path == string.Empty)
+            if (String.IsNullOrWhiteSpace(path))
                 return this;
             
             path = path.Trim();

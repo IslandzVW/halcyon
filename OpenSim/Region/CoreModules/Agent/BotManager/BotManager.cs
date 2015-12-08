@@ -142,7 +142,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
                 AvatarAppearance appearance;
                 UUID originalOwner = UUID.Zero;
-                string ownerName = "";
+                string ownerName = String.Empty;
                 bool isSavedOutfit = !string.IsNullOrEmpty(outfitName);
 
                 if (!isSavedOutfit)
@@ -156,13 +156,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                             reason = "No appearance could be found for the owner.";
                             return UUID.Zero;
                         }
-                        CachedUserInfo userInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(owner);
-                        if (userInfo == null)
+                        ownerName = m_scene.CommsManager.UserService.Key2Name(owner,false);
+                        if (String.IsNullOrEmpty(ownerName))
                         {
                             reason = "Owner could not be found.";
                             return UUID.Zero;
                         }
-                        ownerName = userInfo.UserProfile.Name;
                     }
                     else
                     {
@@ -185,13 +184,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         reason = "No such outfit could be found.";
                         return UUID.Zero;
                     }
-                    CachedUserInfo userInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(owner);
-                    if (userInfo == null)
+                    ownerName = m_scene.CommsManager.UserService.Key2Name(owner, false);
+                    if (String.IsNullOrEmpty(ownerName))
                     {
                         reason = "Owner could not be found.";
                         return UUID.Zero;
                     }
-                    ownerName = userInfo.UserProfile.Name;
                 }
 
                 if (!CheckAttachmentCount(appearance, parcel, appearance.Owner, out reason))
@@ -215,7 +213,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     BaseFolder = UUID.Zero,
                     child = false,
                     CircuitCode = client.CircuitCode,
-                    ClientVersion = "",
+                    ClientVersion = String.Empty,
                     FirstName = client.FirstName,
                     InventoryFolder = UUID.Zero,
                     LastName = client.LastName,
@@ -239,14 +237,14 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         AboutText = defaultAbout,
                         Created = Util.ToUnixTime(client.TimeCreated),
                         CustomType = "Bot",
-                        Email = "",
+                        Email = String.Empty,
                         FirstLifeAboutText = defaultAbout,
                         FirstLifeImage = UUID.Zero,
                         FirstName = client.FirstName,
                         GodLevel = 0,
                         ID = client.AgentID,
                         Image = UUID.Zero,
-                        ProfileURL = "",
+                        ProfileURL = String.Empty,
                         SurName = client.LastName,
                     });
 
@@ -413,7 +411,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
             IBot bot;
             if ((bot = GetBot(botID)) == null)
-                return "";
+                return String.Empty;
 
             return bot.Name;
         }
@@ -436,23 +434,23 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
                 return false;
 
-            CachedUserInfo userInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(botID);
-            if (userInfo == null)
+            UserProfileData profile = m_scene.CommsManager.UserService.GetUserProfile(botID);
+            if (profile == null)
                 return false;
 
             m_scene.CommsManager.UserService.AddTemporaryUserProfile(new UserProfileData() 
             { 
-                AboutText = aboutText ?? userInfo.UserProfile.AboutText,
+                AboutText = aboutText ?? profile.AboutText,
                 Created = Util.ToUnixTime(bot.TimeCreated),
                 CustomType = "Bot",
-                Email = email ?? userInfo.UserProfile.Email,
-                FirstLifeAboutText = userInfo.UserProfile.FirstLifeAboutText,
+                Email = email ?? profile.Email,
+                FirstLifeAboutText = profile.FirstLifeAboutText,
                 FirstLifeImage = UUID.Zero,
                 FirstName = bot.FirstName,
                 GodLevel = 0,
                 ID = botID,
-                Image = imageUUID.HasValue ? imageUUID.Value : userInfo.UserProfile.Image,
-                ProfileURL = profileURL ?? userInfo.UserProfile.ProfileURL,
+                Image = imageUUID.HasValue ? imageUUID.Value : profile.Image,
+                ProfileURL = profileURL ?? profile.ProfileURL,
                 SurName = bot.LastName,
             });
 
@@ -734,7 +732,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 return false;
 
             if (sp.PhysicsActor != null)
-                sp.AbsolutePosition = sp.AbsolutePosition + new Vector3(0, 0, 0.001f);
+            {
+                EntityBase.PositionInfo posInfo = sp.GetPosInfo();
+                posInfo.m_pos.Z += 0.001f;
+                sp.SetAgentPositionInfo(null, false, posInfo.m_pos, posInfo.m_parent, Vector3.Zero, sp.Velocity);
+            }
             sp.Rotation = rotation;
             sp.SendTerseUpdateToAllClients();
             return true;

@@ -86,6 +86,8 @@ namespace OpenSim.Framework
         private static string regexInvalidPathChars = "[" + new String(Path.GetInvalidPathChars()) + "]";
         private static object XferLock = new object();
 
+        public static bool IsWindows = System.Environment.OSVersion.Platform == System.PlatformID.Win32NT;
+
         /// <summary>
         /// These pools will be created for different purposes so that one does not affect the other
         /// </summary>
@@ -157,21 +159,20 @@ namespace OpenSim.Framework
         /// </value>
         public static UUID BLANK_TEXTURE_UUID = new UUID("5748decc-f629-461c-9a36-a35a221fe21f");
 
-        #if _WIN32
-            [DllImport("kernel32.dll")]
-            static extern UInt64 GetTickCount64();
-        #else
-            // TODO: Fill in implementation for linux/cross platform GetTickCount64 implementation
-        #endif
+        [DllImport("kernel32.dll")]
+        static extern UInt64 GetTickCount64();
 
         public static UInt64 GetLongTickCount()
         {
-            #if _WIN32
+            if (IsWindows)
+            {
                 return GetTickCount64();
-            #else
+            }
+            else
+            {
                 // TODO: Fill in implementation for linux/cross platform GetTickCount64 implementation
                 return (UInt64)Environment.TickCount;
-            #endif 
+            }
         }
 
 
@@ -666,7 +667,7 @@ namespace OpenSim.Framework
 
             if (printable)
             {
-                if (fieldName.Length > 0)
+                if (!String.IsNullOrEmpty(fieldName))
                 {
                     output.Append(fieldName);
                     output.Append(": ");
@@ -680,7 +681,7 @@ namespace OpenSim.Framework
                 {
                     if (i != 0)
                         output.Append(Environment.NewLine);
-                    if (fieldName.Length > 0)
+                    if (!String.IsNullOrEmpty(fieldName))
                     {
                         output.Append(fieldName);
                         output.Append(": ");
@@ -741,7 +742,7 @@ namespace OpenSim.Framework
                 m_log.WarnFormat("[UTIL]: An error occurred while resolving host name {0}, {1}", dnsAddress, e);
 
                 // Still going to throw the exception on for now, since this was what was happening in the first place
-                throw e;
+                throw;
             }
 
             foreach (IPAddress host in hosts)
@@ -992,8 +993,8 @@ namespace OpenSim.Framework
 
         public static string CleanString(string input)
         {
-            if (input.Length == 0)
-                return input;
+            if (String.IsNullOrEmpty(input))
+                return String.Empty;
 
             int clip = input.Length;
 
@@ -1032,7 +1033,7 @@ namespace OpenSim.Framework
             }
             catch (Exception)
             {
-                return "";
+                return String.Empty;
             }
         }
 
@@ -1499,7 +1500,7 @@ namespace OpenSim.Framework
             // Glob
 
             path = vol;
-            if (vol != String.Empty)
+            if (!String.IsNullOrEmpty(vol))
                 path += new String(new char[] { Path.VolumeSeparatorChar, Path.DirectorySeparatorChar });
             else
                 path = new String(new char[] { Path.DirectorySeparatorChar });
@@ -1540,14 +1541,14 @@ namespace OpenSim.Framework
 
         public static string ServerURI(string uri)
         {
-            if (uri == string.Empty)
-                return string.Empty;
+            if (String.IsNullOrEmpty(uri))
+                return String.Empty;
 
             // Get rid of eventual slashes at the end
             uri = uri.TrimEnd('/');
 
             IPAddress ipaddr1 = null;
-            string port1 = "";
+            string port1 = String.Empty;
             try
             {
                 ipaddr1 = Util.GetHostFromURL(uri);
@@ -1567,7 +1568,7 @@ namespace OpenSim.Framework
         public static string XmlRpcRequestPrefix(string methodName)
         {
             string prefix = "/xmlrpc";
-            if ((methodName != null) && (methodName != ""))
+            if (!String.IsNullOrEmpty(methodName))
                 prefix += ("/" + methodName);
             return (prefix);
         }
@@ -2135,6 +2136,29 @@ namespace OpenSim.Framework
             return newPos;
         }
 
+        public static string LocationURL(string regionName, Vector3 pos, string separator)
+        {
+            int x = (int)pos.X;
+            int y = (int)pos.Y;
+            int z = (int)pos.Z;
+            string region;
+            if (String.IsNullOrEmpty(regionName))
+            {
+                region = String.Empty;
+                return x.ToString() + separator + y.ToString() + separator + z.ToString();
+            }
+
+            try
+            {
+                region = Util.EscapeUriDataStringRfc3986(regionName);
+            }
+            catch (Exception)
+            {
+                region = regionName;
+            }
+            return "http://places.inworldz.com/" + region + separator + x.ToString() + separator + y.ToString() + separator + z.ToString();
+        }
+
         public static Vector3 EmergencyPosition()
         {
             return new Vector3(Constants.REGION_VALID_X, Constants.REGION_VALID_Y, Constants.REGION_VALID_Z);
@@ -2197,7 +2221,7 @@ namespace OpenSim.Framework
                     if (i == retryCount)
                     {
                         //cant retry anymore. rethrow
-                        throw e;
+                        throw;
                     }
 
                     if (passthroughExceptions != null)
@@ -2239,7 +2263,7 @@ namespace OpenSim.Framework
                     if (i == retryCount)
                     {
                         //cant retry anymore. rethrow
-                        throw e;
+                        throw;
                     }
 
                     if (passthroughExceptions != null)

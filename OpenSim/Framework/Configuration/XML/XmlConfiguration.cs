@@ -133,7 +133,7 @@ namespace OpenSim.Framework.Configuration.XML
             if (!needsCommit)
                 return;
 
-            if (fileName == null || fileName == String.Empty)
+            if (String.IsNullOrEmpty(fileName))
                 return;
 
             if (!Directory.Exists(Util.configDir()))

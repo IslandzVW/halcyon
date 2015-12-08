@@ -110,7 +110,7 @@ namespace OpenSim.Servers.Base
         public static T LoadPlugin<T>(string dllName, Object[] args) where T:class
         {
             // This is good to debug configuration problems
-            //if (dllName == string.Empty)
+            //if (String.IsNullOrEmpty(dllName))
             //    Util.PrintCallStack();
 
             string[] parts = dllName.Split(new char[] {':'});
@@ -134,8 +134,6 @@ namespace OpenSim.Servers.Base
         /// <returns></returns>
         public static T LoadPlugin<T>(string dllName, string className, Object[] args) where T:class
         {
-            string interfaceName = typeof(T).ToString();
-
             try
             {
                 Assembly pluginAssembly = Assembly.LoadFrom(dllName);
@@ -144,13 +142,11 @@ namespace OpenSim.Servers.Base
                 {
                     if (pluginType.IsPublic)
                     {
-                        if ((className != String.Empty) && 
+                        if (!String.IsNullOrEmpty(className) && 
                              (pluginType.ToString() != pluginType.Namespace + "." + className))
                             continue;
                         
-                        Type typeInterface = pluginType.GetInterface(interfaceName, true);
-
-                        if (typeInterface != null)
+                        if (typeof (T).IsAssignableFrom(pluginType))
                         {
                             T plug = null;
                             try
@@ -163,7 +159,7 @@ namespace OpenSim.Servers.Base
                                 if (!(e is System.MissingMethodException))
                                 {
                                     m_log.ErrorFormat("Error loading plugin {0} from {1}. Exception: {2}",
-                                        interfaceName, dllName, e.InnerException == null ? e.Message : e.InnerException.Message);
+                                        typeof(T).ToString(), dllName, e.InnerException == null ? e.Message : e.InnerException.Message);
                                 }
                                 return null;
                             }
@@ -257,7 +253,7 @@ namespace OpenSim.Servers.Base
                         part = System.Web.HttpUtility.UrlEncode(kvp.Key) +
                                 "[]=" + System.Web.HttpUtility.UrlEncode(s);
 
-                        if (qstring != String.Empty)
+                        if (!String.IsNullOrEmpty(qstring))
                             qstring += "&";
 
                         qstring += part;
@@ -265,7 +261,7 @@ namespace OpenSim.Servers.Base
                 }
                 else
                 {
-                    if (kvp.Value.ToString() != String.Empty)
+                    if (!String.IsNullOrEmpty(kvp.Value.ToString()))
                     {
                         part = System.Web.HttpUtility.UrlEncode(kvp.Key) +
                                 "=" + System.Web.HttpUtility.UrlEncode(kvp.Value.ToString());
@@ -275,7 +271,7 @@ namespace OpenSim.Servers.Base
                         part = System.Web.HttpUtility.UrlEncode(kvp.Key);
                     }
 
-                    if (qstring != String.Empty)
+                    if (!String.IsNullOrEmpty(qstring))
                         qstring += "&";
 
                     qstring += part;
@@ -290,12 +286,12 @@ namespace OpenSim.Servers.Base
             XmlDocument doc = new XmlDocument();
 
             XmlNode xmlnode = doc.CreateNode(XmlNodeType.XmlDeclaration,
-                    "", "");
+                    String.Empty, String.Empty);
 
             doc.AppendChild(xmlnode);
 
-            XmlElement rootElement = doc.CreateElement("", "ServerResponse",
-                    "");
+            XmlElement rootElement = doc.CreateElement(String.Empty, "ServerResponse",
+                    String.Empty);
 
             doc.AppendChild(rootElement);
 
@@ -311,13 +307,13 @@ namespace OpenSim.Servers.Base
                 if (kvp.Value == null)
                     continue;
 
-                XmlElement elem = parent.OwnerDocument.CreateElement("",
-                        XmlConvert.EncodeLocalName(kvp.Key), "");
+                XmlElement elem = parent.OwnerDocument.CreateElement(String.Empty,
+                        XmlConvert.EncodeLocalName(kvp.Key), String.Empty);
 
                 if (kvp.Value is Dictionary<string, object>)
                 {
-                    XmlAttribute type = parent.OwnerDocument.CreateAttribute("",
-                        "type", "");
+                    XmlAttribute type = parent.OwnerDocument.CreateAttribute(String.Empty,
+                        "type", String.Empty);
                     type.Value = "List";
 
                     elem.Attributes.Append(type);

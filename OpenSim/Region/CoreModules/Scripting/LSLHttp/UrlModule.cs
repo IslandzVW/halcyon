@@ -147,7 +147,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             {
                 if (m_UrlMap.Count >= m_TotalUrls)
                 {
-                    engine.PostScriptEvent(itemID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
+                    engine.PostScriptEvent(itemID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", String.Empty });
                     return urlcode;
                 }
 
@@ -182,7 +182,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
 
             if (m_HttpsServer == null)
             {
-                engine.PostScriptEvent(itemID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
+                engine.PostScriptEvent(itemID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", String.Empty });
                 return urlcode;
             }
 
@@ -190,7 +190,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             {
                 if (m_UrlMap.Count >= m_TotalUrls)
                 {
-                    engine.PostScriptEvent(itemID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", "" });
+                    engine.PostScriptEvent(itemID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_DENIED", String.Empty });
                     return urlcode;
                 }
 
@@ -453,7 +453,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             {
                 Hashtable headers = (Hashtable)request["headers"];
                 //HTTP server code doesn't provide us with QueryStrings
-                string queryString = "";
+                string queryString = String.Empty;
 
                 int pos1 = uri.IndexOf("/");// /lslhttp
                 int pos2 = uri.IndexOf("/", pos1 + 1);// /lslhttp/

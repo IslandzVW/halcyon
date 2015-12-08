@@ -237,7 +237,7 @@ namespace InWorldz.VivoxVoice
                     
                     string channelId;
 
-                    string sceneUUID  = m_forcedChannelName == String.Empty ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
+                    string sceneUUID  = String.IsNullOrEmpty(m_forcedChannelName) ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
                     string sceneName  = scene.RegionInfo.RegionName;
                     
                     // Make sure that all local channels are deleted.
@@ -656,18 +656,19 @@ namespace InWorldz.VivoxVoice
                 // settings allow voice, then whether parcel allows
                 // voice, if all do retrieve or obtain the parcel
                 // voice channel
-                LandData land = scene.GetLandData(avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y);
+                Vector3 pos = avatar.AbsolutePosition;  // take a copy to avoid double recalc
+                LandData land = scene.GetLandData(pos.X, pos.Y);
                 if (land == null)
                 {
                     // m_log.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": avatar\"{1}\" at ({2}): Land parcel not found.",
-                    //                scene.RegionInfo.RegionName, avatarName, avatar.AbsolutePosition.ToString());
+                    //                scene.RegionInfo.RegionName, avatarName, pos.ToString());
                     return EMPTY_RESPONSE;
                 }
 
                 // m_log.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": request: {4}, path: {5}, param: {6}",
                 //                  scene.RegionInfo.RegionName, land.Name, land.LocalID, avatarName, request, path, param);
                 // m_log.DebugFormat("[VivoxVoice][PARCELVOICE]: avatar \"{0}\": location: {1} {2} {3}",
-                //                   avatarName, avatar.AbsolutePosition.X, avatar.AbsolutePosition.Y, avatar.AbsolutePosition.Z);
+                //                   avatarName, pos.X, pos.Y, avatar.AbsolutePosition.Z);
 
                 // TODO: EstateSettings don't seem to get propagated...
                 if (!scene.RegionInfo.EstateSettings.AllowVoice)
@@ -743,7 +744,7 @@ namespace InWorldz.VivoxVoice
             string landName;
             string parentId;
 
-            lock (m_parents) parentId = m_forcedChannelName == String.Empty ? m_parents[scene.RegionInfo.RegionID.ToString()] : m_parents[m_forcedChannelName];
+            lock (m_parents) parentId = String.IsNullOrEmpty(m_forcedChannelName) ? m_parents[scene.RegionInfo.RegionID.ToString()] : m_parents[m_forcedChannelName];
 
             // Create parcel voice channel. If no parcel exists, then the voice channel ID is the same
             // as the directory ID. Otherwise, it reflects the parcel's ID.
@@ -758,7 +759,7 @@ namespace InWorldz.VivoxVoice
             else
             {
                 landName = String.Format("{0}:{1}", scene.RegionInfo.RegionName, scene.RegionInfo.RegionName);
-                landUUID = m_forcedChannelName == String.Empty ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
+                landUUID = String.IsNullOrEmpty(m_forcedChannelName) ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
                 //m_log.DebugFormat("[VivoxVoice]: Region:Parcel \"{0}\": parcel id {1}: using channel name {2}", 
                 //                  landName, land.LocalID, landUUID);
             }
@@ -870,11 +871,11 @@ namespace InWorldz.VivoxVoice
         {
             string requrl = String.Format(m_vivoxChannelPath, m_vivoxServer, "create", channelId, m_authToken);
 
-            if (parent != null && parent != String.Empty)
+            if (!String.IsNullOrEmpty(parent))
             {
                 requrl = String.Format("{0}&chan_parent={1}", requrl, parent);
             }
-            if (description != null && description != String.Empty)
+            if (!String.IsNullOrEmpty(description))
             {
                 requrl = String.Format("{0}&chan_desc={1}", requrl, description);
             }
@@ -906,12 +907,12 @@ namespace InWorldz.VivoxVoice
         {
             string requrl = String.Format(m_vivoxChannelPath, m_vivoxServer, "create", dirId, m_authToken);
 
-            // if (parent != null && parent != String.Empty)
+            // if (!String.IsNullOrEmpty(parent))
             // {
             //     requrl = String.Format("{0}&chan_parent={1}", requrl, parent);
             // }
 
-            if (description != null && description != String.Empty)
+            if (!String.IsNullOrEmpty(description))
             {
                 requrl = String.Format("{0}&chan_desc={1}", requrl, description);
             }
@@ -1086,7 +1087,7 @@ namespace InWorldz.VivoxVoice
         private XmlElement VivoxDeleteChannel(string parent, string channelid)
         {
             string requrl = String.Format(m_vivoxChannelDel, m_vivoxServer, "delete", channelid, m_authToken);
-            if (parent != null && parent != String.Empty)
+            if (!String.IsNullOrEmpty(parent))
             {
                 requrl = String.Format("{0}&chan_parent={1}", requrl, parent);
             }
@@ -1256,7 +1257,7 @@ namespace InWorldz.VivoxVoice
         /// </summary>
         private bool XmlFind(XmlElement root, string tag, int nth, out string result)
         {
-            if (root == null || tag == null || tag == String.Empty)
+            if (root == null || String.IsNullOrEmpty(tag))
             { 
                 result = String.Empty;
                 return false;
@@ -1267,7 +1268,7 @@ namespace InWorldz.VivoxVoice
         private bool XmlFind(XmlElement root, string tag, out string result)
         {
             int nth = 0;
-            if (root == null || tag == null || tag == String.Empty)
+            if (root == null || String.IsNullOrEmpty(tag))
             { 
                 result = String.Empty;
                 return false;

@@ -94,7 +94,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Combat.CombatModule
             else
             {
                 bool foundResult = false;
-                string resultstring = "";
+                string resultstring = String.Empty;
                 List<ScenePresence> allav = DeadAvatar.Scene.GetScenePresences();
                 try
                 {

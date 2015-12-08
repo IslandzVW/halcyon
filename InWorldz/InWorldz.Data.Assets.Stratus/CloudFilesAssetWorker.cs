@@ -120,7 +120,7 @@ namespace InWorldz.Data.Assets.Stratus
         /// <returns></returns>
         private static string GenerateAssetObjectName(string assetId)
         {
-            return assetId.Replace("-", "").ToLower() + ".asset";
+            return assetId.Replace("-", String.Empty).ToLower() + ".asset";
         }
 
         private void WarnIfLongOperation(string opName, Action operation)

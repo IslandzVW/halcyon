@@ -234,7 +234,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
         /// <returns></returns>
         protected CachedUserInfo GetUserInfo(string firstName, string lastName)
         {
-            CachedUserInfo userInfo = CommsManager.UserProfileCacheService.GetUserDetails(firstName, lastName);
+            CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(firstName, lastName);
             if (null == userInfo)
             {
                 m_log.ErrorFormat(

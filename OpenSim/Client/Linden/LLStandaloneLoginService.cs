@@ -58,10 +58,10 @@ namespace OpenSim.Client.Linden
         protected ILoginServiceToRegionsConnector m_regionsConnector;
 
         public LLStandaloneLoginService(
-            UserManagerBase userManager, string welcomeMess, string mapServerURI,
+            UserProfileManager userManager, string welcomeMess, string mapServerURI, string profileServerURI,
             NetworkServersInfo serversInfo,
             bool authenticate, LibraryRootFolder libraryRootFolder, ILoginServiceToRegionsConnector regionsConnector)
-            : base(userManager, libraryRootFolder, welcomeMess, mapServerURI)
+            : base(userManager, libraryRootFolder, welcomeMess, mapServerURI, profileServerURI)
         {
             this.m_serversInfo = serversInfo;
             m_defaultHomeX = this.m_serversInfo.DefaultHomeLocX;
@@ -84,7 +84,7 @@ namespace OpenSim.Client.Linden
                 //no current user account so make one
                 m_log.Info("[LOGIN]: No user account found so creating a new one.");
 
-                m_userManager.AddUser(firstname, lastname, "test", "", m_defaultHomeX, m_defaultHomeY);
+                m_userManager.AddUser(firstname, lastname, "test", String.Empty, m_defaultHomeX, m_defaultHomeY);
 
                 return m_userManager.GetUserProfile(firstname, lastname);
             }

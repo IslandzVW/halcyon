@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Reflection;
 using System.Threading;
 using log4net;
@@ -55,7 +56,7 @@ namespace OpenSim
             base.Startup();
 
             m_log.InfoFormat("[HALCYON MAIN]: Startup complete, serving {0} region{1}",
-                             m_clientServers.Count.ToString(), m_clientServers.Count > 1 ? "s" : "");
+                             m_clientServers.Count.ToString(), m_clientServers.Count > 1 ? "s" : String.Empty);
 
             WorldHasComeToAnEnd.WaitOne();
             WorldHasComeToAnEnd.Close();

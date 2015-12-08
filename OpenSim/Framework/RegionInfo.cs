@@ -276,7 +276,7 @@ namespace OpenSim.Framework
         public string MasterAvatarLastName = String.Empty;
         public string MasterAvatarSandboxPassword = String.Empty;
         public UUID originRegionID = UUID.Zero;
-        public string proxyUrl = "";
+        public string proxyUrl = String.Empty;
         public int ProxyOffset = 0;
         public string RegionName = String.Empty;
         public string regionSecret = UUID.Random().ToString();
@@ -732,8 +732,8 @@ namespace OpenSim.Framework
                 m_externalHostName = Util.GetLocalHost().ToString();
             }
 
-            OutsideIP = source.Configs[sectionName].GetString("outside_ip", "");
-            if (OutsideIP == "") OutsideIP = null;
+            OutsideIP = source.Configs[sectionName].GetString("outside_ip", String.Empty);
+            if (String.IsNullOrEmpty(OutsideIP)) OutsideIP = null;
 
             MasterAvatarFirstName = source.Configs[sectionName].GetString("master_avatar_first", "Test");
             MasterAvatarLastName = source.Configs[sectionName].GetString("master_avatar_last", "User");
@@ -741,9 +741,9 @@ namespace OpenSim.Framework
 
             MasterAvatarSandboxPassword = source.Configs[sectionName].GetString("master_avatar_pass", "test");
 
-            if (errorMessage != String.Empty)
+            if (!String.IsNullOrEmpty(errorMessage))
             {
-                // a error
+                // TODO: a error
             }
         }
 
@@ -891,7 +891,7 @@ namespace OpenSim.Framework
                                                 "Access restrictions, 0=anyone, 1=only Plus users", "0", true);
 
             configMember.addConfigurationOption("outside_ip", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
-                                                "The ip address as seen by the outside world", "", true);
+                                                "The ip address as seen by the outside world", String.Empty, true);
         }
 
         public bool shouldMasterAvatarDetailsBeAsked(string configuration_key)
@@ -1005,7 +1005,7 @@ namespace OpenSim.Framework
                     break;
                 case "outside_ip":
                     OutsideIP = (string)configuration_result;
-                    if (OutsideIP == "") OutsideIP = null;
+                    if (String.IsNullOrEmpty(OutsideIP)) OutsideIP = null;
                     break;
             }
 
@@ -1027,7 +1027,7 @@ namespace OpenSim.Framework
         {
             OSDMap args = new OSDMap();
             args["region_id"] = OSD.FromUUID(RegionID);
-            if ((RegionName != null) && !RegionName.Equals(""))
+            if (!String.IsNullOrEmpty(RegionName))
                 args["region_name"] = OSD.FromString(RegionName);
             args["external_host_name"] = OSD.FromString(ExternalHostName);
             args["http_port"] = OSD.FromString(HttpPort.ToString());
@@ -1035,11 +1035,11 @@ namespace OpenSim.Framework
             args["region_yloc"] = OSD.FromString(RegionLocY.ToString());
             args["internal_ep_address"] = OSD.FromString(InternalEndPoint.Address.ToString());
             args["internal_ep_port"] = OSD.FromString(InternalEndPoint.Port.ToString());
-            if ((RemotingAddress != null) && !RemotingAddress.Equals(""))
+            if (!String.IsNullOrEmpty(RemotingAddress))
                 args["remoting_address"] = OSD.FromString(RemotingAddress);
             args["remoting_port"] = OSD.FromString(RemotingPort.ToString());
             args["allow_alt_ports"] = OSD.FromBoolean(m_allow_alternate_ports);
-            if ((proxyUrl != null) && !proxyUrl.Equals(""))
+            if (!String.IsNullOrEmpty(proxyUrl))
                 args["proxy_url"] = OSD.FromString(proxyUrl);
 
             if (OutsideIP != null) args["outside_ip"] = OSD.FromString(OutsideIP);
@@ -1099,7 +1099,7 @@ namespace OpenSim.Framework
             string outsideIp)
         {
             RegionInfo regionInfo;
-            IPEndPoint neighbourInternalEndPoint = new IPEndPoint(Util.GetHostFromDNS(externalHostName), (int)simPort);                    
+            IPEndPoint neighbourInternalEndPoint = new IPEndPoint(Util.GetHostFromDNS(externalHostName), (int)simPort);
             regionInfo = new RegionInfo(regX, regY, neighbourInternalEndPoint, externalHostName);
             regionInfo.RemotingPort = remotingPort;
             regionInfo.RemotingAddress = externalHostName;

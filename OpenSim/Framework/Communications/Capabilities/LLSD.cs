@@ -256,7 +256,7 @@ namespace OpenSim.Framework.Communications.Capabilities
                         reader.Read();
                         string s = reader.ReadString().Trim();
 
-                        if (s == String.Empty || s == "false" || s == "0")
+                        if (String.IsNullOrEmpty(s) || s == "false" || s == "0")
                             ret = false;
                         else if (s == "true" || s == "1")
                             ret = true;
@@ -526,7 +526,7 @@ namespace OpenSim.Framework.Communications.Capabilities
 
         public static object ParseTerseLLSD(string llsd, out int endPos)
         {
-            if (llsd.Length == 0)
+            if (String.IsNullOrEmpty(llsd))
             {
                 endPos = 0;
                 return null;

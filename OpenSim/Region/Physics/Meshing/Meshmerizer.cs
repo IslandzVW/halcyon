@@ -151,16 +151,13 @@ namespace OpenSim.Region.Physics.Meshing
 
             foreach (Vector3 v in meshIn.getVertexList())
             {
-                if (v != null)
-                {
-                    if (v.X < minX) minX = v.X;
-                    if (v.Y < minY) minY = v.Y;
-                    if (v.Z < minZ) minZ = v.Z;
+                if (v.X < minX) minX = v.X;
+                if (v.Y < minY) minY = v.Y;
+                if (v.Z < minZ) minZ = v.Z;
 
-                    if (v.X > maxX) maxX = v.X;
-                    if (v.Y > maxY) maxY = v.Y;
-                    if (v.Z > maxZ) maxZ = v.Z;
-                }
+                if (v.X > maxX) maxX = v.X;
+                if (v.Y > maxY) maxY = v.Y;
+                if (v.Z > maxZ) maxZ = v.Z;
             }
 
             return CreateSimpleBoxMesh(minX, maxX, minY, maxY, minZ, maxZ);
@@ -480,7 +477,7 @@ namespace OpenSim.Region.Physics.Meshing
             primMesh = new PrimMesh(sides, profileBegin, profileEnd, profileHollow, hollowSides);
 
             if (primMesh.errorMessage != null)
-                if (primMesh.errorMessage.Length > 0)
+            if (!String.IsNullOrEmpty(primMesh.errorMessage))
                     m_log.Error("[ERROR] " + primMesh.errorMessage);
 
             primMesh.topShearX = pathShearX;

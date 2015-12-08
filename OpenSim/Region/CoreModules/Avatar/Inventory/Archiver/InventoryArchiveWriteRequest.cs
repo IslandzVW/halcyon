@@ -246,7 +246,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
 
             // Annoyingly Split actually returns the original string if the input string consists only of delimiters
             // Therefore if we still start with a / after the split, then we need the root folder
-            if (m_invPath.Length == 0)
+            if (String.IsNullOrEmpty(m_invPath))
             {
                 inventoryFolder = m_userInfo.RootFolder;
             }
@@ -312,7 +312,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             {
                 // Record the creator of this item
                 CachedUserInfo creator 
-                    = m_module.CommsManager.UserProfileCacheService.GetUserDetails(creatorId);
+                    = m_module.CommsManager.UserService.GetUserDetails(creatorId);
 
                 if (creator != null)
                 {

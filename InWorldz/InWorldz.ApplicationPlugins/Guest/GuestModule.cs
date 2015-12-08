@@ -122,13 +122,10 @@ namespace InWorldz.ApplicationPlugins.GuestModule
         void EventManager_OnChatFromClient(object sender, OSChatMessage chat)
         {
             if (!m_enabled) return;
-            if (chat.Message == "" || chat.SenderUUID == chat.DestinationUUID) return;
+            if (String.IsNullOrEmpty(chat.Message) || chat.SenderUUID == chat.DestinationUUID) return;
 
-            CachedUserInfo info = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(chat.SenderUUID);
-            if (info == null) return;
-
-
-            if (info.UserProfile.SurName == "Guest")
+            string lastName = m_scene.CommsManager.UserService.GetLastName(chat.SenderUUID, false);
+            if (lastName == "Guest")
             {
                 //scan for and remove hyperlinks
                 //v2 recognizes .com, .org, and .net links with or without HTTP/S in them..
@@ -137,8 +134,8 @@ namespace InWorldz.ApplicationPlugins.GuestModule
                 string noProto = "(\\bwww\\.\\S+\\.\\S+|(?<!@)\\b[^[:space:]:@/>]+\\.(?:com|net|edu|org)([/:][^[:space:]<]*)?\\b)";
                 string withProto = "https?://([-\\w\\.]+)+(:\\d+)?(:\\w+)?(@\\d+)?(@\\w+)?/?\\S*";
 
-                string replaced = Regex.Replace(chat.Message, withProto, "", RegexOptions.IgnoreCase);
-                replaced = Regex.Replace(replaced, noProto, "", RegexOptions.IgnoreCase);
+                string replaced = Regex.Replace(chat.Message, withProto, String.Empty, RegexOptions.IgnoreCase);
+                replaced = Regex.Replace(replaced, noProto, String.Empty, RegexOptions.IgnoreCase);
 
                 chat.Message = replaced;
             }

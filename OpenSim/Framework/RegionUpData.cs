@@ -32,7 +32,7 @@ namespace OpenSim.Framework
     [Serializable]
     public class RegionUpData
     {
-        private string m_ipaddr = "";
+        private string m_ipaddr = String.Empty;
         private int m_port = 0;
         private uint m_X = 0;
         private uint m_Y = 0;

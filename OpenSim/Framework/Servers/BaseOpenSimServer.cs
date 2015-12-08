@@ -300,7 +300,7 @@ namespace OpenSim.Framework.Servers
             StartupSpecific();
 
             // Report the version number near the end so you can still see it after startup.
-            m_log.Info("[STARTUP]: Version: " + VersionInfo.FullVersion + "\n");
+            m_log.Info("[STARTUP]: Version: " + VersionInfo.Version + "\n");
 
             TimeSpan timeTaken = DateTime.Now - m_startuptime;
             m_log.InfoFormat("[STARTUP]: Startup took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
@@ -359,7 +359,7 @@ namespace OpenSim.Framework.Servers
         /// <param name="helpArgs"></param>
         protected virtual void ShowHelp(string[] helpArgs)
         {
-            Notice("");
+            Notice(String.Empty);
             
             if (helpArgs.Length == 0)
             {
@@ -372,7 +372,7 @@ namespace OpenSim.Framework.Servers
                 Notice("show threads - list tracked threads");
                 Notice("show uptime - show server startup time and uptime.");
                 Notice("show version - show server version.");
-                Notice("");
+                Notice(String.Empty);
 
                 return;
             }
@@ -389,7 +389,7 @@ namespace OpenSim.Framework.Servers
             switch (showParams[0])
             {                       
                 case "info":
-                    Notice("Version: " + VersionInfo.FullVersion);
+                    Notice("Version: " + VersionInfo.Version);
                     Notice("Startup directory: " + m_startupDirectory);
                     break;
 
@@ -409,7 +409,7 @@ namespace OpenSim.Framework.Servers
                 case "version":
                     Notice(
                         String.Format(
-                            "Version: {0} (interface version {1})", VersionInfo.FullVersion, VersionInfo.MajorInterfaceVersion));
+                            "Version: {0}", VersionInfo.Version));
                     break;
             }
         }
@@ -491,7 +491,7 @@ namespace OpenSim.Framework.Servers
            
         protected void RemovePIDFile()
         {
-            if (m_pidFile != String.Empty)
+            if (!String.IsNullOrEmpty(m_pidFile))
             {
                 try
                 {

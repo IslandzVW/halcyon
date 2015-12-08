@@ -61,7 +61,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.User
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
             {
-                string name = moduleConfig.GetString("UserServices", "");
+                string name = moduleConfig.GetString("UserServices", String.Empty);
                 if (name == Name)
                 {
                     IConfig userConfig = source.Configs["UserService"];
@@ -74,7 +74,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.User
                     string serviceDll = userConfig.GetString("LocalServiceModule",
                             String.Empty);
 
-                    if (serviceDll == String.Empty)
+                    if (String.IsNullOrEmpty(serviceDll))
                     {
                         m_log.Error("[USER CONNECTOR]: No LocalServiceModule named in section UserService");
                         return;

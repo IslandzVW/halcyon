@@ -185,6 +185,8 @@ namespace OpenSim.Region.Physics.Manager
 
         public abstract void CrossingFailure();
 
+        public abstract void ForceAboveParcel(float height);
+
         public abstract void LinkToNewParent(PhysicsActor obj, OpenMetaverse.Vector3 localPos, OpenMetaverse.Quaternion localRot);
 
         public abstract void DelinkFromParent(Vector3 newWorldPosition, Quaternion newWorldRotation);

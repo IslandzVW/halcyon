@@ -180,6 +180,14 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
+        public void RemoveAvatarFromParcel(UUID userID)
+        {
+            if (m_landManagementModule != null)
+            {
+                m_landManagementModule.RemoveAvatarFromParcel(userID);
+            }
+        }
+
         public void UpdateLandPrimCounts()
         {
             if (m_landManagementModule != null)

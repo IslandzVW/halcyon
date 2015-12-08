@@ -47,7 +47,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FriendPermissions
                 connString = userConfig.GetString("ConnectionString", String.Empty);
             }
 
-            if (String.Empty == connString)
+            if (String.IsNullOrEmpty(connString))
             {
                 userConfig = source.Configs["StandAlone"];
                 connString = userConfig.GetString("user_source", String.Empty);
@@ -109,7 +109,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FriendPermissions
 
             }
 
-            m_scene.CommsManager.UserProfileCacheService.UpdateUserFriendPerms(grantor, grantee, (uint)rights);
+            m_scene.CommsManager.UserService.UpdateUserFriendPerms(grantor, grantee, (uint)rights);
             sender.SendChangeUserRights(grantor, grantee, rights);
         }
     }

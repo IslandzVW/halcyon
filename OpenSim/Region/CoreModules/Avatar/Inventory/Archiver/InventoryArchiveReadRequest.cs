@@ -214,9 +214,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
             InventoryFolderImpl foundFolder = null;
 
             // XXX: Nasty way of dealing with a path that has no directory component
-            if (fsPath.Length > 0)
+            if (!String.IsNullOrEmpty(fsPath))
             {
-                while (null == foundFolder && fsPath.Length > 0)
+                while (null == foundFolder && !String.IsNullOrEmpty(fsPath))
                 {
                     if (foldersCreated.ContainsKey(fsPath))
                     {
@@ -237,7 +237,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Archiver
                             m_log.DebugFormat(
                                 "[INVENTORY ARCHIVER]: Found no previously created fs path for {0}",
                                 originalFsPath);
-                            fsPath = string.Empty;
+                            fsPath = String.Empty;
                             foundFolder = rootDestinationFolder;
                         }
                     }

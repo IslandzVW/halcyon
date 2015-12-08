@@ -283,13 +283,13 @@ namespace OpenSim.Framework
     public class PluginExtensionNode : ExtensionNode
     {
         [NodeAttribute]
-        string id = "";
+        string id = String.Empty;
 
         [NodeAttribute]
-        string provider = "";
+        string provider = String.Empty;
 
         [NodeAttribute]
-        string type = "";
+        string type = String.Empty;
 
         Type typeobj;
 
@@ -304,7 +304,7 @@ namespace OpenSim.Framework
                 if (typeobj != null)
                     return typeobj;
 
-                if (type.Length == 0)
+                if (String.IsNullOrEmpty(type))
                     throw new InvalidOperationException("Type name not specified.");
 
                 return typeobj = Addin.GetType(type, true);

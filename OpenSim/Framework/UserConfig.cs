@@ -39,6 +39,7 @@ namespace OpenSim.Framework
         public string DatabaseConnect = String.Empty;
         public string DefaultStartupMsg = String.Empty;
         public string MapServerURI = String.Empty;
+        public string ProfileServerURI = String.Empty;
         public uint DefaultX = 1000;
         public uint DefaultY = 1000;
         public string GridRecvKey = String.Empty;
@@ -46,7 +47,7 @@ namespace OpenSim.Framework
         public uint HttpPort = ConfigSettings.DefaultUserServerHttpPort;
         public bool HttpSSL = ConfigSettings.DefaultUserServerHttpSSL;
         public uint DefaultUserLevel = 0;
-        public string LibraryXmlfile = "";
+        public string LibraryXmlfile = String.Empty;
 
         private Uri m_inventoryUrl;
 
@@ -106,7 +107,7 @@ namespace OpenSim.Framework
         {
             m_configMember.addConfigurationOption("default_startup_message",
                                                 ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
-                                                "Default Startup Message", "Welcome to OGS", false);
+                                                "Default Startup Message", "Welcome to an InWorldz compatible grid", false);
 
             m_configMember.addConfigurationOption("default_grid_server",
                                                 ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
@@ -125,12 +126,12 @@ namespace OpenSim.Framework
             m_configMember.addConfigurationOption("library_location",
                                                 ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
                                                 "Path to library control file",
-                                                string.Format(".{0}inventory{0}Libraries.xml", Path.DirectorySeparatorChar), false);            
+                                                string.Format(".{0}inventory{0}Libraries.xml", Path.DirectorySeparatorChar), false);
             
             m_configMember.addConfigurationOption("database_provider", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                 "DLL for database provider", "OpenSim.Data.MySQL.dll", false);
             m_configMember.addConfigurationOption("database_connect", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
-                                                "Connection String for Database", "", false);
+                                                "Connection String for Database", String.Empty, false);
 
             m_configMember.addConfigurationOption("http_port", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Http Listener port", ConfigSettings.DefaultUserServerHttpPort.ToString(), false);
@@ -141,14 +142,15 @@ namespace OpenSim.Framework
             m_configMember.addConfigurationOption("default_Y", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Known good region Y", "1000", false);
             m_configMember.addConfigurationOption("map_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
-                                                "Map server URI?", "", false);
+                                                "Map server URI?", String.Empty, false);
+            m_configMember.addConfigurationOption("profile_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "URI for the server and page responsible for handling web profiles?", "", true); // That's what the viewer currently defaults to and makes an excellent example.
 
             m_configMember.addConfigurationOption("enable_hg_login", ConfigurationOption.ConfigurationTypes.TYPE_BOOLEAN,
-                    "Enable Hypergrid login support [Currently used by GridSurfer-proxied clients]? true/false", true.ToString(), false);
+                                                "Enable Hypergrid login support [Currently used by GridSurfer-proxied clients]? true/false", true.ToString(), false);
 
             m_configMember.addConfigurationOption("default_loginLevel", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Minimum Level a user should have to login [0 default]", "0", false);
-            
         }
 
         public bool handleIncomingConfiguration(string configuration_key, object configuration_result)
@@ -202,6 +204,9 @@ namespace OpenSim.Framework
                     break;
                 case "map_server_uri":
                     MapServerURI = (string)configuration_result;
+                    break;
+                case "profile_server_uri":
+                    ProfileServerURI = (string)configuration_result;
                     break;
             }
 
