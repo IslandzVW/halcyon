@@ -71,7 +71,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
         private string m_MapImageServerURL = String.Empty;
         private string m_SearchURL = String.Empty;
         private bool m_MeshEnabled = true;
-        private bool m_PhysicsMaterialsEnabled = true;
         private bool m_DynamicPathfindingEnabled = false;
         private bool m_ExportSupported = true;
         private int m_whisperdistance = 10;
@@ -94,7 +93,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
                 m_SearchURL = config.GetString("SearchServerURI", String.Empty);
                 m_MeshEnabled = config.GetBoolean("MeshEnabled", m_MeshEnabled);
-                m_PhysicsMaterialsEnabled = config.GetBoolean("PhysicsMaterialsEnabled", m_MeshEnabled);
                 m_DynamicPathfindingEnabled = config.GetBoolean("DynamicPathfindingEnabled", m_DynamicPathfindingEnabled);
                 m_ExportSupported = config.GetBoolean("ExportSupported", m_ExportSupported);
             }
@@ -160,7 +158,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 m_features["MeshRezEnabled"] = m_MeshEnabled;
                 m_features["MeshUploadEnabled"] = m_MeshEnabled;
                 m_features["MeshXferEnabled"] = m_MeshEnabled;
-                m_features["PhysicsMaterialsEnabled"] = m_PhysicsMaterialsEnabled;
                 m_features["DynamicPathfindingEnabled"] = m_DynamicPathfindingEnabled;
     
                 OSDMap typesMap = new OSDMap();
@@ -181,7 +178,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 opensimFeatures["shout-range"] = m_shoutdistance;
                 m_features["OpenSimExtras"] = opensimFeatures;
 
-                m_log.InfoFormat("[SimulatorFeatures]: mesh={0} physMat={1} exp={2} map='{3}' search='{4}'", m_MeshEnabled, m_PhysicsMaterialsEnabled, m_ExportSupported, m_MapImageServerURL, m_SearchURL);
+                m_log.InfoFormat("[SimulatorFeatures]: mesh={0} exp={1} map='{2}' search='{3}'", m_MeshEnabled, m_ExportSupported, m_MapImageServerURL, m_SearchURL);
             }
         }
 
@@ -194,7 +191,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
         }
 
         public bool MeshEnabled { get { return m_MeshEnabled; } }
-        public bool PhysicsMaterialsEnabled { get { return m_PhysicsMaterialsEnabled; } }
 
         public void AddFeature(string name, OSD value)
         {

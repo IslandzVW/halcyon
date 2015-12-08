@@ -36,7 +36,6 @@ namespace OpenSim.Region.Framework.Interfaces
     public interface ISimulatorFeaturesModule
     {
         bool MeshEnabled { get; }
-        bool PhysicsMaterialsEnabled { get; }
 
         void AddFeature(string name, OSD value);
         bool RemoveFeature(string name);
