@@ -188,7 +188,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
         {
             string fromName = c.From;
             UUID fromID = UUID.Zero;
-            UUID ownerID = UUID.Zero;
+            UUID ownerID = c.GeneratingAvatarID;
             UUID destID = c.DestinationUUID;
             string message = c.Message;
             IScene scene = c.Scene;
@@ -217,8 +217,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
                 case ChatSourceType.Object:
                     fromID = c.SenderUUID;
-                    ownerID = ((SceneObjectPart)c.SenderObject).OwnerID;
-
                 break;
             }
 
@@ -264,7 +262,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             string fromName = c.From;
             
             UUID fromID = UUID.Zero;
-            UUID ownerID = UUID.Zero;
+            UUID ownerID = c.GeneratingAvatarID;
             ChatSourceType sourceType = ChatSourceType.Object;
             if (null != c.Sender)
             {
@@ -277,7 +275,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             else if (c.SenderUUID != UUID.Zero)
             {
                 fromID = c.SenderUUID; 
-                ownerID = ((SceneObjectPart)c.SenderObject).OwnerID;
             }
 
             // m_log.DebugFormat("[CHAT] Broadcast: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, cType, sourceType);
@@ -293,8 +290,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                     // don't forward SayOwner chat from objects to
                     // non-owner agents
                     if ((c.Type == ChatTypeEnum.Owner) &&
-                        (null != c.SenderObject) &&
-                        (((SceneObjectPart)c.SenderObject).OwnerID != client.AgentId))
+                        (ownerID != client.AgentId))
                         return;
 
                     presence.Scene.EventManager.TriggerOnChatToClient(c.Message, fromID,

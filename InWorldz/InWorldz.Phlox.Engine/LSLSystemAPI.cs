@@ -11961,7 +11961,8 @@ namespace InWorldz.Phlox.Engine
         public void llOwnerSay(string msg)
         {
             World.SimChatBroadcast(Utils.StringToBytes(msg), ChatTypeEnum.Owner, 0,
-                                   m_host.AbsolutePosition, m_host.Name, m_host.UUID, false);
+                                   m_host.AbsolutePosition, m_host.Name, m_host.UUID, false,
+                                   m_host.OwnerID);
 
             ScriptSleep(15);
         }
