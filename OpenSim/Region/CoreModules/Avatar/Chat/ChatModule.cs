@@ -188,6 +188,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
         {
             string fromName = c.From;
             UUID fromID = UUID.Zero;
+            UUID ownerID = UUID.Zero;
             UUID destID = c.DestinationUUID;
             string message = c.Message;
             IScene scene = c.Scene;
@@ -199,22 +200,24 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
             switch (sourceType) 
             {
-            case ChatSourceType.Agent:
-                if (!(scene is Scene))
-                {
-                    m_log.WarnFormat("[CHAT]: scene {0} is not a Scene object, cannot obtain scene presence for {1}",
-                                     scene.RegionInfo.RegionName, c.Sender.AgentId);
-                    return;
-                }
-                ScenePresence avatar = (scene as Scene).GetScenePresence(c.Sender.AgentId);
-                fromPos = avatar.AbsolutePosition;
-                fromName = avatar.Name;
-                fromID = c.Sender.AgentId;
+                case ChatSourceType.Agent:
+                    if (!(scene is Scene))
+                    {
+                        m_log.WarnFormat("[CHAT]: scene {0} is not a Scene object, cannot obtain scene presence for {1}",
+                            scene.RegionInfo.RegionName, c.Sender.AgentId);
+                        return;
+                    }
+                    ScenePresence avatar = (scene as Scene).GetScenePresence(c.Sender.AgentId);
+                    fromPos = avatar.AbsolutePosition;
+                    fromName = avatar.Name;
+                    fromID = c.Sender.AgentId;
+                    ownerID = c.Sender.AgentId;
 
                 break;
 
-            case ChatSourceType.Object:
-                fromID = c.SenderUUID;
+                case ChatSourceType.Object:
+                    fromID = c.SenderUUID;
+                    ownerID = ((SceneObjectPart)c.SenderObject).OwnerID;
 
                 break;
             }
@@ -227,14 +230,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
             foreach (Scene s in m_scenes)
             {
-                s.ForEachScenePresence(delegate(ScenePresence presence) 
-                                       {
+                s.ForEachScenePresence(delegate(ScenePresence presence)
+                    {
                                            
-                                           if (!presence.IsChildAgent)
-                                               if ((destID == UUID.Zero) || (destID == presence.UUID))
-                                                    TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, 
-                                                              c.Type, message, sourceType);
-                                       });
+                        if (!presence.IsChildAgent)
+                            if ((destID == UUID.Zero) || (destID == presence.UUID))
+                                TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, ownerID,
+                                    c.Type, message, sourceType);
+                    });
             }
         }
 
@@ -324,7 +327,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
         }
 
         protected virtual void TrySendChatMessage(ScenePresence presence, Vector3 fromPos, Vector3 regionPos,
-                                                  UUID fromAgentID, string fromName, ChatTypeEnum type,
+                                                  UUID fromAgentID, string fromName, UUID ownerID, ChatTypeEnum type,
                                                   string message, ChatSourceType src)
         {
             if ((presence.Scene.RegionInfo.RegionLocX != ((uint)regionPos.X) / Constants.RegionSize) ||
@@ -358,7 +361,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                 ChatToClientType.InworldChat);
             // TODO: should change so the message is sent through the avatar rather than direct to the ClientView
             presence.ControllingClient.SendChatMessage(message, (byte) type, fromPos, fromName, fromAgentID,
-                                                       fromAgentID, (byte)src, (byte)ChatAudibleLevel.Fully);
+                                                       ownerID, (byte)src, (byte)ChatAudibleLevel.Fully);
         }
         
         private SceneObjectPart FindObject(uint localID)
@@ -444,7 +447,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             ((Scene)client.Scene).EventManager.TriggerOnChatToClient(msg, UUID.Zero,
                 client.AgentId, client.Scene.RegionInfo.RegionID, (uint)Util.UnixTimeSinceEpoch(),
                 ChatToClientType.InworldChat);
-            client.SendChatMessage(msg, (byte)ChatTypeEnum.Say, Pos, client.Name, UUID.Zero, UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
+            client.SendChatMessage(msg, (byte)ChatTypeEnum.Say, Pos, client.Name, UUID.Zero, UUID.Zero, 
+                (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
         }
 
         private void SendSystemChat(IClientAPI client, string format, params Object[] args)
@@ -454,7 +458,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             ((Scene)client.Scene).EventManager.TriggerOnChatToClient(msg, UUID.Zero,
                 client.AgentId, client.Scene.RegionInfo.RegionID, (uint)Util.UnixTimeSinceEpoch(),
                 ChatToClientType.InworldChat);
-            client.SendChatMessage(msg, (byte)ChatTypeEnum.Say, GodPos, "System", UUID.Zero, UUID.Zero, (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
+            client.SendChatMessage(msg, (byte)ChatTypeEnum.Say, GodPos, "System", UUID.Zero, UUID.Zero, 
+                (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
         }
 
         private string LocationURL(Scene scene, SceneObjectPart part)
