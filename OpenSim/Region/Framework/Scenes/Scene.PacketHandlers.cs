@@ -38,7 +38,7 @@ namespace OpenSim.Region.Framework.Scenes
     public partial class Scene
     {
         protected void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                               UUID fromID, bool fromAgent, bool broadcast, UUID destID)
+                               UUID fromID, bool fromAgent, bool broadcast, UUID destID, UUID generatingAvatarID)
         {
             OSChatMessage args = new OSChatMessage();
 
@@ -56,13 +56,9 @@ namespace OpenSim.Region.Framework.Scenes
                 if (user != null)
                     args.Sender = user.ControllingClient;
             }
-            else
-            {
-                SceneObjectPart obj = GetSceneObjectPart(fromID);
-                args.SenderObject = obj;
-            }
 
             args.From = fromName;
+            args.GeneratingAvatarID = generatingAvatarID;
 
             if (broadcast)
                 EventManager.TriggerOnChatBroadcast(this, args);
@@ -79,25 +75,26 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="fromName"></param>
         /// <param name="fromAgentID"></param>
         public void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                            UUID fromID, bool fromAgent, UUID destID)
+                            UUID fromID, bool fromAgent, UUID destID, UUID generatingAvatarID)
         {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, destID);
+            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, destID, generatingAvatarID);
         }
 
         public void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                            UUID fromID, bool fromAgent)
+                            UUID fromID, bool fromAgent, UUID generatingAvatarID)
         {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, UUID.Zero);
+            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, UUID.Zero, generatingAvatarID);
         }
 
-        public void SimChat(string message, ChatTypeEnum type, Vector3 fromPos, string fromName, UUID fromID, bool fromAgent)
+        public void SimChat(string message, ChatTypeEnum type, Vector3 fromPos, string fromName, UUID fromID, 
+            bool fromAgent, UUID generatingAvatarID)
         {
-            SimChat(Utils.StringToBytes(message), type, 0, fromPos, fromName, fromID, fromAgent);
+            SimChat(Utils.StringToBytes(message), type, 0, fromPos, fromName, fromID, fromAgent, generatingAvatarID);
         }
 
-        public void SimChat(string message, string fromName)
+        public void SimChat(string message, string fromName, UUID generatingAvatarID)
         {
-            SimChat(message, ChatTypeEnum.Broadcast, Vector3.Zero, fromName, UUID.Zero, false);
+            SimChat(message, ChatTypeEnum.Broadcast, Vector3.Zero, fromName, UUID.Zero, false, generatingAvatarID);
         }
 
         /// <summary>
@@ -109,9 +106,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="fromName"></param>
         /// <param name="fromAgentID"></param>
         public void SimChatBroadcast(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                                     UUID fromID, bool fromAgent)
+                                     UUID fromID, bool fromAgent, UUID generatingAvatarID)
         {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, true, UUID.Zero);
+            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, true, UUID.Zero, generatingAvatarID);
         }
 
         /// <summary>
