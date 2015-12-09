@@ -72,6 +72,8 @@ namespace OpenSim.Region.CoreModules.Capabilities
         private string m_SearchURL = String.Empty;
         private bool m_MeshEnabled = true;
         private bool m_PhysicsMaterialsEnabled = true;
+        private float m_RenderMaterialsCapability = 1.0f;
+        private int m_MaxMaterialsPerTransaction = 50;
         private bool m_DynamicPathfindingEnabled = false;
         private bool m_ExportSupported = true;
         private int m_whisperdistance = 10;
@@ -95,6 +97,8 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 m_SearchURL = config.GetString("SearchServerURI", String.Empty);
                 m_MeshEnabled = config.GetBoolean("MeshEnabled", m_MeshEnabled);
                 m_PhysicsMaterialsEnabled = config.GetBoolean("PhysicsMaterialsEnabled", m_MeshEnabled);
+                m_RenderMaterialsCapability = config.GetFloat("RenderMaterialsCapability", m_RenderMaterialsCapability);
+                m_MaxMaterialsPerTransaction = config.GetInt("MaxMaterialsPerTransaction", m_MaxMaterialsPerTransaction);
                 m_DynamicPathfindingEnabled = config.GetBoolean("DynamicPathfindingEnabled", m_DynamicPathfindingEnabled);
                 m_ExportSupported = config.GetBoolean("ExportSupported", m_ExportSupported);
             }
@@ -161,6 +165,8 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 m_features["MeshUploadEnabled"] = m_MeshEnabled;
                 m_features["MeshXferEnabled"] = m_MeshEnabled;
                 m_features["PhysicsMaterialsEnabled"] = m_PhysicsMaterialsEnabled;
+                m_features["RenderMaterialsCapability"] = m_RenderMaterialsCapability;
+                m_features["MaxMaterialsPerTransaction"] = m_MaxMaterialsPerTransaction;
                 m_features["DynamicPathfindingEnabled"] = m_DynamicPathfindingEnabled;
     
                 OSDMap typesMap = new OSDMap();
