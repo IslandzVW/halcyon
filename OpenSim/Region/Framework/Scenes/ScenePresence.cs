@@ -3959,6 +3959,7 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.AgentID = UUID;
             cAgent.RegionHandle = m_scene.RegionInfo.RegionHandle;
 
+            // m_log.WarnFormat("[PRESENCE]: CopyToForRootAgent for {0} position {1} was {2}", cAgent.AgentID, m_posInfo.Position, cAgent.Position);
             cAgent.Position = m_posInfo.Position;
             cAgent.Velocity = Velocity;
             cAgent.Center = m_CameraCenter;

@@ -853,6 +853,7 @@ namespace OpenSim.Data.MySQL
         /// <returns>Success?</returns>
         public bool insertAgentRow(UserAgentData agentdata)
         {
+            // m_log.ErrorFormat("[MYSQL]: REPLACE AgentData: {0} at {1} {2}", agentdata.ProfileID, agentdata.Handle, agentdata.Position);
             string sql = String.Empty;
             sql += "REPLACE INTO ";
             sql += "agents (UUID, sessionID, secureSessionID, agentIP, agentPort, agentOnline, loginTime, logoutTime, currentRegion, currentHandle, currentPos, currentLookAt) VALUES ";

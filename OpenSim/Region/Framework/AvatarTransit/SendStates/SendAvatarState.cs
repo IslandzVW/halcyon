@@ -229,6 +229,7 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
             }
             else
             {
+                // _log.WarnFormat("[SCENE COMM]: SendChildAgentUpdate2 for {0} position {1} was {2}", cAgent.AgentID, pos, cAgent.Position);
                 cAgent.Position = pos;
             }
 
