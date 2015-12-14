@@ -791,10 +791,6 @@ namespace InWorldz.PhysxPhysics
             //NOP
         }
 
-        public override void DeleteTerrain()
-        {
-        }
-
         public override void Dispose()
         {
             _stop = true;

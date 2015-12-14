@@ -181,8 +181,6 @@ namespace OpenSim.Region.Physics.Manager
 
         public abstract void SetWaterLevel(float baseheight);
 
-        public abstract void DeleteTerrain();
-
         public abstract void Dispose();
 
         public abstract Dictionary<uint, float> GetTopColliders();
