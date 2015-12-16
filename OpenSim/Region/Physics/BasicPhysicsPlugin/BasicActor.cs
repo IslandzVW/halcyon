@@ -44,19 +44,64 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
     public class BasicActor : PhysicsActor
     {
         private const float CHARACTER_DENSITY = 60.0f;
+        /// <summary>
+        /// Maximum amount of time that is allowed to be passed to the velocity
+        /// and other computations. If more time than this has passed, the 
+        /// movements of the avatar will be dilated to prevent explosions
+        /// </summary>
+        private const float MAX_TIMESTEP = 0.5f;
+        /// <summary>
+        /// The minimum tick count on windows
+        /// </summary>
+        private const float MIN_TIMESTEP = 0.0156f;
+        private const float TERMINAL_VELOCITY_GRAVITY = 55.0f;
+        private const float MIN_FORCE_MAG_BEFORE_ZEROING_SQUARED = 0.00625f;
+        private const float ACCELERATION_COMPARISON_TOLERANCE = 0.006f;
+        private const int VELOCITY_RAMPUP_TIME = 600;
+        private const float GRAVITY_PUSHBACK_DIFF_TOLERANCE = 0.001f;
+        private const float POSITION_COMPARISON_TOLERANCE = 0.1f;
+        private const float STEP_OFFSET = 0.45f;
 
         private OpenMetaverse.Vector3 _position;
         private OpenMetaverse.Vector3 _velocity;
         private OpenMetaverse.Vector3 _acceleration;
         private OpenMetaverse.Vector3 _size;
+        private OpenMetaverse.Quaternion _rotation;
         private OpenMetaverse.Vector3 m_rotationalVelocity = OpenMetaverse.Vector3.Zero;
         private float _mass;
 
-        private bool flying;
-        private bool iscolliding;
+        private ulong _lastVelocityNonZero = 0;
 
-        private const float _height = 1.5f;
-        private const float _radius = 0.25f;
+        /// <summary>
+        /// The current velocity due to gravity clamped at terminal
+        /// </summary>
+        private OpenMetaverse.Vector3 _vGravity;
+
+        /// <summary>
+        /// Current self-decaying forces acting on an avatar
+        /// </summary>
+        private OpenMetaverse.Vector3 _vForces;
+
+        /// <summary>
+        /// Target velocity set by the user (walking, flying, etc)
+        /// </summary>
+        private OpenMetaverse.Vector3 _vTarget;
+
+        /// <summary>
+        /// Current constant forces acting on an avatar
+        /// </summary>
+        // TODO - these two variables have to be serialized.
+        // [...]
+        private bool _cForcesAreLocal = false;
+        private OpenMetaverse.Vector3 _cForces;
+
+        private bool _running;
+        private bool _flying;
+        private bool _colliding;
+        private volatile bool _collidingGround = false;
+
+        private float _height;
+        private float _radius;
 
         /// <summary>
         /// Whether or not this character is frozen in place with its state intact.
@@ -64,17 +109,55 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         /// </summary>
         private bool _suspended = false;
 
+        uint _lastSync;
+
         private bool _disposed = false;
 
-        public BasicActor()
+        private readonly BasicScene _scene;
+
+        public BasicActor(BasicScene scene, float height, float radius,
+            OpenMetaverse.Vector3 position, OpenMetaverse.Quaternion rotation,
+            bool flying, OpenMetaverse.Vector3 initialVelocity)
         {
-            _velocity = new OpenMetaverse.Vector3();
-            _position = new OpenMetaverse.Vector3();
-            _acceleration = new OpenMetaverse.Vector3();
-            _size = new OpenMetaverse.Vector3(_radius * 2.0f, _radius * 2.0f, CapsuleHeight / 2.0f);
+            _scene = scene;
+
+            _radius = Math.Max(radius, 0.2f);
+
+            /*
+             * The capsule is defined as a position, a vertical height, and a radius. The height is the distance between the 
+             * two sphere centers at the end of the capsule. In other words:
+             *
+             *   p = pos (returned by controller)
+             *   h = height
+             *   r = radius
+             *
+             *   p = center of capsule
+             *   top sphere center = p.y + h*0.5
+             *   bottom sphere center = p.y - h*0.5
+             *   top capsule point = p.y + h*0.5 + r
+             *   bottom capsule point = p.y - h*0.5 - r
+             */
+            _height = height;
+
+            _flying = flying;
 
             float volume = (float)(Math.PI * Math.Pow(_radius, 2) * this.CapsuleHeight);
             _mass = CHARACTER_DENSITY * volume;
+
+            _position = position;
+            _rotation = rotation;
+
+            DoZDepenetration();
+
+            _lastSync = (uint)Environment.TickCount;
+
+            _vTarget = initialVelocity;
+            _velocity = initialVelocity;
+            if (_vTarget != OpenMetaverse.Vector3.Zero)
+            {
+                //hack to continue at velocity until the controller picks up
+                _lastVelocityNonZero = OpenSim.Framework.Util.GetLongTickCount() - VELOCITY_RAMPUP_TIME;
+            }
         }
 
         private float CapsuleHeight
@@ -95,8 +178,14 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override bool SetAlwaysRun
         {
-            get { return false; }
-            set { }
+            get
+            {
+                return _running;
+            }
+            set
+            {
+                _running = value;
+            }
         }
 
         public override uint LocalID
@@ -107,7 +196,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override bool Grabbed
         {
-            set { return; }
+            set { }
         }
 
         public override bool Selected
@@ -119,12 +208,12 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override float Buoyancy
         {
             get { return 0f; }
-            set { return; }
+            set { }
         }
 
         public override bool FloatOnWater
         {
-            set { return; }
+            set { }
         }
 
         public override bool IsPhysical
@@ -135,31 +224,43 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override bool ThrottleUpdates
         {
             get { return false; }
-            set { return; }
+            set { }
         }
 
         public override bool Flying
         {
-            get { return flying; }
-            set { flying = value; }
+            get { return _flying; }
+            set { _flying = value; }
         }
 
         public override bool IsColliding
         {
-            get { return iscolliding; }
-            set { iscolliding = value; }
+            get { return _colliding; }
+            set { _colliding = value; }
         }
 
         public override bool CollidingGround
         {
-            get { return false; }
-            set { return; }
+            get
+            {
+                return _collidingGround;
+            }
+            set
+            {
+
+            }
         }
 
         public override bool CollidingObj
         {
-            get { return false; }
-            set { return; }
+            get
+            {
+                return _colliding && !_collidingGround;
+            }
+            set
+            {
+
+            }
         }
 
         public override bool Stopped
@@ -211,8 +312,19 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override OpenMetaverse.Vector3 Velocity
         {
-            get { return _velocity; }
-            set { _velocity = value; }
+            get
+            {
+                return _velocity;
+            }
+            set
+            {
+                if (_vTarget == OpenMetaverse.Vector3.Zero && value != OpenMetaverse.Vector3.Zero)
+                {
+                    _lastVelocityNonZero = OpenSim.Framework.Util.GetLongTickCount() - 30; //dont begin stopped
+                }
+
+                _vTarget = value;
+            }
         }
 
         public override OpenMetaverse.Vector3 Torque
@@ -294,6 +406,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void AddForce(Vector3 force, ForceType ftype)
         {
+            AddForceSync(force, OpenMetaverse.Vector3.Zero, ftype);
         }
 
         public override void AddAngularForce(Vector3 force, ForceType ftype)
@@ -309,16 +422,118 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             if (_suspended)
             {
                 // character is in the middle of a crossing. we do not simulate
+                _lastSync = (uint)Environment.TickCount;
                 return;
             }
 
-            // TODO
+            float secondsSinceLastSync = Math.Min(((uint)Environment.TickCount - _lastSync) * 0.001f, MAX_TIMESTEP);
+            //m_log.DebugFormat("[CHAR]: secondsSinceLastSync: {0}", secondsSinceLastSync);
 
+            //sometimes a single quantum doesnt show up here, and the calculation returns a zero
+            if (secondsSinceLastSync < MIN_TIMESTEP * 2)
+            {
+                secondsSinceLastSync = MIN_TIMESTEP * 2;
+            }
+
+            AccumulateGravity(secondsSinceLastSync);
+            DecayForces(secondsSinceLastSync);
+
+            OpenMetaverse.Vector3 cforces = _cForcesAreLocal ? _cForces * _rotation : _cForces;
+            cforces.Z = 0;
+
+            OpenMetaverse.Vector3 vCombined = (_vGravity + _vForces + cforces + this.VTargetWithRunAndRamp) * secondsSinceLastSync;
+            //m_log.DebugFormat("[CHAR]: vGrav: {0}, vForces: {1}, vTarget {2}", _vGravity, _vForces, this.VTargetWithRun);
+
+            if (vCombined == OpenMetaverse.Vector3.Zero) 
+            {
+                SetVelocityAndRequestTerseUpdate(secondsSinceLastSync, OpenMetaverse.Vector3.Zero);
+                //ReportCollisionsFromLastFrame(frameNum);
+                return;
+            }
+
+            OpenMetaverse.Vector3 lastPosition = _position;
+            //PhysX.ControllerFlag flags = _controller.Move(PhysUtil.OmvVectorToPhysx(vCombined), TimeSpan.FromSeconds(secondsSinceLastSync), 0.001f, FILTERS);
+            //_position = PhysUtil.PhysxVectorToOmv(_controller.Position);
+            bool collidingDown = CalcPhysics(vCombined, secondsSinceLastSync, 0.001f);
+            _lastSync = (uint)Environment.TickCount;
+
+            //take into account any movement not accounted for by the other calculations
+            //this is due to collision
+            OpenMetaverse.Vector3 vColl = (_position - lastPosition) - vCombined;
+            //m_log.InfoFormat("vColl {0} {1} PosDiff: {2} Expected: {3}", vColl, flags, _position - lastPosition, vCombined);
+            //m_log.DebugFormat("[CHAR]: vColl: {0}", vColl);
+
+            //bool collidingDown = (flags & PhysX.ControllerFlag.Down) != 0;
+            //if (!collidingDown) _rideOnBehavior.AvatarNotStandingOnPrim();
+
+            //negative z in vcoll while colliding down is due to gravity/ground collision, dont report it
+            float gravityPushback = Math.Abs(_vGravity.Z) * secondsSinceLastSync;
+            if (collidingDown && vColl.Z > 0 && Math.Abs(vColl.Z - gravityPushback) < GRAVITY_PUSHBACK_DIFF_TOLERANCE) vColl.Z = 0;
+            //m_log.DebugFormat("[CHAR]: vColl: {0} gravityPushback {1} collidingDown:{2}", vColl, gravityPushback, collidingDown);
+
+            if (/*flags != 0*/ collidingDown)
+            {
+                _colliding = true;
+                if (collidingDown)
+                {
+                    _collidingGround = true;
+                    _flying = false;
+
+                    _vGravity = OpenMetaverse.Vector3.Zero;
+                    _vForces.Z = 0.0f;
+                    _vTarget.Z = 0.0f;
+                }
+                else
+                {
+                    _collidingGround = false;
+                    //if we're colliding with anything but the ground, zero out other forces
+                    _vForces = OpenMetaverse.Vector3.Zero;
+                }
+            }
+            else
+            {
+                _colliding = false;
+                _collidingGround = false;
+            }
+
+            if (frameNum % 3 == 0)
+            {
+                CheckAvatarNotBelowGround();
+            }
+
+            SetVelocityAndRequestTerseUpdate(secondsSinceLastSync, vColl);
+            //ReportCollisionsFromLastFrame(frameNum);
+
+            if (!_position.ApproxEquals(lastPosition, POSITION_COMPARISON_TOLERANCE))
+            {
+                RequestPhysicsPositionUpdate();
+            }
         }
 
         public override void AddForceSync(Vector3 Force, Vector3 forceOffset, ForceType type)
         {
-            // TODO Maybe
+            Force /= _mass;
+
+            switch (type)
+            {
+                case ForceType.ConstantLocalLinearForce:
+                    _cForcesAreLocal = true;
+                    _cForces = Force;
+                    break;
+
+                case ForceType.ConstantGlobalLinearForce:
+                    _cForcesAreLocal = false;
+                    _cForces = Force;
+                    break;
+
+                case ForceType.GlobalLinearImpulse:
+                    _vForces += Force;
+                    break;
+
+                case ForceType.LocalLinearImpulse:
+                    _vForces += Force * _rotation;
+                    break;
+            }
         }
 
         public override void UpdateOffsetPosition(Vector3 newOffset, Quaternion rotOffset)
@@ -329,7 +544,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         public override void GatherTerseUpdate(out Vector3 position, out Quaternion rotation, out Vector3 velocity, out Vector3 acceleration, out Vector3 angularVelocity)
         {
             position = _position;
-            rotation = OpenMetaverse.Quaternion.Identity;
+            rotation = _rotation;
             velocity = _velocity;
             acceleration = _acceleration;
             angularVelocity = OpenMetaverse.Vector3.Zero;
@@ -394,8 +609,15 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override Quaternion Rotation
         {
-            get { return Quaternion.Identity; }
-            set { }
+            get
+            {
+                return _rotation;
+            }
+            set
+            {
+                _rotation = value;
+                //m_log.DebugFormat("[PhysxCharacter] new rot={0}", value);
+            }
         }
 
         public override Vector3 AngularVelocity
@@ -429,6 +651,204 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         }
 
         #endregion
+
+        private OpenMetaverse.Vector3 VTargetWithRunAndRamp
+        {
+            get
+            {
+                if (_vTarget == OpenMetaverse.Vector3.Zero)
+                    return OpenMetaverse.Vector3.Zero;
+
+                OpenMetaverse.Vector3 baseTarget = _vTarget;
+
+                if (_running && !_flying)
+                {
+                    baseTarget *= 2.0f;
+                }
+
+                return ComputeVelocityRamp(baseTarget);
+            }
+        }
+
+        private OpenMetaverse.Vector3 ComputeVelocityRamp(OpenMetaverse.Vector3 baseTarget)
+        {
+            ulong accelerationTime = OpenSim.Framework.Util.GetLongTickCount() - _lastVelocityNonZero;
+            if (accelerationTime >= VELOCITY_RAMPUP_TIME) return baseTarget; //fully accelerated
+
+            //linear ramp
+            OpenMetaverse.Vector3 result = baseTarget * ((float)accelerationTime / VELOCITY_RAMPUP_TIME);
+
+            //m_log.DebugFormat("[CHAR]: {0}", result);
+
+            return result;
+        }
+
+        private void DoZDepenetration()
+        {
+            CheckAvatarNotBelowGround();
+        }
+
+        private void SetVelocityAndRequestTerseUpdate(float secondsSinceLastSync, OpenMetaverse.Vector3 vColl)
+        {
+            OpenMetaverse.Vector3 cforces = _cForcesAreLocal ? _cForces * _rotation : _cForces;
+            cforces.Z = 0;
+
+            OpenMetaverse.Vector3 oldVelocity = _velocity;
+            _velocity = (_vGravity + _vForces + cforces + this.VTargetWithRunAndRamp + vColl);
+
+            if (_velocity == OpenMetaverse.Vector3.Zero && oldVelocity != OpenMetaverse.Vector3.Zero)
+            {
+                _acceleration = OpenMetaverse.Vector3.Zero;
+                RequestPhysicsterseUpdate();
+            }
+            else
+            {
+                OpenMetaverse.Vector3 velDiff = _velocity - oldVelocity;
+                OpenMetaverse.Vector3 accel = velDiff / secondsSinceLastSync;
+
+                if (!accel.ApproxEquals(_acceleration, ACCELERATION_COMPARISON_TOLERANCE))
+                {
+                    _acceleration = accel;
+                    RequestPhysicsterseUpdate();
+                    //m_log.DebugFormat("Avatar Terse Vel: {0} Accel: {1} Sync: {2}", _velocity, _acceleration, secondsSinceLastSync);
+                    //m_log.DebugFormat("Vel Breakdown: vGravity {0} vForces {1} vTarget {2} vColl {3}", _vGravity, _vForces, this.VTargetWithRun, vColl);
+                }
+            }
+        }
+
+        private void DecayForces(float secondsSinceLastSync)
+        {
+            if (_vForces != OpenMetaverse.Vector3.Zero)
+            {
+                if (_vTarget != OpenMetaverse.Vector3.Zero)
+                {
+
+                    if (!_flying)
+                    {
+                        //user movement instantly cancels any x or y axis movement, but
+                        //it does not cancel z axis movement while jumping. This allows the user to have
+                        //a nice jump while walking
+                        _vForces.X = 0f;
+                        _vForces.Y = 0f;
+                    }
+                    else
+                    {
+                        _vForces = OpenMetaverse.Vector3.Zero;
+                    }
+                }
+                else
+                {
+                    //decay velocity in relation to velocity to badly mimic drag
+                    OpenMetaverse.Vector3 decayForce;
+                    if (_collidingGround)
+                    {
+                        decayForce = OpenMetaverse.Vector3.Multiply(_vForces, 2.0f * secondsSinceLastSync);
+                    }
+                    else
+                    {
+                        decayForce = OpenMetaverse.Vector3.Multiply(_vForces, 1.0f * secondsSinceLastSync);
+                    }
+
+                    _vForces -= decayForce;
+
+                    if (_vForces.LengthSquared() < MIN_FORCE_MAG_BEFORE_ZEROING_SQUARED)
+                    {
+                        _vForces = OpenMetaverse.Vector3.Zero;
+                    }
+                }
+            }
+        }
+
+        private void AccumulateGravity(float secondsSinceLastSync)
+        {
+            if (_flying)
+            {
+                _vGravity.Z = 0.0f;
+            }
+            else
+            {
+                OpenMetaverse.Vector3 cforces = _cForcesAreLocal ? _cForces * _rotation : _cForces;
+
+                //if we have an upward force, we need to start removing the energy from that before
+                //adding negative force to vGravity
+                if (_vForces.Z > 0.0f)
+                {
+                    _vForces.Z += (BasicScene.GRAVITY + cforces.Z) * secondsSinceLastSync;
+                    if (_vForces.Z < 0.0f) _vForces.Z = 0.0f;
+                }
+                else if (Math.Abs(_vGravity.Z) < TERMINAL_VELOCITY_GRAVITY)
+                {
+                    _vGravity.Z += (BasicScene.GRAVITY + cforces.Z) * secondsSinceLastSync;
+                }
+            }
+        }
+
+        private void CheckAvatarNotBelowGround()
+        {
+            float groundHeight = _scene.TerrainChannel.CalculateHeightAt(_position.X, _position.Y);
+            if (_position.Z < groundHeight)
+            {
+                _vForces = OpenMetaverse.Vector3.Zero;
+                _vGravity = OpenMetaverse.Vector3.Zero;
+                _vTarget = OpenMetaverse.Vector3.Zero;
+
+                //place the avatar a decimeter above the ground
+                _position.Z = groundHeight + (_height / 2.0f) + 0.1f;
+                //_controller.Position = PhysUtil.OmvVectorToPhysx(_position);
+            }
+        }
+
+        //private float accumulatedTime = 0.0f;
+        private bool CalcPhysics(OpenMetaverse.Vector3 displacement, float elapsedTime, float minDist) // TODO: redo this basically from scratch.
+        {
+            bool groundCollision = false;
+            _colliding = false;
+
+            // Avatar bounces in and out of ground, but meh, it's OK and flying works.
+            Vector3 newPos = _position + displacement;
+            newPos.X = Util.Clip(newPos.X, 0.1f, Constants.RegionSize - 0.1f);
+            newPos.Y = Util.Clip(newPos.Y, 0.1f, Constants.RegionSize - 0.1f);
+
+            float groundHeight = _scene.TerrainChannel.CalculateHeightAt(newPos.X, newPos.Y);
+            if (newPos.Z < groundHeight)
+            {
+                newPos.Z = groundHeight + (_height / 2.0f);
+
+                groundCollision = true;
+                _colliding = true;
+            }
+            _position = newPos;
+
+            /* Below is a failed attempt at a better model.  Not needed at this time.
+            accumulatedTime += elapsedTime;
+            const float dt = 1 / 200;
+            int steps = (int)(accumulatedTime / dt);
+            accumulatedTime -= steps * dt; // Whatever time wasn't able to be an integer step is left in the field for processing later.
+
+            Vector3 newPos = _position;
+            while (--steps > 0)
+            {
+                newPos += displacement * dt;
+                newPos.X = Util.Clip(newPos.X, 0.1f, Constants.RegionSize - 0.1f);
+                newPos.Y = Util.Clip(newPos.Y, 0.1f, Constants.RegionSize - 0.1f);
+
+                float groundHeight = _scene.TerrainChannel.CalculateHeightAt(newPos.X, newPos.Y);
+                if (newPos.Z < groundHeight)
+                {
+                    newPos.Z = groundHeight + (_height / 2.0f);
+
+                    groundCollision = true;
+                    _colliding = true;
+
+                    if (!_flying)
+                        break; // Collision with ground takes all falling energy out, no need to keep processing.
+                }
+
+            }
+            _position = newPos;
+            */
+            return groundCollision;
+        }
     }
     
 }

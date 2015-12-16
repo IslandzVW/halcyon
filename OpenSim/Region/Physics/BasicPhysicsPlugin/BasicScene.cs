@@ -44,6 +44,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
     public class BasicScene : PhysicsScene
     {
+        public const float GRAVITY = -9.81f;
         public const int TIMESTEP = 15;
         public const float TIMESTEP_IN_SECONDS = TIMESTEP / 1000.0f;
         public const float DILATED_TIMESTEP_IN_SECONDS = TIMESTEP_IN_SECONDS * 2.0f;
@@ -190,9 +191,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override PhysicsActor AddAvatar(string avName, OpenMetaverse.Vector3 position, OpenMetaverse.Quaternion rotation, OpenMetaverse.Vector3 size, bool isFlying, OpenMetaverse.Vector3 initialVelocity)
         {
-            BasicActor act = new BasicActor();
-            act.Position = position;
-            act.Flying = isFlying;
+            BasicActor act = new BasicActor(this, size.Z, size.X, position, rotation, isFlying, initialVelocity);
             _actors.Add(act);
             return act;
         }
@@ -280,66 +279,18 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override float Simulate(float timeStep, uint ticksSinceLastSimulate, uint frameNum, bool dilated)
         {
-            if (!_simulating)
-                return 0.0f;
-            
-            foreach(BasicActor actor in _actors)
+            //ProcessDynamicPrimChanges(timeStep, ticksSinceLastSimulate, frameNum);
+            //ProcessCollisionRepeats(timeStep, ticksSinceLastSimulate, frameNum);
+
+            //run avatar dynamics at 1/2 simulation speed (30fps nominal)
+            if (frameNum % 2 == 0)
             {
-                Vector3 temp;
-
-                temp.X = actor.Position.X + actor.Velocity.X * timeStep;
-                temp.Y = actor.Position.Y + actor.Velocity.Y * timeStep;
-                temp.Z = actor.Position.Z;
-
-                if (temp.Y < 0)
+                foreach (BasicActor character in _actors)
                 {
-                    temp.Y = 0.1F;
+                    character.SyncWithPhysics(timeStep, ticksSinceLastSimulate, frameNum);
                 }
-                else if (temp.Y >= Constants.RegionSize)
-                {
-                    temp.Y = 255.9F;
-                }
-
-                if (temp.X < 0)
-                {
-                    temp.X = 0.1F;
-                }
-                else if (actor.Position.X >= Constants.RegionSize)
-                {
-                    temp.X = 255.9F;
-                }
-
-                float height;
-                if (_heightMap != null)
-                {
-                    height = _heightMap[(int)temp.Y * Constants.RegionSize + (int)temp.X] + actor.Size.Z;
-                }
-                else
-                {
-                    height = 26.0f; // Just stay level.
-                }
-
-                if (actor.Flying)
-                {
-                    if (_heightMap != null && temp.Z + (temp.Z * timeStep) < _heightMap[(int)temp.Y * Constants.RegionSize + (int)temp.X] + 2)
-                    {
-                        temp.Z = height;
-                        actor.IsColliding = true;
-                    }
-                    else
-                    {
-                        temp.Z += actor.Velocity.Z * timeStep;
-                        actor.IsColliding = false;
-                    }
-                }
-                else
-                {
-                    temp.Z = height;
-                    actor.IsColliding = true;
-                }
-
-                actor.Position = temp;
             }
+
             return 0.0f;
         }
 
