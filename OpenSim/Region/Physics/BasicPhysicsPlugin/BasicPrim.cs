@@ -142,7 +142,11 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void ForceAboveParcel(float height)
         {
-            throw new NotImplementedException();
+            OpenMetaverse.Vector3 newPos = _position;
+            //place this object back above the parcel
+            _position.Z = height;
+
+            _position = newPos;
         }
 
         public override void LinkToNewParent(PhysicsActor obj, OpenMetaverse.Vector3 localPos, OpenMetaverse.Quaternion localRot)
@@ -169,11 +173,18 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void LockAngularMotion(OpenMetaverse.Vector3 axis)
         {
-            throw new NotImplementedException();
+            lock (_properties)
+            {
+                _properties.LockedAxes = axis;
+            }
         }
+
         public override OpenMetaverse.Vector3 GetLockedAngularMotion()
         {
-            throw new NotImplementedException();
+            lock (_properties)
+            {
+                return _properties.LockedAxes;
+            }
         }
 
         public override void SetVolumeDetect(bool vd)
@@ -186,11 +197,12 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void AddForce(OpenMetaverse.Vector3 force, ForceType ftype)
         {
-            throw new NotImplementedException();
+            AddForceSync(force, OpenMetaverse.Vector3.Zero, ftype);
         }
+
         public override void AddAngularForce(OpenMetaverse.Vector3 force, ForceType ftype)
         {
-            throw new NotImplementedException();
+            AddForceSync(force, OpenMetaverse.Vector3.Zero, ftype);
         }
 
         public override void SubscribeCollisionEvents(int ms)
@@ -210,15 +222,56 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void SyncWithPhysics(float timeStep, uint ticksSinceLastSimulate, uint frameNum)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            // TODO: if you want to actually simulate prim motion!  Will get very complex very fast.
         }
+
         public override void AddForceSync(OpenMetaverse.Vector3 Force, OpenMetaverse.Vector3 forceOffset, ForceType type)
         {
-            throw new NotImplementedException();
+            //these property setter force types need to be set and assigned regardless
+            //of if the object is currently a free dynamic
+            switch (type)
+            {
+                case ForceType.AngularVelocityTarget:
+                    lock (_properties)
+                    {
+                        _properties.AngularVelocityTarget = Force;
+                    }
+                    RequestPhysicsNeedsPersistence();
+                    break;
+
+                case ForceType.ConstantGlobalLinearForce:
+                    lock (_properties)
+                    {
+                        _properties.ForceIsLocal = false;
+                        _properties.Force = Force;
+                    }
+                    RequestPhysicsNeedsPersistence();
+                    break;
+
+                case ForceType.ConstantLocalLinearForce:
+                    lock (_properties)
+                    {
+                        _properties.ForceIsLocal = true;
+                        _properties.Force = Force;
+                    }
+                    RequestPhysicsNeedsPersistence();
+                    break;
+            }
+
+            //in all cases, wake up
+            //this.WakeUp();
         }
+
         public override void UpdateOffsetPosition(OpenMetaverse.Vector3 newOffset, OpenMetaverse.Quaternion rotOffset)
         {
-            throw new NotImplementedException();
+            //Offset updates are only handled for child prims. Upstream a non child move is 
+            //handled by setting our position directly
+            if (IsChild)
+            {
+                _position = newOffset;
+                _rotation = rotOffset;
+            }
         }
 
         public override void GatherTerseUpdate(out OpenMetaverse.Vector3 position, out OpenMetaverse.Quaternion rotation, out OpenMetaverse.Vector3 velocity, out OpenMetaverse.Vector3 acceleration, out OpenMetaverse.Vector3 angularVelocity)
@@ -244,11 +297,12 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         public override void Suspend()
         {
-            throw new NotImplementedException();
+            // Ignored.
         }
+
         public override void Resume(bool interpolate, AfterResumeCallback callback)
         {
-            throw new NotImplementedException();
+            // Ignored.
         }
 
         public override bool Stopped
@@ -313,13 +367,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                 }
                 else
                 {
-                    int resultCount = --_selectCount;
-                    if (resultCount == -1)
-                    {
-                        //this can happen when you delink a child part from a group,
-                        //we need to reset to zero
-                        resultCount =  ++_selectCount;
-                    }
+                    --_selectCount;
                 }
             }
         }
@@ -362,7 +410,23 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
             get
             {
-                return OpenMetaverse.Vector3.Zero;
+                OpenMetaverse.Vector3 force = OpenMetaverse.Vector3.Zero;
+                bool isLocal = false;
+
+                lock (_properties)
+                {
+                    force = _properties.Force;
+                    isLocal = _properties.ForceIsLocal;
+                }
+
+                if (!isLocal)
+                {
+                    return force;
+                }
+                else
+                {
+                    return force * _rotation;
+                }
             }
         }
 
@@ -370,7 +434,14 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
             get
             {
-                return OpenMetaverse.Vector3.Zero;
+                OpenMetaverse.Vector3 force = OpenMetaverse.Vector3.Zero;
+
+                lock (_properties)
+                {
+                    force = _properties.Force;
+                }
+
+                return force;
             }
         }
 
@@ -378,7 +449,14 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
             get
             {
-                return false;
+                bool isLocal = false;
+
+                lock (_properties)
+                {
+                    isLocal = _properties.ForceIsLocal;
+                }
+
+                return isLocal;
             }
         }
 
@@ -409,6 +487,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         {
             get
             {
+                // TODO: maybe.
                 throw new NotImplementedException();
             }
         }
@@ -570,6 +649,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             set
             {
                 _angularVelocity = value;
+                AddForceSync(value, OpenMetaverse.Vector3.Zero, ForceType.AngularVelocityTarget);
             }
         }
 
@@ -588,6 +668,8 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                 {
                     _properties.AngularVelocityTarget = value;
                 }
+
+                AddForceSync(value, OpenMetaverse.Vector3.Zero, ForceType.AngularVelocityTarget);
             }
         }
 
