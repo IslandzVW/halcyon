@@ -1157,6 +1157,26 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (userInfo != null)
             {
+                if(assetType == AssetType.CallingCard && invType == (int)OpenMetaverse.InventoryType.CallingCard)
+                {
+                    //On 2015-12-15, a problem with calling cards occurred such that all calling cards
+                    // would be duplicated by the viewer when logging in, which caused users to not
+                    // display themselves and in extreme cases, would block them from doing anything
+                    // along with generating 65000 calling cards for one user
+                    //To address this issue, we make sure that the viewer cannot add calling cards
+                    // that already exist for that user in the "Calling Cards"/Friends/All folder. 
+                    // We will ignore the requests.
+                    //We will cache the calling card folder in the CachedUserInfo as we don't want to 
+                    // call the inventory database repeatedly to get the data.
+                    if (userInfo.CheckIfCallingCardAlreadyExistsForUser(folderID, name))
+                    {
+                        m_log.WarnFormat(
+                            "[AGENT INVENTORY]: User requested to generate duplicate calling card for client {0} uuid {1} in CreateNewInventoryItem!",
+                                remoteClient.Name, remoteClient.AgentId);
+                        return;
+                    }
+                }
+
                 InventoryItemBase item = new InventoryItemBase();
                 item.Owner = remoteClient.AgentId;
                 item.CreatorId = creatorID;
