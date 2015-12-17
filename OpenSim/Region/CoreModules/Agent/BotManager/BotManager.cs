@@ -355,7 +355,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         UUID assetId = grp.UUID;
                         sp.Appearance.SetAttachment((int)attachment.AttachPoint, true, attachment.ItemID, assetId);
                         grp.DisableUpdates = false;
-                        grp.ScheduleGroupForFullUpdate();
+                        grp.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                     }
                 }
             }

@@ -2726,7 +2726,7 @@ namespace OpenSim.Region.Framework.Scenes
                     Vector3 safepos = NearestLegalPos(oldGroupPosition);
                     grp.OffsetForNewRegion(safepos);// no effect during transit
                 }
-                grp.ScheduleGroupForFullUpdate();
+                grp.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 return false;
             }
 
@@ -4924,7 +4924,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (ent is SceneObjectGroup)
                 {
-                    ((SceneObjectGroup)ent).ScheduleGroupForFullUpdate();
+                    ((SceneObjectGroup)ent).ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
             }
         }
@@ -5610,7 +5610,7 @@ namespace OpenSim.Region.Framework.Scenes
             group.RezzedFromFolderId = UUID.Zero;
             InspectForAutoReturn(group);
             part.GetProperties(newOwner);
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
             return true;
         }
 

@@ -747,7 +747,7 @@ namespace InWorldz.Testing
             
         }
 
-        public void SendPrimitiveToClient(object sop, uint clientFlags, OpenMetaverse.Vector3 lpos)
+        public void SendPrimitiveToClient(object sop, uint clientFlags, OpenMetaverse.Vector3 lpos, PrimUpdateFlags updateFlags)
         {
             
         }

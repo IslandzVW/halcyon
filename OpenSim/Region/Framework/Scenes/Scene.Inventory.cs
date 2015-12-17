@@ -3457,7 +3457,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // Fire on_rez
                     group.CreateScriptInstances(startParam, ScriptStartFlags.PostOnRez, DefaultScriptEngine, (int)ScriptStateSource.PrimData, null);
 
-                    rootPart.ScheduleFullUpdate();
+                    rootPart.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
 
             } 
@@ -4048,7 +4048,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             group.CreateScriptInstances(param, ScriptStartFlags.PostOnRez, DefaultScriptEngine, (int)ScriptStateSource.PrimData, null);
-            rootPart.ScheduleFullUpdate();
+            rootPart.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
             reason = "success";
             return rootPart.ParentGroup;

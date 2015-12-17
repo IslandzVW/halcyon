@@ -3301,7 +3301,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                   clickAction, material, textureanim, false, 0, UUID.Zero, UUID.Zero, 0, 0, 0);
         }*/
 
-        public void SendPrimitiveToClient(object obj, uint flags, Vector3 lPos)
+        public void SendPrimitiveToClient(object obj, uint flags, Vector3 lPos, PrimUpdateFlags updateFlags)
         {
             if (m_closeActive == 1) return;
 
@@ -3740,7 +3740,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             if (validParts.Count == 0) return false;
-
+            
             outPacket.ObjectData =
                 new ImprovedTerseObjectUpdatePacket.
                     ObjectDataBlock[validParts.Count];

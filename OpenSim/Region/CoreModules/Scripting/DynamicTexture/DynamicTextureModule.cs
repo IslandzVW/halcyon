@@ -314,7 +314,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                 // tmptex.DefaultTexture.Fullbright = true;
 
                 part.Shape.Textures = tmptex;
-                part.ScheduleFullUpdate();
+                part.ScheduleFullUpdate(PrimUpdateFlags.Textures);
             }
 
             private byte[] BlendTextures(byte[] frontImage, byte[] backImage, bool setNewAlpha, byte newAlpha)

@@ -28,6 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using OpenSim.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -234,7 +235,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (part != null)
             {
                 part.IsInTransaction = false;
-                if (!part.ParentGroup.IsDeleted && postUpdates) part.ScheduleFullUpdate();
+                if (!part.ParentGroup.IsDeleted && postUpdates) part.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
             }
         }
 
