@@ -5004,19 +5004,23 @@ namespace OpenSim.Region.Framework.Scenes
             // optimization; we have to check per script, but if nothing is pressed and nothing changed, we can skip that
             if (allflags != ScriptControlled.CONTROL_ZERO || allflags != LastCommands)
             {
+                UUID[] scripts;
                 lock (m_scriptedcontrols)
                 {
-                    foreach (UUID scriptUUID in m_scriptedcontrols.Keys)
+                    // Must not call TriggerControlEvent with thes controls locked (deadlocks with m_items iterations).
+                    scripts = new UUID[m_scriptedcontrols.Count];
+                    m_scriptedcontrols.Keys.CopyTo(scripts, 0);
+                }
+                foreach (UUID scriptUUID in scripts)
+                {
+                    ScriptControllers scriptControlData = m_scriptedcontrols[scriptUUID];
+                    ScriptControlled localHeld = allflags & scriptControlData.eventControls;     // the flags interesting for us
+                    ScriptControlled localLast = LastCommands & scriptControlData.eventControls; // the activated controls in the last cycle
+                    ScriptControlled localChange = localHeld ^ localLast;                        // the changed bits
+                    if (localHeld != ScriptControlled.CONTROL_ZERO || localChange != ScriptControlled.CONTROL_ZERO)
                     {
-                        ScriptControllers scriptControlData = m_scriptedcontrols[scriptUUID];
-                        ScriptControlled localHeld = allflags & scriptControlData.eventControls;     // the flags interesting for us
-                        ScriptControlled localLast = LastCommands & scriptControlData.eventControls; // the activated controls in the last cycle
-                        ScriptControlled localChange = localHeld ^ localLast;                        // the changed bits
-                        if (localHeld != ScriptControlled.CONTROL_ZERO || localChange != ScriptControlled.CONTROL_ZERO)
-                        {
-                            // only send if still pressed or just changed
-                            m_scene.EventManager.TriggerControlEvent(scriptControlData.objID, scriptUUID, UUID, (uint)localHeld, (uint)localChange);
-                        }
+                        // only send if still pressed or just changed
+                        m_scene.EventManager.TriggerControlEvent(scriptControlData.objID, scriptUUID, UUID, (uint)localHeld, (uint)localChange);
                     }
                 }
             }
