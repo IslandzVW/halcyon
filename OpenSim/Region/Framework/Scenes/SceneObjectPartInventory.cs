@@ -309,7 +309,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 m_part.ParentGroup.AddActiveScriptCount(1);
-                m_part.ScheduleFullUpdate();
+                m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
             }
         }
 
@@ -607,7 +607,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
-                    m_part.ScheduleFullUpdate();
+                    m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
                     return true;
                 }
                 else
@@ -680,7 +680,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
-                    m_part.ScheduleFullUpdate();
+                    m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
                     return true;
                 }
                 else
@@ -727,7 +727,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 HandleAddRunningScript(newItem, replaceArgs);
             }
-            m_part.ScheduleFullUpdate();
+            m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
         }
 
         /// <summary>

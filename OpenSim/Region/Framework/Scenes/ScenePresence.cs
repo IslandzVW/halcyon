@@ -2009,7 +2009,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Commented out this code since it could never have executed, but might still be informative.
 //            if (proxyObjectGroup != null)
 //            {
-                proxyObjectGroup.SendGroupFullUpdate();
+                proxyObjectGroup.SendGroupFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 remote_client.SendSitResponse(proxyObjectGroup.UUID, Vector3.Zero, Quaternion.Identity, true, Vector3.Zero, Vector3.Zero, false);
                 m_scene.DeleteSceneObject(proxyObjectGroup, false);
 //            }
@@ -2504,7 +2504,7 @@ namespace OpenSim.Region.Framework.Scenes
             HandleAgentSit(remoteClient, UUID);
             ControllingClient.SendSitResponse(vParentID, vPos, vRot, false, cameraAtOffset, cameraEyeOffset, forceMouselook);
             SceneView.SendFullUpdateToAllClients();
-            part.ParentGroup.ScheduleGroupForFullUpdate();//Tell all avatars about this object, as otherwise avatars will show up at <0,0,0> on the radar if they have not seen this object before (culling)
+            part.ParentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);//Tell all avatars about this object, as otherwise avatars will show up at <0,0,0> on the radar if they have not seen this object before (culling)
         }
 
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset)
@@ -4565,7 +4565,7 @@ namespace OpenSim.Region.Framework.Scenes
                     continue;
 
                 //Send an immediate update
-                presence.SceneView.SendGroupUpdate(gobj);
+                presence.SceneView.SendGroupUpdate(gobj, PrimUpdateFlags.ForcedFullUpdate);
             }
         }
 

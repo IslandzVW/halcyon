@@ -270,7 +270,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // The group was marked as InTransit, so when it's original position was restored, 
                     // the update didn't make it to the viewer(s). Now transit is complete, we can
                     // send it now so the viewer knows where it is.
-                    ScheduleGroupForFullUpdate();
+                    ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
 
                 return true;
@@ -1100,7 +1100,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (RootPart.PhysActor == null) //don't apply physics if we already have a physactor.
             {
                 ApplyPhysics(m_scene.m_physicalPrim, fromStorage);
-                ScheduleGroupForFullUpdate();
+                ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
             }
 
             // Need the bounding box now.
@@ -1415,7 +1415,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!silent)
                 {
                     IsSelected = false; // fudge....
-                    ScheduleGroupForFullUpdate();
+                    ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
             }
         }
@@ -1476,7 +1476,7 @@ namespace OpenSim.Region.Framework.Scenes
             AttachToBackup();
             m_scene.InspectForAutoReturn(this);
             m_scene.EventManager.TriggerParcelPrimCountTainted();
-            m_rootPart.ScheduleFullUpdate();
+            m_rootPart.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
             m_rootPart.ClearUndoState();
         }
 
@@ -1788,7 +1788,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_aggregateScriptEvents = aggregateScriptEvents;
 
-            ScheduleGroupForFullUpdate();
+            ScheduleGroupForFullUpdate(PrimUpdateFlags.FindBest);
         }
 
         public override void SetText(string text, Vector3 color, double alpha)
@@ -1800,7 +1800,7 @@ namespace OpenSim.Region.Framework.Scenes
             Text = text;
 
             HasGroupChanged = true;
-            m_rootPart.ScheduleFullUpdate();
+            m_rootPart.ScheduleFullUpdate(PrimUpdateFlags.Text);
         }
 
         /// <summary>
@@ -1976,16 +1976,16 @@ namespace OpenSim.Region.Framework.Scenes
 
 #region Client Updating
 
-        public void SendFullUpdateToClient(IClientAPI remoteClient)
+        public void SendFullUpdateToClient(IClientAPI remoteClient, PrimUpdateFlags updateFlags)
         {
-            SendPartFullUpdate(remoteClient, RootPart, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, RootPart.UUID));
+            SendPartFullUpdate(remoteClient, RootPart, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, RootPart.UUID), updateFlags);
 
             lock (m_parts)
             {
                 foreach (SceneObjectPart part in m_parts.Values)
                 {
                     if (part != RootPart)
-                        SendPartFullUpdate(remoteClient, part, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, part.UUID));
+                        SendPartFullUpdate(remoteClient, part, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, part.UUID), updateFlags);
                 }
             }
         }
@@ -2001,21 +2001,24 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SendFullUpdateToClientImmediate(IClientAPI remoteClient)
         {
-            SendPartFullUpdate(remoteClient, RootPart, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, RootPart.UUID), true);
+            //Since this is immediate, the update flags are ignored, but for clarity, we'll use ForcedFullUpdate
+            SendPartFullUpdate(remoteClient, RootPart, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, RootPart.UUID),
+                true, PrimUpdateFlags.ForcedFullUpdate);
 
             lock (m_parts)
             {
                 foreach (SceneObjectPart part in m_parts.Values)
                 {
                     if (part != RootPart)
-                        SendPartFullUpdate(remoteClient, part, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, part.UUID), true);
+                        SendPartFullUpdate(remoteClient, part, 
+                            m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, part.UUID), true, PrimUpdateFlags.ForcedFullUpdate);
                 }
             }
         }
 
-        internal void SendPartFullUpdate(IClientAPI remoteClient, SceneObjectPart part, uint clientFlags)
+        internal void SendPartFullUpdate(IClientAPI remoteClient, SceneObjectPart part, uint clientFlags, PrimUpdateFlags updateFlags)
         {
-            SendPartFullUpdate(remoteClient, part, clientFlags, false);
+            SendPartFullUpdate(remoteClient, part, clientFlags, false, updateFlags);
         }
 
         /// <summary>
@@ -2023,7 +2026,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="part"></param>
-        internal void SendPartFullUpdate(IClientAPI remoteClient, SceneObjectPart part, uint clientFlags, bool immediate)
+        internal void SendPartFullUpdate(IClientAPI remoteClient, SceneObjectPart part, uint clientFlags,
+            bool immediate, PrimUpdateFlags updateFlags)
         {
             if (m_rootPart != null && m_rootPart.UUID == part.UUID)
             {
@@ -2035,7 +2039,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        part.SendFullUpdateToClient(remoteClient, m_rootPart.AttachedPos, clientFlags);
+                        part.SendFullUpdateToClient(remoteClient, m_rootPart.AttachedPos, clientFlags, updateFlags);
                     }
                 }
                 else
@@ -2046,7 +2050,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        part.SendFullUpdateToClient(remoteClient, AbsolutePosition, clientFlags);
+                        part.SendFullUpdateToClient(remoteClient, AbsolutePosition, clientFlags, updateFlags);
                     }
                 }
             }
@@ -2060,7 +2064,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
-                    part.SendFullUpdateToClient(remoteClient, clientFlags);
+                    part.SendFullUpdateToClient(remoteClient, clientFlags, updateFlags);
                 }
             }
         }
@@ -2100,7 +2104,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (userExposed)
             {
                 SetRootPartOwner(dupe.m_rootPart, cAgentID, cGroupID);
-                dupe.m_rootPart.ScheduleFullUpdate();
+                dupe.m_rootPart.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
             }
 
             List<SceneObjectPart> partList;
@@ -2126,7 +2130,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (userExposed)
                     {
                         SetPartOwner(newPart, cAgentID, cGroupID);
-                        newPart.ScheduleFullUpdate();
+                        newPart.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                     }
                 }
             }
@@ -2150,7 +2154,7 @@ namespace OpenSim.Region.Framework.Scenes
                 dupe.AttachToBackup();
                 m_scene.InspectForAutoReturn(dupe);
 
-                ScheduleGroupForFullUpdate();
+                ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
             }
 
             dupe.IsScripted = this.IsScripted;
@@ -2440,7 +2444,7 @@ namespace OpenSim.Region.Framework.Scenes
                     ApplyNextOwnerPermissions();
             }
 
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
         }
 
         /// <summary>
@@ -2533,53 +2537,22 @@ namespace OpenSim.Region.Framework.Scenes
         {
             //intentionally now does nothing. 
         }
-
-        public void ScheduleFullUpdateToAvatar(ScenePresence presence)
-        {
-            if (IsDeleted)
-                return;
-
-            lock (m_parts)
-            {
-                RootPart.AddFullUpdateToAvatar(presence);
-                foreach (SceneObjectPart part in m_parts.Values)
-                {
-                    if (part != RootPart)
-                        part.AddFullUpdateToAvatar(presence);
-                }
-            }
-        }
-
-        public void ScheduleTerseUpdateToAvatar(ScenePresence presence)
-        {
-            if (IsDeleted)
-                return;
-            lock (m_parts)
-            {
-                RootPart.AddTerseUpdateToAvatar(presence);
-                foreach (SceneObjectPart part in m_parts.Values)
-                {
-                    if (part != RootPart)
-                        part.AddTerseUpdateToAvatar(presence);
-                }
-            }
-        }
-
+        
         /// <summary>
         /// Schedule a full update for this scene object
         /// </summary>
-        public void ScheduleGroupForFullUpdate()
+        public void ScheduleGroupForFullUpdate(PrimUpdateFlags updateFlags)
         {
             if (IsDeleted)
                 return;
 
             lock (m_parts)
             {
-                RootPart.ScheduleFullUpdate();
+                RootPart.ScheduleFullUpdate(updateFlags);
                 foreach (SceneObjectPart part in m_parts.Values)
                 {
                     if (part != RootPart)
-                        part.ScheduleFullUpdate();
+                        part.ScheduleFullUpdate(updateFlags);
                 }
             }
         }
@@ -2606,7 +2579,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Immediately send a full update for this scene object.
         /// </summary>
-        public void SendGroupFullUpdate()
+        public void SendGroupFullUpdate(PrimUpdateFlags updateFlags)
         {
             if (IsDeleted)
                 return;
@@ -2614,16 +2587,16 @@ namespace OpenSim.Region.Framework.Scenes
             List<ScenePresence> avatars = Scene.GetScenePresences();
             lock (m_parts)
             {
-                RootPart.SendFullUpdateToAllClients(avatars);
+                RootPart.SendFullUpdateToAllClients(avatars, updateFlags);
                 foreach (SceneObjectPart part in m_parts.Values)
                 {
                     if (part != RootPart)
-                        part.SendFullUpdateToAllClients(avatars);
+                        part.SendFullUpdateToAllClients(avatars, updateFlags);
                 }
             }
         }
 
-        public void QueueForUpdateCheck(SceneObjectPart part, SceneObjectPart.UpdateLevel level)
+        public void QueueForUpdateCheck(SceneObjectPart part, SceneObjectPart.UpdateLevel level, PrimUpdateFlags updateFlags)
         {
             if (m_scene == null) // Need to check here as it's null during object creation
             {
@@ -2634,7 +2607,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (DisableUpdates)
                 return;
 
-            m_scene.SceneGraph.AddToUpdateList(this, part, level);
+            m_scene.SceneGraph.AddToUpdateList(this, part, level, updateFlags);
         }
 
         /// <summary>
@@ -2875,7 +2848,7 @@ namespace OpenSim.Region.Framework.Scenes
             this.CheckIfScriptedStatusChanged();
 
             HasGroupChanged = true;
-            ScheduleGroupForFullUpdate();
+            ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
         }
 
         /// <summary>
@@ -2980,8 +2953,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (sendGroupUpdate)
             {
                 HasGroupChanged = true;
-                ScheduleGroupForFullUpdate();
-                objectGroup.ScheduleGroupForFullUpdate();
+                ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
+                objectGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
             }
         }
 
@@ -3470,7 +3443,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //if (part.UUID != m_rootPart.UUID)
 
                 HasGroupChanged = true;
-                ScheduleGroupForFullUpdate();
+                ScheduleGroupForFullUpdate(PrimUpdateFlags.FindBest);
             }
         }
 
@@ -4233,7 +4206,7 @@ namespace OpenSim.Region.Framework.Scenes
                 HasGroupChanged = true;
             }
 
-            ScheduleGroupForFullUpdate();
+            ScheduleGroupForFullUpdate(PrimUpdateFlags.PrimData);
         }
 
         public void SetGeneration(int value)

@@ -1000,7 +1000,7 @@ namespace OpenSim.Framework
         void AttachObject(uint localID, Quaternion rotation, byte attachPoint, UUID ownerID);
         void SetChildAgentThrottle(byte[] throttle);
 
-        void SendPrimitiveToClient(object sop, uint clientFlags, Vector3 lpos);
+        void SendPrimitiveToClient(object sop, uint clientFlags, Vector3 lpos, PrimUpdateFlags updateFlags);
 
         void SendPrimitiveToClientImmediate(object sop, uint clientFlags, Vector3 lpos);
 
