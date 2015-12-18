@@ -1742,7 +1742,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (PhysicsActor != null)
                 {
                     // Uodate the physactor's rotation. This communicates
-                    // the rotation to the charcter controller.
+                    // the rotation to the character controller.
                     physActor.Rotation = q;
 
                     bool oldflying = physActor.Flying;
@@ -1789,7 +1789,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     // use camera up angle when in mouselook and not flying or when holding the left mouse button down and not flying
                     // this prevents 'jumping' in inappropriate situations.
-                    if ((m_mouseLook && !physActor.Flying) || (m_leftButtonDown && !physActor.Flying)) 
+                    if ((m_mouseLook || m_leftButtonDown) && !physActor.Flying)
                         dirVectors = GetWalkDirectionVectors();
                     else
                         dirVectors = Dir_Vectors;
