@@ -1391,7 +1391,7 @@ namespace OpenSim.Region.Framework.Scenes
 #region Event Handlers
 
         /// <summary>
-        /// Sets avatar height in the phyiscs plugin
+        /// Sets avatar height in the physics plugin
         /// </summary>
         public void SetHeight(float height)
         {
@@ -1742,7 +1742,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (PhysicsActor != null)
                 {
                     // Uodate the physactor's rotation. This communicates
-                    // the rotation to the character controller.
+                    // the rotation to the charcter controller.
                     physActor.Rotation = q;
 
                     bool oldflying = physActor.Flying;
@@ -1941,6 +1941,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                         }
                     }
+
+                    // Determine whether the user has said to stop and the agent is not sitting.
+                    physActor.SetAirBrakes = (m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_STOP) != 0 && !IsInTransitOnPrim;
                 }
                 
                 // Cause the avatar to stop flying if it's colliding

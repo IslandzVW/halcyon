@@ -62,6 +62,9 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         private const float POSITION_COMPARISON_TOLERANCE = 0.1f;
         private const float STEP_OFFSET = 0.45f;
 
+        /// <summary>
+        /// The center of the collision capsule, and consequently the root of the avatar.
+        /// </summary>
         private OpenMetaverse.Vector3 _position;
         private OpenMetaverse.Vector3 _velocity;
         private OpenMetaverse.Vector3 _acceleration;
@@ -73,34 +76,47 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         private ulong _lastVelocityNonZero = 0;
 
         /// <summary>
-        /// The current velocity due to gravity clamped at terminal
+        /// The current velocity due to gravity clamped at terminal.
         /// </summary>
         private OpenMetaverse.Vector3 _vGravity;
 
         /// <summary>
-        /// Current self-decaying forces acting on an avatar
+        /// Current self-decaying forces acting on an avatar.
         /// </summary>
         private OpenMetaverse.Vector3 _vForces;
 
         /// <summary>
-        /// Target velocity set by the user (walking, flying, etc)
+        /// Target velocity set by the user. (walking, flying, etc)
         /// </summary>
         private OpenMetaverse.Vector3 _vTarget;
 
         /// <summary>
-        /// Current constant forces acting on an avatar
+        /// Whether the current constant forces acting on an avatar are local to the avatar.
         /// </summary>
         // TODO - these two variables have to be serialized.
         // [...]
         private bool _cForcesAreLocal = false;
+        /// <summary>
+        /// Current constant forces acting on an avatar.
+        /// </summary>
         private OpenMetaverse.Vector3 _cForces;
 
+        /// <summary>
+        /// Whether the user has requested the brakes be set (AGENT_CONTROL_STOP) and the agent isn't sitting on a prim.
+        /// </summary>
+        private bool _brakes;
         private bool _running;
         private bool _flying;
         private bool _colliding;
         private volatile bool _collidingGround = false;
 
+        /// <summary>
+        ///  The height is the distance between the two sphere centers at the end of the capsule.
+        /// </summary>
         private float _height;
+        /// <summary>
+        /// The radius of the capsule.
+        /// </summary>
         private float _radius;
 
         /// <summary>
@@ -132,10 +148,10 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
              *   r = radius
              *
              *   p = center of capsule
-             *   top sphere center = p.y + h*0.5
-             *   bottom sphere center = p.y - h*0.5
-             *   top capsule point = p.y + h*0.5 + r
-             *   bottom capsule point = p.y - h*0.5 - r
+             *   top sphere center = p.z + h*0.5
+             *   bottom sphere center = p.z - h*0.5
+             *   top capsule point = p.z + h*0.5 + r
+             *   bottom capsule point = p.z - h*0.5 - r
              */
             _height = height;
 
@@ -173,6 +189,18 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             get
             {
                 return ActorType.Agent;
+            }
+        }
+
+        public override bool SetAirBrakes
+        {
+            get
+            {
+                return _brakes;
+            }
+            set
+            {
+                _brakes = value;
             }
         }
 
@@ -441,10 +469,10 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             OpenMetaverse.Vector3 cforces = _cForcesAreLocal ? _cForces * _rotation : _cForces;
             cforces.Z = 0;
 
-            OpenMetaverse.Vector3 vCombined = (_vGravity + _vForces + cforces + this.VTargetWithRunAndRamp) * secondsSinceLastSync;
+            OpenMetaverse.Vector3 vCombined = ApplyAirBrakes(_vGravity + _vForces + cforces + this.VTargetWithRunAndRamp) * secondsSinceLastSync;
             //m_log.DebugFormat("[CHAR]: vGrav: {0}, vForces: {1}, vTarget {2}", _vGravity, _vForces, this.VTargetWithRun);
 
-            if (vCombined == OpenMetaverse.Vector3.Zero) 
+            if (vCombined == OpenMetaverse.Vector3.Zero)
             {
                 SetVelocityAndRequestTerseUpdate(secondsSinceLastSync, OpenMetaverse.Vector3.Zero);
                 //ReportCollisionsFromLastFrame(frameNum);
@@ -496,10 +524,12 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                 _collidingGround = false;
             }
 
+            /* Redundant here, and I suspect never even did anything unless the agent tunneled through the terrain mesh in the PhysX implmentation...
             if (frameNum % 3 == 0)
             {
                 CheckAvatarNotBelowGround();
             }
+            */
 
             SetVelocityAndRequestTerseUpdate(secondsSinceLastSync, vColl);
             //ReportCollisionsFromLastFrame(frameNum);
@@ -694,12 +724,12 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             cforces.Z = 0;
 
             OpenMetaverse.Vector3 oldVelocity = _velocity;
-            _velocity = (_vGravity + _vForces + cforces + this.VTargetWithRunAndRamp + vColl);
+            _velocity = ApplyAirBrakes(_vGravity + _vForces + cforces + this.VTargetWithRunAndRamp + vColl);
 
             if (_velocity == OpenMetaverse.Vector3.Zero && oldVelocity != OpenMetaverse.Vector3.Zero)
             {
                 _acceleration = OpenMetaverse.Vector3.Zero;
-                RequestPhysicsterseUpdate();
+                RequestPhysicsTerseUpdate();
             }
             else
             {
@@ -709,7 +739,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                 if (!accel.ApproxEquals(_acceleration, ACCELERATION_COMPARISON_TOLERANCE))
                 {
                     _acceleration = accel;
-                    RequestPhysicsterseUpdate();
+                    RequestPhysicsTerseUpdate();
                     //m_log.DebugFormat("Avatar Terse Vel: {0} Accel: {1} Sync: {2}", _velocity, _acceleration, secondsSinceLastSync);
                     //m_log.DebugFormat("Vel Breakdown: vGravity {0} vForces {1} vTarget {2} vColl {3}", _vGravity, _vForces, this.VTargetWithRun, vColl);
                 }
@@ -785,68 +815,58 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         private void CheckAvatarNotBelowGround()
         {
-            float groundHeight = _scene.TerrainChannel.CalculateHeightAt(_position.X, _position.Y);
-            if (_position.Z < groundHeight)
+            float groundHeightAdjustedForAgent = _scene.TerrainChannel.CalculateHeightAt(_position.X, _position.Y) + _height * 0.5f + _radius;
+            if (_position.Z < groundHeightAdjustedForAgent)
             {
                 _vForces = OpenMetaverse.Vector3.Zero;
                 _vGravity = OpenMetaverse.Vector3.Zero;
                 _vTarget = OpenMetaverse.Vector3.Zero;
 
-                //place the avatar a decimeter above the ground
-                _position.Z = groundHeight + (_height / 2.0f) + 0.1f;
+                //place the avatar above the ground
+                _position.Z = groundHeightAdjustedForAgent;
                 //_controller.Position = PhysUtil.OmvVectorToPhysx(_position);
             }
         }
 
-        //private float accumulatedTime = 0.0f;
-        private bool CalcPhysics(OpenMetaverse.Vector3 displacement, float elapsedTime, float minDist) // TODO: redo this basically from scratch.
+        private OpenMetaverse.Vector3 ApplyAirBrakes(OpenMetaverse.Vector3 velocity)
+        {
+            if (_brakes)
+            {
+                // The user has said to stop.
+
+                if (_flying || _vTarget != OpenMetaverse.Vector3.Zero) // We are either flying or falling.
+                {
+                    // Dead stop. HACK: In SL a little bit of gravity sneaks in anyway. The constant comes from measuring that value.
+                    velocity = new OpenMetaverse.Vector3(0.0f, 0.0f, 0.0f); //-0.217762f
+                }
+                else // We are walking or running.
+                {
+                    // Slow down.
+                    velocity *= 0.25f; // SL seems to just about quarter walk/run speeds according to tests run on 20151217.
+                }
+                //m_log.DebugFormat("a. mag: {0}, vel: {1}", Velocity.Length(), Velocity);
+            }
+
+            return velocity;
+        }
+
+        private bool CalcPhysics(OpenMetaverse.Vector3 displacement, float elapsedTime, float minDist)
         {
             bool groundCollision = false;
-            _colliding = false;
 
-            // Avatar bounces in and out of ground, but meh, it's OK and flying works.
             Vector3 newPos = _position + displacement;
             newPos.X = Util.Clip(newPos.X, 0.1f, Constants.RegionSize - 0.1f);
             newPos.Y = Util.Clip(newPos.Y, 0.1f, Constants.RegionSize - 0.1f);
 
-            float groundHeight = _scene.TerrainChannel.CalculateHeightAt(newPos.X, newPos.Y);
-            if (newPos.Z < groundHeight)
+            float groundHeightAdjustedForAgent = _scene.TerrainChannel.CalculateHeightAt(newPos.X, newPos.Y) + _height * 0.5f + _radius;
+            if (newPos.Z < groundHeightAdjustedForAgent)
             {
-                newPos.Z = groundHeight + (_height / 2.0f);
-
                 groundCollision = true;
-                _colliding = true;
+
+                newPos.Z = groundHeightAdjustedForAgent;
             }
             _position = newPos;
 
-            /* Below is a failed attempt at a better model.  Not needed at this time.
-            accumulatedTime += elapsedTime;
-            const float dt = 1 / 200;
-            int steps = (int)(accumulatedTime / dt);
-            accumulatedTime -= steps * dt; // Whatever time wasn't able to be an integer step is left in the field for processing later.
-
-            Vector3 newPos = _position;
-            while (--steps > 0)
-            {
-                newPos += displacement * dt;
-                newPos.X = Util.Clip(newPos.X, 0.1f, Constants.RegionSize - 0.1f);
-                newPos.Y = Util.Clip(newPos.Y, 0.1f, Constants.RegionSize - 0.1f);
-
-                float groundHeight = _scene.TerrainChannel.CalculateHeightAt(newPos.X, newPos.Y);
-                if (newPos.Z < groundHeight)
-                {
-                    newPos.Z = groundHeight + (_height / 2.0f);
-
-                    groundCollision = true;
-                    _colliding = true;
-
-                    if (!_flying)
-                        break; // Collision with ground takes all falling energy out, no need to keep processing.
-                }
-
-            }
-            _position = newPos;
-            */
             return groundCollision;
         }
     }

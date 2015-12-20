@@ -580,6 +580,17 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             }
         }
 
+        public override bool SetAirBrakes
+        {
+            get
+            {
+                return false;
+            }
+            set
+            {
+            }
+        }
+
         public override bool SetAlwaysRun
         {
             get

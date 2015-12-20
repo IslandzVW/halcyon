@@ -152,6 +152,7 @@ namespace InWorldz.PhysxPhysics
 
         private uint _localId;
 
+        private bool _brakes;
         private bool _running;
 
         private bool _disposed = false;
@@ -434,7 +435,7 @@ namespace InWorldz.PhysxPhysics
                             _position = value;
                             _controller.Position = PhysUtil.OmvVectorToPhysx(value);
                             DoZDepenetration();
-                            RequestPhysicsterseUpdate();
+                            RequestPhysicsTerseUpdate();
                         }
                 ));
             }
@@ -583,6 +584,18 @@ namespace InWorldz.PhysxPhysics
             set
             {
                 _flying = value;
+            }
+        }
+
+        public override bool SetAirBrakes
+        {
+            get
+            {
+                return _brakes;
+            }
+            set
+            {
+                _brakes = value;
             }
         }
 
@@ -1137,7 +1150,7 @@ namespace InWorldz.PhysxPhysics
             if (_velocity == OpenMetaverse.Vector3.Zero && oldVelocity != OpenMetaverse.Vector3.Zero)
             {
                 _acceleration = OpenMetaverse.Vector3.Zero;
-                RequestPhysicsterseUpdate();
+                RequestPhysicsTerseUpdate();
             }
             else
             {
@@ -1147,7 +1160,7 @@ namespace InWorldz.PhysxPhysics
                 if (!accel.ApproxEquals(_acceleration, ACCELERATION_COMPARISON_TOLERANCE))
                 {
                     _acceleration = accel;
-                    RequestPhysicsterseUpdate();
+                    RequestPhysicsTerseUpdate();
                     //m_log.DebugFormat("Avatar Terse Vel: {0} Accel: {1} Sync: {2}", _velocity, _acceleration, secondsSinceLastSync);
                     //m_log.DebugFormat("Vel Breakdown: vGravity {0} vForces {1} vTarget {2} vColl {3}", _vGravity, _vForces, this.VTargetWithRun, vColl);
                 }
