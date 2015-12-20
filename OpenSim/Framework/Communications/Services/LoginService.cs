@@ -764,7 +764,8 @@ namespace OpenSim.Framework.Communications.Services
         /// <returns></returns>
         public virtual UserProfileData GetTheUser(string firstname, string lastname)
         {
-            return m_userManager.GetUserProfile(firstname, lastname, false);
+            // Login service must always force a refresh here, since local/VM User server may have updated data on logout.
+            return m_userManager.GetUserProfile(firstname, lastname, true);
         }
 
         /// <summary>
@@ -870,8 +871,12 @@ namespace OpenSim.Framework.Communications.Services
                 m_log.InfoFormat("[LOGIN]: Got {0} {1}, can't locate region {2}", desc, startLocationRequest, region);
                 return false;
             }
-            theUser.CurrentAgent.Position = new Vector3(float.Parse(uriMatch.Groups["x"].Value),
+
+            Vector3 newPos = new Vector3(float.Parse(uriMatch.Groups["x"].Value),
                                                         float.Parse(uriMatch.Groups["y"].Value), float.Parse(uriMatch.Groups["z"].Value));
+            // m_log.WarnFormat("[LOGIN]: PrepareLoginToREURI for user {0} at {1} was {2}", theUser.ID, newPos, theUser.CurrentAgent.Position);
+
+            theUser.CurrentAgent.Position = newPos;
             response.LookAt = "[r0,r1,r0]";
             // can be: last, home, safe, url
             response.StartLocation = StartLocationType;

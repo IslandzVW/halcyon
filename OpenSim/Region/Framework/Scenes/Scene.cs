@@ -5711,40 +5711,7 @@ namespace OpenSim.Region.Framework.Scenes
         // from within the OdePhysicsScene.
         public void jointErrorMessage(PhysicsJoint joint, string message)
         {
-            if (joint != null)
-            {
-                if (joint.ErrorMessageCount > PhysicsJoint.maxErrorMessages)
-                    return;
-
-                SceneObjectPart jointProxyObject = GetSceneObjectPart(joint.ObjectNameInScene);
-                if (jointProxyObject != null)
-                {
-                    SimChat(Utils.StringToBytes("[NINJA]: " + message),
-                        ChatTypeEnum.DebugChannel,
-                        2147483647,
-                        jointProxyObject.AbsolutePosition,
-                        jointProxyObject.Name,
-                        jointProxyObject.UUID,
-                        false);
-
-                    joint.ErrorMessageCount++;
-
-                    if (joint.ErrorMessageCount > PhysicsJoint.maxErrorMessages)
-                    {
-                        SimChat(Utils.StringToBytes("[NINJA]: Too many messages for this joint, suppressing further messages."),
-                            ChatTypeEnum.DebugChannel,
-                            2147483647,
-                            jointProxyObject.AbsolutePosition,
-                            jointProxyObject.Name,
-                            jointProxyObject.UUID,
-                            false);
-                    }
-                }
-                else
-                {
-                    // couldn't find the joint proxy object; the error message is silently suppressed
-                }
-            }
+            
         }
 
         public Scene ConsoleScene()

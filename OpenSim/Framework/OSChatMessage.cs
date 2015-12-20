@@ -48,7 +48,6 @@ namespace OpenSim.Framework
 
         protected IScene m_scene;
         protected IClientAPI m_sender;
-        protected object m_senderObject;
         protected ChatTypeEnum m_type;
         protected UUID m_fromID;
         protected UUID m_destID;
@@ -57,6 +56,12 @@ namespace OpenSim.Framework
         {
             m_position = new Vector3();
         }
+
+        /// <summary>
+        /// The avatar ID that has generated this message regardless of
+        /// if it is a script owned by this avatar, or the avatar itself
+        /// </summary>
+        public UUID GeneratingAvatarID { get; set; }
 
         /// <summary>
         /// The message sent by the user
@@ -116,16 +121,7 @@ namespace OpenSim.Framework
             get { return m_sender; }
             set { m_sender = value; }
         }
-
-        /// <summary>
-        /// The object responsible for sending the message, or null.
-        /// </summary>
-        public object SenderObject
-        {
-            get { return m_senderObject; }
-            set { m_senderObject = value; }
-        }
-
+        
         public UUID SenderUUID
         {
             get { return m_fromID; }

@@ -72,7 +72,7 @@ namespace OpenSim.Framework.Communications
         /// <summary>
         /// LRU cache for UserAgentData
         /// </summary>
-        private LRUCache<UUID, TimestampedItem<UserAgentData>> m_agentDataByUUID
+        private LRUCache<UUID, TimestampedItem<UserAgentData>> m_agentDataByUUID    //not used/cached in User servers
             = new LRUCache<UUID, TimestampedItem<UserAgentData>>(MAX_CACHE_SIZE);
 
         ///////////// Caches for UserProfileData //////////////
@@ -431,26 +431,32 @@ namespace OpenSim.Framework.Communications
 
         private void RemoveAgentData(UUID uuid)
         {
-            lock (m_agentDataByUUID)
+            if (!m_isUserServer)
             {
-                TimestampedItem<UserAgentData> item;
-                if (m_agentDataByUUID.TryGetValue(uuid, out item))
+                lock (m_agentDataByUUID)
                 {
-                    m_agentDataByUUID.Remove(uuid);
+                    TimestampedItem<UserAgentData> item;
+                    if (m_agentDataByUUID.TryGetValue(uuid, out item))
+                    {
+                        m_agentDataByUUID.Remove(uuid);
+                    }
                 }
             }
         }
 
         private void ReplaceAgentData(UserAgentData agent)
         {
-            lock (m_agentDataByUUID)
+            if (!m_isUserServer)
             {
-                TimestampedItem<UserAgentData> item;
-                if (m_agentDataByUUID.TryGetValue(agent.ProfileID, out item))
+                lock (m_agentDataByUUID)
                 {
-                    m_agentDataByUUID.Remove(agent.ProfileID);
+                    TimestampedItem<UserAgentData> item;
+                    if (m_agentDataByUUID.TryGetValue(agent.ProfileID, out item))
+                    {
+                        m_agentDataByUUID.Remove(agent.ProfileID);
+                    }
+                    m_agentDataByUUID.Add(agent.ProfileID, new TimestampedItem<UserAgentData>(agent));
                 }
-                m_agentDataByUUID.Add(agent.ProfileID, new TimestampedItem<UserAgentData>(agent));
             }
         }
 
@@ -461,24 +467,40 @@ namespace OpenSim.Framework.Communications
         /// <returns>Agent profiles</returns>
         public UserAgentData GetUserAgent(UUID uuid, bool forceRefresh)
         {
-            lock (m_agentDataByUUID)
+            if (!m_isUserServer)
             {
-                TimestampedItem<UserAgentData> item;
-                if (m_agentDataByUUID.TryGetValue(uuid, out item))
+                lock (m_agentDataByUUID)
                 {
-                    if (item.ElapsedSeconds < CACHE_ITEM_EXPIRY)
-                        if (!forceRefresh)
-                            return item.Item;
+                    TimestampedItem<UserAgentData> item;
+                    if (m_agentDataByUUID.TryGetValue(uuid, out item))
+                    {
+                        if (item.ElapsedSeconds < CACHE_ITEM_EXPIRY)
+                            if (!forceRefresh)
+                            {
+                                // m_log.WarnFormat("[PROFILE]: AgentData cached: {0} at {1} {2}", item.Item.ProfileID, item.Item.Handle, item.Item.Position);
+                                return item.Item;
+                            }
 
-                    // Else cache expired, or forcing a refresh.
+                        // Else cache expired, or forcing a refresh.
+                        // m_log.WarnFormat("[PROFILE]: AgentData cache expired or forced: {0} at {1} {2}", item.Item.ProfileID, item.Item.Handle, item.Item.Position);
+                    }
                 }
             }
 
             UserAgentData agent = m_storage.GetAgentData(uuid);
-            if (agent != null)
-                ReplaceAgentData(agent);
-            else
-                RemoveAgentData(uuid);
+            if (!m_isUserServer)
+            {
+                if (agent != null)
+                {
+                    // m_log.WarnFormat("[PROFILE]: Updating AgentData: {0} at {1} {2}", agent.ProfileID, agent.Handle, agent.Position);
+                    ReplaceAgentData(agent);
+                }
+                else
+                {
+                    // m_log.WarnFormat("[PROFILE]: Removing AgentData for {0}", uuid);
+                    RemoveAgentData(uuid);
+                }
+            }
 
             return agent;
         }
@@ -814,6 +836,7 @@ namespace OpenSim.Framework.Communications
             // Current location/position/alignment
             if (profile.CurrentAgent != null)
             {
+                // m_log.WarnFormat("[USER CACHE]: Creating agent {0} {1} at {2} {3} was {4} {5}", profile.Name, profile.ID, profile.CurrentAgent.Handle, profile.CurrentAgent.Position, agent.Handle, agent.Position);
                 agent.Region = profile.CurrentAgent.Region;
                 agent.Handle = profile.CurrentAgent.Handle;
                 agent.Position = profile.CurrentAgent.Position;
@@ -821,6 +844,7 @@ namespace OpenSim.Framework.Communications
             }
             else
             {
+                // m_log.WarnFormat("[USER CACHE]: Creating agent {0} {1} at HOME {2} {3} was {4} {5}", profile.Name, profile.ID, profile.HomeRegion, profile.HomeLocation, agent.Handle, agent.Position);
                 agent.Region = profile.HomeRegionID;
                 agent.Handle = profile.HomeRegion;
                 agent.Position = profile.HomeLocation;
@@ -831,7 +855,9 @@ namespace OpenSim.Framework.Communications
             agent.LoginTime = Util.UnixTimeSinceEpoch();
             agent.LogoutTime = 0;
 
-//            if (m_isUserServer) m_log.WarnFormat("[USER CACHE]: Creating new agent data for {0} SSID={1}", agent.ProfileID, agent.SecureSessionID); 
+            // if (m_isUserServer)
+            //     m_log.WarnFormat("[USER CACHE]: Creating new agent data for {0} SSID={1} at {2} {3}", agent.ProfileID, agent.SecureSessionID, agent.Handle, agent.Position); 
+
             profile.CurrentAgent = agent;
         }
 
@@ -894,7 +920,8 @@ namespace OpenSim.Framework.Communications
         /// <returns>Successful?</returns>
         public bool CommitAgent(ref UserProfileData profile)
         {
-//            if (m_isUserServer) m_log.WarnFormat("[USER CACHE]: CommitAgent: {0} {1}", profile.ID, profile.CurrentAgent.SecureSessionID);
+            // if (m_isUserServer)
+            //      m_log.WarnFormat("[USER CACHE]: CommitAgent: {0} SSID={1} at {2} {3}", profile.ID, profile.CurrentAgent.SecureSessionID, profile.CurrentAgent.Handle, profile.CurrentAgent.Position);
 
             // TODO: how is this function different from setUserProfile?  -> Add AddUserAgent() here and commit both tables "users" and "agents"
             // TODO: what is the logic should be?
@@ -931,6 +958,7 @@ namespace OpenSim.Framework.Communications
                     {
                         userAgent.Region = regionid;
                     }
+                    // m_log.WarnFormat("[LOGOFF]: User {0} at {1} {2} was at {3} {4}", userAgent.ProfileID, userAgent.Handle, userAgent.Position, regionhandle, position);
                     userAgent.Handle = regionhandle;
                     userAgent.Position = position;
                     userAgent.LookAt = lookat;
@@ -942,7 +970,7 @@ namespace OpenSim.Framework.Communications
                 else
                 {
                     // If currentagent is null, we can't reference it here or the UserServer crashes!
-                    m_log.Info("[LOGOUT]: didn't save logout position: " + uuid.ToString());
+                    m_log.Warn("[LOGOUT]: didn't save logout position: " + uuid.ToString());
                 }
             }
             else
@@ -1209,18 +1237,21 @@ namespace OpenSim.Framework.Communications
         /// </returns>
         public virtual bool AddUserAgent(UserAgentData agent)
         {
-            lock (m_agentDataByUUID)
+            if (!m_isUserServer)
             {
-                UUID uuid = agent.ProfileID;
+                lock (m_agentDataByUUID)
+                {
+                    UUID uuid = agent.ProfileID;
 
-                TimestampedItem<UserAgentData> timedItem = null;
-                if (m_agentDataByUUID.TryGetValue(uuid, out timedItem))
-                    m_agentDataByUUID.Remove(uuid);
+                    TimestampedItem<UserAgentData> timedItem = null;
+                    if (m_agentDataByUUID.TryGetValue(uuid, out timedItem))
+                        m_agentDataByUUID.Remove(uuid);
 
-                // Must also add the updated record to the cache, inside the lock, or risk
-                // a race condition with other threads refreshing the cache from the database 
-                // before plugin.AddNewUserAgent below has finished committing the change.
-                m_agentDataByUUID.Add(uuid, new TimestampedItem<UserAgentData>(agent));
+                    // Must also add the updated record to the cache, inside the lock, or risk
+                    // a race condition with other threads refreshing the cache from the database 
+                    // before plugin.AddNewUserAgent below has finished committing the change.
+                    m_agentDataByUUID.Add(uuid, new TimestampedItem<UserAgentData>(agent));
+                }
             }
 
             return m_storage.AddNewUserAgent(agent);
