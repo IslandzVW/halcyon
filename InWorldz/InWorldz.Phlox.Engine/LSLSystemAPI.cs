@@ -8581,9 +8581,9 @@ namespace InWorldz.Phlox.Engine
                 return String.Empty;
             }
             StringBuilder ret = new StringBuilder();
-            foreach (object o in src.Data)
+            for (int index = 0; index < src.Data.Length; ++index)
             {
-                ret.Append(o.ToString());
+                ret.Append(src.GetLSLStringItem(index));
                 ret.Append(seperator);
             }
             ret.Length -= seperator.Length;
