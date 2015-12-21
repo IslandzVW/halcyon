@@ -748,9 +748,9 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 
         private void DecayForces(float secondsSinceLastSync)
         {
-            if (_vForces != OpenMetaverse.Vector3.Zero)
+            if (_vForces != OpenMetaverse.Vector3.Zero) // Do I have any forces to decay?
             {
-                if (_vTarget != OpenMetaverse.Vector3.Zero)
+                if (_vTarget != OpenMetaverse.Vector3.Zero) // Has user input?
                 {
 
                     if (!_flying)
@@ -766,7 +766,7 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
                         _vForces = OpenMetaverse.Vector3.Zero;
                     }
                 }
-                else
+                else // No user input found.
                 {
                     //decay velocity in relation to velocity to badly mimic drag
                     OpenMetaverse.Vector3 decayForce;
@@ -834,17 +834,19 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
             {
                 // The user has said to stop.
 
-                if (_flying || _vTarget != OpenMetaverse.Vector3.Zero) // We are either flying or falling.
+                if (_flying || !_colliding || _vTarget == OpenMetaverse.Vector3.Zero) // We are either flying or falling straight down. (Or standing still...)
                 {
+                    // Possible BUG: Could not be handling the case of falling down a steeply inclined surface - whether ground or prim. Cannot test because in IW you cannot fall down a steeply inclined plane!
                     // Dead stop. HACK: In SL a little bit of gravity sneaks in anyway. The constant comes from measuring that value.
-                    velocity = new OpenMetaverse.Vector3(0.0f, 0.0f, 0.0f); //-0.217762f
+                    _vForces = OpenMetaverse.Vector3.Zero;
+                    _vGravity = OpenMetaverse.Vector3.Zero;
+                    velocity = new OpenMetaverse.Vector3(0.0f, 0.0f, -0.217762f);
                 }
                 else // We are walking or running.
                 {
                     // Slow down.
                     velocity *= 0.25f; // SL seems to just about quarter walk/run speeds according to tests run on 20151217.
                 }
-                //m_log.DebugFormat("a. mag: {0}, vel: {1}", Velocity.Length(), Velocity);
             }
 
             return velocity;

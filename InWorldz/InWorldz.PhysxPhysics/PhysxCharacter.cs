@@ -810,7 +810,7 @@ namespace InWorldz.PhysxPhysics
             OpenMetaverse.Vector3 cforces = _cForcesAreLocal ? _cForces * _rotation : _cForces;
             cforces.Z = 0;
 
-            OpenMetaverse.Vector3 vCombined = (_vGravity + _vForces + cforces + this.VTargetWithRunAndRamp) * secondsSinceLastSync;
+            OpenMetaverse.Vector3 vCombined = ApplyAirBrakes(_vGravity + _vForces + cforces + this.VTargetWithRunAndRamp) * secondsSinceLastSync;
             //m_log.DebugFormat("[CHAR]: vGrav: {0}, vForces: {1}, vTarget {2}", _vGravity, _vForces, this.VTargetWithRun);
 
             if (vCombined == OpenMetaverse.Vector3.Zero) 
@@ -1145,7 +1145,7 @@ namespace InWorldz.PhysxPhysics
             cforces.Z = 0;
 
             OpenMetaverse.Vector3 oldVelocity = _velocity;
-            _velocity = (_vGravity + _vForces + cforces + this.VTargetWithRunAndRamp + vColl);
+            _velocity = ApplyAirBrakes(_vGravity + _vForces + cforces + this.VTargetWithRunAndRamp + vColl);
 
             if (_velocity == OpenMetaverse.Vector3.Zero && oldVelocity != OpenMetaverse.Vector3.Zero)
             {
@@ -1232,6 +1232,30 @@ namespace InWorldz.PhysxPhysics
                     _vGravity.Z += (Settings.Instance.Gravity + cforces.Z) * secondsSinceLastSync;
                 }
             }
+        }
+
+        private OpenMetaverse.Vector3 ApplyAirBrakes(OpenMetaverse.Vector3 velocity)
+        {
+            if (_brakes)
+            {
+                // The user has said to stop.
+
+                if (_flying || !_colliding || _vTarget == OpenMetaverse.Vector3.Zero) // We are either flying or falling straight down. (Or standing still...)
+                {
+                    // Possible BUG: Could not be handling the case of falling down a steeply inclined surface - whether ground or prim. Cannot test because in IW you cannot fall down a steeply inclined plane!
+                    // Dead stop. HACK: In SL a little bit of gravity sneaks in anyway. The constant comes from measuring that value.
+                    _vForces = OpenMetaverse.Vector3.Zero;
+                    _vGravity = OpenMetaverse.Vector3.Zero;
+                    velocity = new OpenMetaverse.Vector3(0.0f, 0.0f, -0.217762f);
+                }
+                else // We are walking or running.
+                {
+                    // Slow down.
+                    velocity *= 0.25f; // SL seems to just about quarter walk/run speeds according to tests run on 20151217.
+                }
+            }
+
+            return velocity;
         }
 
         public override void AddForceSync(OpenMetaverse.Vector3 Force, OpenMetaverse.Vector3 forceOffset, ForceType type)
