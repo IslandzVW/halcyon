@@ -90,13 +90,19 @@ namespace InWorldz.Data.Assets.Stratus.Cache
             }
         }
 
-        public Cache()
+        /// <summary>
+        /// Constructs a new asset cache
+        /// </summary>
+        /// <param name="maxEntryAge">The maximum age for a cache entry before it becomes a candidate to be purged</param>
+        public Cache(int maxEntryAge = 0)
         {
-            _assetCache = new LRUCache<UUID, CacheEntry>(Config.Settings.Instance.CFCacheSize, true);
+            _assetCache = new LRUCache<UUID, CacheEntry>(Config.Settings.Instance.CFCacheSize, true, 
+                (int)(Config.Settings.Instance.CFCacheSize * 0.1f), maxEntryAge);
+
             _assetCache.OnItemPurged += _assetCache_OnItemPurged;
 
             int bufferPoolSize = (int)(Config.Settings.Instance.CFCacheSize * CACHE_VS_BUFFERPOOL_EXTENSION_FACTOR);
-            _bufferPool = new ByteBufferPool(bufferPoolSize, BUFFER_SIZES);
+            _bufferPool = new ByteBufferPool(bufferPoolSize, BUFFER_SIZES, (ulong)maxEntryAge);
         }
 
         void _assetCache_OnItemPurged(CacheEntry item)
@@ -144,6 +150,16 @@ namespace InWorldz.Data.Assets.Stratus.Cache
         public bool HasAsset(UUID assetId)
         {
             return _assetCache.Contains(assetId);
+        }
+
+        /// <summary>
+        /// Should be called periodically to run cleanup tasks on data
+        /// that has aged out
+        /// </summary>
+        public void Maintain()
+        {
+            _assetCache.Maintain();
+            _bufferPool.Maintain();
         }
     }
 }
