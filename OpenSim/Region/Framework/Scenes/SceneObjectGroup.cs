@@ -383,11 +383,39 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.Warn("[SCENE OBJECT GROUP]: StreamingCost is " + m_streamingCost.ToString() + " after delta of " + delta.ToString() + " for " + this.LocalId.ToString());
         }
 
-        // Recalculate the Server and Streaming Cost weights.
+        /// <summary>
+        /// Land Impact.  Calculated from Server Weight. May be different from PrimCount.
+        /// This value is calculated so not persisted.
+        /// </summary>
+        private float m_landCost = WEIGHT_NOT_SET;      // -1 is a sentinel value meaning "not set yet"
+
+        [XmlIgnore]
+        public int LandImpact
+        {
+            get
+            {
+                if (m_landCost == WEIGHT_NOT_SET)
+                    RecalcPrimWeights();
+
+                return (int)Math.Ceiling(m_landCost);
+            }
+        }
+
+        public void LandCostDelta(float delta)
+        {
+            m_landCost += delta;
+            if (m_landCost < 0.0f)
+            {
+                m_log.Warn("[SCENE OBJECT GROUP]: LandCost (LI) is " + m_landCost.ToString() + " after delta of " + delta.ToString() + " for " + this.LocalId.ToString());
+            }
+        }
+
+        // Recalculate the Server, Streaming and Land Cost weights.
         public void RecalcPrimWeights()
         {
             float server_weight = 0.0f;
             float streaming_cost = 0.0f;
+            float land_cost = 0.0f;
 
             lock (m_parts)
             {
@@ -395,22 +423,15 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     server_weight += part.ServerWeight;
                     streaming_cost += part.StreamingCost;
+                    land_cost += part.LandCost;
                 }
             }
 
             m_serverWeight = server_weight;
             m_streamingCost = streaming_cost;
+            m_landCost = land_cost;
         }
 
-        /// <summary>
-        /// Land Impact.  Calculated from Server Weight. May be different from PrimCount.
-        /// This value is calculated so not persisted.
-        /// </summary>
-        [XmlIgnore]
-        public int LandImpact
-        {
-            get { return (int)Math.Ceiling(Math.Min(ServerWeight, StreamingCost)); }
-        }
 
         public Quaternion GroupRotation
         {
