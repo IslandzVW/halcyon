@@ -240,6 +240,12 @@ namespace OpenSim.Framework.Communications
                 profile = TryGetUserProfile(uuid, false);
                 if (profile != null)
                 {
+                    if (profile.CurrentAgent == null)
+                    {
+                        // Make sure we also have an AgentData for the profile.
+                        profile.CurrentAgent = GetUserAgent(uuid, true);
+                    }
+
                     // Check if we should force a refresh.
                     if (!forceRefresh)
                         return profile;
