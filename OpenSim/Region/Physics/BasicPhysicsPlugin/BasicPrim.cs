@@ -137,7 +137,58 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         #region implemented abstract members of PhysicsActor
         public override void CrossingFailure()
         {
-            throw new NotImplementedException();
+            OpenMetaverse.Vector3 newPos = _position;
+            //place this object back into the region
+            if (_position.X > Constants.RegionSize - 1)
+            {
+                newPos.X = Constants.RegionSize - 1/* - _actor.WorldBounds.Extents.X*/;
+            }
+            else if (_position.X <= 0f)
+            {
+                newPos.X = 0.0f/*_actor.WorldBounds.Extents.X*/;
+            }
+
+            if (_position.Y > Constants.RegionSize - 1)
+            {
+                newPos.Y = Constants.RegionSize - 1/* - _actor.WorldBounds.Extents.Y*/;
+            }
+            else if (_position.Y <= 0f)
+            {
+                newPos.Y = 0.0f/*_actor.WorldBounds.Extents.Y*/;
+            }
+
+            //also make sure Z is above ground
+            float groundHeight = _scene.TerrainChannel.CalculateHeightAt(newPos.X, newPos.Y);
+            if (newPos.Z/* - _actor.WorldBounds.Extents.Z*/ < groundHeight)
+            {
+                newPos.Z = groundHeight/* + _actor.WorldBounds.Extents.Z*/ + 0.1f;
+            }
+            /*
+            if (_dynActor != null)
+            {
+                bool wasKinematic = (_dynActor.Flags & PhysX.RigidDynamicFlags.Kinematic) != 0;
+
+                _dynActor.GlobalPose = PhysUtil.PositionToMatrix(newPos, _rotation);
+                _velocity = OpenMetaverse.Vector3.Zero;
+                _angularVelocity = OpenMetaverse.Vector3.Zero;
+
+                if (!wasKinematic)
+                {
+                    _dynActor.AngularVelocity = PhysX.Math.Vector3.Zero;
+                    _dynActor.LinearVelocity = PhysX.Math.Vector3.Zero;
+                    _dynActor.PutToSleep();
+                }
+            }
+            */
+        }
+
+        public override byte[] GetSerializedPhysicsShapes()
+        {
+            byte[] outShapes = null;
+
+            // Ignoring.  No shapes are stored!
+
+            return outShapes;
         }
 
         public override void ForceAboveParcel(float height)
@@ -570,6 +621,17 @@ namespace OpenSim.Region.Physics.BasicPhysicsPlugin
         }
 
         public override bool Flying
+        {
+            get
+            {
+                return false;
+            }
+            set
+            {
+            }
+        }
+
+        public override bool SetAirBrakes
         {
             get
             {
