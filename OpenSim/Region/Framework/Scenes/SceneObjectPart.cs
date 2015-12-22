@@ -525,6 +525,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         /// <summary>
         /// StreamingCost. Based on a triangle budget and LOD levels.  Defaults to 1.0f
+        /// This value can change on a prim resize so we need to recalculate it
         /// </summary>
         private float m_streamingCost = WEIGHT_NOT_SET;
         public virtual float StreamingCost
@@ -549,15 +550,59 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SceneObjectGroup parent = ParentGroup;
-                float previous = m_streamingCost;
+                float previousStreamingCost = m_streamingCost;
                 m_streamingCost = value;
+
                 if (parent != null)
                 {
                     // Rare but called when part.StreamingCost is assigned (e.g. from llSetPrimitiveParams on a shape change).
-                    if (previous <= 0.0f)
-                        previous = 1.0f;
-                    if (previous != value)
-                        parent.StreamingCostDelta(m_streamingCost - previous);
+                    if (previousStreamingCost <= 0.0f)
+                        previousStreamingCost = 1.0f;
+
+                    // Happens on a resize.  StreamingCost is recalculated based on the new prim size.
+                    if (previousStreamingCost != value)
+                    {
+                        // Adjust Land Cost
+                        LandCost = CalculateLandCost(_serverWeight, m_streamingCost);
+
+                        // Add the delta of the old and new value into the SOG
+                        parent.StreamingCostDelta(m_streamingCost - previousStreamingCost);
+                    }
+                }
+            }
+        }
+
+        // We call this in multiple places so keep the actual algorithm in one spot.
+        private float CalculateLandCost(float serverWeight, float streamingCost)
+        {
+            return Math.Min(serverWeight, streamingCost);
+        }
+
+        // Land Impact is the minimum of ServerWeight and StreamingCost
+        private float m_landCost = WEIGHT_NOT_SET;
+
+        [XmlIgnore]
+        public virtual float LandCost
+        {
+            get
+            {
+                if (m_landCost <= 0.0f)
+                    m_landCost = CalculateLandCost(ServerWeight, StreamingCost);
+
+                return m_landCost;
+            }
+            private set
+            {
+                SceneObjectGroup parent = ParentGroup;
+                float previousLandCost = m_landCost;
+                m_landCost = value;
+
+                if (parent != null)
+                {
+                    if (previousLandCost <= 0.0f)
+                        previousLandCost = 1.0f;
+                    if (previousLandCost != m_landCost)
+                        parent.LandCostDelta(m_landCost - previousLandCost);
                 }
             }
         }
