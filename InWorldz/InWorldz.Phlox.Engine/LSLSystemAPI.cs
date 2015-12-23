@@ -1454,7 +1454,7 @@ namespace InWorldz.Phlox.Engine
                     if (group == null)
                         return;
                     bool allow = true;
-                    foreach (SceneObjectPart part in group.Children.Values)
+                    foreach (SceneObjectPart part in group.GetParts())
                     {
                         if (part.Scale.X > World.m_maxPhys || part.Scale.Y > World.m_maxPhys || part.Scale.Z > World.m_maxPhys)
                         {
@@ -4606,7 +4606,7 @@ namespace InWorldz.Phlox.Engine
         {
             
 
-            if (m_host.ParentGroup.Children.Count > 1)
+            if (m_host.ParentGroup.GetParts().Length > 1)
             {
                 return m_host.LinkNum;
             }
@@ -4732,7 +4732,7 @@ namespace InWorldz.Phlox.Engine
                 case ScriptBaseClass.LINK_ALL_OTHERS:
                 case ScriptBaseClass.LINK_ALL_CHILDREN:
                 case ScriptBaseClass.LINK_THIS:
-                    foreach (SceneObjectPart part in parentPrim.Children.Values)
+                    foreach (SceneObjectPart part in parentPrim.GetParts())
                     {
                         if (part.UUID != m_host.UUID)
                         {
@@ -4751,7 +4751,7 @@ namespace InWorldz.Phlox.Engine
             if (linknum == ScriptBaseClass.LINK_ROOT)
             {
                 // Restructuring Multiple Prims.
-                List<SceneObjectPart> parts = new List<SceneObjectPart>(parentPrim.Children.Values);
+                var parts = new List<SceneObjectPart>(parentPrim.GetParts());
                 parts.Remove(parentPrim.RootPart);
                 foreach (SceneObjectPart part in parts)
                 {
@@ -4786,7 +4786,7 @@ namespace InWorldz.Phlox.Engine
             if (parentPrim.RootPart.AttachmentPoint != 0)
                 return; // Fail silently if attached
 
-            List<SceneObjectPart> parts = new List<SceneObjectPart>(parentPrim.Children.Values);
+            List<SceneObjectPart> parts = new List<SceneObjectPart>(parentPrim.GetParts());
             parts.Remove(parentPrim.RootPart);
 
             foreach (SceneObjectPart part in parts)
@@ -5702,7 +5702,7 @@ namespace InWorldz.Phlox.Engine
                     {
                         partItemID = item.ItemID;
                         int linkNumber = m_host.LinkNum;
-                        if (m_host.ParentGroup.Children.Count == 1)
+                        if (m_host.ParentGroup.GetParts().Length == 1)
                             linkNumber = 0;
 
                         object[] resobj = new object[] { linkNumber, num, msg, id };
@@ -17318,7 +17318,7 @@ namespace InWorldz.Phlox.Engine
                         {
                             partItemID = item.ItemID;
                             int linkNumber = m_host.LinkNum;
-                            if (m_host.ParentGroup.Children.Count == 1)
+                            if (m_host.ParentGroup.GetParts().Length == 1)
                                 linkNumber = 0;
 
                             object[] resobj = new object[] { linkNumber, num, msg, id };
@@ -17433,7 +17433,7 @@ namespace InWorldz.Phlox.Engine
             List<object> ret = new List<object>();
             List<SceneObjectPart> parts = new List<SceneObjectPart>();
 
-            foreach(SceneObjectPart part in m_host.ParentGroup.Children.Values)
+            foreach(SceneObjectPart part in m_host.ParentGroup.GetParts())
             {
                 if (String.IsNullOrEmpty(pattern) || iwMatchString(part.Name, pattern, matchType) == 1)
                     parts.Add(part);
@@ -17465,7 +17465,7 @@ namespace InWorldz.Phlox.Engine
             List<object> ret = new List<object>();
             List<SceneObjectPart> parts = new List<SceneObjectPart>();
 
-            foreach (SceneObjectPart part in m_host.ParentGroup.Children.Values)
+            foreach (SceneObjectPart part in m_host.ParentGroup.GetParts())
             {
                 if (String.IsNullOrEmpty(pattern) || iwMatchString(part.Description, pattern, matchType) == 1)
                     parts.Add(part);

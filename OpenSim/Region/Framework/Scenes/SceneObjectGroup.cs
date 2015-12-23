@@ -444,11 +444,6 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_rootPart.GroupID = value; }
         }
 
-        public Dictionary<UUID, SceneObjectPart> Children
-        {
-            get { return m_parts; }
-        }
-
         /// <value>
         /// The root part of this scene object
         /// </value>
@@ -905,7 +900,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_rootPart != null && m_rootPart.PhysActor != null)
                 {
                     // Pass it on to the children.
-                    foreach (SceneObjectPart child in Children.Values)
+                    foreach (SceneObjectPart child in m_parts.Values)
                     {
                         PhysicsActor physActor = child.PhysActor;
                         if (physActor != null)
@@ -2162,7 +2157,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (userExposed)
             {
-                foreach (SceneObjectPart part in dupe.Children.Values)
+                foreach (SceneObjectPart part in dupe.GetParts())
                 {
                     part.PhysActor = null;
                 }
@@ -2826,7 +2821,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 // rest of parts
                 int linkNum = 3;
-                foreach (SceneObjectPart part in otherGroup.Children.Values)
+                foreach (SceneObjectPart part in otherGroup.GetParts())
                 {
                     if (part.UUID != otherGroup.m_rootPart.UUID)
                     {
@@ -3344,7 +3339,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_parts)
             {
-                int numParts = Children.Count;
+                int numParts = m_parts.Count;
                 SceneObjectPart[] partArray = new SceneObjectPart[numParts];
 
                 int i = 0;
@@ -3636,7 +3631,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (SaveUpdate)
             {
-                foreach (SceneObjectPart part in Children.Values)
+                foreach (SceneObjectPart part in m_parts.Values)
                 {
                     part.StoreUndoState();
                 }
@@ -3707,7 +3702,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (saveUpdate)
             {
-                foreach (SceneObjectPart part in Children.Values)
+                foreach (SceneObjectPart part in m_parts.Values)
                 {
                     part.StoreUndoState();
                 }
@@ -3751,7 +3746,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void OffsetForNewRegion(Vector3 offset)
         {
-            foreach (SceneObjectPart part in Children.Values)
+            foreach (SceneObjectPart part in m_parts.Values)
                 part.StoreUndoState();
             m_rootPart.SetGroupPosition(offset, true, false);
         }
@@ -3768,7 +3763,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (SaveUpdate)
             {
-                foreach (SceneObjectPart parts in Children.Values)
+                foreach (SceneObjectPart parts in m_parts.Values)
                 {
                     parts.StoreUndoState();
                 }
@@ -3801,7 +3796,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="localID"></param>
         public void UpdateSingleRotation(Quaternion rot, uint localID)
         {
-            foreach (SceneObjectPart parts in Children.Values)
+            foreach (SceneObjectPart parts in m_parts.Values)
             {
                 parts.StoreUndoState();
             }
@@ -4863,9 +4858,9 @@ namespace OpenSim.Region.Framework.Scenes
             if ((RootPart.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
                 newIsScripted = true;
 
-            if (!newIsScripted && Children.Count > 1)
+            if (!newIsScripted && m_parts.Count > 1)
             {
-                foreach(SceneObjectPart part in Children.Values)
+                foreach(SceneObjectPart part in m_parts.Values)
                 {
                     if (part == null || part == RootPart)
                         continue;

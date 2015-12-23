@@ -1138,7 +1138,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     if (scriptedOnly)
                     {
                         bool containsScripts = false;
-                        foreach (SceneObjectPart part in obj.Children.Values)
+                        foreach (SceneObjectPart part in obj.GetParts())
                         {
                             if (part.Inventory.ContainsScripts())
                             {
