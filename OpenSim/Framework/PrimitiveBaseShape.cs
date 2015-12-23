@@ -115,7 +115,7 @@ namespace OpenSim.Framework
         private PhysicsShapeType _preferredPhysicsShape;
 
         // Materials
-        [XmlIgnore][NonSerialized] private RenderMaterials _renderMaterials;
+        private RenderMaterials _renderMaterials;
 
         // Sculpted
         [XmlIgnore] private UUID _sculptTexture = UUID.Zero;
@@ -1041,6 +1041,19 @@ namespace OpenSim.Framework
             set
             {
                 _renderMaterials = value;
+            }
+        }
+
+        // Used for XML Serialization
+        public byte[] RenderMaterialsBytes
+        {
+            get
+            {
+                return _renderMaterials.ToBytes();
+            }
+            set
+            {
+                _renderMaterials = RenderMaterials.FromBytes(value, 0);
             }
         }
 
