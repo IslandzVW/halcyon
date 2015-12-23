@@ -235,23 +235,26 @@ namespace OpenSim.Framework.Communications
 
             UserProfileData profile;
 
-            lock (m_userDataLock)
+            if (!forceRefresh)
             {
-                profile = TryGetUserProfile(uuid, false);
-                if (profile != null)
+                lock (m_userDataLock)
                 {
-                    if (profile.CurrentAgent == null)
+                    profile = TryGetUserProfile(uuid, false);
+                    if (profile != null)
                     {
-                        // Make sure we also have an AgentData for the profile.
-                        profile.CurrentAgent = GetUserAgent(uuid, true);
-                    }
+                        if (profile.CurrentAgent == null)
+                        {
+                            // Make sure we also have an AgentData for the profile.
+                            profile.CurrentAgent = GetUserAgent(uuid, true);
+                        }
 
-                    // Check if we should force a refresh.
-                    if (!forceRefresh)
-                        return profile;
-                    // Never force refresh of local profiles or temp profiles.
-                    if (m_localUser.ContainsKey(uuid) || m_tempDataByUUID.ContainsKey(uuid))
-                        return profile;
+                        // Check if we should force a refresh.
+                        if (!forceRefresh)
+                            return profile;
+                        // Never force refresh of local profiles or temp profiles.
+                        if (m_localUser.ContainsKey(uuid) || m_tempDataByUUID.ContainsKey(uuid))
+                            return profile;
+                    }
                 }
             }
 
@@ -296,17 +299,12 @@ namespace OpenSim.Framework.Communications
             lock (m_userDataLock)
             {
                 // Now that it's locked again, ensure the lists have the correct data.
-                if (profile == null)
+                if (profile != null)
                 {
-                    if (m_userDataByName.ContainsKey(name))
-                        m_userDataByName.Remove(name);
-                    if ((uuid != UUID.Zero) && m_userDataByUUID.Contains(uuid))
-                        m_userDataByUUID.Remove(uuid);
-                    return null;
+                    // We fetched a profile above, just use the function above.
+                    profile.CurrentAgent = GetUserAgent(profile.ID);
+                    ReplaceUserData(profile);
                 }
-
-                // We fetched a profile above, just use the function above.
-                ReplaceUserData(profile);
             }
 
             return profile;
@@ -424,9 +422,11 @@ namespace OpenSim.Framework.Communications
         public UserProfileData GetUserProfile(Uri uri)
         {
             UserProfileData profile = m_storage.GetUserProfileData(uri);
-
             if (profile != null)
-                ReplaceUserData(profile);   // this has the latest data
+            {
+                profile.CurrentAgent = GetUserAgent(profile.ID);
+                ReplaceUserData(profile);
+            }
 
             return profile;
         }
@@ -473,7 +473,7 @@ namespace OpenSim.Framework.Communications
         /// <returns>Agent profiles</returns>
         public UserAgentData GetUserAgent(UUID uuid, bool forceRefresh)
         {
-            if (!m_isUserServer)
+            if ((!m_isUserServer) && (!forceRefresh))   // don't do this if User or forced
             {
                 lock (m_agentDataByUUID)
                 {
@@ -498,18 +498,15 @@ namespace OpenSim.Framework.Communications
             }
 
             UserAgentData agent = m_storage.GetAgentData(uuid);
-            if (!m_isUserServer)
+            if (agent != null)
             {
-                if (agent != null)
-                {
-                    m_log.WarnFormat("[PROFILE]: Updating AgentData: {0} at {1} {2}", agent.ProfileID, Util.RegionHandleToLocationString(agent.Handle), agent.Position);
-                    ReplaceAgentData(agent);
-                }
-                else
-                {
-                    m_log.WarnFormat("[PROFILE]: Removing AgentData for {0}", uuid);
-                    RemoveAgentData(uuid);
-                }
+                m_log.WarnFormat("[PROFILE]: Updating AgentData: {0} at {1} {2}", agent.ProfileID, Util.RegionHandleToLocationString(agent.Handle), agent.Position);
+                ReplaceAgentData(agent);
+            }
+            else
+            {
+                m_log.WarnFormat("[PROFILE]: Removing AgentData for {0}", uuid);
+                RemoveAgentData(uuid);
             }
 
             return agent;
