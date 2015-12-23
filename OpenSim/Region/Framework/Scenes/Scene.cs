@@ -4676,29 +4676,41 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            SimpleRegionInfo reg = regionHandle == fromRegionHandle ? RegionInfo : RequestNeighbouringRegionInfo(regionHandle);
-            if (reg == null)
-            {
-                //no real neighbor information about that region, consult the grid server
-                reg = m_sceneGridService.RequestNeighbouringRegionInfo(regionHandle);
+            SimpleRegionInfo sreg;
+            string destRegionName;
 
-                if (reg == null)
+            if (regionHandle == fromRegionHandle)
+            {
+                sreg = RegionInfo;
+                destRegionName = "this region";
+            } else {
+                sreg = RequestNeighbouringRegionInfo(regionHandle);
+                if (sreg == null)
                 {
-                    avatar.ControllingClient.SendTeleportFailed("Destination region could not be found.");
-                    return;
+                    //no real neighbor information about that region, consult the grid server
+                    RegionInfo reg = m_sceneGridService.RequestNeighbouringRegionInfo(regionHandle);
+                    if (reg == null)
+                    {
+                        avatar.ControllingClient.SendTeleportFailed("Destination region could not be found.");
+                        return;
+                    }
+                    sreg = reg;
+                    destRegionName = reg.RegionName;
                 }
+                else
+                    destRegionName = String.Format("neighbor at ({0},{1})", sreg.RegionLocX, sreg.RegionLocY);
             }
 
             // Check for landing point or telehub override.
             if ((teleportFlags & (TeleportFlags.ViaLandmark | TeleportFlags.ViaLocation)) != 0)
             {
                 bool set = false;
-                EstateSettings neighborEstateSettings = StorageManager.EstateDataStore.LoadEstateSettings(reg.RegionID);
+                EstateSettings neighborEstateSettings = StorageManager.EstateDataStore.LoadEstateSettings(sreg.RegionID);
                 //Telehubs only work if allow direct teleport is disabled, and it only works on non estate owners/managers
                 if (neighborEstateSettings != null && !neighborEstateSettings.AllowDirectTeleport && !neighborEstateSettings.IsEstateManager(avatar.UUID))
                 {
                     //If no spawn points are set, just use the telehub's position
-                    Telehub telehub = StorageManager.EstateDataStore.FindTelehub(reg.RegionID);
+                    Telehub telehub = StorageManager.EstateDataStore.FindTelehub(sreg.RegionID);
 
                     if (telehub != null)
                     {
@@ -4742,7 +4754,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // Teleport within the same region
                 m_log.DebugFormat(
                     "[SCENE COMMUNICATION SERVICE]: RequestTeleportToLocation {0} within {1}",
-                    position, RegionInfo.RegionName);
+                    position, destRegionName);
 
                 if (!Util.IsValidRegionXYZ(position))
                 {
@@ -4774,13 +4786,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_log.DebugFormat(
                     "[SCENE COMMUNICATION SERVICE]: RequestTeleportToLocation to {0} in {1}",
-                    position, RegionInfo.RegionName);
+                    position, destRegionName);
 
                 avatar.StandUp(null, false, true);
 
                 AvatarTransit.TransitArguments args = new AvatarTransit.TransitArguments
                 {
-                    DestinationRegion = reg,
+                    DestinationRegion = sreg,
                     LocationInDestination = position,
                     TeleportFlags = teleportFlags,
                     Type = AvatarTransit.TransitType.OutboundTeleport,
