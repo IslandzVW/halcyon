@@ -320,11 +320,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Physical scene representation of this Avatar.
         /// </summary>
-        public PhysicsActor PhysicsActor
-        {
-            set { m_physicsActor = value; }
-            get { return m_physicsActor; }
-        }
+        public PhysicsActor PhysicsActor { get; set; }
 
         public uint MovementFlag
         {
@@ -461,7 +457,6 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_connection; }
         }
 
-        protected PhysicsActor m_physicsActor;
 
         private bool m_newPhysActorNeedsUpdate;
 
@@ -549,11 +544,11 @@ namespace OpenSim.Region.Framework.Scenes
                 pos = m_posInfo.Position;
             }
 
-            if (m_physicsActor != null)
+            if (PhysicsActor != null)
             {
                 if (velocity != oldVelocity)
-                    m_physicsActor.Velocity = velocity;
-                m_physicsActor.Position = pos;
+                    PhysicsActor.Velocity = velocity;
+                PhysicsActor.Position = pos;
             }
         }
 
@@ -588,7 +583,7 @@ namespace OpenSim.Region.Framework.Scenes
                 posinfo = GetPosInfo();
                 pos = posinfo.Position;
                 parent = posinfo.Parent;
-                physActor = m_physicsActor;
+                physActor = PhysicsActor;
                 if (updateFromPhysics && (physActor != null))
                     ppos = physActor.Position;   // this seems to be safe to call inside the posInfo lock
                 else
@@ -654,9 +649,9 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_posInfo.SetPosition(ppos.X, ppos.Y, ppos.Z);
                         pos = m_posInfo.Position;
-                        if (posForced && m_physicsActor != null) // in case it changed
+                        if (posForced && PhysicsActor != null) // in case it changed
                         {
-                            m_physicsActor.Position = pos;
+                            PhysicsActor.Position = pos;
                         }
                     }
                 }
@@ -767,11 +762,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (m_physicsActor != null)
+                if (PhysicsActor != null)
                 {
-                    m_velocity.X = m_physicsActor.Velocity.X;
-                    m_velocity.Y = m_physicsActor.Velocity.Y;
-                    m_velocity.Z = m_physicsActor.Velocity.Z;
+                    m_velocity.X = PhysicsActor.Velocity.X;
+                    m_velocity.Y = PhysicsActor.Velocity.Y;
+                    m_velocity.Z = PhysicsActor.Velocity.Z;
                 }
                 else
                 {
@@ -787,16 +782,16 @@ namespace OpenSim.Region.Framework.Scenes
                 if (value.Z < TERMINAL_VELOCITY)    // < because this case both negative
                     value.Z = TERMINAL_VELOCITY;    // minimum value (-54.2 m/s/s)
 
-                if (m_physicsActor != null)
+                if (PhysicsActor != null)
                 {
                     try
                     {
-                        m_physicsActor.Velocity = new OpenMetaverse.Vector3(value.X, value.Y, value.Z);
+                        PhysicsActor.Velocity = new OpenMetaverse.Vector3(value.X, value.Y, value.Z);
                     }
                     catch (Exception e)
                     {
                         m_log.Error("[SCENE PRESENCE]: VELOCITY " + e.Message);
-                        m_physicsActor.Velocity = OpenMetaverse.Vector3.Zero;
+                        PhysicsActor.Velocity = OpenMetaverse.Vector3.Zero;
                         value = Vector3.Zero;
                     }
                 }
@@ -1158,11 +1153,11 @@ namespace OpenSim.Region.Framework.Scenes
                 AddToPhysicalScene(isFlying);
                 if (m_forceFly)
                 {
-                    m_physicsActor.Flying = true;
+                    PhysicsActor.Flying = true;
                 }
                 else if (m_flyDisabled)
                 {
-                    m_physicsActor.Flying = false;
+                    PhysicsActor.Flying = false;
                 }
             }
 
@@ -1319,13 +1314,13 @@ namespace OpenSim.Region.Framework.Scenes
         {
             DumpDebug("RemoveFromPhysicalScene", "n/a");
             Velocity = Vector3.Zero; 
-            if (m_physicsActor != null)
+            if (PhysicsActor != null)
             {
-                m_physicsActor.OnRequestTerseUpdate -= SendTerseUpdateToAllClients;
-                m_physicsActor.OnPositionUpdate -= new PositionUpdate(m_physicsActor_OnPositionUpdate);
+                PhysicsActor.OnRequestTerseUpdate -= SendTerseUpdateToAllClients;
+                PhysicsActor.OnPositionUpdate -= new PositionUpdate(m_physicsActor_OnPositionUpdate);
                 m_scene.PhysicsScene.RemoveAvatar(PhysicsActor);
-                m_physicsActor.UnSubscribeEvents();
-                m_physicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
+                PhysicsActor.UnSubscribeEvents();
+                PhysicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
                 PhysicsActor = null;
             }
         }
@@ -1333,7 +1328,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void VerifyInPhysicalScene(bool isFlying)
         {
             if (!IsChildAgent)
-                if (m_physicsActor == null)
+                if (PhysicsActor == null)
                     AddToPhysicalScene(isFlying);
         }
 
@@ -1344,8 +1339,8 @@ namespace OpenSim.Region.Framework.Scenes
         public void Teleport(Vector3 pos)
         {
             bool isFlying = false;
-            if (m_physicsActor != null)
-                isFlying = m_physicsActor.Flying;
+            if (PhysicsActor != null)
+                isFlying = PhysicsActor.Flying;
 
             Box boundingBox = GetBoundingBox(false);
             float zmin = (float)Scene.Heightmap.CalculateHeightAt(pos.X, pos.Y);
@@ -1360,8 +1355,8 @@ namespace OpenSim.Region.Framework.Scenes
         public void TeleportWithMomentum(Vector3 pos)
         {
             bool isFlying = false;
-            if (m_physicsActor != null)
-                isFlying = m_physicsActor.Flying;
+            if (PhysicsActor != null)
+                isFlying = PhysicsActor.Flying;
 
             AbsolutePosition = pos;
 
@@ -1715,8 +1710,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (physActor == null)
             {
-                if (Velocity != Vector3.Zero)
-                    Velocity = Vector3.Zero;
+                Velocity = Vector3.Zero;
                 return;
             }
 
@@ -2298,7 +2292,7 @@ namespace OpenSim.Region.Framework.Scenes
                         m_posInfo.Set(info);
 
                         bool needsSetHeight = true;
-                        if (m_physicsActor == null)
+                        if (PhysicsActor == null)
                         {
                             needsSetHeight = false;
                             // be careful, do not call this when fromCrossing is true
@@ -2408,8 +2402,8 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
                 }
 
-                // First, remove the physActor since we're going to be sitting, so that physics doesn't interfere while we're doing this update.
-                if (m_physicsActor != null)
+                // First, remove the PhysicsActor since we're going to be sitting, so that physics doesn't interfere while we're doing this update.
+                if (PhysicsActor != null)
                 {
                     RemoveFromPhysicalScene();
                 }
@@ -2603,7 +2597,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_log.Warn("[SCENE PRESENCE]: Sit requested on unknown object: " + m_requestedSitTargetID);
                     return;
                 }
-                // First, remove the physActor so it doesn't mess with anything that happens below
+                // First, remove the PhysicsActor so it doesn't mess with anything that happens below
                 RemoveFromPhysicalScene();
                 Velocity = Vector3.Zero;
                 m_animPersistUntil = 0;    // abort any timed animation
@@ -3079,15 +3073,15 @@ namespace OpenSim.Region.Framework.Scenes
             direc.Normalize();
 
             direc *= 0.03f * 128f * m_speedModifier;
-            if (m_physicsActor != null)
+            if (PhysicsActor != null)
             {
-                if (m_physicsActor.Flying)
+                if (PhysicsActor.Flying)
                 {
                     direc *= 4;
                 }
                 else
                 {
-                    if (!m_physicsActor.Flying && m_physicsActor.IsColliding || m_shouldJump)
+                    if (!PhysicsActor.Flying && PhysicsActor.IsColliding || m_shouldJump)
                     {
                         if (direc.Z > 2.0f || m_shouldJump)
                         {
@@ -3663,7 +3657,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // Makes sure avatar does not end up outside region
-            if (m_physicsActor != null)
+            if (PhysicsActor != null)
             {
                 if (neighbor < 0)
                 {
@@ -3675,7 +3669,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // Makes sure avatar does not end up outside region
-            if (m_physicsActor != null)
+            if (PhysicsActor != null)
             {
                 if (neighbor > 0)
                 {
@@ -3748,7 +3742,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             lock (m_posInfo)    // SetInTransit and AbsolutePosition will grab this
             {
-                if (m_physicsActor == null)
+                if (PhysicsActor == null)
                 {
                     //when a user is crossing on a border due to being attached to a moving object
                     //they will have no physics actor. This is our signal to let the object
@@ -4178,7 +4172,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void AddToPhysicalScene(bool isFlying)
         {
-            if (m_physicsActor != null)
+            if (PhysicsActor != null)
             {
                 DumpDebug("AddToPhysicalScene(existing)", "n/a");
                 RemoveFromPhysicalScene();
@@ -4195,7 +4189,7 @@ namespace OpenSim.Region.Framework.Scenes
                                                 new Vector3(0, 0, m_avHeight), isFlying,
                                                 Velocity);
 
-            m_physicsActor = pa;
+            PhysicsActor = pa;
             scene.AddPhysicsActorTaint(pa);
 
             pa.OnRequestTerseUpdate += SendTerseUpdateToAllClients;
