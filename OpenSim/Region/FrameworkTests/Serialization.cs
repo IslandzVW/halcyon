@@ -43,7 +43,7 @@ namespace OpenSim.Region.FrameworkTests
     public class XMLSerializerTests
     {
         private readonly List<string> PrimCompareIgnoreList = new List<string> { "ParentGroup", "FullUpdateCounter", "TerseUpdateCounter", 
-                "TimeStamp", "SerializedVelocity", "InventorySerial", "Rezzed", "Shape" };
+                "TimeStamp", "SerializedVelocity", "InventorySerial", "Rezzed" };
 
         [TestFixtureSetUp]
         public void Setup()
@@ -67,8 +67,9 @@ namespace OpenSim.Region.FrameworkTests
             Assert.DoesNotThrow(() =>
             {
                 grpBytes = SceneObjectSerializer.ToXml2Format(group, true);
-                Assert.NotNull(grpBytes);
             });
+
+            Assert.NotNull(grpBytes);
 
             Assert.DoesNotThrow(() =>
             {
@@ -96,13 +97,20 @@ namespace OpenSim.Region.FrameworkTests
 
             sop1.Shape.Media = null;
 
+            SceneObjectGroup deserGroup = null;
+            string grpBytes = null;
+
             Assert.DoesNotThrow(() =>
             {
+                grpBytes = SceneObjectSerializer.ToXml2Format(group, true);
 
-                var grpBytes = SceneObjectSerializer.ToXml2Format(group, true);
-                Assert.NotNull(grpBytes);
+            });
 
-                var deserGroup = SceneObjectSerializer.FromXml2Format(grpBytes);
+            Assert.NotNull(grpBytes);
+
+            Assert.DoesNotThrow(() =>
+            {
+                deserGroup = SceneObjectSerializer.FromXml2Format(grpBytes);
             });
         }
 
@@ -122,13 +130,19 @@ namespace OpenSim.Region.FrameworkTests
             group.AddPart(sop2);
             group.AddPart(sop3);
 
+            SceneObjectGroup deserGroup = null;
+            string grpBytes = null;
+
             Assert.DoesNotThrow(() =>
             {
+                grpBytes = SceneObjectSerializer.ToXml2Format(group, true);
+            });
 
-                var grpBytes = SceneObjectSerializer.ToXml2Format(group, true);
-                Assert.NotNull(grpBytes);
+            Assert.NotNull(grpBytes);
 
-                var deserGroup = SceneObjectSerializer.FromXml2Format(grpBytes);
+            Assert.DoesNotThrow(() =>
+            {
+                deserGroup = SceneObjectSerializer.FromXml2Format(grpBytes);
             });
         }
 
@@ -149,18 +163,24 @@ namespace OpenSim.Region.FrameworkTests
             group.AddPart(sop2);
             group.AddPart(sop3);
 
-            SceneObjectGroup deserObj = null;
+            SceneObjectGroup deserGroup = null;
+            string grpBytes = null;
 
             Assert.DoesNotThrow(() =>
             {
-                var grpBytes = SceneObjectSerializer.ToXml2Format(group, true);
-                Assert.NotNull(grpBytes);
-                deserObj = SceneObjectSerializer.FromXml2Format(grpBytes);
+                grpBytes = SceneObjectSerializer.ToXml2Format(group, true);
             });
 
-            var newsop1 = deserObj.GetChildPart(1);
-            var newsop2 = deserObj.GetChildPart(2);
-            var newsop3 = deserObj.GetChildPart(3);
+            Assert.NotNull(grpBytes);
+
+            Assert.DoesNotThrow(() =>
+            {
+                deserGroup = SceneObjectSerializer.FromXml2Format(grpBytes);
+            });
+
+            var newsop1 = deserGroup.GetChildPart(1);
+            var newsop2 = deserGroup.GetChildPart(2);
+            var newsop3 = deserGroup.GetChildPart(3);
 
             Assert.That(sop1.Shape.RenderMaterials, Is.EqualTo(newsop1.Shape.RenderMaterials));
             Assert.That(sop2.Shape.RenderMaterials, Is.EqualTo(newsop2.Shape.RenderMaterials));
