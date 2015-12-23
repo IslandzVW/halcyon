@@ -84,6 +84,7 @@ namespace OpenSim.Region.Framework.Scenes
             public SceneObjectGroup Group;
             public SceneObjectPart Part;
             public SceneObjectPart.UpdateLevel UpdateLevel;
+            public PrimUpdateFlags UpdateFlags;
         }
 
         private Dictionary<uint, UpdateInfo> m_updateList = new Dictionary<uint, UpdateInfo>();
@@ -431,14 +432,19 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="obj">
         /// A <see cref="EntityBase"/>
         /// </param>
-        protected internal void AddToUpdateList(SceneObjectGroup group, SceneObjectPart part, SceneObjectPart.UpdateLevel level)
+        protected internal void AddToUpdateList(SceneObjectGroup group, SceneObjectPart part, SceneObjectPart.UpdateLevel level, PrimUpdateFlags updateFlags)
         {
             lock (m_updateList)
             {
                 UpdateInfo updInfo;
-                if (m_updateList.TryGetValue(part.LocalId, out updInfo) == false || updInfo.UpdateLevel < level || updInfo.Group != group)
+                if (!m_updateList.TryGetValue(part.LocalId, out updInfo))
                 {
-                    m_updateList[part.LocalId] = new UpdateInfo { Group = group, Part = part, UpdateLevel = level };
+                    m_updateList[part.LocalId] = new UpdateInfo { Group = group, Part = part, UpdateLevel = level, UpdateFlags = updateFlags };
+                }
+                else if(updInfo.UpdateLevel <= level || updInfo.Group != group)
+                {
+                    UpdateInfo oldInfo = m_updateList[part.LocalId];
+                    m_updateList[part.LocalId] = new UpdateInfo { Group = group, Part = part, UpdateLevel = level, UpdateFlags = updateFlags | oldInfo.UpdateFlags };
                 }
             }
         }
@@ -560,7 +566,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 try
                 {
-                    update.Part.SendScheduledUpdates(update.UpdateLevel);
+                    update.Part.SendScheduledUpdates(update.UpdateLevel, update.UpdateFlags);
                 }
                 catch (Exception e)
                 {
@@ -720,7 +726,7 @@ namespace OpenSim.Region.Framework.Scenes
                 AttachObject(remoteClient, objatt.LocalId, AttachmentPt, appendMode, false, AttachFlags.None);
 
                 //Send the attachment immediately, so that it goes out before other prims that may be in the sending queue
-                objatt.SendGroupFullUpdate();
+                objatt.SendGroupFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 //objatt.ScheduleGroupForFullUpdate();
                 if (tainted)
                     objatt.HasGroupChanged = true;
@@ -2000,7 +2006,7 @@ namespace OpenSim.Region.Framework.Scenes
                 parentGroup.RootPart.AddFlag(PrimFlags.CreateSelected);
                 parentGroup.TriggerScriptChangedEvent(Changed.LINK);
                 parentGroup.HasGroupChanged = true;
-                parentGroup.ScheduleGroupForFullUpdate();
+                parentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
             }
         }
 
@@ -2134,7 +2140,7 @@ namespace OpenSim.Region.Framework.Scenes
                 foreach (SceneObjectGroup g in affectedGroups)
                 {
                     g.TriggerScriptChangedEvent(Changed.LINK);
-                    g.ScheduleGroupForFullUpdate();
+                    g.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
 
                 //m_log.DebugFormat("Delink finished for {0} prims", primIds.Count);
@@ -2252,7 +2258,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     copy.CreateScriptInstances(0, ScriptStartFlags.None, m_parentScene.DefaultScriptEngine, 0, null);
                     copy.HasGroupChanged = true;
-                    copy.ScheduleGroupForFullUpdate();
+                    copy.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
                     if (OnObjectDuplicate != null)
                         OnObjectDuplicate(original, copy);

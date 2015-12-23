@@ -1033,7 +1033,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
         }
 
-        public void SendPrimitiveToClient(object sop, uint clientFlags, OpenMetaverse.Vector3 lpos)
+        public void SendPrimitiveToClient(object sop, uint clientFlags, OpenMetaverse.Vector3 lpos, PrimUpdateFlags updateFlags)
         {
         }
 

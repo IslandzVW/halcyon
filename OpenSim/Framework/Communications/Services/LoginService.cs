@@ -256,11 +256,11 @@ namespace OpenSim.Framework.Communications.Services
 
                     if (this.IsViewerBlacklisted(clientVersion))
                     {
-                        m_log.DebugFormat("[LOGIN]: Denying login, Client {0} is blacklisted", clientVersion);
+                        m_log.WarnFormat("[LOGIN]: Denying login, Client {0} is blacklisted", clientVersion);
                         return logResponse.CreateViewerNotAllowedResponse();
                     }
 
-                    m_log.DebugFormat(
+                    m_log.InfoFormat(
                         "[LOGIN]: XMLRPC Client is {0} {1} on {2} {3}, start location is {4}",
                             clientChannel, clientVersion, clientPlatform, clientPlatformVer, startLocationRequest);
 

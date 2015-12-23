@@ -1391,7 +1391,7 @@ namespace OpenSim.Region.Framework.Scenes
 #region Event Handlers
 
         /// <summary>
-        /// Sets avatar height in the phyiscs plugin
+        /// Sets avatar height in the physics plugin
         /// </summary>
         public void SetHeight(float height)
         {
@@ -1789,7 +1789,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     // use camera up angle when in mouselook and not flying or when holding the left mouse button down and not flying
                     // this prevents 'jumping' in inappropriate situations.
-                    if ((m_mouseLook && !physActor.Flying) || (m_leftButtonDown && !physActor.Flying)) 
+                    if ((m_mouseLook || m_leftButtonDown) && !physActor.Flying)
                         dirVectors = GetWalkDirectionVectors();
                     else
                         dirVectors = Dir_Vectors;
@@ -1941,6 +1941,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                         }
                     }
+
+                    // Determine whether the user has said to stop and the agent is not sitting.
+                    physActor.SetAirBrakes = (m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_STOP) != 0 && !IsInTransitOnPrim;
                 }
                 
                 // Cause the avatar to stop flying if it's colliding
@@ -2009,7 +2012,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Commented out this code since it could never have executed, but might still be informative.
 //            if (proxyObjectGroup != null)
 //            {
-                proxyObjectGroup.SendGroupFullUpdate();
+                proxyObjectGroup.SendGroupFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 remote_client.SendSitResponse(proxyObjectGroup.UUID, Vector3.Zero, Quaternion.Identity, true, Vector3.Zero, Vector3.Zero, false);
                 m_scene.DeleteSceneObject(proxyObjectGroup, false);
 //            }
@@ -2504,7 +2507,7 @@ namespace OpenSim.Region.Framework.Scenes
             HandleAgentSit(remoteClient, UUID);
             ControllingClient.SendSitResponse(vParentID, vPos, vRot, false, cameraAtOffset, cameraEyeOffset, forceMouselook);
             SceneView.SendFullUpdateToAllClients();
-            part.ParentGroup.ScheduleGroupForFullUpdate();//Tell all avatars about this object, as otherwise avatars will show up at <0,0,0> on the radar if they have not seen this object before (culling)
+            part.ParentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);//Tell all avatars about this object, as otherwise avatars will show up at <0,0,0> on the radar if they have not seen this object before (culling)
         }
 
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset)
@@ -4565,7 +4568,7 @@ namespace OpenSim.Region.Framework.Scenes
                     continue;
 
                 //Send an immediate update
-                presence.SceneView.SendGroupUpdate(gobj);
+                presence.SceneView.SendGroupUpdate(gobj, PrimUpdateFlags.ForcedFullUpdate);
             }
         }
 

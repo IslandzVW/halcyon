@@ -122,7 +122,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (obj != null)
             {
-                obj.SendFullUpdateToClient(remoteClient);
+                //The viewer didn't have the cached prim like we thought - force a full update 
+                // so that they will get the full prim
+                obj.SendFullUpdateToClient(remoteClient, PrimUpdateFlags.ForcedFullUpdate);
             }
 
             return;
@@ -190,7 +192,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (part.ParentGroup.IsAttachment)
                 isAttachment = true;
             // Regardless of if it is an attachment or not, we need to resend the position in case it moved or changed.
-            part.ParentGroup.ScheduleGroupForFullUpdate();
+            part.ParentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FindBest);
 
             // If it's not an attachment, and we are allowed to move it,
             // then we might have done so. If we moved across a parcel

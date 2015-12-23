@@ -30,6 +30,7 @@ using System.Linq;
 using OpenMetaverse;
 using log4net;
 using System.Reflection;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes
 {
@@ -128,7 +129,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 part.Undoing = false;
-                part.ScheduleFullUpdate();
+                part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
             }
         }
 
@@ -173,7 +174,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
                 part.Undoing = false;
-                part.ScheduleFullUpdate();
+                part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
             }
         }
     }

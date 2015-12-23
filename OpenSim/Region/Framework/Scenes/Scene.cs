@@ -2726,7 +2726,7 @@ namespace OpenSim.Region.Framework.Scenes
                     Vector3 safepos = NearestLegalPos(oldGroupPosition);
                     grp.OffsetForNewRegion(safepos);// no effect during transit
                 }
-                grp.ScheduleGroupForFullUpdate();
+                grp.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 return false;
             }
 
@@ -3599,12 +3599,11 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if ((avatar != null) && (!avatar.IsBot))
                 {
-                    CommsManager.UserService.UnmakeLocalUser(agentID);
-
                     if (!avatar.IsChildAgent)
                     {
                         m_sceneGridService.LogOffUser(agentID, RegionInfo.RegionID, RegionInfo.RegionHandle, avatar.AbsolutePosition, avatar.Lookat);
                     }
+                    CommsManager.UserService.UnmakeLocalUser(agentID);
                 }
 
                 m_eventManager.TriggerClientClosed(agentID, this);
@@ -4936,7 +4935,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (ent is SceneObjectGroup)
                 {
-                    ((SceneObjectGroup)ent).ScheduleGroupForFullUpdate();
+                    ((SceneObjectGroup)ent).ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
             }
         }
@@ -5622,7 +5621,7 @@ namespace OpenSim.Region.Framework.Scenes
             group.RezzedFromFolderId = UUID.Zero;
             InspectForAutoReturn(group);
             part.GetProperties(newOwner);
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
             return true;
         }
 

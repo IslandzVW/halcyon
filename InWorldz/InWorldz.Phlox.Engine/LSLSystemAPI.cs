@@ -1682,7 +1682,7 @@ namespace InWorldz.Phlox.Engine
             tmp.Y = (float)scale.Y;
             tmp.Z = (float)scale.Z;
             part.Scale = tmp;
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
 
             PhySleep();
         }
@@ -1696,7 +1696,7 @@ namespace InWorldz.Phlox.Engine
         {
             m_host.ClickAction = (byte)action;
             if (m_host.ParentGroup != null) m_host.ParentGroup.HasGroupChanged = true;
-            m_host.ScheduleFullUpdate();
+            m_host.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
             return;
         }
 
@@ -1989,7 +1989,7 @@ namespace InWorldz.Phlox.Engine
             }
 
             part.ParentGroup.HasGroupChanged = true;
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.FullUpdate);
         }
 
         private static void SetPhantomPropertiesOnPart(SceneObjectPart part, int softness, float gravity, float friction, float wind, float tension, LSL_Vector Force)
@@ -2039,7 +2039,7 @@ namespace InWorldz.Phlox.Engine
             }
 
             part.ParentGroup.HasGroupChanged = true;
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
         }
 
         public LSL_Vector llGetColor(int face)
@@ -3315,7 +3315,7 @@ namespace InWorldz.Phlox.Engine
             if (vel != Vector3.Zero)
                 new_group.SetVelocity(vel, false);
 
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
 
             // if a script was specified, start it now
             if (includesScripts)
@@ -4689,7 +4689,7 @@ namespace InWorldz.Phlox.Engine
             group1.TriggerScriptChangedEvent(Changed.LINK);
             group1.RootPart.AddFlag(PrimFlags.CreateSelected);
             group1.HasGroupChanged = true;
-            group1.ScheduleGroupForFullUpdate();
+            group1.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
             if (client != null)
                 group1.GetProperties(client);
@@ -5369,6 +5369,7 @@ namespace InWorldz.Phlox.Engine
 
         private bool GetAgentData(UUID uuid, int data, out string reply)
         {
+            // Grab the profile even if only CurrentAgent is needed so that it uses the profile cache with timeout.
             UserProfileData userProfile = World.CommsManager.UserService.GetUserProfile(uuid);
 
             reply = String.Empty;
@@ -5376,6 +5377,11 @@ namespace InWorldz.Phlox.Engine
             switch (data)
             {
                 case ScriptBaseClass.DATA_ONLINE:
+                    Scene scene = m_host.ParentGroup.Scene;
+                    ScenePresence SP = scene.GetScenePresence(uuid);
+                    if (SP != null) // user is here, always allow this
+                        reply = "1";
+                    else
                     if ((userProfile == null) || (!userProfile.CurrentAgent.AgentOnline))
                     {
                         reply = "0";
@@ -5387,25 +5393,18 @@ namespace InWorldz.Phlox.Engine
                     }
                     else
                     {   // user is online... are they in this region?
-                        Scene scene = m_host.ParentGroup.Scene;
-                        ScenePresence SP = scene.GetScenePresence(uuid);
-                        if (SP != null) // user is here, always allow this
+                        if (IsScriptOwnerFriendOf(uuid))
                             reply = "1";
                         else
                         {
-                            if (IsScriptOwnerFriendOf(uuid))
-                                reply = "1";
-                            else
+                            UserPreferencesData prefs = scene.CommsManager.UserService.RetrieveUserPreferences(uuid);
+                            reply = "0";
+                            if (prefs != null)
                             {
-                                UserPreferencesData prefs = scene.CommsManager.UserService.RetrieveUserPreferences(uuid);
-                                reply = "0";
-                                if (prefs != null)
-                                {
-                                    // This is where we check the "Only friend and groups know I'm online" option.
-                                    // Only applies to friends (not groups) in InWorldz (for now at least).
-                                    if (prefs.ListedInDirectory)
-                                        reply = "1";
-                                }
+                                // This is where we check the "Only friend and groups know I'm online" option.
+                                // Only applies to friends (not groups) in InWorldz (for now at least).
+                                if (prefs.ListedInDirectory)
+                                    reply = "1";
                             }
                         }
                     }
@@ -7103,13 +7102,13 @@ namespace InWorldz.Phlox.Engine
             else
                 m_host.SoundOptions |= (byte)SoundFlags.Queue;
             m_host.ParentGroup.HasGroupChanged = true;
-            m_host.ScheduleFullUpdate();
+            m_host.ScheduleFullUpdate(PrimUpdateFlags.Sound);
         }
 
         public void llSetSoundRadius(float radius)
         {
             m_host.SoundRadius = radius;
-            m_host.ScheduleFullUpdate();
+            m_host.ScheduleFullUpdate(PrimUpdateFlags.Sound);
         }
 
         public string llKey2Name(string id)
@@ -7150,7 +7149,7 @@ namespace InWorldz.Phlox.Engine
             pTexAnim.Start = (float)start;
 
             part.AddTextureAnimation(pTexAnim);
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.TextureAnim);
             part.ParentGroup.HasGroupChanged = true;
         }
 
@@ -8215,7 +8214,7 @@ namespace InWorldz.Phlox.Engine
                 part.AddNewParticleSystem(prules);
                 part.ParentGroup.HasGroupChanged = true;
             }
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.Particles);
         }
 
         public void llParticleSystem(LSL_List rules)
@@ -9620,7 +9619,7 @@ namespace InWorldz.Phlox.Engine
                                 shape.ProjectionFocus = ford;
                                 shape.ProjectionAmbiance = ambience;
                                 part.ParentGroup.HasGroupChanged = true;
-                                part.ScheduleFullUpdate();
+                                part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
                             }
                         break;
 
@@ -9633,7 +9632,7 @@ namespace InWorldz.Phlox.Engine
                             PrimitiveBaseShape shape = part.Shape;
                             shape.ProjectionEntry = projector;
                             part.ParentGroup.HasGroupChanged = true;
-                            part.ScheduleFullUpdate();
+                            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
                         }
                         break;
 
@@ -9653,7 +9652,7 @@ namespace InWorldz.Phlox.Engine
                                 PrimitiveBaseShape shape = part.Shape;
                                 shape.ProjectionTextureUUID = textureID;
                                 part.ParentGroup.HasGroupChanged = true;
-                                part.ScheduleFullUpdate();
+                                part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
                             }
                         break;
 
@@ -9666,7 +9665,7 @@ namespace InWorldz.Phlox.Engine
                             PrimitiveBaseShape shape = part.Shape;
                             shape.ProjectionFOV = fov;
                             part.ParentGroup.HasGroupChanged = true;
-                            part.ScheduleFullUpdate();
+                            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
                         }
                         break;
 
@@ -9679,7 +9678,7 @@ namespace InWorldz.Phlox.Engine
                             PrimitiveBaseShape shape = part.Shape;
                             shape.ProjectionFocus = focus;
                             part.ParentGroup.HasGroupChanged = true;
-                            part.ScheduleFullUpdate();
+                            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
                         }
                         break;
 
@@ -9692,7 +9691,7 @@ namespace InWorldz.Phlox.Engine
                             PrimitiveBaseShape shape = part.Shape;
                             shape.ProjectionAmbiance = amb;
                             part.ParentGroup.HasGroupChanged = true;
-                            part.ScheduleFullUpdate();
+                            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
                         }
                         break;
 

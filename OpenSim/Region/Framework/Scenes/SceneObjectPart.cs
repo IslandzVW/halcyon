@@ -525,6 +525,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         /// <summary>
         /// StreamingCost. Based on a triangle budget and LOD levels.  Defaults to 1.0f
+        /// This value can change on a prim resize so we need to recalculate it
         /// </summary>
         private float m_streamingCost = WEIGHT_NOT_SET;
         public virtual float StreamingCost
@@ -549,15 +550,59 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 SceneObjectGroup parent = ParentGroup;
-                float previous = m_streamingCost;
+                float previousStreamingCost = m_streamingCost;
                 m_streamingCost = value;
+
                 if (parent != null)
                 {
                     // Rare but called when part.StreamingCost is assigned (e.g. from llSetPrimitiveParams on a shape change).
-                    if (previous <= 0.0f)
-                        previous = 1.0f;
-                    if (previous != value)
-                        parent.StreamingCostDelta(m_streamingCost - previous);
+                    if (previousStreamingCost <= 0.0f)
+                        previousStreamingCost = 1.0f;
+
+                    // Happens on a resize.  StreamingCost is recalculated based on the new prim size.
+                    if (previousStreamingCost != value)
+                    {
+                        // Adjust Land Cost
+                        LandCost = CalculateLandCost(_serverWeight, m_streamingCost);
+
+                        // Add the delta of the old and new value into the SOG
+                        parent.StreamingCostDelta(m_streamingCost - previousStreamingCost);
+                    }
+                }
+            }
+        }
+
+        // We call this in multiple places so keep the actual algorithm in one spot.
+        private float CalculateLandCost(float serverWeight, float streamingCost)
+        {
+            return Math.Min(serverWeight, streamingCost);
+        }
+
+        // Land Impact is the minimum of ServerWeight and StreamingCost
+        private float m_landCost = WEIGHT_NOT_SET;
+
+        [XmlIgnore]
+        public virtual float LandCost
+        {
+            get
+            {
+                if (m_landCost <= 0.0f)
+                    m_landCost = CalculateLandCost(ServerWeight, StreamingCost);
+
+                return m_landCost;
+            }
+            private set
+            {
+                SceneObjectGroup parent = ParentGroup;
+                float previousLandCost = m_landCost;
+                m_landCost = value;
+
+                if (parent != null)
+                {
+                    if (previousLandCost <= 0.0f)
+                        previousLandCost = 1.0f;
+                    if (previousLandCost != m_landCost)
+                        parent.LandCostDelta(m_landCost - previousLandCost);
                 }
             }
         }
@@ -1732,21 +1777,16 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Tell all scene presences that they should send updates for this part to their clients
         /// </summary>
-        public void AddFullUpdateToAllAvatars()
+        public void AddFullUpdateToAllAvatars(PrimUpdateFlags flags)
         {
             List<ScenePresence> avatars = m_parentGroup.Scene.GetScenePresences();
             foreach (ScenePresence avatar in avatars)
             {
                 if (!(avatar.IsDeleted || avatar.IsInTransit))
-                    avatar.SceneView.QueuePartForUpdate(this);
+                    avatar.SceneView.QueuePartForUpdate(this, flags);
             }
         }
-
-        public void AddFullUpdateToAvatar(ScenePresence presence)
-        {
-            presence.SceneView.QueuePartForUpdate(this);
-        }
-
+        
         public void AddNewParticleSystem(Primitive.ParticleSystem pSystem)
         {
             m_particleSystem = pSystem.GetBytes();
@@ -1764,15 +1804,10 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (ScenePresence avatar in avatars)
             {
                 if (!(avatar.IsDeleted || avatar.IsInTransit))
-                    avatar.SceneView.QueuePartForUpdate(this);
+                    avatar.SceneView.QueuePartForUpdate(this, PrimUpdateFlags.TerseUpdate);
             }
         }
-
-        public void AddTerseUpdateToAvatar(ScenePresence presence)
-        {
-            presence.SceneView.QueuePartForUpdate(this);
-        }
-
+        
         public void AddTextureAnimation(Primitive.TextureAnimation pTexAnim)
         {
             byte[] data = new byte[16];
@@ -1970,7 +2005,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             //disable the physics flag
             this.ParentGroup.RemGroupFlagValue(PrimFlags.Physics);
-            this.ScheduleFullUpdate();
+            this.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
         }
 
         void PhysActor_OnPositionUpdate()
@@ -2876,13 +2911,13 @@ namespace OpenSim.Region.Framework.Scenes
 
             ParentGroup.HasGroupChanged = true;
             if (m_parentGroup != null) m_parentGroup.ClearBoundingBoxCache();
-            ScheduleFullUpdate();
+            ScheduleFullUpdate(PrimUpdateFlags.Shape);
         }
 
         /// <summary>
         /// Schedules this prim for a full update
         /// </summary>
-        public void ScheduleFullUpdate()
+        public void ScheduleFullUpdate(PrimUpdateFlags updateFlags)
         {
             if (_isInTransaction) return;
 
@@ -2891,7 +2926,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentGroup.Scene == null)
                     return; // no updates unless the object is at least in the scene
 
-                m_parentGroup.QueueForUpdateCheck(this, UpdateLevel.Full);
+                m_parentGroup.QueueForUpdateCheck(this, UpdateLevel.Full, updateFlags);
             }
 
             Interlocked.Increment(ref FullUpdateCounter);
@@ -2914,7 +2949,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentGroup.Scene == null)
                     return; // no updates unless the object is at least in the scene
 
-                m_parentGroup.QueueForUpdateCheck(this, UpdateLevel.Terse);
+                m_parentGroup.QueueForUpdateCheck(this, UpdateLevel.Terse, PrimUpdateFlags.TerseUpdate);
                 m_parentGroup.HasGroupChanged = true;
             }
 
@@ -2975,20 +3010,20 @@ namespace OpenSim.Region.Framework.Scenes
         ///
         /// </summary>
         /// <param name="remoteClient"></param>
-        public void SendFullUpdate(IClientAPI remoteClient, uint clientFlags)
+        public void SendFullUpdate(IClientAPI remoteClient, uint clientFlags, PrimUpdateFlags updateFlags)
         {
             if (m_parentGroup.InTransit)
                 return;
             if (m_parentGroup.IsDeleted)
                 return;
 
-            m_parentGroup.SendPartFullUpdate(remoteClient, this, clientFlags);
+            m_parentGroup.SendPartFullUpdate(remoteClient, this, clientFlags, updateFlags);
         }
 
         /// <summary>
         ///
         /// </summary>
-        public void SendFullUpdateToAllClients(IEnumerable<ScenePresence> avatars)
+        public void SendFullUpdateToAllClients(IEnumerable<ScenePresence> avatars, PrimUpdateFlags updateFlags)
         {
             if (m_parentGroup.InTransit)
                 return;
@@ -2999,11 +3034,11 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (ScenePresence avatar in avatars)
             {
                 if (!(avatar.IsDeleted || avatar.IsInTransit))
-                    m_parentGroup.SendPartFullUpdate(avatar.ControllingClient, this, avatar.GenerateClientFlags(UUID));
+                    m_parentGroup.SendPartFullUpdate(avatar.ControllingClient, this, avatar.GenerateClientFlags(UUID), updateFlags);
             }
         }
 
-        public void SendFullUpdateToAllClientsExcept(UUID agentID)
+        public void SendFullUpdateToAllClientsExcept(UUID agentID, PrimUpdateFlags updateFlags)
         {
             if (m_parentGroup.InTransit)
                 return;
@@ -3015,7 +3050,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (avatar.UUID != agentID)
                     if (!(avatar.IsDeleted || avatar.IsInTransit))
-                        m_parentGroup.SendPartFullUpdate(avatar.ControllingClient, this, avatar.GenerateClientFlags(UUID));
+                        m_parentGroup.SendPartFullUpdate(avatar.ControllingClient, this, avatar.GenerateClientFlags(UUID), updateFlags);
             }
         }
 
@@ -3024,7 +3059,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="remoteClient"></param>
         /// <param name="clientFlags"></param>
-        public void SendFullUpdateToClient(IClientAPI remoteClient, uint clientflags)
+        public void SendFullUpdateToClient(IClientAPI remoteClient, uint clientflags, PrimUpdateFlags updateFlags)
         {
             if (m_parentGroup.InTransit)
                 return;
@@ -3033,7 +3068,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             Vector3 lPos;
             lPos = OffsetPosition;
-            SendFullUpdateToClient(remoteClient, lPos, clientflags);
+            SendFullUpdateToClient(remoteClient, lPos, clientflags, updateFlags);
         }
 
         /// <summary>
@@ -3042,7 +3077,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="remoteClient"></param>
         /// <param name="lPos"></param>
         /// <param name="clientFlags"></param>
-        public void SendFullUpdateToClient(IClientAPI remoteClient, Vector3 lPos, uint clientFlags)
+        /// <param name="updateFlags">The properties that were changed that caused this update</param>
+        public void SendFullUpdateToClient(IClientAPI remoteClient, Vector3 lPos,
+            uint clientFlags, PrimUpdateFlags updateFlags)
         {
             if (m_parentGroup.IsDeleted)
                 return;
@@ -3068,7 +3105,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
             }
 
-            remoteClient.SendPrimitiveToClient(this, clientFlags, lPos);
+            remoteClient.SendPrimitiveToClient(this, clientFlags, lPos, updateFlags);
         }
 
         public void SendFullUpdateToClientImmediate(IClientAPI remoteClient, Vector3 lPos, uint clientFlags)
@@ -3098,7 +3135,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         /// Tell all the prims which have had updates scheduled
         /// </summary>
-        public void SendScheduledUpdates(UpdateLevel level)
+        public void SendScheduledUpdates(UpdateLevel level, PrimUpdateFlags updateFlags)
         {
             switch (level)
             {
@@ -3111,7 +3148,7 @@ namespace OpenSim.Region.Framework.Scenes
                     break;*/
 
                 case UpdateLevel.Full:
-                    AddFullUpdateToAllAvatars();
+                    AddFullUpdateToAllAvatars(updateFlags);
                     break;
             }
         }
@@ -3206,7 +3243,7 @@ namespace OpenSim.Region.Framework.Scenes
             ParentGroup.HasGroupChanged = true;
             // v1 viewers seem to require the update in order to stop playing the sound.
             if (Sound == UUID.Zero)
-                ScheduleFullUpdate();
+                ScheduleFullUpdate(PrimUpdateFlags.Sound);
         }
 
         /// <summary>
@@ -3535,7 +3572,7 @@ namespace OpenSim.Region.Framework.Scenes
             _groupID = groupID;
             if (client != null)
                 GetProperties(client);
-            ScheduleFullUpdate();
+            ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
         }
 
         /// <summary>
@@ -3609,7 +3646,7 @@ namespace OpenSim.Region.Framework.Scenes
             Text = text;
 
             ParentGroup.HasGroupChanged = true;
-            ScheduleFullUpdate();
+            ScheduleFullUpdate(PrimUpdateFlags.Text);
         }
 
         /// <summary>
@@ -4221,7 +4258,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             ParentGroup.HasGroupChanged = true;
-            ScheduleFullUpdate();
+            ScheduleFullUpdate(PrimUpdateFlags.ExtraData);
         }
 
         public void UpdateGroupPosition(Vector3 pos)
@@ -4262,7 +4299,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Emulate SL behavior (but better): Force no changes, refreshing the old data and a message to the viewer.
                 // Alternative is to update the inventory item with folded perms to keep it in sync, but good luck with that. :p
-                ScheduleFullUpdate();
+                ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 SendObjectPropertiesToClient(AgentID);
                 return false;
             }
@@ -4317,7 +4354,7 @@ namespace OpenSim.Region.Framework.Scenes
                             _everyoneMask &= ~(uint)PermissionMask.Export;
                         break;
                 }
-                ScheduleFullUpdate();
+                ScheduleFullUpdate(PrimUpdateFlags.PrimData);
                 SendObjectPropertiesToClient(AgentID);
             }
             return true;
@@ -4516,7 +4553,7 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.Debug(targetSummary);
 
             ParentGroup.HasGroupChanged = true;
-            ScheduleFullUpdate();
+            ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
         }
 
         private void RemoveFromPhysicalScene(PhysicsActor physActor)
@@ -4644,7 +4681,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ParentGroup.RootPart.Rezzed = DateTime.Now;
 
             ParentGroup.HasGroupChanged = true;
-            ScheduleFullUpdate();
+            ScheduleFullUpdate(PrimUpdateFlags.Shape);
         }
 
         /// <summary>
@@ -4659,7 +4696,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             TriggerScriptChangedEvent(Changed.TEXTURE);
             ParentGroup.HasGroupChanged = true;
-            ScheduleFullUpdate();
+            ScheduleFullUpdate(PrimUpdateFlags.Textures);
         }
 
         /// <summary>
@@ -4673,7 +4710,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             TriggerScriptChangedEvent(Changed.TEXTURE);
             ParentGroup.HasGroupChanged = true;
-            ScheduleFullUpdate();
+            ScheduleFullUpdate(PrimUpdateFlags.Textures);
         }
 
         public void DoAggregateScriptEvents()
@@ -4722,7 +4759,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (m_parentGroup == null)
             {
-                ScheduleFullUpdate();
+                ScheduleFullUpdate(PrimUpdateFlags.FindBest);
                 return;
             }
 
@@ -4731,7 +4768,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_parentGroup != null && m_parentGroup.RootPart == this)
                 m_parentGroup.aggregateScriptEvents();
             else
-                ScheduleFullUpdate();
+                ScheduleFullUpdate(PrimUpdateFlags.FindBest);
         }
 
         public int registerTargetWaypoint(Vector3 target, float tolerance)
