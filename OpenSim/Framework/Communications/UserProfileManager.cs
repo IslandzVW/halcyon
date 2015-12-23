@@ -242,18 +242,9 @@ namespace OpenSim.Framework.Communications
                     profile = TryGetUserProfile(uuid, false);
                     if (profile != null)
                     {
-                        if (profile.CurrentAgent == null)
-                        {
-                            // Make sure we also have an AgentData for the profile.
-                            profile.CurrentAgent = GetUserAgent(uuid, true);
-                        }
-
-                        // Check if we should force a refresh.
-                        if (!forceRefresh)
-                            return profile;
-                        // Never force refresh of local profiles or temp profiles.
-                        if (m_localUser.ContainsKey(uuid) || m_tempDataByUUID.ContainsKey(uuid))
-                            return profile;
+                        // Make sure we also have an AgentData for the profile.
+                        profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
+                        return profile;
                     }
                 }
             }
