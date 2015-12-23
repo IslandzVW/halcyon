@@ -169,7 +169,7 @@ namespace OpenSim.Framework.Communications
             lock (m_userDataLock)
             {
                 if (m_localUser.ContainsKey(uuid))
-                    return m_localUser[uuid];
+                    return m_localUser[uuid];   // never updates on timer (!)
 
                 if (m_tempDataByUUID.ContainsKey(uuid))
                     return m_tempDataByUUID[uuid];
@@ -480,15 +480,19 @@ namespace OpenSim.Framework.Communications
                     TimestampedItem<UserAgentData> item;
                     if (m_agentDataByUUID.TryGetValue(uuid, out item))
                     {
-                        if (item.ElapsedSeconds < CACHE_ITEM_EXPIRY)
-                            if (!forceRefresh)
+                        if ((item.ElapsedSeconds < CACHE_ITEM_EXPIRY) && !forceRefresh)
+                        {
+                            UserAgentData agentData = item.Item;
+                            // The profile may have been initialized when the user was not logged in, if the cache was warmed by EO or owners of prims in the region.
+                            if (agentData.ProfileID != UUID.Zero)   // agentData is initialized?
                             {
-                                // m_log.WarnFormat("[PROFILE]: AgentData cached: {0} at {1} {2}", item.Item.ProfileID, item.Item.Handle, item.Item.Position);
-                                return item.Item;
+                                m_log.WarnFormat("[PROFILE]: AgentData cached: {0} at {1} {2}", agentData.ProfileID, Util.RegionHandleToLocationString(agentData.Handle), agentData.Position);
+                                return agentData;
                             }
+                        }
 
                         // Else cache expired, or forcing a refresh.
-                        // m_log.WarnFormat("[PROFILE]: AgentData cache expired or forced: {0} at {1} {2}", item.Item.ProfileID, item.Item.Handle, item.Item.Position);
+                        m_log.WarnFormat("[PROFILE]: AgentData cache expired or forced: {0} at {1} {2}", item.Item.ProfileID, Util.RegionHandleToLocationString(item.Item.Handle), item.Item.Position);
                     }
                 }
             }
@@ -498,12 +502,12 @@ namespace OpenSim.Framework.Communications
             {
                 if (agent != null)
                 {
-                    // m_log.WarnFormat("[PROFILE]: Updating AgentData: {0} at {1} {2}", agent.ProfileID, agent.Handle, agent.Position);
+                    m_log.WarnFormat("[PROFILE]: Updating AgentData: {0} at {1} {2}", agent.ProfileID, Util.RegionHandleToLocationString(agent.Handle), agent.Position);
                     ReplaceAgentData(agent);
                 }
                 else
                 {
-                    // m_log.WarnFormat("[PROFILE]: Removing AgentData for {0}", uuid);
+                    m_log.WarnFormat("[PROFILE]: Removing AgentData for {0}", uuid);
                     RemoveAgentData(uuid);
                 }
             }
@@ -804,12 +808,13 @@ namespace OpenSim.Framework.Communications
 
         /// <summary>
         /// Creates and initializes a new user agent - make sure to use CommitAgent when done to submit to the DB
+        /// This method is only ever invoked by the User server (not regions).
         /// </summary>
         /// <param name="profile">The users profile</param>
         /// <param name="request">The users loginrequest</param>
         public void CreateAgent(UserProfileData profile, XmlRpcRequest request)
         {
-            //m_log.DebugFormat("[USER CACHE]: Creating agent {0} {1}", profile.Name, profile.ID);
+            // m_log.DebugFormat("[USER CACHE]: Creating agent {0} {1}", profile.Name, profile.ID);
             
             UserAgentData agent = new UserAgentData();
 
@@ -842,7 +847,7 @@ namespace OpenSim.Framework.Communications
             // Current location/position/alignment
             if (profile.CurrentAgent != null)
             {
-                // m_log.WarnFormat("[USER CACHE]: Creating agent {0} {1} at {2} {3} was {4} {5}", profile.Name, profile.ID, profile.CurrentAgent.Handle, profile.CurrentAgent.Position, agent.Handle, agent.Position);
+                m_log.WarnFormat("[USER CACHE]: Creating agent {0} {1} at {2} {3} was {4} {5}", profile.Name, profile.ID, Util.RegionHandleToLocationString(profile.CurrentAgent.Handle), profile.CurrentAgent.Position, Util.RegionHandleToLocationString(agent.Handle), agent.Position);
                 agent.Region = profile.CurrentAgent.Region;
                 agent.Handle = profile.CurrentAgent.Handle;
                 agent.Position = profile.CurrentAgent.Position;
@@ -850,7 +855,7 @@ namespace OpenSim.Framework.Communications
             }
             else
             {
-                // m_log.WarnFormat("[USER CACHE]: Creating agent {0} {1} at HOME {2} {3} was {4} {5}", profile.Name, profile.ID, profile.HomeRegion, profile.HomeLocation, agent.Handle, agent.Position);
+                m_log.WarnFormat("[USER CACHE]: Creating agent {0} {1} at HOME {2} {3} was {4} {5}", profile.Name, profile.ID, Util.RegionHandleToLocationString(profile.HomeRegion), profile.HomeLocation, Util.RegionHandleToLocationString(agent.Handle), agent.Position);
                 agent.Region = profile.HomeRegionID;
                 agent.Handle = profile.HomeRegion;
                 agent.Position = profile.HomeLocation;
@@ -862,11 +867,12 @@ namespace OpenSim.Framework.Communications
             agent.LogoutTime = 0;
 
             // if (m_isUserServer)
-            //     m_log.WarnFormat("[USER CACHE]: Creating new agent data for {0} SSID={1} at {2} {3}", agent.ProfileID, agent.SecureSessionID, agent.Handle, agent.Position); 
+            //     m_log.WarnFormat("[USER CACHE]: Creating new agent data for {0} SSID={1} at {2} {3}", agent.ProfileID, agent.SecureSessionID, Util.RegionHandleToLocationString(agent.Handle), agent.Position); 
 
             profile.CurrentAgent = agent;
         }
 
+        // This method is only ever invoked by the User server (not regions).
         public void CreateAgent(UserProfileData profile, OSD request)
         {
             //m_log.DebugFormat("[USER CACHE]: Creating agent {0} {1}", profile.Name, profile.ID);
@@ -921,13 +927,14 @@ namespace OpenSim.Framework.Communications
 
         /// <summary>
         /// Saves a target agent to the database
+        /// This method is only ever invoked by the User server (not regions).
         /// </summary>
         /// <param name="profile">The users profile</param>
         /// <returns>Successful?</returns>
         public bool CommitAgent(ref UserProfileData profile)
         {
             // if (m_isUserServer)
-            //      m_log.WarnFormat("[USER CACHE]: CommitAgent: {0} SSID={1} at {2} {3}", profile.ID, profile.CurrentAgent.SecureSessionID, profile.CurrentAgent.Handle, profile.CurrentAgent.Position);
+                  m_log.WarnFormat("[USER CACHE]: CommitAgent: {0} SSID={1} at {2} {3}", profile.ID, profile.CurrentAgent.SecureSessionID, Util.RegionHandleToLocationString(profile.CurrentAgent.Handle), profile.CurrentAgent.Position);
 
             // TODO: how is this function different from setUserProfile?  -> Add AddUserAgent() here and commit both tables "users" and "agents"
             // TODO: what is the logic should be?
@@ -964,7 +971,7 @@ namespace OpenSim.Framework.Communications
                     {
                         userAgent.Region = regionid;
                     }
-                    // m_log.WarnFormat("[LOGOFF]: User {0} at {1} {2} was at {3} {4}", userAgent.ProfileID, userAgent.Handle, userAgent.Position, regionhandle, position);
+                    m_log.WarnFormat("[LOGOFF]: User {0} at {1} {2} was at {3} {4}", userAgent.ProfileID, Util.RegionHandleToLocationString(userAgent.Handle), userAgent.Position, regionhandle, position);
                     userAgent.Handle = regionhandle;
                     userAgent.Position = position;
                     userAgent.LookAt = lookat;
