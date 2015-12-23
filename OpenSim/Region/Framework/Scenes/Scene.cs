@@ -3599,12 +3599,11 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if ((avatar != null) && (!avatar.IsBot))
                 {
-                    CommsManager.UserService.UnmakeLocalUser(agentID);
-
                     if (!avatar.IsChildAgent)
                     {
                         m_sceneGridService.LogOffUser(agentID, RegionInfo.RegionID, RegionInfo.RegionHandle, avatar.AbsolutePosition, avatar.Lookat);
                     }
+                    CommsManager.UserService.UnmakeLocalUser(agentID);
                 }
 
                 m_eventManager.TriggerClientClosed(agentID, this);

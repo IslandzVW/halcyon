@@ -5369,6 +5369,7 @@ namespace InWorldz.Phlox.Engine
 
         private bool GetAgentData(UUID uuid, int data, out string reply)
         {
+            // Grab the profile even if only CurrentAgent is needed so that it uses the profile cache with timeout.
             UserProfileData userProfile = World.CommsManager.UserService.GetUserProfile(uuid);
 
             reply = String.Empty;
@@ -5376,6 +5377,11 @@ namespace InWorldz.Phlox.Engine
             switch (data)
             {
                 case ScriptBaseClass.DATA_ONLINE:
+                    Scene scene = m_host.ParentGroup.Scene;
+                    ScenePresence SP = scene.GetScenePresence(uuid);
+                    if (SP != null) // user is here, always allow this
+                        reply = "1";
+                    else
                     if ((userProfile == null) || (!userProfile.CurrentAgent.AgentOnline))
                     {
                         reply = "0";
@@ -5387,25 +5393,18 @@ namespace InWorldz.Phlox.Engine
                     }
                     else
                     {   // user is online... are they in this region?
-                        Scene scene = m_host.ParentGroup.Scene;
-                        ScenePresence SP = scene.GetScenePresence(uuid);
-                        if (SP != null) // user is here, always allow this
+                        if (IsScriptOwnerFriendOf(uuid))
                             reply = "1";
                         else
                         {
-                            if (IsScriptOwnerFriendOf(uuid))
-                                reply = "1";
-                            else
+                            UserPreferencesData prefs = scene.CommsManager.UserService.RetrieveUserPreferences(uuid);
+                            reply = "0";
+                            if (prefs != null)
                             {
-                                UserPreferencesData prefs = scene.CommsManager.UserService.RetrieveUserPreferences(uuid);
-                                reply = "0";
-                                if (prefs != null)
-                                {
-                                    // This is where we check the "Only friend and groups know I'm online" option.
-                                    // Only applies to friends (not groups) in InWorldz (for now at least).
-                                    if (prefs.ListedInDirectory)
-                                        reply = "1";
-                                }
+                                // This is where we check the "Only friend and groups know I'm online" option.
+                                // Only applies to friends (not groups) in InWorldz (for now at least).
+                                if (prefs.ListedInDirectory)
+                                    reply = "1";
                             }
                         }
                     }
