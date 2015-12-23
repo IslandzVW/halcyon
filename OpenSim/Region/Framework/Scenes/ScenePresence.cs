@@ -412,9 +412,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (PhysicsActor != null)
+                var pa = PhysicsActor;
+                if (pa != null)
                 {
-                    return PhysicsActor.SetAlwaysRun;
+                    return pa.SetAlwaysRun;
                 }
                 else
                 {
@@ -423,10 +424,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
             set
             {
+                var pa = PhysicsActor;
                 m_setAlwaysRun = value;
-                if (PhysicsActor != null)
+                if (pa != null)
                 {
-                    PhysicsActor.SetAlwaysRun = value;
+                    pa.SetAlwaysRun = value;
                 }
             }
         }
@@ -544,11 +546,12 @@ namespace OpenSim.Region.Framework.Scenes
                 pos = m_posInfo.Position;
             }
 
-            if (PhysicsActor != null)
+            var pa = PhysicsActor;
+            if (pa != null)
             {
                 if (velocity != oldVelocity)
-                    PhysicsActor.Velocity = velocity;
-                PhysicsActor.Position = pos;
+                    pa.Velocity = velocity;
+                pa.Position = pos;
             }
         }
 
@@ -649,9 +652,10 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_posInfo.SetPosition(ppos.X, ppos.Y, ppos.Z);
                         pos = m_posInfo.Position;
-                        if (posForced && PhysicsActor != null) // in case it changed
+                        var pa = PhysicsActor;
+                        if (posForced && pa != null) // in case it changed
                         {
-                            PhysicsActor.Position = pos;
+                            pa.Position = pos;
                         }
                     }
                 }
@@ -762,11 +766,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get
             {
-                if (PhysicsActor != null)
+                var pa = PhysicsActor;
+                if (pa != null)
                 {
-                    m_velocity.X = PhysicsActor.Velocity.X;
-                    m_velocity.Y = PhysicsActor.Velocity.Y;
-                    m_velocity.Z = PhysicsActor.Velocity.Z;
+                    m_velocity = pa.Velocity;
                 }
                 else
                 {
@@ -782,16 +785,17 @@ namespace OpenSim.Region.Framework.Scenes
                 if (value.Z < TERMINAL_VELOCITY)    // < because this case both negative
                     value.Z = TERMINAL_VELOCITY;    // minimum value (-54.2 m/s/s)
 
-                if (PhysicsActor != null)
+                var pa = PhysicsActor;
+                if (pa != null)
                 {
                     try
                     {
-                        PhysicsActor.Velocity = new OpenMetaverse.Vector3(value.X, value.Y, value.Z);
+                        pa.Velocity = value;
                     }
                     catch (Exception e)
                     {
                         m_log.Error("[SCENE PRESENCE]: VELOCITY " + e.Message);
-                        PhysicsActor.Velocity = OpenMetaverse.Vector3.Zero;
+                        pa.Velocity = OpenMetaverse.Vector3.Zero;
                         value = Vector3.Zero;
                     }
                 }
@@ -1314,13 +1318,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
             DumpDebug("RemoveFromPhysicalScene", "n/a");
             Velocity = Vector3.Zero; 
-            if (PhysicsActor != null)
+            PhysicsActor pa = PhysicsActor;
+            if (pa != null)
             {
-                PhysicsActor.OnRequestTerseUpdate -= SendTerseUpdateToAllClients;
-                PhysicsActor.OnPositionUpdate -= new PositionUpdate(m_physicsActor_OnPositionUpdate);
-                m_scene.PhysicsScene.RemoveAvatar(PhysicsActor);
-                PhysicsActor.UnSubscribeEvents();
-                PhysicsActor.OnCollisionUpdate -= PhysicsCollisionUpdate;
+                pa.OnRequestTerseUpdate -= SendTerseUpdateToAllClients;
+                pa.OnPositionUpdate -= new PositionUpdate(m_physicsActor_OnPositionUpdate);
+                m_scene.PhysicsScene.RemoveAvatar(pa);
+                pa.UnSubscribeEvents();
+                pa.OnCollisionUpdate -= PhysicsCollisionUpdate;
                 PhysicsActor = null;
             }
         }
@@ -1338,10 +1343,6 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="pos"></param>
         public void Teleport(Vector3 pos)
         {
-            bool isFlying = false;
-            if (PhysicsActor != null)
-                isFlying = PhysicsActor.Flying;
-
             Box boundingBox = GetBoundingBox(false);
             float zmin = (float)Scene.Heightmap.CalculateHeightAt(pos.X, pos.Y);
             if (pos.Z < zmin + (boundingBox.Extent.Z / 2))
@@ -1354,10 +1355,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void TeleportWithMomentum(Vector3 pos)
         {
-            bool isFlying = false;
-            if (PhysicsActor != null)
-                isFlying = PhysicsActor.Flying;
-
             AbsolutePosition = pos;
 
             SendTerseUpdateToAllClients();
@@ -1391,9 +1388,10 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetHeight(float height)
         {
             m_avHeight = height;
-            if (PhysicsActor != null && !IsChildAgent)
+            var pa = PhysicsActor;
+            if (pa != null && !IsChildAgent)
             {
-                PhysicsActor.Size = new Vector3(0f, 0f, m_avHeight);
+                pa.Size = new Vector3(0f, 0f, m_avHeight);
             }
         }
 
@@ -1731,38 +1729,33 @@ namespace OpenSim.Region.Framework.Scenes
                 bool update_movementflag = false;
                 bool update_rotation = false;
                 bool DCFlagKeyPressed = false;
-                Vector3 agent_control_v3 = new Vector3(0, 0, 0);
-                Quaternion q = bodyRotation;
-                if (PhysicsActor != null)
+                Vector3 agent_control_v3 = Vector3.Zero;
+
+                // Update the physactor's rotation. This communicates the rotation to the character controller.
+                physActor.Rotation = bodyRotation;
+
+                bool oldflying = physActor.Flying;
+
+                if (m_forceFly)
+                    physActor.Flying = true;
+                else if (m_flyDisabled)
+                    physActor.Flying = false;
+                else
+                    physActor.Flying = ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
+
+                if (physActor.Flying != oldflying)
                 {
-                    // Uodate the physactor's rotation. This communicates
-                    // the rotation to the charcter controller.
-                    physActor.Rotation = q;
+                    update_movementflag = true;
 
-                    bool oldflying = physActor.Flying;
-
-                    if (m_forceFly)
-                        physActor.Flying = true;
-                    else if (m_flyDisabled)
-                        physActor.Flying = false;
-                    else
-                        physActor.Flying = ((flags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
-
-                    if (physActor.Flying != oldflying)
+                    if (physActor.Flying && physActor.CollidingGround)
                     {
-                        update_movementflag = true;
-
-                        if (physActor.Flying && physActor.CollidingGround)
-                        {
-                            physActor.AddForce(new Vector3(0f, 0f, FLY_LAUNCH_FORCE) * physActor.Mass, ForceType.GlobalLinearImpulse);
-                        }
+                        physActor.AddForce(new Vector3(0f, 0f, FLY_LAUNCH_FORCE) * physActor.Mass, ForceType.GlobalLinearImpulse);
                     }
-                    
                 }
-                
-                if (q != m_bodyRot)
+
+                if (bodyRotation != m_bodyRot)
                 {
-                    m_bodyRot = q;
+                    m_bodyRot = bodyRotation;
                     update_rotation = true;
                 }
 
@@ -1944,7 +1937,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // with something with the down arrow pressed.
 
                 // Only do this if we're flying
-                if (physActor != null && m_physicsActor.Flying && !m_forceFly)
+                if (physActor != null && physActor.Flying && !m_forceFly)
                 {
                     // Are the landing controls requirements filled?
                     bool controlland = (((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0) ||
@@ -1964,7 +1957,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (!m_sittingGround && (update_movementflag || (update_rotation && DCFlagKeyPressed)))
                 {
-                    AddNewMovement(agent_control_v3, q);
+                    AddNewMovement(agent_control_v3, bodyRotation);
 
                     if (update_movementflag)
                         UpdateMovementAnimations();
@@ -2612,9 +2605,10 @@ namespace OpenSim.Region.Framework.Scenes
         public void HandleSetAlwaysRun(IClientAPI remoteClient, bool pSetAlwaysRun)
         {
             m_setAlwaysRun = pSetAlwaysRun;
-            if (PhysicsActor != null)
+            var pa = PhysicsActor;
+            if (pa != null)
             {
-                PhysicsActor.SetAlwaysRun = pSetAlwaysRun;
+                pa.SetAlwaysRun = pSetAlwaysRun;
             }
         }
         public BinBVHAnimation GenerateRandomAnimation()
@@ -2816,13 +2810,14 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 //We're moving
                 m_allowFalling = true;
-                if (PhysicsActor != null && PhysicsActor.IsColliding)
+                PhysicsActor pa = PhysicsActor;
+                if (pa != null && pa.IsColliding)
                 {
                     //And colliding. Can you guess what it is yet?
                     if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG) != 0)
                     {
                         //Down key is being pressed.
-                        if (PhysicsActor.Flying)
+                        if (pa.Flying)
                         {
                             return "LAND";
                         }
@@ -2842,7 +2837,7 @@ namespace OpenSim.Region.Framework.Scenes
                         return "PREJUMP";
                     }
                     else
-                        if (PhysicsActor.Flying)
+                        if (pa.Flying)
                         {
                             // if (m_movementAnimation != "FLY") m_log.DebugFormat("[SCENE PRESENCE]: GetMovementAnimation: {0} --> FLY", m_movementAnimation);
                             return "FLY";
@@ -2866,7 +2861,7 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                 {
                     //We're not colliding. Colliding isn't cool these days.
-                    if (PhysicsActor != null && PhysicsActor.Flying)
+                    if (pa != null && pa.Flying)
                     {
                         //Are we moving forwards or backwards?
                         if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_POS) != 0 || (m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_AT_NEG) != 0)
@@ -2940,7 +2935,8 @@ namespace OpenSim.Region.Framework.Scenes
             else
             {
                 //We're not moving.
-                if (PhysicsActor != null && PhysicsActor.IsColliding)
+                PhysicsActor pa = PhysicsActor;
+                if (pa != null && pa.IsColliding)
                 {
                     //But we are colliding.
                     if (m_movementAnimation == "FALLDOWN")
@@ -2971,7 +2967,7 @@ namespace OpenSim.Region.Framework.Scenes
                         return "SOFT_LAND";
 
                     }
-                    else if (PhysicsActor != null && PhysicsActor.Flying)
+                    else if (pa != null && pa.Flying)
                     {
                         m_allowFalling = true;
                         if ((m_movementflag & (uint)AgentManager.ControlFlags.AGENT_CONTROL_UP_POS) != 0)
@@ -2996,7 +2992,7 @@ namespace OpenSim.Region.Framework.Scenes
                 else
                 {
                     //We're not colliding.
-                    if (PhysicsActor != null && PhysicsActor.Flying)
+                    if (pa != null && pa.Flying)
                     {
 
                         return "HOVER";
@@ -3073,15 +3069,16 @@ namespace OpenSim.Region.Framework.Scenes
             direc.Normalize();
 
             direc *= 0.03f * 128f * m_speedModifier;
-            if (PhysicsActor != null)
+            PhysicsActor pa = PhysicsActor;
+            if (pa != null)
             {
-                if (PhysicsActor.Flying)
+                if (pa.Flying)
                 {
                     direc *= 4;
                 }
                 else
                 {
-                    if (!PhysicsActor.Flying && PhysicsActor.IsColliding || m_shouldJump)
+                    if (!pa.Flying && pa.IsColliding || m_shouldJump)
                     {
                         if (direc.Z > 2.0f || m_shouldJump)
                         {
@@ -3998,7 +3995,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             cAgent.RemoteAgents = presInfo;
 
-            PhysicsActor pa = m_physicsActor;
+            PhysicsActor pa = PhysicsActor;
             if (pa != null)
             {
                 cAgent.ConstantForces = pa.ConstantForce;
@@ -4625,9 +4622,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         internal void AddAngularForce(OpenMetaverse.Vector3 force, ForceType ftype)
         {
-            if (PhysicsActor != null)
+            var pa = PhysicsActor;
+            if (pa != null)
             {
-                PhysicsActor.AddAngularForce(force, ftype);
+                pa.AddAngularForce(force, ftype);
             }
         }
 
