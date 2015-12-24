@@ -203,8 +203,9 @@ namespace OpenSim.Region.Framework.Scenes
                 lock (m_posInfo)
                 {
                     m_bodyRot = value;
-                    if (PhysicsActor != null)
-                        PhysicsActor.Rotation = value;
+                    var pa = PhysicsActor;
+                    if (pa != null)
+                        pa.Rotation = value;
                     if (m_scene != null)
                         SendTerseUpdateToAllClients();
                 }

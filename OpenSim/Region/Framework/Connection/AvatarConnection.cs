@@ -195,7 +195,7 @@ namespace OpenSim.Region.Framework.Connection
         {
             if (stage == AvatarTransit.TransitStage.SendBegin)
             {
-                Physics.Manager.PhysicsActor pa = ScenePresence.PhysicsActor;
+                var pa = ScenePresence.PhysicsActor;
 
                 if (pa != null)
                 {
@@ -215,7 +215,7 @@ namespace OpenSim.Region.Framework.Connection
 
                 if (stage == AvatarTransit.TransitStage.SendError)
                 {
-                    Physics.Manager.PhysicsActor pa = ScenePresence.PhysicsActor;
+                    var pa = ScenePresence.PhysicsActor;
 
                     if (pa != null)
                     {
