@@ -172,6 +172,8 @@ namespace OpenSim.Region.Framework.Scenes
         protected Dictionary<UUID, SceneObjectPart> m_parts = new Dictionary<UUID, SceneObjectPart>();
         private Dictionary<uint, SceneObjectPart> _partsByLocalId = new Dictionary<uint, SceneObjectPart>();
 
+        private GroupPartsCollection m_children = new GroupPartsCollection();
+
         protected ulong m_regionHandle;
         protected SceneObjectPart m_rootPart;
         // private Dictionary<UUID, scriptEvents> m_scriptEvents = new Dictionary<UUID, scriptEvents>();
@@ -333,7 +335,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public int PrimCount
         {
-            get { return m_parts.Count; }
+            get
+            {
+                return m_children.Count;
+            }
         }
 
         /// <summary>
@@ -417,15 +422,11 @@ namespace OpenSim.Region.Framework.Scenes
             float streaming_cost = 0.0f;
             float land_cost = 0.0f;
 
-            lock (m_parts)
-            {
-                foreach (SceneObjectPart part in m_parts.Values)
-                {
-                    server_weight += part.ServerWeight;
-                    streaming_cost += part.StreamingCost;
-                    land_cost += part.LandCost;
-                }
-            }
+            m_children.ForEachPart((SceneObjectPart part) => {
+                server_weight += part.ServerWeight;
+                streaming_cost += part.StreamingCost;
+                land_cost += part.LandCost;
+            });
 
             m_serverWeight = server_weight;
             m_streamingCost = streaming_cost;
@@ -458,14 +459,13 @@ namespace OpenSim.Region.Framework.Scenes
             get
             {
                 uint groupTimeStamp = (uint)Util.UnixTimeSinceEpoch();
-                lock (m_parts)
+
+                m_children.ForEachPart((SceneObjectPart part) =>
                 {
-                    foreach (SceneObjectPart part in m_parts.Values)
-                    {
-                        if (part.TimeStamp < groupTimeStamp)
-                            groupTimeStamp = part.TimeStamp;
-                    }
-                }
+                    if (part.TimeStamp < groupTimeStamp)
+                        groupTimeStamp = part.TimeStamp;
+                });
+
                 return groupTimeStamp;
             }
         }
@@ -476,13 +476,10 @@ namespace OpenSim.Region.Framework.Scenes
             set
             {
                 m_regionHandle = value;
-                lock (m_parts)
+                m_children.ForEachPart((SceneObjectPart part) =>
                 {
-                    foreach (SceneObjectPart part in m_parts.Values)
-                    {
-                        part.RegionHandle = m_regionHandle;
-                    }
-                }
+                    part.RegionHandle = m_regionHandle;
+                });
             }
         }
 
@@ -502,14 +499,11 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void FixPartPositions(Vector3 difference)
         {
-            lock (m_parts)
+            m_children.ForEachPart((SceneObjectPart part) =>
             {
-                foreach (SceneObjectPart part in m_parts.Values)
-                {
-                    if (part.ParentID != 0)
-                        part.OffsetPosition = part.OffsetPosition + difference;
-                }
-            }
+                if (part.ParentID != 0)
+                    part.OffsetPosition = part.OffsetPosition + difference;
+            });
         }
 
         /// <summary>
@@ -899,15 +893,14 @@ namespace OpenSim.Region.Framework.Scenes
                 // Tell physics engine that group is selected
                 if (m_rootPart != null && m_rootPart.PhysActor != null)
                 {
-                    // Pass it on to the children.
-                    foreach (SceneObjectPart child in m_parts.Values)
-                    {
-                        PhysicsActor physActor = child.PhysActor;
+                    m_children.ForEachPart((SceneObjectPart part) => {
+                        PhysicsActor physActor = part.PhysActor;
                         if (physActor != null)
                         {
                             physActor.Selected = value;
                         }
-                    }
+                    });
+
                 }
             }
         }
