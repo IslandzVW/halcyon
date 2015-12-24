@@ -86,8 +86,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 UUID sopGlobal = sop.UUID;
                 m_partsByUuid = m_partsByUuid.Add(sop.UUID, sop);
-                m_partsByLocalId = m_partsByLocalId.Add(sop.LocalId, sopGlobal);
 
+                //all local IDs will be 0 during the initial load
+                if (sop.LocalId != 0)
+                {
+                    m_partsByLocalId = m_partsByLocalId.Add(sop.LocalId, sopGlobal);
+                }
+                
                 return m_partsByUuid.Count;
             }
         }
@@ -196,7 +201,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_partsByLocalId = m_partsByLocalId.Add(value, part.UUID);
 
-                if (oldLocalId != 0)
+                if (oldLocalId != 0 && oldLocalId != value)
                 {
                     m_partsByLocalId = m_partsByLocalId.Remove(oldLocalId);
                 }
