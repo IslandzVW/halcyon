@@ -5868,13 +5868,14 @@ namespace InWorldz.Phlox.Engine
                 {
                     if (pusheeav != null)
                     {
-                        if (pusheeav.PhysicsActor != null)
+                        PhysicsActor pa = pusheeav.PhysicsActor;
+                        if (pa != null)
                         {
                             if (local != 0)
                             {
                                 applied_linear_impulse *= m_host.GetWorldRotation();
                             }
-                            pusheeav.PhysicsActor.AddForce(applied_linear_impulse, (local!=0) ? ForceType.LocalLinearImpulse : ForceType.GlobalLinearImpulse);
+                            pa.AddForce(applied_linear_impulse, (local!=0) ? ForceType.LocalLinearImpulse : ForceType.GlobalLinearImpulse);
                         }
                     }
                 }
@@ -7066,11 +7067,11 @@ namespace InWorldz.Phlox.Engine
             // note: this may need some tweaking when walking downhill. you "fall down" for a brief instant
             // and don't collide when walking downhill, which instantly registers as in-air, briefly. should
             // there be some minimum non-collision threshold time before claiming the avatar is in-air?
+            PhysicsActor pa = agent.PhysicsActor;
             if ((flags & ScriptBaseClass.AGENT_WALKING) == 0 && 
                 (flags & ScriptBaseClass.AGENT_SITTING) == 0 &&
                 (flags & ScriptBaseClass.AGENT_CROUCHING) == 0 &&
-                agent.PhysicsActor != null &&
-                !agent.PhysicsActor.IsColliding)
+                pa != null && !pa.IsColliding)
             {
                 flags |= ScriptBaseClass.AGENT_IN_AIR;
             }
@@ -12091,9 +12092,10 @@ namespace InWorldz.Phlox.Engine
                         {
                             // We don't have a mass without a PhysActor, so we need to come up something.
                             // For now fix the null reference crash and use same as child agent.
-                            if (avatar.PhysicsActor == null)
+                            PhysicsActor pa = avatar.PhysicsActor;
+                            if (pa == null)
                                 return 0.01f;
-                            return (float)avatar.PhysicsActor.Mass;
+                            return (float)pa.Mass;
                         }
                     }
                 }

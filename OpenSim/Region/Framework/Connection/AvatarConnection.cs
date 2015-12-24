@@ -199,7 +199,7 @@ namespace OpenSim.Region.Framework.Connection
 
                 if (pa != null)
                 {
-                    ScenePresence.PhysicsActor.Suspend();
+                    pa.Suspend();
                 }
 
                 if (_capsControl != null) _capsControl.PauseTraffic();

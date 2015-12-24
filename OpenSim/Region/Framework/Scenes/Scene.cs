@@ -4733,7 +4733,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // Preserve flying status to viewer; must be set before SendLocalTeleport.
-            if ((avatar.PhysicsActor != null) && avatar.PhysicsActor.Flying)
+            PhysicsActor pa = avatar.PhysicsActor;
+            if (pa != null && pa.Flying)
                 teleportFlags |= TeleportFlags.IsFlying;
             else
                 teleportFlags &= ~TeleportFlags.IsFlying;

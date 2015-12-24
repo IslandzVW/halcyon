@@ -303,7 +303,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             m_perfMonMS = Environment.TickCount;
             scenePresence.RecalcVisualPosition(out vPos, out vRot, out vParentID);    // vParentID is not used in terse updates.  o.O
             PhysicsActor physActor = scenePresence.PhysicsActor;
-            Vector3 accel = (physActor != null) ?    physActor.Accelerat : Vector3.Zeroero;
+            Vector3 accel = (physActor != null) ? physActor.Acceleration : Vector3.Zero;
 
             // m_log.InfoFormat("[SCENE PRESENCE]: SendTerseUpdateToClient sit at {0} vel {1} rot {2} ", pos.ToString(),vel.ToString(), rot.ToString()); 
             m_presence.ControllingClient.SendAvatarTerseUpdate(scenePresence.Scene.RegionInfo.RegionHandle, (ushort)(scenePresence.Scene.TimeDilation * ushort.MaxValue), scenePresence.LocalId, vPos,
