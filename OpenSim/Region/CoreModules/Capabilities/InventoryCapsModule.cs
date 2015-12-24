@@ -32,6 +32,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 
 using log4net;
 using Nini.Config;
@@ -801,7 +802,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 }
 
                 Vector3 rootPos = positions[0];
-                SceneObjectPart[] parts = grp.GetParts();
+                SceneObjectPart[] parts = grp.GetParts().ToArray();
 
                 // Fix first link number
                 if (parts.Length > 1)

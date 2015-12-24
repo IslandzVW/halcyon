@@ -464,7 +464,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                 if ((e).IsAttachedHUD && (e).OwnerID != m_presence.UUID)
                     continue;//Don't ever send HUD attachments to non-owners
 
-                SceneObjectPart[] sogParts = null;
+                IReadOnlyCollection<SceneObjectPart> sogParts = null;
                 bool needsParts = false;
                 lock (m_updateTimes)
                 {
@@ -534,7 +534,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         private bool CheckWhetherAttachmentShouldBeSent(SceneObjectGroup e)
         {
             bool hasBeenUpdated = false;
-            SceneObjectPart[] attParts = e.GetParts();
+            var attParts = e.GetParts();
 
             lock (m_updateTimes)
             {
@@ -741,7 +741,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
 
             SceneObjectGroup lastSog = null;
             bool condition1 = false;
-            SceneObjectPart[] lastParentGroupParts = null;
+            IReadOnlyCollection<SceneObjectPart> lastParentGroupParts = null;
 
             while (m_partsUpdateQueue.Count > 0 && HasFinishedInitialUpdate)
             {
@@ -787,7 +787,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                     condition1 = false;
                 }
 
-                SceneObjectPart[] parentGroupParts = null;
+                IReadOnlyCollection<SceneObjectPart> parentGroupParts = null;
                 bool needsParentGroupParts = false;
                 lock (m_updateTimes)
                 {

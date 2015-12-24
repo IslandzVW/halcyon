@@ -13,7 +13,7 @@ namespace OpenSim.Region.Framework.Scenes
     internal class GroupPartsCollection
     {
         /// <summary>
-        /// Provides a better interface to the collection of parts
+        /// Provides a better interface to the collection of parts when returned to the caller
         /// </summary>
         private class ReadOnlyPartsCollection : IReadOnlyCollection<SceneObjectPart>
         {
@@ -80,13 +80,40 @@ namespace OpenSim.Region.Framework.Scenes
         /// Adds the given part to this collection
         /// </summary>
         /// <param name="sop">The part to add</param>
-        public void AddPart(SceneObjectPart sop)
+        public int AddPart(SceneObjectPart sop)
         {
             lock (m_mutationLock)
             {
                 UUID sopGlobal = sop.UUID;
                 m_partsByUuid = m_partsByUuid.Add(sop.UUID, sop);
                 m_partsByLocalId = m_partsByLocalId.Add(sop.LocalId, sopGlobal);
+
+                return m_partsByUuid.Count;
+            }
+        }
+
+        /// <summary>
+        /// Removes the given part from this collection
+        /// </summary>
+        /// <param name="sop">The part to remove</param>
+        public void RemovePart(SceneObjectPart sop)
+        {
+            lock (m_mutationLock)
+            {
+                m_partsByUuid = m_partsByUuid.Remove(sop.UUID);
+                m_partsByLocalId = m_partsByLocalId.Remove(sop.LocalId);
+            }
+        }
+
+        /// <summary>
+        /// Clears all parts from this collection
+        /// </summary>
+        public void Clear()
+        {
+            lock (m_mutationLock)
+            {
+                m_partsByUuid = m_partsByUuid.Clear();
+                m_partsByLocalId = m_partsByLocalId.Clear();
             }
         }
 
@@ -109,6 +136,71 @@ namespace OpenSim.Region.Framework.Scenes
                 action(part);
             }
         }
-        
+
+        /// <summary>
+        /// Returns the part matching the given full ID or null
+        /// </summary>
+        /// <param name="fullId">The full ID of the part we're searching for</param>
+        /// <returns>The matching part that was found or null</returns>
+        public SceneObjectPart FindPartByFullId(UUID fullId)
+        {
+            SceneObjectPart outPart = null;
+            m_partsByUuid.TryGetValue(fullId, out outPart);
+
+            return outPart;
+        }
+
+        /// <summary>
+        /// Returns the part matching the given local ID or null
+        /// </summary>
+        /// <param name="localId">The local ID of the part we're searching for</param>
+        /// <returns>The matching part that was found or null</returns>
+        public SceneObjectPart FindPartByLocalId(uint localId)
+        {
+            //this is a 2 part lookup to ensure consistency between the collections 
+            UUID outFullId;
+            if (! m_partsByLocalId.TryGetValue(localId, out outFullId))
+            {
+                return null;
+            }
+
+            return FindPartByFullId(outFullId);
+        }
+
+        /// <summary>
+        /// Adds the given part to this collection only if it does not already exist
+        /// </summary>
+        /// <param name="sop">The part to add</param>
+        public void AddPartIfNotExists(SceneObjectPart sop)
+        {
+            lock (m_mutationLock)
+            {
+                if (! m_partsByUuid.ContainsKey(sop.UUID))
+                {
+                    m_partsByUuid = m_partsByUuid.Add(sop.UUID, sop);
+                    m_partsByLocalId = m_partsByLocalId.Add(sop.LocalId, sop.UUID);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reindexes a part which has been assigned new local id
+        /// </summary>
+        /// <param name="part">The part to update</param>
+        /// <param name="oldLocalId">The old localid</param>
+        /// <param name="value">The new localid</param>
+        public void PartLocalIdUpdated(SceneObjectPart part, uint oldLocalId, uint value)
+        {
+            //add the new local ID then remove the old
+            lock (m_mutationLock)
+            {
+                m_partsByLocalId = m_partsByLocalId.Add(value, part.UUID);
+
+                if (oldLocalId != 0)
+                {
+                    m_partsByLocalId = m_partsByLocalId.Remove(oldLocalId);
+                }
+            }
+        }
     }
 }

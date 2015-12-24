@@ -549,9 +549,9 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
-        private SceneObjectPart[] GetLinkParts(int linkType)
+        private IReadOnlyCollection<SceneObjectPart> GetLinkParts(int linkType)
         {
-            SceneObjectPart[] ret = new SceneObjectPart[] { m_host };
+            IReadOnlyCollection<SceneObjectPart> ret = new SceneObjectPart[] { m_host };
 
             switch (linkType)
             {
@@ -573,14 +573,14 @@ namespace InWorldz.Phlox.Engine
                     if (m_host.ParentGroup == null)
                         return new SceneObjectPart[0];
 
-                    ret = m_host.ParentGroup.GetPartsExcluding(m_host);
+                    ret = new List<SceneObjectPart>(m_host.ParentGroup.GetPartsExcluding(m_host));
                     return ret;
 
                 case ScriptBaseClass.LINK_ALL_CHILDREN:
                     if (m_host.ParentGroup == null)
                         return new SceneObjectPart[0];
 
-                    ret = m_host.ParentGroup.GetPartsExcluding(m_host.ParentGroup.RootPart);
+                    ret = new List<SceneObjectPart>(m_host.ParentGroup.GetPartsExcluding(m_host.ParentGroup.RootPart));
                     return ret;
 
                 case ScriptBaseClass.LINK_THIS:
@@ -1901,7 +1901,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llSetLinkAlpha(int linknumber, float alpha, int face)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 SetAlpha(part, alpha, face);
@@ -2093,7 +2093,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llSetLinkTexture(int linknumber, string texture, int face)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 SetTexture(part, texture, face);
@@ -4032,11 +4032,11 @@ namespace InWorldz.Phlox.Engine
         public void iwStartLinkAnimation(int linknumber, string anim)
         {
             if (linknumber < 0) return;
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
-            if (parts.Length != 1) return;
+            if (parts.Count != 1) return;
 
-            StartAnimation(parts[0], anim);
+            StartAnimation(parts.First(), anim);
 
         }
 
@@ -4158,11 +4158,11 @@ namespace InWorldz.Phlox.Engine
         public void iwStopLinkAnimation(int linknumber, string anim)
         {
             if (linknumber < 0) return;
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
-            if (parts.Length != 1) return;
+            if (parts.Count != 1) return;
 
-            StopAnimation(parts[0], anim);
+            StopAnimation(parts.First(), anim);
         }
         
         /*
@@ -4264,7 +4264,7 @@ namespace InWorldz.Phlox.Engine
 
         public void iwLinkTargetOmega(int linknumber, LSL_Vector axis, float spinrate, float gain)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 PrimTargetOmega(part, axis, spinrate, gain);
@@ -4606,7 +4606,7 @@ namespace InWorldz.Phlox.Engine
         {
             
 
-            if (m_host.ParentGroup.GetParts().Length > 1)
+            if (m_host.ParentGroup.PrimCount > 1)
             {
                 return m_host.LinkNum;
             }
@@ -4618,7 +4618,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llSetLinkColor(int linknumber, LSL_Vector color, int face)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 SetColor(part, color, face);
@@ -4923,7 +4923,7 @@ namespace InWorldz.Phlox.Engine
         public int iwGetLinkInventoryNumber(int linknumber, int type)
         {
             int count = 0;
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
             foreach (SceneObjectPart part in parts)
             {
@@ -5008,10 +5008,10 @@ namespace InWorldz.Phlox.Engine
         public string iwGetLinkInventoryName(int linknumber, int type, int number)
         {
             string name = String.Empty;
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
     
-            if (parts.Length == 1)
-                name = GetInventoryName(parts[0], type, number);
+            if (parts.Count == 1)
+                name = GetInventoryName(parts.First(), type, number);
 
             return name;
         }
@@ -5055,10 +5055,10 @@ namespace InWorldz.Phlox.Engine
         public LSL_List iwSearchLinkInventory(int link, int type, string pattern, int matchtype)
         {
             if (link < 0) return new LSL_List();
-            SceneObjectPart[] parts = GetLinkParts(link);
+            var parts = GetLinkParts(link);
 
-            if (parts.Length == 1)
-                return SearchInventory(parts[0], type, pattern, matchtype);
+            if (parts.Count == 1)
+                return SearchInventory(parts.First(), type, pattern, matchtype);
             else
                 return new LSL_List();
         }
@@ -5295,7 +5295,7 @@ namespace InWorldz.Phlox.Engine
         }
         public void iwGiveLinkInventory(int linknumber, string destination, string inventory)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
             foreach (SceneObjectPart part in parts)
             {
                 GiveLinkInventory(part, destination, inventory);
@@ -5323,7 +5323,7 @@ namespace InWorldz.Phlox.Engine
         }
         public void iwRemoveLinkInventory(int linknumber, string name)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
             foreach (SceneObjectPart part in parts)
                 RemoveLinkInventory(part, name);
         }
@@ -5689,7 +5689,7 @@ namespace InWorldz.Phlox.Engine
         {
             int DELAY = 0;
 
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
             UUID partItemID;
             foreach (SceneObjectPart part in parts)
@@ -5702,7 +5702,7 @@ namespace InWorldz.Phlox.Engine
                     {
                         partItemID = item.ItemID;
                         int linkNumber = m_host.LinkNum;
-                        if (m_host.ParentGroup.GetParts().Length == 1)
+                        if (m_host.ParentGroup.PrimCount == 1)
                             linkNumber = 0;
 
                         object[] resobj = new object[] { linkNumber, num, msg, id };
@@ -5987,7 +5987,7 @@ namespace InWorldz.Phlox.Engine
         {
             int sides = 0;
 
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 sides += part.GetNumberOfSides();
@@ -6156,12 +6156,12 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkInventoryKey(int linknumber, string name)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
-            if (parts.Length != 1)
+            if (parts.Count != 1)
                 return UUID.Zero.ToString();
 
-            return GetInventoryKey(parts[0], name).ToString();
+            return GetInventoryKey(parts.First(), name).ToString();
         }
 
         public string GetInventoryDesc(SceneObjectPart part, string name)
@@ -6180,12 +6180,12 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkInventoryDesc(int linknumber, string name)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
-            if (parts.Length != 1)
+            if (parts.Count != 1)
                 return String.Empty;
 
-            return GetInventoryDesc(parts[0], name);
+            return GetInventoryDesc(parts.First(), name);
         }
 
 
@@ -6205,12 +6205,12 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkInventoryLastOwner(int linknumber, string name)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
-            if (parts.Length != 1)
+            if (parts.Count != 1)
                 return UUID.Zero.ToString();
 
-            return GetInventoryLastOwner(parts[0], name);
+            return GetInventoryLastOwner(parts.First(), name);
         }
 
         public void llAllowInventoryDrop(int add)
@@ -7162,7 +7162,7 @@ namespace InWorldz.Phlox.Engine
         public void llSetLinkTextureAnim(int linknumber, int mode, int face, int sizex, int sizey, float start, float length, float rate)
         {
 
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 SetPrimTextureAnim(part, mode, face, sizex, sizey, start, length, rate);
@@ -8225,7 +8225,7 @@ namespace InWorldz.Phlox.Engine
         public void llLinkParticleSystem(int linknumber, LSL_List rules)
         {
 
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 PrimParticleSystem(part, rules);
@@ -8340,7 +8340,7 @@ namespace InWorldz.Phlox.Engine
         }
         public void iwGiveLinkInventoryList(int linknumber, string destination, string category, LSL_List inventory)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
             foreach (SceneObjectPart part in parts)
             {
                 GiveLinkInventoryList(part, destination, category, inventory);
@@ -8461,7 +8461,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llLinkSitTarget(int linknumber, LSL_Vector offset, LSL_Rotation rot)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
             foreach (SceneObjectPart part in parts)
             {
                 part.SitTargetPosition = new Vector3((float)offset.X, (float)offset.Y, (float)offset.Z);
@@ -8476,7 +8476,7 @@ namespace InWorldz.Phlox.Engine
 
         private SceneObjectPart FindAvatarOnObject(UUID agentId, bool IncludeSitTargetOnly)
         {
-            SceneObjectPart[] parts = m_host.ParentGroup.GetParts();
+            var parts = m_host.ParentGroup.GetParts();
             foreach (SceneObjectPart part in parts)
             {
                 if ((!IncludeSitTargetOnly) || (part.SitTargetPosition != Vector3.Zero))
@@ -8488,7 +8488,7 @@ namespace InWorldz.Phlox.Engine
 
         private string AvatarOnSitTarget(int linknumber, bool IncludeSitTargetOnly)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
             // We'll spin through the "list" but return the values from the first match with a sit target.
             // Should only be one match, but if the script specified LINK_ALL_OTHERS or another wildcard,
@@ -8552,7 +8552,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llSetLinkCamera(int linknumber, LSL_Vector eyeOffset, LSL_Vector cameraAt)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
             foreach (SceneObjectPart part in parts)
             {
                 part.SetCameraEyeOffset(new Vector3((float)eyeOffset.X, (float)eyeOffset.Y, (float)eyeOffset.Z));
@@ -9196,15 +9196,15 @@ namespace InWorldz.Phlox.Engine
 
         private void SetPrimParams(int linknumber, LSL_List rules, SceneObjectPart newPart)
         {
-            SceneObjectPart[] parts;
+            List<SceneObjectPart> initial = new List<SceneObjectPart>();
+            IReadOnlyCollection<SceneObjectPart> parts = initial;
 
             if (newPart == null) // normal SetPrimParams
                 parts = GetLinkParts(linknumber);
             else                // iwRezPart call
             {
                 // force it to use newPart
-                parts = new SceneObjectPart[1];
-                parts[0] = newPart;
+                initial.Add(newPart);
             }
 
             int idx = 0;
@@ -9748,9 +9748,9 @@ namespace InWorldz.Phlox.Engine
 
                         //no matter how many parts are selected, this physics change
                         //is applied to the group, so dont apply in a loop
-                        if (parts.Length > 0)
+                        if (parts.Count > 0)
                         {
-                            parts[0].ScriptSetPhantomStatus(phantom);
+                            parts.First().ScriptSetPhantomStatus(phantom);
                         }
 
                         break;
@@ -9768,9 +9768,9 @@ namespace InWorldz.Phlox.Engine
 
                         //no matter how many parts are selected, this physics change
                         //is applied to the group, so dont apply in a loop
-                        if (parts.Length > 0)
+                        if (parts.Count > 0)
                         {
-                            parts[0].ScriptSetPhysicsStatus(physics);
+                            parts.First().ScriptSetPhysicsStatus(physics);
                         }
                         break;
 
@@ -10339,7 +10339,7 @@ namespace InWorldz.Phlox.Engine
             int idx = 0;
             int face = 0;
             Primitive.TextureEntry tex;
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
             while (idx < rules.Length)
             {
@@ -11911,7 +11911,7 @@ namespace InWorldz.Phlox.Engine
         {
             int rc = -1;
 
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
             foreach (SceneObjectPart part in parts)
                 rc &= GetInventoryPermMask(part, item, mask);
 
@@ -11949,12 +11949,12 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkInventoryCreator(int linknumber, string item)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
-            if (parts.Length != 1)
+            if (parts.Count != 1)
                 return UUID.Zero.ToString();
 
-            return GetInventoryCreator(parts[0], item);
+            return GetInventoryCreator(parts.First(), item);
         }
 
         public void llOwnerSay(string msg)
@@ -12570,12 +12570,12 @@ namespace InWorldz.Phlox.Engine
         }
         public int iwGetLinkInventoryType(int linknumber, string name)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
 
-            if (parts.Length != 1)
+            if (parts.Count != 1)
                 return ScriptBaseClass.INVENTORY_NONE;
 
-            return GetInventoryType(parts[0], name);
+            return GetInventoryType(parts.First(), name);
         }
 
         public void llSetPayPrice(int price, LSL_List quick_pay_buttons)
@@ -13787,8 +13787,8 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkNumberOfNotecardLines(int linknumber, string name)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
-            if (parts.Length == 1)
+            var parts = GetLinkParts(linknumber);
+            if (parts.Count == 1)
             {
                 foreach (SceneObjectPart part in parts)
                 {
@@ -13872,7 +13872,7 @@ namespace InWorldz.Phlox.Engine
 
         public string iwGetLinkNotecardLine(int linknumber, string name, int line)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
             foreach (SceneObjectPart part in parts)
             {
                 // just return the first match
@@ -13884,7 +13884,7 @@ namespace InWorldz.Phlox.Engine
 
         public string iwGetLinkNotecardSegment(int linknumber, string name, int line, int startOffset, int maxLength)
         {
-            SceneObjectPart[] parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);
             foreach (SceneObjectPart part in parts)
             {
                 // just return the first match
@@ -17318,7 +17318,7 @@ namespace InWorldz.Phlox.Engine
                         {
                             partItemID = item.ItemID;
                             int linkNumber = m_host.LinkNum;
-                            if (m_host.ParentGroup.GetParts().Length == 1)
+                            if (m_host.ParentGroup.PrimCount == 1)
                                 linkNumber = 0;
 
                             object[] resobj = new object[] { linkNumber, num, msg, id };

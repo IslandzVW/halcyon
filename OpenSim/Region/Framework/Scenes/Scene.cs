@@ -1563,7 +1563,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //Mark objects as clean, including inventories
                 foreach (SceneObjectGroup group in groupsNeedingBackup)
                 {
-                    SceneObjectPart[] parts = group.GetParts();
+                    var parts = group.GetParts();
                     lock (_taintedGroups)
                     {
                         if (!_taintedGroups.Contains(group))
@@ -2101,7 +2101,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (group.RootPart == null)
                 {
                     m_log.ErrorFormat("[SCENE] Found a SceneObjectGroup with m_rootPart == null and {0} children",
-                                      group.GetParts().Length);
+                                      group.GetParts().Count);
                 }
 
                 if (IsBadUserLoad(group) || IsBlacklistedLoad(group))

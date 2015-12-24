@@ -334,7 +334,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (entityAdded)
                 {
-                    m_numPrim += sceneObject.GetParts().Length;
+                    m_numPrim += sceneObject.PrimCount;
                     m_parentScene.EventManager.TriggerParcelPrimCountTainted();
 
                     if (attachToBackup)
@@ -391,7 +391,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (!resultOfObjectLinked)
                     {
-                        m_numPrim -= group.GetParts().Length;
+                        m_numPrim -= group.PrimCount;
 
                         if ((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                         {
@@ -452,7 +452,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal void RemoveFromUpdateList(SceneObjectGroup obj)
         {
             //done here so that it happens outside the lock
-            SceneObjectPart[] objParts = obj.GetParts();
+            var objParts = obj.GetParts();
 
             lock (m_updateList)
             {
@@ -2223,7 +2223,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup original = GetGroupByPrim(originalPrimID);
             if (original != null)
             {
-                if (m_parentScene.Permissions.CanDuplicateObject(original.GetParts().Length, original.UUID, AgentID, original.AbsolutePosition))
+                if (m_parentScene.Permissions.CanDuplicateObject(original.PrimCount, original.UUID, AgentID, original.AbsolutePosition))
                 {
                     SceneObjectGroup copy = original.Copy(AgentID, GroupID, true);
                     copy.AbsolutePosition = copy.AbsolutePosition + offset;
@@ -2249,7 +2249,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // think it's selected, so it will never send a deselect...
                     copy.SetUnselectedForCopy();
 
-                    m_numPrim += copy.GetParts().Length;
+                    m_numPrim += copy.PrimCount;
 
                     if (rot != Quaternion.Identity)
                     {
