@@ -58,6 +58,69 @@ namespace OpenSim.Region.FrameworkTests
 
         public static SceneObjectPart RandomSOP(string name, uint localId)
         {
+            OpenSim.Framework.PrimitiveBaseShape shape = MockPrmitiveBaseShape();
+
+            SceneObjectPart part = new SceneObjectPart(UUID.Zero, shape, new Vector3(1, 2, 3), new Quaternion(4, 5, 6, 7), Vector3.Zero, false);
+            part.Name = name;
+            part.Description = "Desc";
+            part.AngularVelocity = SceneUtil.RandomVector();
+            part.BaseMask = 0x0876;
+            part.Category = 10;
+            part.ClickAction = 5;
+            part.CollisionSound = UUID.Random();
+            part.CollisionSoundVolume = 1.1f;
+            part.CreationDate = OpenSim.Framework.Util.UnixTimeSinceEpoch();
+            part.CreatorID = UUID.Random();
+            part.EveryoneMask = 0x0543;
+            part.Flags = PrimFlags.CameraSource | PrimFlags.DieAtEdge;
+            part.GroupID = UUID.Random();
+            part.GroupMask = 0x0210;
+            part.LastOwnerID = UUID.Random();
+            part.LinkNum = 4;
+            part.LocalId = localId;
+            part.Material = 0x1;
+            part.MediaUrl = "http://bam";
+            part.NextOwnerMask = 0x0234;
+            part.CreatorID = UUID.Random();
+            part.ObjectFlags = 10101;
+            part.OwnerID = UUID.Random();
+            part.OwnerMask = 0x0567;
+            part.OwnershipCost = 5;
+            part.ParentID = 0202;
+            part.ParticleSystem = new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, };
+            part.PassTouches = true;
+            part.PhysicalAngularVelocity = SceneUtil.RandomVector();
+            part.RegionHandle = 1234567;
+            part.RegionID = UUID.Random();
+            part.RotationOffset = SceneUtil.RandomQuat();
+            part.SalePrice = 42;
+            part.SavedAttachmentPoint = 6;
+            part.SavedAttachmentPos = SceneUtil.RandomVector();
+            part.SavedAttachmentRot = SceneUtil.RandomQuat();
+            part.ScriptAccessPin = 87654;
+            part.SerializedPhysicsData = new byte[] { 0xA, 0xB, 0xC, 0xD, 0xE, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, };
+            part.ServerWeight = 3.0f;
+            part.StreamingCost = 2.0f;
+            part.SitName = "Sitting";
+            part.SitTargetOrientation = SceneUtil.RandomQuat();
+            part.SitTargetPosition = SceneUtil.RandomVector();
+            part.Sound = UUID.Random();
+            part.SoundGain = 3.4f;
+            part.SoundOptions = 9;
+            part.SoundRadius = 10.3f;
+            part.Text = "Test";
+            part.TextColor = System.Drawing.Color.FromArgb(1, 2, 3, 4);
+            part.TextureAnimation = new byte[] { 0xA, 0xB, 0xC, 0xD, 0xE, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD };
+            part.TouchName = "DoIt";
+            part.UUID = UUID.Random();
+            part.Velocity = SceneUtil.RandomVector();
+            part.FromItemID = UUID.Random();
+
+            return part;
+        }
+
+        public static OpenSim.Framework.PrimitiveBaseShape MockPrmitiveBaseShape()
+        {
             var shape = new OpenSim.Framework.PrimitiveBaseShape();
             shape.ExtraParams = new byte[] { 0xA, 0x9, 0x8, 0x7, 0x6, 0x5 };
             shape.FlexiDrag = 0.3f;
@@ -153,64 +216,7 @@ namespace OpenSim.Region.FrameworkTests
             shape.MidLODBytes = 3;
             shape.LowLODBytes = 4;
             shape.LowestLODBytes = 5;
-
-            SceneObjectPart part = new SceneObjectPart(UUID.Zero, shape, new Vector3(1, 2, 3), new Quaternion(4, 5, 6, 7), Vector3.Zero, false);
-            part.Name = name;
-            part.Description = "Desc";
-            part.AngularVelocity = SceneUtil.RandomVector();
-            part.BaseMask = 0x0876;
-            part.Category = 10;
-            part.ClickAction = 5;
-            part.CollisionSound = UUID.Random();
-            part.CollisionSoundVolume = 1.1f;
-            part.CreationDate = OpenSim.Framework.Util.UnixTimeSinceEpoch();
-            part.CreatorID = UUID.Random();
-            part.EveryoneMask = 0x0543;
-            part.Flags = PrimFlags.CameraSource | PrimFlags.DieAtEdge;
-            part.GroupID = UUID.Random();
-            part.GroupMask = 0x0210;
-            part.LastOwnerID = UUID.Random();
-            part.LinkNum = 4;
-            part.LocalId = localId;
-            part.Material = 0x1;
-            part.MediaUrl = "http://bam";
-            part.NextOwnerMask = 0x0234;
-            part.CreatorID = UUID.Random();
-            part.ObjectFlags = 10101;
-            part.OwnerID = UUID.Random();
-            part.OwnerMask = 0x0567;
-            part.OwnershipCost = 5;
-            part.ParentID = 0202;
-            part.ParticleSystem = new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, };
-            part.PassTouches = true;
-            part.PhysicalAngularVelocity = SceneUtil.RandomVector();
-            part.RegionHandle = 1234567;
-            part.RegionID = UUID.Random();
-            part.RotationOffset = SceneUtil.RandomQuat();
-            part.SalePrice = 42;
-            part.SavedAttachmentPoint = 6;
-            part.SavedAttachmentPos = SceneUtil.RandomVector();
-            part.SavedAttachmentRot = SceneUtil.RandomQuat();
-            part.ScriptAccessPin = 87654;
-            part.SerializedPhysicsData = new byte[] { 0xA, 0xB, 0xC, 0xD, 0xE, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, };
-            part.ServerWeight = 3.0f;
-            part.StreamingCost = 2.0f;
-            part.SitName = "Sitting";
-            part.SitTargetOrientation = SceneUtil.RandomQuat();
-            part.SitTargetPosition = SceneUtil.RandomVector();
-            part.Sound = UUID.Random();
-            part.SoundGain = 3.4f;
-            part.SoundOptions = 9;
-            part.SoundRadius = 10.3f;
-            part.Text = "Test";
-            part.TextColor = System.Drawing.Color.FromArgb(1, 2, 3, 4);
-            part.TextureAnimation = new byte[] { 0xA, 0xB, 0xC, 0xD, 0xE, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD };
-            part.TouchName = "DoIt";
-            part.UUID = UUID.Random();
-            part.Velocity = SceneUtil.RandomVector();
-            part.FromItemID = UUID.Random();
-
-            return part;
+            return shape;
         }
     }
 }
