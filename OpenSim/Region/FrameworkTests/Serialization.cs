@@ -36,6 +36,8 @@ using OpenSim.Region.Framework.Scenes.Serialization;
 using OpenMetaverse;
 using KellermanSoftware.CompareNetObjects;
 using OpenSim.Framework;
+using System.IO;
+using System.Xml.Serialization;
 
 namespace OpenSim.Region.FrameworkTests
 {
@@ -82,6 +84,43 @@ namespace OpenSim.Region.FrameworkTests
             comp.ElementsToIgnore = PrimCompareIgnoreList;
 
             Assert.IsTrue(comp.Compare(group, deserGroup), comp.DifferencesString);
+        }
+
+        [Test]
+        public void TestPrimitiveBaseShapeDeserialization()
+        {
+            var shape = SceneUtil.MockPrmitiveBaseShape();;
+            var serializer = new XmlSerializer(shape.GetType());
+
+            Assert.NotNull(serializer);
+
+            string shapeBytes = null;
+
+            Assert.DoesNotThrow(() =>
+            {
+                using (StringWriter stringwriter = new System.IO.StringWriter())
+                {
+                    serializer.Serialize(stringwriter, shape);
+                    shapeBytes = stringwriter.ToString();
+                }
+            });
+
+            Assert.NotNull(shapeBytes);
+
+            PrimitiveBaseShape deserShape = null;
+
+            Assert.DoesNotThrow(() =>
+            {
+                using (StringReader stringReader = new System.IO.StringReader(shapeBytes))
+                {
+                    deserShape =  (PrimitiveBaseShape)serializer.Deserialize(stringReader);
+                }
+            });
+
+            CompareObjects comp = new CompareObjects();
+            comp.CompareStaticFields = false;
+            comp.CompareStaticProperties = false;
+            Assert.IsTrue(comp.Compare(shape, deserShape), comp.DifferencesString);
         }
 
         [Test]
