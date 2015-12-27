@@ -112,11 +112,13 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
             private static InventoryFolderBase GetCurrentOutfitFolder(CachedUserInfo userInfo)
             {
-                InventoryFolderBase CurrentOutfitFolder = null;
+                // Duplicate method exists at Scene.Inventory.cs::Scene::GetCurrentOutfitFolder
+
+                InventoryFolderBase currentOutfitFolder = null;
 
                 try
                 {
-                    CurrentOutfitFolder = userInfo.FindFolderForType((int)AssetType.CurrentOutfitFolder);
+                    currentOutfitFolder = userInfo.FindFolderForType((int)AssetType.CurrentOutfitFolder);
                 }
                 catch (InventoryStorageException)
                 {
@@ -133,17 +135,17 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                     }
                     if (foundFolder != null)
                     {
-                        CurrentOutfitFolder = userInfo.GetFolder(foundFolder.ID);
-                        if (CurrentOutfitFolder != null)
+                        currentOutfitFolder = userInfo.GetFolder(foundFolder.ID);
+                        if (currentOutfitFolder != null)
                         {
-                            CurrentOutfitFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
-                            userInfo.UpdateFolder(CurrentOutfitFolder);
+                            currentOutfitFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
+                            userInfo.UpdateFolder(currentOutfitFolder);
                         }
                     }
                 }
-                if(CurrentOutfitFolder != null)
-                    CurrentOutfitFolder = userInfo.GetFolder(CurrentOutfitFolder.ID);
-                return CurrentOutfitFolder;
+                if(currentOutfitFolder != null)
+                    currentOutfitFolder = userInfo.GetFolder(currentOutfitFolder.ID);
+                return currentOutfitFolder;
             }
 
             public void COFHasBeenSet()

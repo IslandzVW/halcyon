@@ -1177,6 +1177,40 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
+                // Make sure that if this is an outfit link that the old outfit link is gone.
+                // However there may be more than one if this is is an old DB, so make sure all are gone.
+                if (assetType == AssetType.LinkFolder)
+                {
+                    //verify this user actually owns the item
+                    InventoryFolderBase currentOutfitFolder = GetCurrentOutfitFolder(userInfo);
+                    if (currentOutfitFolder != null)
+                    {
+                        List<InventoryItemBase> linksToRemove = null;
+
+                        // Mark all folder links in the COF for removal: there should only ever be one, and that's the one we are about to create.
+                        lock (currentOutfitFolder.Items)
+                        {
+                            linksToRemove = new List<InventoryItemBase>(currentOutfitFolder.Items.Count); // This is the maximum number of entries that we can possibly ever remove, and therefore means only ONE alloc of this list per call to this method.
+
+                            foreach (InventoryItemBase cofItem in currentOutfitFolder.Items)
+                            {
+                                if (cofItem.AssetType == (int)AssetType.LinkFolder)
+                                {
+                                    linksToRemove.Add(cofItem);
+                                }
+                            }
+                        }
+
+                        // Get rid of 'em!  Don't care if there were failures: if this doesn't kill them now, it will on the next outfit change!
+                        foreach (InventoryItemBase itemToBeDeleted in linksToRemove)
+                        {
+                            userInfo.DeleteItem(itemToBeDeleted);
+                        }
+
+                        userInfo.UpdateFolder(currentOutfitFolder);
+                    }
+                }
+
                 InventoryItemBase item = new InventoryItemBase();
                 item.Owner = remoteClient.AgentId;
                 item.CreatorId = creatorID;
@@ -1214,6 +1248,44 @@ namespace OpenSim.Region.Framework.Scenes
                     "No user details associated with client {0} uuid {1} in CreateNewInventoryItem!",
                      remoteClient.Name, remoteClient.AgentId);
             }
+        }
+
+        protected const string COF_NAME = "Current Outfit";
+        // Clone of AvatarFactoryModule::BuildCOF::GetCurrentOutfitFolder
+        private static InventoryFolderBase GetCurrentOutfitFolder(CachedUserInfo userInfo)
+        {
+            InventoryFolderBase currentOutfitFolder = null;
+
+            try
+            {
+                currentOutfitFolder = userInfo.FindFolderForType((int)AssetType.CurrentOutfitFolder);
+            }
+            catch (InventoryStorageException)
+            {
+                // could not find it by type. load root and try to find it by name.
+                InventorySubFolderBase foundFolder = null;
+                InventoryFolderBase rootFolder = userInfo.FindFolderForType((int)AssetType.RootFolder);
+                foreach (var subfolder in rootFolder.SubFolders)
+                {
+                    if (subfolder.Name == COF_NAME)
+                    {
+                        foundFolder = subfolder;
+                        break;
+                    }
+                }
+                if (foundFolder != null)
+                {
+                    currentOutfitFolder = userInfo.GetFolder(foundFolder.ID);
+                    if (currentOutfitFolder != null)
+                    {
+                        currentOutfitFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
+                        userInfo.UpdateFolder(currentOutfitFolder);
+                    }
+                }
+            }
+            if(currentOutfitFolder != null)
+                currentOutfitFolder = userInfo.GetFolder(currentOutfitFolder.ID);
+            return currentOutfitFolder;
         }
 
         /// <summary>
