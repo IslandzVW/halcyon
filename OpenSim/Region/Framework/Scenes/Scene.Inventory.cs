@@ -1185,26 +1185,13 @@ namespace OpenSim.Region.Framework.Scenes
                     InventoryFolderBase currentOutfitFolder = GetCurrentOutfitFolder(userInfo);
                     if (currentOutfitFolder != null)
                     {
-                        List<InventoryItemBase> linksToRemove = null;
-
-                        // Mark all folder links in the COF for removal: there should only ever be one, and that's the one we are about to create.
-                        lock (currentOutfitFolder.Items)
+                        // Get rid of all folder links in the COF: there should only ever be one, and that's the one we are about to create.
+                        foreach (InventoryItemBase cofItem in currentOutfitFolder.Items)
                         {
-                            linksToRemove = new List<InventoryItemBase>(currentOutfitFolder.Items.Count); // This is the maximum number of entries that we can possibly ever remove, and therefore means only ONE alloc of this list per call to this method.
-
-                            foreach (InventoryItemBase cofItem in currentOutfitFolder.Items)
+                            if (cofItem.AssetType == (int)AssetType.LinkFolder)
                             {
-                                if (cofItem.AssetType == (int)AssetType.LinkFolder)
-                                {
-                                    linksToRemove.Add(cofItem);
-                                }
+                                userInfo.DeleteItem(cofItem);
                             }
-                        }
-
-                        // Get rid of 'em!  Don't care if there were failures: if this doesn't kill them now, it will on the next outfit change!
-                        foreach (InventoryItemBase itemToBeDeleted in linksToRemove)
-                        {
-                            userInfo.DeleteItem(itemToBeDeleted);
                         }
 
                         userInfo.UpdateFolder(currentOutfitFolder);
