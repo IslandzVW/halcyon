@@ -1181,9 +1181,9 @@ namespace OpenSim.Region.Framework.Scenes
                 // However there may be more than one if this is is an old DB, so make sure all are gone.
                 if (assetType == AssetType.LinkFolder)
                 {
-                    //verify this user actually owns the item
+                    // Verify this user actually owns the item, AND that the current operation is in the COF - otherwise there's no reason to clean the COF!
                     InventoryFolderBase currentOutfitFolder = GetCurrentOutfitFolder(userInfo);
-                    if (currentOutfitFolder != null)
+                    if (currentOutfitFolder != null && currentOutfitFolder.ID == folderID)
                     {
                         // Get rid of all folder links in the COF: there should only ever be one, and that's the one we are about to create.
                         foreach (InventoryItemBase cofItem in currentOutfitFolder.Items)
