@@ -30,11 +30,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using OpenSim.Framework;
-using net.openstack.Providers.Rackspace;
-using net.openstack.Core.Domain;
 using Amib.Threading;
 using System.Threading;
 using log4net;
@@ -66,6 +62,16 @@ namespace InWorldz.Data.Assets.Stratus
         /// </summary>
         const int ASSET_WAIT_TIMEOUT = 45 * 1000;
 
+        /// <summary>
+        /// The amount of time between cache maintenance checks
+        /// </summary>
+        const int MAINTENANCE_INTERVAL = 5 * 60 * 1000;
+
+        /// <summary>
+        /// The maximum age of an idle cache entry before it will be purged
+        /// </summary>
+        const int MAX_IDLE_CACHE_ENTRY_AGE = MAINTENANCE_INTERVAL * 2;
+
 
 
         /// <summary>
@@ -96,14 +102,10 @@ namespace InWorldz.Data.Assets.Stratus
         private int _readTimeout = CloudFilesAssetWorker.DEFAULT_READ_TIMEOUT;
         private int _writeTimeout = CloudFilesAssetWorker.DEFAULT_WRITE_TIMEOUT;
 
+        private Timer _maintTimer;
+
         public CloudFilesAssetClient()
         {
-        }
-
-        public CloudFilesAssetClient(int readTimeout, int writeTimeout)
-        {
-            _readTimeout = readTimeout;
-            _writeTimeout = writeTimeout;
         }
 
         /// <summary>
@@ -142,13 +144,38 @@ namespace InWorldz.Data.Assets.Stratus
             Func<CloudFilesAssetWorker> ctorFunc = () => { return new CloudFilesAssetWorker(_readTimeout, _writeTimeout); };
             _asyncAssetWorkers = new ObjectPool<CloudFilesAssetWorker>(Config.Settings.Instance.CFWorkerThreads * 2, ctorFunc);
 
-            _assetCache = new Cache.Cache();
+            _assetCache = new Cache.Cache(MAX_IDLE_CACHE_ENTRY_AGE);
 
             if (!Config.Settings.Instance.DisableWritebackCache)
             {
                 _diskWriteBack = new Cache.DiskWriteBackCache();
                 _diskWriteBack.Start();
             }
+
+            //start maintaining the cache
+            _maintTimer = new Timer(this.Maintain, null, MAINTENANCE_INTERVAL, MAINTENANCE_INTERVAL);
+        }
+
+        /// <summary>
+        /// Should be called by the maintenance timer to maintain the cache
+        /// </summary>
+        /// <param name="unused"></param>
+        private void Maintain(object unused)
+        {
+            _maintTimer.Change(MAINTENANCE_INTERVAL, Timeout.Infinite);
+            lock (_assetCache)
+            {
+                try
+                {
+                    _assetCache.Maintain();
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("[InWorldz.Stratus] Error during cache maintenance {0}", e);
+                }
+            }
+
+            _maintTimer.Change(MAINTENANCE_INTERVAL, MAINTENANCE_INTERVAL);
         }
 
         public void Stop()
@@ -157,6 +184,7 @@ namespace InWorldz.Data.Assets.Stratus
             _threadPool.Shutdown();
 
             if (_diskWriteBack != null) _diskWriteBack.Stop();
+            _maintTimer.Dispose();
         }
 
         public void SetReceiver(IAssetReceiver receiver)
