@@ -693,6 +693,7 @@
       <Reference name="log4net" path="../../../bin/"/>
       <Reference name="DotNetOpenMail" path="../../../bin/"/>
       <Reference name="Mono.Addins" path="../../../bin/"/>
+      <Reference name="System.Collections.Immutable" path="../../../bin/"/>
 
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Framework"/>

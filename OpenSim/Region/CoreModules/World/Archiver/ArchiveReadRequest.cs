@@ -231,7 +231,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                 if (m_scene.RegionInfo.EstateSettings.EstateOwner != UUID.Zero)
                     masterAvatarId = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
-                foreach (SceneObjectPart part in sceneObject.Children.Values)
+                foreach (SceneObjectPart part in sceneObject.GetParts())
                 {
                     if (!ResolveUserUuid(part.CreatorID))
                     {

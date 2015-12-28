@@ -1563,7 +1563,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //Mark objects as clean, including inventories
                 foreach (SceneObjectGroup group in groupsNeedingBackup)
                 {
-                    SceneObjectPart[] parts = group.GetParts();
+                    var parts = group.GetParts();
                     lock (_taintedGroups)
                     {
                         if (!_taintedGroups.Contains(group))
@@ -2101,7 +2101,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (group.RootPart == null)
                 {
                     m_log.ErrorFormat("[SCENE] Found a SceneObjectGroup with m_rootPart == null and {0} children",
-                                      group.Children == null ? 0 : group.Children.Count);
+                                      group.GetParts().Count);
                 }
 
                 if (IsBadUserLoad(group) || IsBlacklistedLoad(group))
@@ -2489,7 +2489,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="silent">True when the database should be updated.</param>
         public void DeleteSceneObject(SceneObjectGroup group, bool silent, bool fromCrossing, bool persist)
         {
-            foreach (SceneObjectPart part in group.Children.Values)
+            foreach (SceneObjectPart part in group.GetParts())
             {
                 if (!group.IsAttachment)    // Optimization, can't sit on something you're wearing
                 {
@@ -3014,7 +3014,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Force allocation of new LocalId
             //
-            foreach (SceneObjectPart p in sceneObject.Children.Values)
+            foreach (SceneObjectPart p in sceneObject.GetParts())
             {
                 p.LocalId = 0;
             }
@@ -5605,7 +5605,7 @@ namespace OpenSim.Region.Framework.Scenes
             group.SetRootPartOwner(part, newOwner.AgentId,
                     newOwner.ActiveGroupId);
 
-            List<SceneObjectPart> partList = new List<SceneObjectPart>(group.Children.Values);
+            var partList = group.GetParts();
 
             if (Permissions.PropagatePermissions())
             {

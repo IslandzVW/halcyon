@@ -86,21 +86,19 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 RootPart = SceneObjectPartSnapshot.FromSceneObjectPart(sog.RootPart, flags)
             };
 
-            SceneObjectPart[] parts = sog.GetParts();
+            var parts = sog.GetParts();
             SceneObjectPartSnapshot[] partsSnap;
 
             //do we have more than just the root?
-            if (parts.Length > 1)
+            if (parts.Count > 1)
             {
                 List<SceneObjectPartSnapshot> partsCollect = new List<SceneObjectPartSnapshot>();
 
-                for (int i = 0; i < parts.Length; i++)
+                foreach (SceneObjectPart part in parts)
                 {
-                    SceneObjectPart part = parts[i];
-
                     if (!part.IsRootPart())
                     {
-                        partsCollect.Add(SceneObjectPartSnapshot.FromSceneObjectPart(parts[i], flags));
+                        partsCollect.Add(SceneObjectPartSnapshot.FromSceneObjectPart(part, flags));
                     }
                 }
 

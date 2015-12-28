@@ -881,7 +881,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (entity is SceneObjectGroup)
                     {
                         SceneObjectGroup sog = (SceneObjectGroup) entity;
-                        foreach (SceneObjectPart part in sog.Children.Values)
+                        foreach (SceneObjectPart part in sog.GetParts())
                         {
                             if (part.Shape != null)
                             {

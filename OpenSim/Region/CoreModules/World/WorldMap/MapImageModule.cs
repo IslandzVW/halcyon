@@ -224,7 +224,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         SceneObjectGroup mapdot = (SceneObjectGroup)obj;
                         Color mapdotspot = Color.Gray; // Default color when prim color is white
                         // Loop over prim in group
-                        foreach (SceneObjectPart part in mapdot.Children.Values)
+                        foreach (SceneObjectPart part in mapdot.GetParts())
                         {
                             if (part == null)
                                 continue;
