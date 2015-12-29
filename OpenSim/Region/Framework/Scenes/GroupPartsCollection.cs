@@ -196,15 +196,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="value">The new localid</param>
         public void PartLocalIdUpdated(SceneObjectPart part, uint oldLocalId, uint value)
         {
-            //add the new local ID then remove the old
+            // replace the old local ID with the new one
             lock (m_mutationLock)
             {
-                m_partsByLocalId = m_partsByLocalId.Add(value, part.UUID);
-
-                if (oldLocalId != 0 && oldLocalId != value)
-                {
-                    m_partsByLocalId = m_partsByLocalId.Remove(oldLocalId);
-                }
+                m_partsByLocalId = m_partsByLocalId.SetItem(value, part.UUID);
             }
         }
     }
