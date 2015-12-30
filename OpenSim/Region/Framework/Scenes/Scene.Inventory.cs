@@ -1185,14 +1185,20 @@ namespace OpenSim.Region.Framework.Scenes
                     InventoryFolderBase currentOutfitFolder = GetCurrentOutfitFolder(userInfo);
                     if (currentOutfitFolder != null && currentOutfitFolder.ID == folderID)
                     {
+                        uint count = 0;
+
                         // Get rid of all folder links in the COF: there should only ever be one, and that's the one we are about to create.
                         foreach (InventoryItemBase cofItem in currentOutfitFolder.Items)
                         {
                             if (cofItem.AssetType == (int)AssetType.LinkFolder)
                             {
                                 userInfo.DeleteItem(cofItem);
+                                ++count;
                             }
                         }
+
+                        if (count > 1) // Only report if more than one was removed.
+                            m_log.InfoFormat("[AGENT INVENTORY] Removed {0} out of date folder links from the COF for avatar {1}.", count, userInfo.UserProfile.ID);
 
                         userInfo.UpdateFolder(currentOutfitFolder);
                     }
