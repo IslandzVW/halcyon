@@ -2422,8 +2422,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             foreach (SceneObjectPart part in partsList)
             {
+                m_children.RemovePart(part); // the old IDs are changing
                 part.ResetIDs(part.LinkNum); // Don't change link nums
-                m_children.AddPart(part);
+                m_children.AddPart(part); // update the part lists with new IDs
             }
         }
 
