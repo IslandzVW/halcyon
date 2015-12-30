@@ -1177,6 +1177,33 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
+                // Make sure that if this is an outfit link that the old outfit link is gone.
+                // However there may be more than one if this is is an old DB, so make sure all are gone.
+                if (assetType == AssetType.LinkFolder)
+                {
+                    // Verify this user actually owns the item, AND that the current operation is in the COF - otherwise there's no reason to clean the COF!
+                    InventoryFolderBase currentOutfitFolder = GetCurrentOutfitFolder(userInfo);
+                    if (currentOutfitFolder != null && currentOutfitFolder.ID == folderID)
+                    {
+                        uint count = 0;
+
+                        // Get rid of all folder links in the COF: there should only ever be one, and that's the one we are about to create.
+                        foreach (InventoryItemBase cofItem in currentOutfitFolder.Items)
+                        {
+                            if (cofItem.AssetType == (int)AssetType.LinkFolder)
+                            {
+                                userInfo.DeleteItem(cofItem);
+                                ++count;
+                            }
+                        }
+
+                        if (count > 1) // Only report if more than one was removed.
+                            m_log.InfoFormat("[AGENT INVENTORY] Removed {0} out of date folder links from the COF for avatar {1}.", count, userInfo.UserProfile.ID);
+
+                        userInfo.UpdateFolder(currentOutfitFolder);
+                    }
+                }
+
                 InventoryItemBase item = new InventoryItemBase();
                 item.Owner = remoteClient.AgentId;
                 item.CreatorId = creatorID;
@@ -1214,6 +1241,44 @@ namespace OpenSim.Region.Framework.Scenes
                     "No user details associated with client {0} uuid {1} in CreateNewInventoryItem!",
                      remoteClient.Name, remoteClient.AgentId);
             }
+        }
+
+        protected const string COF_NAME = "Current Outfit";
+        // Clone of AvatarFactoryModule::BuildCOF::GetCurrentOutfitFolder
+        private static InventoryFolderBase GetCurrentOutfitFolder(CachedUserInfo userInfo)
+        {
+            InventoryFolderBase currentOutfitFolder = null;
+
+            try
+            {
+                currentOutfitFolder = userInfo.FindFolderForType((int)AssetType.CurrentOutfitFolder);
+            }
+            catch (InventoryStorageException)
+            {
+                // could not find it by type. load root and try to find it by name.
+                InventorySubFolderBase foundFolder = null;
+                InventoryFolderBase rootFolder = userInfo.FindFolderForType((int)AssetType.RootFolder);
+                foreach (var subfolder in rootFolder.SubFolders)
+                {
+                    if (subfolder.Name == COF_NAME)
+                    {
+                        foundFolder = subfolder;
+                        break;
+                    }
+                }
+                if (foundFolder != null)
+                {
+                    currentOutfitFolder = userInfo.GetFolder(foundFolder.ID);
+                    if (currentOutfitFolder != null)
+                    {
+                        currentOutfitFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
+                        userInfo.UpdateFolder(currentOutfitFolder);
+                    }
+                }
+            }
+            if(currentOutfitFolder != null)
+                currentOutfitFolder = userInfo.GetFolder(currentOutfitFolder.ID);
+            return currentOutfitFolder;
         }
 
         /// <summary>
