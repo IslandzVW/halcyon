@@ -1824,7 +1824,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 if (((DCF & Dir_ControlFlags.DIR_CONTROL_FLAG_UP) != 0) && physActor.CollidingGround && !physActor.Flying)
                                 {
                                     //begin a jump
-                                    physActor.AddForce(new Vector3(0.0f, 0.0f, JUMP_FORCE) * PhysicsActor.Mass, ForceType.LocalLinearImpulse);
+                                    physActor.AddForce(new Vector3(0.0f, 0.0f, JUMP_FORCE) * physActor.Mass, ForceType.LocalLinearImpulse);
                                 }
                             }
                         }
