@@ -235,6 +235,10 @@ namespace OpenSim.Framework.Communications
 
             UserProfileData profile;
 
+            // Temp profiles do not exist in permanent storage, cannot force refresh.
+            if (m_tempDataByUUID.TryGetValue(uuid, out profile))
+                return profile;
+
             if (!forceRefresh)
             {
                 lock (m_userDataLock)
