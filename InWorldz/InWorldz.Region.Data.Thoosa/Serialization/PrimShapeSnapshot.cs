@@ -345,7 +345,7 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 MidLODBytes = this.MidLODBytes,
                 LowLODBytes = this.LowLODBytes,
                 LowestLODBytes = this.LowestLODBytes,
-                RenderMaterials = this.RenderMaterials
+                RenderMaterials = this.RenderMaterials != null ? this.RenderMaterials : new RenderMaterials()
             };
         }
     }
