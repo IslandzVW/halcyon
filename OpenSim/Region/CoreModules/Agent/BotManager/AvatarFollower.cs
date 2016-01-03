@@ -136,19 +136,30 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         public override void Start()
         {
             ScenePresence presence = m_controller.Scene.GetScenePresence(m_description.FollowUUID);
-            if ((presence != null) && (presence.PhysicsActor != null))
-                presence.PhysicsActor.OnRequestTerseUpdate += EventManager_OnClientMovement;
+            if (presence != null)
+            {
+                var pa = presence.PhysicsActor;
+                if (pa != null)
+                    pa.OnRequestTerseUpdate += EventManager_OnClientMovement;
+            }
         }
 
         public override void Stop()
         {
             ScenePresence presence = m_controller.Scene.GetScenePresence(m_description.FollowUUID);
-            if ((presence != null) && (presence.PhysicsActor != null))
-                presence.PhysicsActor.OnRequestTerseUpdate -= EventManager_OnClientMovement;
+            if (presence != null)
+            {
+                var pa = presence.PhysicsActor;
+                if (pa != null)
+                    pa.OnRequestTerseUpdate -= EventManager_OnClientMovement;
+            }
 
             ScenePresence botPresence = m_controller.Scene.GetScenePresence(m_controller.Bot.AgentID);
             if (botPresence != null)
-                StopMoving(botPresence, botPresence.PhysicsActor != null ? botPresence.PhysicsActor.Flying : false, true);
+            {
+                var pa = botPresence.PhysicsActor;
+                StopMoving(botPresence, pa != null && pa.Flying, true);
+            }
         }
 
         public override void UpdateInformation()
@@ -256,8 +267,9 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     UpdateMovementAnimations(false);
                 }
                 m_toAvatar = true;
-                bool fly = presence.PhysicsActor == null ? m_description.AllowFlying : (!m_description.AllowFlying ? false : presence.PhysicsActor.Flying);
-                
+                var physActor = presence.PhysicsActor;
+                bool fly = physActor == null ? m_description.AllowFlying : (m_description.AllowFlying && physActor.Flying);
+
                 StopMoving(botPresence, fly, true);
                 return;
             }
@@ -340,7 +352,8 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             //Do this first
             ClearOutInSignificantPositions(botPresence, true);
 
-            bool fly = presence.PhysicsActor == null ? m_description.AllowFlying : (!m_description.AllowFlying ? false : presence.PhysicsActor.Flying);
+            var physActor = presence.PhysicsActor;
+            bool fly = physActor == null ? m_description.AllowFlying : (m_description.AllowFlying && physActor.Flying);
             if (m_significantAvatarPositions.Count > 0 && m_currentPos + 1 < m_significantAvatarPositions.Count)
             {
                 m_nodeGraph.Clear();
@@ -408,7 +421,8 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             Vector3 ourPos = botPresence.AbsolutePosition;
             Vector3 diffAbsPos = targetPos - ourPos;
 
-            bool fly = presence.PhysicsActor == null ? m_description.AllowFlying : (!m_description.AllowFlying ? false : presence.PhysicsActor.Flying);
+            var physActor = presence.PhysicsActor;
+            bool fly = physActor == null ? m_description.AllowFlying : (m_description.AllowFlying && physActor.Flying);
             if (!fly && (diffAbsPos.Z > 0.25 || m_description.NumberOfTimesJumpAttempted > 5))
             {
                 if (m_description.NumberOfTimesJumpAttempted > 5 || diffAbsPos.Z > 3)

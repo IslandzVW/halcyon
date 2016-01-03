@@ -104,7 +104,9 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
             ScenePresence botPresence = m_controller.Scene.GetScenePresence(m_controller.Bot.AgentID);
 
-            if (m_controller == null || botPresence.PhysicsActor == null)
+            var physActor = botPresence.PhysicsActor;
+
+            if (m_controller == null || physActor == null)
                 return;
             if (m_paused)
             {
@@ -117,7 +119,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             bool teleport;
             bool changingNodes;
 
-            float closeToPoint = botPresence.PhysicsActor.Flying ? 1.5f : 1.0f;
+            float closeToPoint = physActor.Flying ? 1.5f : 1.0f;
 
             TimeSpan diffFromLastFrame = (DateTime.Now - m_timeOfLastStep);
 
@@ -247,8 +249,9 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY;
             OnBotAgentUpdate(botPresence, Vector3.Zero, m_movementFlag, m_bodyDirection, false);
             //botPresence.CollisionPlane = Vector4.UnitW;
-            if (botPresence.PhysicsActor != null)
-                botPresence.PhysicsActor.SetVelocity(Vector3.Zero, false);
+            var pa = botPresence.PhysicsActor;
+            if (pa != null)
+                pa.SetVelocity(Vector3.Zero, false);
         }
 
 
@@ -492,7 +495,8 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
             if (m_controller.Bot.Frozen && isMoving)
             {
-                bool fly = presence.PhysicsActor == null ? false : presence.PhysicsActor.Flying;
+                var pa = presence.PhysicsActor;
+                bool fly = pa != null && pa.Flying;
                 StopMoving(presence, fly, false);
                 return;
             }
