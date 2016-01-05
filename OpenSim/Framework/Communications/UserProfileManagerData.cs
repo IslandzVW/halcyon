@@ -126,7 +126,11 @@ namespace OpenSim.Framework.Communications
             {
                 UserAgentData agent = plugin.GetAgentByUUID(uuid);
                 if (agent != null)
+                {
+                    // Whatever plugin returns an agent data structure, ensure the UUID is filled in.
+                    agent.ProfileID = uuid;
                     return agent;
+                }
             }
 
             return null;
