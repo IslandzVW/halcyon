@@ -544,7 +544,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int OBJECT_BODY_SHAPE_TYPE = 26;
         public const int OBJECT_LAST_OWNER_ID = 27;
         public const int OBJECT_CLICK_ACTION = 28;
-        public const int OBJECT_SCRIPT_MEMORY_USED = 1001;
+        public const int IW_OBJECT_SCRIPT_MEMORY_USED = 10001;
 
         // Values for llGetObjectDetails(OBJECT_PATHFINDING_TYPE) above
         public const int OPT_OTHER = -1;            // Attachments, Linden trees & grass
