@@ -5158,6 +5158,7 @@ namespace InWorldz.Phlox.Engine
                     case ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:
+                    case ScriptBaseClass.OBJECT_SCRIPT_MEMORY_USED:
                         total += GetObjectScriptTotal(group, which);
                         break;
                 }
@@ -13370,6 +13371,7 @@ namespace InWorldz.Phlox.Engine
                     case ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:
+                    case ScriptBaseClass.OBJECT_SCRIPT_MEMORY_USED:
                         ret.Add(GetAgentTotals(av, param));
                         break;
                     case ScriptBaseClass.OBJECT_SCRIPT_TIME:
