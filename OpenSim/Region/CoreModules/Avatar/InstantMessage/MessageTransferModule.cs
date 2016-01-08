@@ -533,7 +533,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             if (lookupAgent)
             {
                 // Non-cached user agent lookup.
-                upd = m_Scenes[0].CommsManager.UserService.GetUserAgent(toAgentID);
+                upd = m_Scenes[0].CommsManager.UserService.GetUserAgent(toAgentID,true);
 
                 if (upd != null)
                 {
