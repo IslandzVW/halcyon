@@ -289,6 +289,7 @@ namespace OpenSim.Region.Framework.Scenes
             return -1;
         }
 
+        private const uint PERM_MCT = (uint)PermissionMask.Copy | (uint)PermissionMask.Modify | (uint)PermissionMask.Transfer;
         public uint GetEffectivePermissions(bool includeContents)
         {
             uint perms = (uint)(PermissionMask.All | PermissionMask.Export);
@@ -337,6 +338,9 @@ namespace OpenSim.Region.Framework.Scenes
                 perms &= ~(uint)PermissionMask.Copy;
             if ((nextOwnerMask & (uint)PermissionMask.Transfer) == 0)
                 perms &= ~(uint)PermissionMask.Transfer;
+
+            if ((perms & PERM_MCT) != PERM_MCT)
+                perms &= ~(uint)PermissionMask.Export;
 
             return perms;
         }

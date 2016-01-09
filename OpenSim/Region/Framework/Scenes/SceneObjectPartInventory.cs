@@ -1057,6 +1057,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        private const uint PERM_MCT = (uint)PermissionMask.Copy | (uint)PermissionMask.Modify | (uint)PermissionMask.Transfer;
         public uint MaskEffectivePermissions()
         {
             uint mask = ScenePermBits.BASEMASK;
@@ -1073,6 +1074,8 @@ namespace OpenSim.Region.Framework.Scenes
                         mask &= ~(uint)PermissionMask.Modify;
                 }
             }
+            if ((mask & PERM_MCT) != PERM_MCT)
+                mask &= ~(uint)PermissionMask.Export;
             return mask;
         }
         public uint MaskEffectiveNextPermissions()
@@ -1091,6 +1094,8 @@ namespace OpenSim.Region.Framework.Scenes
                         mask &= ~(uint)PermissionMask.Modify;
                 }
             }
+            if ((mask & PERM_MCT) != PERM_MCT)
+                mask &= ~(uint)PermissionMask.Export;
             return mask;
         }
 
