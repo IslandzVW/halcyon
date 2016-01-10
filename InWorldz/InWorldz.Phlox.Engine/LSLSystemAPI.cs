@@ -16856,7 +16856,7 @@ namespace InWorldz.Phlox.Engine
                 UUID userID;
                 if (!UUID.TryParse(avatar, out userID))
                 {
-                    if (World.CommsManager.UserService.Name2Key(avatar) == null)
+                    if (World.CommsManager.UserService.Name2Key(avatar) == UUID.Zero)
                         return ScriptBaseClass.BOT_USER_NOT_FOUND;
                 }
 
