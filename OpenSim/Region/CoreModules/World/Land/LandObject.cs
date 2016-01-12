@@ -682,13 +682,13 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void sendAccessList(uint flags, IClientAPI remote_client)
         {
 
-            if (flags == (uint) AccessList.Access || flags == (uint) AccessList.Both)
+            if ((flags & (uint) AccessList.Access) == (uint)AccessList.Access)
             {
                 List<UUID> avatars = createAccessListArrayByFlag(AccessList.Access);
                 remote_client.SendLandAccessListData(avatars,(uint) AccessList.Access,landData.LocalID);
             }
 
-            if (flags == (uint) AccessList.Ban || flags == (uint) AccessList.Both)
+            if ((flags & (uint)AccessList.Ban) == (uint)AccessList.Ban)
             {
                 List<UUID> avatars = createAccessListArrayByFlag(AccessList.Ban);
                 remote_client.SendLandAccessListData(avatars, (uint)AccessList.Ban, landData.LocalID);
