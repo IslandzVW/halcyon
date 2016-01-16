@@ -1486,14 +1486,19 @@ namespace InWorldz.PhysxPhysics
 
             foreach (var pair in pairs)
             {
+                PhysX.Shape shape0 = pair.Shapes[0];
+                PhysX.Shape shape1 = pair.Shapes[1];
+                if ((shape0 == null) || (shape1 == null))
+                    continue;
+
                 PhysX.Shape otherShape;
-                if (pair.Shapes[0].Actor != _controller.Actor)
+                if (shape0.Actor != _controller.Actor)
                 {
-                    otherShape = pair.Shapes[0];
+                    otherShape = shape0;
                 }
                 else
                 {
-                    otherShape = pair.Shapes[1];
+                    otherShape = shape1;
                 }
 
                 //m_log.DebugFormat("[CHAR]: Collision: {0}", pair.Events);
