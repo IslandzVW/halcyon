@@ -1187,14 +1187,21 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         uint count = 0;
 
-                        // Get rid of all folder links in the COF: there should only ever be one, and that's the one we are about to create.
-                        foreach (InventoryItemBase cofItem in currentOutfitFolder.Items)
+                        try
                         {
-                            if (cofItem.AssetType == (int)AssetType.LinkFolder)
+                            // Get rid of all folder links in the COF: there should only ever be one, and that's the one we are about to create.
+                            foreach (InventoryItemBase cofItem in currentOutfitFolder.Items)
                             {
-                                userInfo.DeleteItem(cofItem);
-                                ++count;
+                                if (cofItem.AssetType == (int)AssetType.LinkFolder)
+                                {
+                                    userInfo.DeleteItem(cofItem);
+                                    ++count;
+                                }
                             }
+                        }
+                        catch (InventoryStorageException ise)
+                        {
+                            m_log.WarnFormat("[AGENT INVENTORY] Had InventoryStorageException while removing out of date folder links from the COF for avatar {0}: {1}", userInfo.UserProfile.ID, ise);
                         }
 
                         if (count > 1) // Only report if more than one was removed.
