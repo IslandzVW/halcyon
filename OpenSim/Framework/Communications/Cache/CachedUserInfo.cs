@@ -548,7 +548,7 @@ namespace OpenSim.Framework.Communications.Cache
         /// If the inventory service has not yet delievered the inventory
         /// for this user then the request will be queued.
         /// </summary>
-        /// <param name="itemID"></param>
+        /// <param name="item"></param>
         /// <returns>
         /// true on a successful delete or a if the request is queued.
         /// Returns false on an immediate failure
