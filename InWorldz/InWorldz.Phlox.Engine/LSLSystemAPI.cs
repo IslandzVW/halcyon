@@ -1003,7 +1003,7 @@ namespace InWorldz.Phlox.Engine
                 text = text.Substring(0, 1023);
 
             world.SimChat(Utils.StringToBytes(text),
-                          type, channelID, part.AbsolutePosition, part.Name, part.UUID, false, destID);
+                          type, channelID, part.AbsolutePosition, part.Name, part.UUID, false, destID, part.OwnerID);
 
             IWorldComm wComm = world.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(type, channelID, part.Name, part.UUID, text, destID);
