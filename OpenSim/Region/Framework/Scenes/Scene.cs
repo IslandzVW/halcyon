@@ -3171,6 +3171,7 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnSpinUpdate += m_sceneGraph.SpinObject;
             client.OnDeRezObjects += DeRezObjects;
             client.OnRezObject += RezObject;
+            client.OnRestoreObject += RestoreObject;
             client.OnRezSingleAttachmentFromInv += RezSingleAttachment;
             client.OnRezMultipleAttachmentsFromInv += RezMultipleAttachments;
             client.OnDetachAttachmentIntoInv += DetachSingleAttachmentToInv;
