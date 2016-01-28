@@ -1137,6 +1137,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event ChatMessage OnChatFromClient;
         public event TextureRequest OnRequestTexture;
         public event RezObject OnRezObject;
+        public event RestoreObject OnRestoreObject;
         public event DeRezObjects OnDeRezObjects;
         public event ModifyTerrain OnModifyTerrain;
         public event Action<IClientAPI> OnRegionHandShakeReply;
@@ -4804,6 +4805,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.AgentIsNowWearing, HandlerAgentIsNowWearing, PacketHandlingDisposition.HandleSynchronized);
             AddLocalPacketHandler(PacketType.RezSingleAttachmentFromInv, HandlerRezSingleAttachmentFromInv, PacketHandlingDisposition.HandleAsync);
             AddLocalPacketHandler(PacketType.RezMultipleAttachmentsFromInv, HandleRezMultipleAttachmentsFromInv, PacketHandlingDisposition.HandleAsync);
+            AddLocalPacketHandler(PacketType.RezRestoreToWorld, HandlerRezRestoreToWorld, PacketHandlingDisposition.HandleAsync);
             AddLocalPacketHandler(PacketType.DetachAttachmentIntoInv, HandleDetachAttachmentIntoInv, PacketHandlingDisposition.HandleAsync);
             AddLocalPacketHandler(PacketType.ObjectAttach, HandleObjectAttach, PacketHandlingDisposition.HandleSynchronized);
             AddLocalPacketHandler(PacketType.ObjectDetach, HandleObjectDetach, PacketHandlingDisposition.HandleSynchronized);
@@ -7872,6 +7874,29 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     OutPacket(deRezAck, ThrottleOutPacketType.Task);
                 }
 
+            }
+            return true;
+        }
+
+        private bool HandlerRezRestoreToWorld(IClientAPI sender, Packet Pack)
+        {
+            if (m_frozenUser) return true;
+
+            RezRestoreToWorldPacket rezPacket = (RezRestoreToWorldPacket)Pack;
+
+            #region Packet Session and User Check
+            if (m_checkPackets)
+            {
+                if (rezPacket.AgentData.SessionID != SessionId ||
+                    rezPacket.AgentData.AgentID != AgentId)
+                    return true;
+            }
+            #endregion
+
+            RestoreObject handlerRestoreObject = OnRestoreObject;
+            if (handlerRestoreObject != null)
+            {
+                handlerRestoreObject(this, rezPacket.InventoryData.GroupID, rezPacket.InventoryData.ItemID);
             }
             return true;
         }

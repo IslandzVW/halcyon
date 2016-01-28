@@ -134,6 +134,7 @@ namespace InWorldz.Testing
         public event TextureRequest OnRequestTexture;
 
         public event RezObject OnRezObject;
+        public event RestoreObject OnRestoreObject;
 
         public event ModifyTerrain OnModifyTerrain;
 

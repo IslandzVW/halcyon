@@ -3592,6 +3592,24 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
+        public virtual void RestoreObject(IClientAPI remoteClient, UUID groupID, UUID itemID)
+        {
+            // Rez object
+            CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
+            if (userInfo != null)
+            {
+                InventoryItemBase item = userInfo.FindItem(itemID);
+
+                if (item != null)
+                {
+                    RestoreObject(remoteClient, userInfo, itemID, item, null, groupID);
+                }
+            }
+            else
+                m_log.WarnFormat("[AGENT INVENTORY]: User profile not found during restore object: {0}", RegionInfo.RegionName);
+        }
+
+
         public virtual SceneObjectGroup GetObjectFromItem(InventoryItemBase item)
         {
             AssetBase rezAsset = CommsManager.AssetCache.GetAsset(item.AssetID, AssetRequestInfo.InternalRequest());
@@ -3772,6 +3790,127 @@ namespace OpenSim.Region.Framework.Scenes
                 return retGroup;
             }
             return null;
+        }
+
+        // unpackedGroup is null for an actual user Inventory item. non-null for group from a coalesced inventory item.
+        public virtual bool RestoreObject(IClientAPI remoteClient, CachedUserInfo userInfo, UUID itemID, InventoryItemBase item, SceneObjectGroup unpackedGroup, UUID groupID)
+        {
+            Vector3 scale = new Vector3(0.5f, 0.5f, 0.5f);
+
+            AssetBase rezAsset = CommsManager.AssetCache.GetAsset(item.AssetID, AssetRequestInfo.InternalRequest());
+            if (rezAsset == null)
+                return false;
+
+            UUID itemId = UUID.Zero;
+            bool success = false;
+
+            // If we have permission to copy then link the rezzed object back to the user inventory
+            // item that it came from.  This allows us to enable 'save object to inventory'
+            if (!Permissions.BypassPermissions())
+            {
+                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == (uint)PermissionMask.Copy)
+                {
+                    itemId = item.ID;
+                }
+            }
+            else
+            {
+                // Brave new fullperm world
+                //
+                itemId = item.ID;
+            }
+
+            if ((unpackedGroup==null) && item.ContainsMultipleItems)
+            {
+                CoalescedObject obj = this.DoDeserializeCoalesced(itemId, rezAsset.Data);
+                //restore (rez) coalesced object
+                success = this.RestoreCoalescedObject(remoteClient, userInfo, obj, itemID, item, groupID);
+            }
+            else
+            {
+                //rez single group
+                SceneObjectGroup group = (unpackedGroup == null) ? this.DoDeserializeGroup(itemId, rezAsset.Data) : unpackedGroup;
+                Vector3 pos = group.RootPart.GroupPositionNoUpdate;
+                bool attachment = group.IsAttachment;
+                uint attachPoint = group.AttachmentPoint;
+                group.DisableUpdates = false;
+
+                bool shouldTaint = false;
+
+                if (attachment)
+                {
+                    remoteClient.SendAlertMessage("Inventory item is an attachment, use Wear or Add instead.");
+                    return false;
+                }
+
+                // Save the previous attachment params if they've never been saved or default.
+                if (group.RootPart.SavedAttachmentPos == Vector3.Zero)
+                    group.RootPart.SavedAttachmentPos = group.RootPart.RawGroupPosition;
+                if (group.RootPart.SavedAttachmentRot == Quaternion.Identity)
+                    group.RootPart.SavedAttachmentRot = group.RootPart.RotationOffset;
+
+                //after this, the group is no longer an attachment as it is being rezzed as a normal group.
+                //this prevents an issue where the BB calculation tries to get the worldpos for the
+                //attachment that is not yet attached and creates a null reference exception
+                //when trying to access the scene to look up the wearer
+                group.SetAttachmentPoint(0);
+
+                Box bbox = group.BoundingBox();
+                scale = bbox.Size; ; // update the 0.5 cube with the actual size
+                pos = group.AbsolutePosition;
+                float zCorrection = group.RootPart.GroupPosition.Z - bbox.Center.Z;
+                pos.Z += zCorrection;
+
+                SceneObjectGroup rezGroup =
+                    this.RezSingleObjectToWorld(remoteClient, itemID,
+                            group, pos, Vector3.Zero, UUID.Zero, 1, 1, false,
+                            attachment, pos, group.Name, group.RootPart.Description,
+                            item, ItemPermissionBlock.FromOther(item), 0, groupID, null);
+
+                if (rezGroup != null)
+                {
+                    success = true;
+
+                    if (shouldTaint)
+                    {
+                        rezGroup.HasGroupChanged = true;
+                        rezGroup.TaintedAttachment = true;
+                    }
+                }
+            }
+
+            if (success && !Permissions.BypassPermissions())
+            {
+                //we check the inventory item permissions here instead of the prim permissions
+                //if the group or item is no copy, it should be removed
+                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                {
+                    // Not an attachment, so remove inventory copy, if no-copy.
+                    if (userInfo != null)
+                        userInfo.DeleteItem(item);
+                }
+            }
+
+            return success;
+        }
+
+        private bool RestoreCoalescedObject(IClientAPI remoteClient, CachedUserInfo userInfo, CoalescedObject obj, UUID itemID, InventoryItemBase item, UUID groupId)
+        {
+            //determine the bounding box of the entire set
+            Box coBoundingBox = obj.GetBoundingBox();
+            Vector3 rezAtRootOffset = Vector3.Zero;
+
+            Vector3 newPos = coBoundingBox.Center;
+
+            //rez each group
+            bool success = true;
+            foreach (SceneObjectGroup group in obj.Groups)
+            {
+                group.ResetInstance(true, false, UUID.Zero);
+                success &= RestoreObject(remoteClient, userInfo, itemID, item, group, groupId);
+            }
+
+            return success;
         }
 
         private SceneObjectGroup DoDeserializeGroup(UUID itemId, byte[] bytes)
