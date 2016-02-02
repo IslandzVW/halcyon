@@ -55,6 +55,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         private Dictionary<UUID, IBot> m_bots = new Dictionary<UUID, IBot>();
         private int m_maxNumberOfBots = 40;
         private int m_maxLandImpactAllowedByOutfitAttachments = 5000;
+        private Dictionary<UUID, UUID> m_itemMap = new Dictionary<UUID, UUID>();
 
         #endregion
 
@@ -271,17 +272,29 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             return UUID.Zero;
         }
 
+        private UUID GetOriginalItemID(UUID itemID)
+        {
+            UUID origItemID = UUID.Zero;
+
+            if (itemID != UUID.Zero)
+                if (!m_itemMap.TryGetValue(itemID, out origItemID))
+                    origItemID = UUID.Zero;
+
+            return origItemID;
+        }
+
         public bool CheckAttachmentCount(AvatarAppearance appearance, ILandObject parcel, UUID originalOwner, out string reason)
         {
             int landImpact = 0;
             foreach (AvatarAttachment attachment in appearance.GetAttachments())
             {
-                if (attachment.ItemID == UUID.Zero)
+                UUID origItemID = GetOriginalItemID(attachment.ItemID);
+                if (origItemID == UUID.Zero)
                     continue;
 
                 IInventoryProviderSelector inventorySelect = ProviderRegistry.Instance.Get<IInventoryProviderSelector>();
                 var provider = inventorySelect.GetProvider(originalOwner);
-                InventoryItemBase item = provider.GetItem(attachment.ItemID, UUID.Zero);
+                InventoryItemBase item = provider.GetItem(origItemID, UUID.Zero);
 
                 SceneObjectGroup grp = m_scene.GetObjectFromItem(item);
                 if (grp != null)
@@ -312,15 +325,16 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
             foreach (AvatarAttachment attachment in attachments)
             {
-                if (attachment.ItemID == UUID.Zero)
+                UUID origItemID = GetOriginalItemID(attachment.ItemID);
+                if (origItemID == UUID.Zero)
                     continue;
 
                 // Are we already attached?
-                if (sp.Appearance.GetAttachmentForItem(attachment.ItemID) == null)
+                if (sp.Appearance.GetAttachmentForItem(origItemID) == null)
                 {
                     IInventoryProviderSelector inventorySelect = ProviderRegistry.Instance.Get<IInventoryProviderSelector>();
                     var provider = inventorySelect.GetProvider(originalOwner);
-                    InventoryItemBase item = provider.GetItem(attachment.ItemID, UUID.Zero);
+                    InventoryItemBase item = provider.GetItem(origItemID, UUID.Zero);
                     if ((item.CurrentPermissions & (uint)PermissionMask.Copy) != (uint)PermissionMask.Copy)
                     {
                         if (ownerSP == null)
@@ -331,7 +345,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     }
 
                     SceneObjectGroup grp = m_scene.RezObject(sp.ControllingClient, sp.ControllingClient.ActiveGroupId,
-                        attachment.ItemID, Vector3.Zero, Vector3.Zero, UUID.Zero, (byte)1, true,
+                        origItemID, Vector3.Zero, Vector3.Zero, UUID.Zero, (byte)1, true,
                         false, false, sp.UUID, true, (uint)attachment.AttachPoint, 0, null, item, false);
 
                     if (grp != null)
@@ -579,6 +593,25 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 }
                 reason = null;
 
+                // Remap bot outfit with new item IDs
+                List<AvatarWearable> wearables = appearance.GetWearables();
+                appearance.ClearWearables();
+                foreach (AvatarWearable w in wearables)
+                {
+                    AvatarWearable newWearable = new AvatarWearable(w);
+                    newWearable.ItemID = UUID.Random();
+                    m_itemMap[newWearable.ItemID] = w.ItemID;   // store a back-link to the original inventory item ID.
+                    appearance.SetWearable(newWearable);
+                }
+                List<AvatarAttachment> attachments = appearance.GetAttachments();
+                appearance.ClearAttachments();
+                foreach (AvatarAttachment a in attachments)
+                {
+                    UUID itemID = UUID.Random();
+                    m_itemMap[itemID] = a.ItemID;   // store a back-link to the original inventory item ID.
+                    appearance.SetAttachment(a.AttachPoint, true, itemID, a.AssetID);
+                }
+
                 originalOwner = appearance.Owner;
                 appearance.Owner = bot.AgentID;
                 appearance.IsBotAppearance = true;
@@ -589,8 +622,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     sp.SetHeight(appearance.AvatarHeight);
                 sp.SendInitialData();
 
-                List<AvatarAttachment> attachments = sp.Appearance.GetAttachments();
-
+                attachments = sp.Appearance.GetAttachments();
                 foreach (SceneObjectGroup group in sp.GetAttachments())
                 {
                     sp.Appearance.DetachAttachment(group.GetFromItemID());
