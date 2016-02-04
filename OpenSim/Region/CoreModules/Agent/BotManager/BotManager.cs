@@ -55,7 +55,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         private Dictionary<UUID, IBot> m_bots = new Dictionary<UUID, IBot>();
         private int m_maxNumberOfBots = 40;
         private int m_maxLandImpactAllowedByOutfitAttachments = 5000;
-        private Dictionary<UUID, UUID> m_itemMap = new Dictionary<UUID, UUID>();
 
         #endregion
 
@@ -193,18 +192,17 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     }
                 }
 
-                // Do this before RemapWornItems since it needs to find the items in owner's inventory.
-                if (!CheckAttachmentCount(appearance, parcel, appearance.Owner, out reason))
+                BotClient client = new BotClient(firstName, lastName, m_scene, startPos, owner);
+
+                // Replace all wearables and attachments item IDs with new ones so that they cannot be found in the
+                // owner's avatar appearance in case the user is in the same region, wearing some of the same items.
+                RemapWornItems(client.AgentID, appearance);
+
+                if (!CheckAttachmentCount(client.AgentID, appearance, parcel, appearance.Owner, out reason))
                 {
                     //Too many objects already on this parcel/region
                     return UUID.Zero;
                 }
-
-                // Replace all wearables and attachments item IDs with new ones so that they cannot be found in the
-                // owner's avatar appearance in case the user is in the same region, wearing some of the same items.
-                RemapWornItems(appearance);
-
-                BotClient client = new BotClient(firstName, lastName, m_scene, startPos, owner);
 
                 originalOwner = appearance.Owner;
                 appearance.Owner = client.AgentID;
@@ -276,23 +274,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             return UUID.Zero;
         }
 
-        private UUID GetOriginalItemID(UUID itemID)
-        {
-            UUID origItemID = UUID.Zero;
-
-            if (itemID != UUID.Zero)
-            {
-                lock (m_itemMap)
-                {
-                    if (!m_itemMap.TryGetValue(itemID, out origItemID))
-                        origItemID = UUID.Zero;
-                }
-            }
-
-            return origItemID;
-        }
-
-        private void RemapWornItems(AvatarAppearance appearance)
+        private void RemapWornItems(UUID botID, AvatarAppearance appearance)
         {
             // save before Clear calls
             List<AvatarWearable> wearables = appearance.GetWearables();
@@ -304,55 +286,26 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             foreach (AvatarWearable w in wearables)
             {
                 AvatarWearable newWearable = new AvatarWearable(w);
-                newWearable.ItemID = UUID.Random();
-                lock (m_itemMap)
-                {
-                    m_itemMap[newWearable.ItemID] = w.ItemID;   // store a back-link to the original inventory item ID.
-                }
+                // store a reversible back-link to the original inventory item ID.
+                newWearable.ItemID = w.ItemID ^ botID;
                 appearance.SetWearable(newWearable);
             }
 
             foreach (AvatarAttachment a in attachments)
             {
-                UUID itemID = UUID.Random();
-                lock (m_itemMap)
-                {
-                    m_itemMap[itemID] = a.ItemID;   // store a back-link to the original inventory item ID.
-                }
+                // store a reversible back-link to the original inventory item ID.
+                UUID itemID = a.ItemID ^ botID;
                 appearance.SetAttachment(a.AttachPoint, true, itemID, a.AssetID);
             }
         }
 
-        private void UnmapWornItems(UUID botID)
-        {
-            ScenePresence sp;
-            if (!m_scene.TryGetAvatar(botID, out sp))
-                return;
-
-            List<AvatarWearable> wearables = sp.Appearance.GetWearables();
-            List<AvatarAttachment> attachments = sp.Appearance.GetAttachments();
-
-            lock (m_itemMap)
-            {
-                foreach (AvatarWearable w in wearables)
-                {
-                    if (m_itemMap.ContainsKey(w.ItemID))
-                        m_itemMap.Remove(w.ItemID);
-                }
-                foreach (AvatarAttachment a in attachments)
-                {
-                    if (m_itemMap.ContainsKey(a.ItemID))
-                        m_itemMap.Remove(a.ItemID);
-                }
-            }
-        }
-
-        public bool CheckAttachmentCount(AvatarAppearance appearance, ILandObject parcel, UUID originalOwner, out string reason)
+        public bool CheckAttachmentCount(UUID botID, AvatarAppearance appearance, ILandObject parcel, UUID originalOwner, out string reason)
         {
             int landImpact = 0;
             foreach (AvatarAttachment attachment in appearance.GetAttachments())
             {
-                UUID origItemID = GetOriginalItemID(attachment.ItemID);
+                // get original itemID
+                UUID origItemID = attachment.ItemID ^ botID;
                 if (origItemID == UUID.Zero)
                     continue;
 
@@ -389,7 +342,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
             foreach (AvatarAttachment attachment in attachments)
             {
-                UUID origItemID = GetOriginalItemID(attachment.ItemID);
+                UUID origItemID = attachment.ItemID ^ sp.UUID;
                 if (origItemID == UUID.Zero)
                     continue;
 
@@ -462,8 +415,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
             if (GetBotWithPermission(botID, attemptingUser) == null)
                 return false;
-
-            UnmapWornItems(botID);
 
             lock (m_bots)
                 m_bots.Remove(botID);
@@ -653,18 +604,16 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     return false;
                 }
 
-                // Do this before RemapWornItems since it needs to find the items in owner's inventory.
-                if (!CheckAttachmentCount(appearance, parcel, appearance.Owner, out reason))
+                // Replace all wearables and attachments item IDs with new ones so that they cannot be found in the
+                // owner's avatar appearance in case the user is in the same region, wearing some of the same items.
+                RemapWornItems(bot.AgentID, appearance);     // allocate temp IDs for the new outfit.
+
+                if (!CheckAttachmentCount(bot.AgentID, appearance, parcel, appearance.Owner, out reason))
                 {
                     //Too many objects already on this parcel/region
                     return false;
                 }
                 reason = null;
-
-                // Replace all wearables and attachments item IDs with new ones so that they cannot be found in the
-                // owner's avatar appearance in case the user is in the same region, wearing some of the same items.
-                UnmapWornItems(bot.AgentID);    // free up the temp IDs in the old outfit.
-                RemapWornItems(appearance);     // allocate temp IDs for the new outfit.
 
                 originalOwner = appearance.Owner;
                 appearance.Owner = bot.AgentID;
