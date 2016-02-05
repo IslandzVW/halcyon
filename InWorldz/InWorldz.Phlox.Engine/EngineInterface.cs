@@ -242,14 +242,15 @@ namespace InWorldz.Phlox.Engine
         public bool ScriptsCanRun(ILandObject parcel, SceneObjectPart hostPart)
         {
             if (hostPart.ParentGroup.IsAttachment)
-            {
                 return true;
-            }
 
-            bool parcelAllowsOtherScripts = parcel != null && (parcel.landData.Flags & (uint)ParcelFlags.AllowOtherScripts) != 0;
-            bool parcelAllowsGroupScripts = parcel != null && (parcel.landData.Flags & (uint)ParcelFlags.AllowGroupScripts) != 0;
-            bool parcelMatchesObjectGroup = parcel != null && parcel.landData.GroupID == hostPart.GroupID;
-            bool ownerOwnsParcel = parcel != null && parcel.landData.OwnerID == hostPart.OwnerID;
+            if (parcel == null)
+                return false;
+
+            bool parcelAllowsOtherScripts = (parcel.landData.Flags & (uint)ParcelFlags.AllowOtherScripts) != 0;
+            bool parcelAllowsGroupScripts = (parcel.landData.Flags & (uint)ParcelFlags.AllowGroupScripts) != 0;
+            bool parcelMatchesObjectGroup = parcel.landData.GroupID == hostPart.GroupID;
+            bool ownerOwnsParcel = parcel.landData.OwnerID == hostPart.OwnerID;
 
             if (ownerOwnsParcel ||
                 parcelAllowsOtherScripts ||
