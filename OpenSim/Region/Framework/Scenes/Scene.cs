@@ -2335,7 +2335,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Pass 0 for landImpact here so that it can be tested separately.
             if (Permissions.CanRezObject(0, ownerID, UUID.Zero, pos, false))
             {
-                reason = ". Cannot determine land parcel.";
+                reason = ". Cannot determine land parcel at "+(int)pos.X+","+(int)pos.Y;
                 ILandObject parcel = LandChannel.GetLandObject(pos.X, pos.Y);
                 if (parcel != null)
                 {

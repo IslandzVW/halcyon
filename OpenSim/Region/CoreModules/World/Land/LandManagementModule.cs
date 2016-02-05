@@ -402,7 +402,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
 
             ILandObject parcel = landChannel.GetLandObject(pos.X, pos.Y);
-            if (parcel.DenyParcelAccess(avatar.UUID, out reason2))
+            if ((parcel != null) && parcel.DenyParcelAccess(avatar.UUID, out reason2))
             {
                 float minZ = LandChannel.BAN_LINE_SAFETY_HEIGHT + AVATAR_BOUNCE;
                 if (pos.Z < minZ)
@@ -1758,7 +1758,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     if (regionID == m_scene.RegionInfo.RegionID)
                     {
                         ILandObject parcel = this.GetLandObject(localLandID);
-                        if (parcel.landData != null)
+                        if ((parcel != null) && (parcel.landData != null))
                             landData = parcel.landData;
                         regionHandle = m_scene.RegionInfo.RegionHandle;
                     }
