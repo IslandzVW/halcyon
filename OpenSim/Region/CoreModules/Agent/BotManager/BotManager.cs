@@ -133,6 +133,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 }
 
                 ILandObject parcel = m_scene.LandChannel.GetLandObject(startPos.X, startPos.Y);
+                if (parcel == null)
+                {
+                    reason = "Land parcel could not be found at "+ ((int)startPos.X).ToString() + "," + ((int)startPos.Y).ToString();
+                    return UUID.Zero;
+                }
+
                 ParcelPropertiesStatus status;
                 if (parcel.DenyParcelAccess(owner, out status))
                 {
@@ -566,12 +572,14 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     }
                 }
 
-                ILandObject parcel = m_scene.LandChannel.GetLandObject(sp.AbsolutePosition.X, sp.AbsolutePosition.Y);
+                Vector3 pos = sp.AbsolutePosition;
+                ILandObject parcel = m_scene.LandChannel.GetLandObject(pos.X, pos.Y);
                 if (parcel == null)
                 {
-                    reason = "Land parcel could not be found.";
+                    reason = "Land parcel could not be found at " + ((int)pos.X).ToString() + "," + ((int)pos.Y).ToString();
                     return false;
                 }
+
                 if (!CheckAttachmentCount(appearance, parcel, appearance.Owner, out reason))
                 {
                     //Too many objects already on this parcel/region

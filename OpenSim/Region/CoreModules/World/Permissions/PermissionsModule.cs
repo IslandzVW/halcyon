@@ -998,6 +998,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
     
         protected bool GenericParcelOwnerPermission(UUID user, ILandObject parcel, ulong groupPowers)
         {
+            if (parcel == null)
+                return false;
+
             // First the simple check, calling context matches the land owner.
             // This also includes group-deeded objects on group-deeded land.
             if (parcel.landData.OwnerID == user)
