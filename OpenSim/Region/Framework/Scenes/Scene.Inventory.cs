@@ -3609,7 +3609,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.WarnFormat("[AGENT INVENTORY]: User profile not found during restore object: {0}", RegionInfo.RegionName);
         }
 
-
         public virtual SceneObjectGroup GetObjectFromItem(InventoryItemBase item)
         {
             AssetBase rezAsset = CommsManager.AssetCache.GetAsset(item.AssetID, AssetRequestInfo.InternalRequest());
@@ -3633,8 +3632,11 @@ namespace OpenSim.Region.Framework.Scenes
                     //
                     itemId = item.ID;
                 }
+                return this.DoDeserializeGroup(item.ID, rezAsset.Data);
             }
-            return this.DoDeserializeGroup(item.ID, rezAsset.Data);
+
+            // else asset could not be loaded
+            return null;
         }
 
         public virtual SceneObjectGroup RezObject(IClientAPI remoteClient, UUID groupID, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
