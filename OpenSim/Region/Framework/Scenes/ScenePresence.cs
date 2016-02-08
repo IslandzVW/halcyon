@@ -4383,9 +4383,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             List<SceneObjectGroup> attList = GetAttachments();
 
-
-            // Save and Delete attachments from scene only if we're a root
-            if (!m_isChildAgent)
+            // Save and Delete attachments from scene only if we're a root and not a bot
+            if ((!IsChildAgent) && (!IsBot))
             {
                 foreach (SceneObjectGroup grp in attList)
                 {
