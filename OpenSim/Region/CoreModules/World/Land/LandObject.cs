@@ -567,7 +567,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
 
             ILandObject parcel = m_scene.LandChannel.GetLandObject(pos.X, pos.Y);
-            if (parcel.DenyParcelAccess(sp.UUID, out reason2))
+            if ((parcel != null) && parcel.DenyParcelAccess(sp.UUID, out reason2))
             {
                 float minZ = LandChannel.BAN_LINE_SAFETY_HEIGHT + AVATAR_BOUNCE;
                 if (pos.Z < minZ)

@@ -7692,7 +7692,7 @@ namespace InWorldz.Phlox.Engine
 
         public int llOverMyLand(string id)
         {
-            
+            ILandObject parcel = null;
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
             {
@@ -7701,8 +7701,7 @@ namespace InWorldz.Phlox.Engine
                 if (presence != null) // object is an avatar
                 {
                     pos = presence.AbsolutePosition;
-                    if (m_host.OwnerID == World.LandChannel.GetLandObject(pos.X, pos.Y).landData.OwnerID)
-                        return 1;
+                    parcel = World.LandChannel.GetLandObject(pos.X, pos.Y);
                 }
                 else // object is not an avatar
                 {
@@ -7710,19 +7709,21 @@ namespace InWorldz.Phlox.Engine
                     if (obj != null)
                     {
                         pos = obj.AbsolutePosition;
-                        if (m_host.OwnerID == World.LandChannel.GetLandObject(pos.X, pos.Y).landData.OwnerID)
-                            return 1;
+                        parcel = World.LandChannel.GetLandObject(pos.X, pos.Y);
                     }
                 }
             }
 
-            return 0;
+            return (parcel != null) && (m_host.OwnerID == parcel.landData.OwnerID) ? 1 : 0;
         }
 
         public string llGetLandOwnerAt(LSL_Vector pos)
         {
-            
-            return World.LandChannel.GetLandObject((float)pos.X, (float)pos.Y).landData.OwnerID.ToString();
+            UUID owner = UUID.Zero;
+            ILandObject parcel = World.LandChannel.GetLandObject((float)pos.X, (float)pos.Y);
+            if (parcel != null)
+                owner = parcel.landData.OwnerID;
+            return owner.ToString();
         }
 
         /// <summary>
@@ -10151,6 +10152,8 @@ namespace InWorldz.Phlox.Engine
         public string llGetParcelMusicURL()
         {
             ILandObject land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+            if (land == null)
+                return String.Empty;
 
             return land.GetMusicUrl();
         }
@@ -12731,7 +12734,7 @@ namespace InWorldz.Phlox.Engine
             
             UUID key;
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).landData;
-            if (land.OwnerID == m_host.OwnerID)
+            if ((land != null) && (land.OwnerID == m_host.OwnerID))
             {
                 ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
                 if (UUID.TryParse(avatar, out key))
@@ -12751,7 +12754,7 @@ namespace InWorldz.Phlox.Engine
             
             UUID key;
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).landData;
-            if (land.OwnerID == m_host.OwnerID)
+            if ((land != null) && (land.OwnerID == m_host.OwnerID))
             {
                 if (UUID.TryParse(avatar, out key))
                 {
@@ -12774,7 +12777,7 @@ namespace InWorldz.Phlox.Engine
             
             UUID key;
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).landData;
-            if (land.OwnerID == m_host.OwnerID)
+            if ((land != null) && (land.OwnerID == m_host.OwnerID))
             {
                 if (UUID.TryParse(avatar, out key))
                 {
@@ -13141,7 +13144,7 @@ namespace InWorldz.Phlox.Engine
         {
             
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).landData;
-            if (land.OwnerID == m_host.OwnerID)
+            if ((land != null) && (land.OwnerID == m_host.OwnerID))
             {
                 foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
                 {
@@ -13159,7 +13162,7 @@ namespace InWorldz.Phlox.Engine
         {
             
             LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).landData;
-            if (land.OwnerID == m_host.OwnerID)
+            if ((land != null) && (land.OwnerID == m_host.OwnerID))
             {
                 foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
                 {
