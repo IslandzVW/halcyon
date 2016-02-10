@@ -2122,7 +2122,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 AddRestoredSceneObject(group, true, true);
                 SceneObjectPart rootPart = group.GetChildPart(group.UUID);
-                rootPart.ObjectFlags &= ~(uint)PrimFlags.Scripted;
+                group.RecalcScriptedStatus();
                 rootPart.TrimPermissions();
 
                 // Check if it rezzed off-world...
