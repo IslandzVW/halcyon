@@ -12744,7 +12744,7 @@ namespace InWorldz.Phlox.Engine
                     entry.AgentID = key;
                     entry.Flags = AccessList.Ban;
                     entry.Time = DateTime.Now.AddHours(hours);
-                    land.ParcelAccessList.Add(entry);
+                    landObject.landData.ParcelAccessList.Add(entry);
                 }
             }
             
@@ -12785,11 +12785,11 @@ namespace InWorldz.Phlox.Engine
             {
                 if (UUID.TryParse(avatar, out key))
                 {
-                    foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
+                    foreach (ParcelManager.ParcelAccessEntry entry in landObject.landData.ParcelAccessList)
                     {
                         if (entry.AgentID == key && entry.Flags == AccessList.Ban)
                         {
-                            land.ParcelAccessList.Remove(entry);
+                            landObject.landData.ParcelAccessList.Remove(entry);
                             break;
                         }
                     }
