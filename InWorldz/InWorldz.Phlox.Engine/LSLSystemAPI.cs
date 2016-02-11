@@ -12689,6 +12689,16 @@ namespace InWorldz.Phlox.Engine
             // ScriptSleep(20000);
         }
 
+        //Returns true if the URL's format is valid.
+        public int iwValidateURL(string url)
+        {
+            if (url.StartsWith("www."))
+                url = "http://" + url;
+            Uri uriResult;
+            bool ret = Uri.TryCreate(url, UriKind.Absolute, out uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+            return Convert.ToInt32(ret);
+        }
+
         public string llEscapeURL(string url)
         {
             try
