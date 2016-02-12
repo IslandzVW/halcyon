@@ -1715,7 +1715,16 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part == null)
                     return;
                 if (part != RootPart)
-                    part.ObjectFlags = objectflagupdate;
+                {
+                    // Preserve the Scripted flag status for each part.
+                    bool isScripted = (part.Flags & PrimFlags.Scripted) != 0;
+                    part.ObjectFlags = objectflagupdate;    // update
+                    // Now restore the per-part Scripted flag.
+                    if (isScripted)
+                        part.ObjectFlags |= (uint)PrimFlags.Scripted;
+                    else
+                        part.ObjectFlags &= ~(uint)PrimFlags.Scripted;
+                }
                 aggregateScriptEvents |= part.AggregateScriptEvents;
             });
 
