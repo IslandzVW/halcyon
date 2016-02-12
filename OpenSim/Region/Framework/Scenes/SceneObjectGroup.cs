@@ -1707,12 +1707,15 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void aggregateScriptEvents()
         {
+            uint objectflagupdate = (uint)RootPart.GetEffectiveObjectFlags();
+
             ScriptEvents aggregateScriptEvents = 0;
 
             m_children.ForEachPart((SceneObjectPart part) => {
                 if (part == null)
                     return;
-                part.ObjectFlags = (uint)part.GetEffectiveObjectFlags();
+                if (part != RootPart)
+                    part.ObjectFlags = objectflagupdate;
                 aggregateScriptEvents |= part.AggregateScriptEvents;
             });
 
