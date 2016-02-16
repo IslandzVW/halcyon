@@ -170,6 +170,34 @@ namespace InWorldz.Data.Assets.Stratus.Cache
         }
 
         /// <summary>
+        /// Auto-repair the case where we don't really have a cached item
+        /// Uses the lock but it should be called from within the lock by caller as well.
+        /// </summary>
+        /// <param name="assetId">The ID of the asset that isn't actually cached.</param>
+        /// <returns>Returns true if asset cache file is missing or empty.</returns>
+        private bool RepairEmpty(Guid assetId)
+        {
+            string assetFileName = GetAssetFileName(assetId);
+            lock (_oplock)
+            {
+                FileInfo fileInfo = new System.IO.FileInfo(assetFileName);
+                if (fileInfo.Exists)
+                {
+                    if (fileInfo.Length > 0)
+                        return false; // this one is actually okay
+                    // we have an empty asset cache file (disk full?)
+                    fileInfo.Delete();
+                }
+                if (_ids.Contains(assetId))
+                    _ids.Remove(assetId);
+                if (_recentlyWritten.ContainsKey(assetId))
+                    _recentlyWritten.Remove(assetId);
+
+                return true;    // missing or empty asset cache file
+            }
+        }
+
+        /// <summary>
         /// Puts an asset into the writeback cache
         /// </summary>
         /// <param name="asset"></param>
@@ -177,17 +205,25 @@ namespace InWorldz.Data.Assets.Stratus.Cache
         {
             CheckCacheDir();
 
+            string assetFileName = GetAssetFileName(asset.Id);
+
             lock (_oplock)
             {
                 if (_ids.Contains(asset.Id) || _recentlyWritten.ContainsKey(asset.Id))
                 {
-                    //we already have this asset scheduled to write
-                    throw new AssetAlreadyExistsException("Asset " + asset.Id.ToString() + " already cached for writeback");
+                    // Auto-repair the case where we don't really have a cached item.
+                    // Only call this when we think we already have an asset file.
+                    if (!RepairEmpty(asset.Id))
+                    {
+                        //we already have this asset scheduled to write
+                        throw new AssetAlreadyExistsException("Asset " + asset.Id.ToString() + " already cached for writeback");
+                    }
+                    // else fall through to write the item to disk (repair the cached item)
                 }
 
                 try
                 {
-                    using (FileStream fstream = File.OpenWrite(GetAssetFileName(asset.Id)))
+                    using (FileStream fstream = File.OpenWrite(assetFileName))
                     {
                         ProtoBuf.Serializer.Serialize(fstream, asset);
                     }
@@ -213,6 +249,14 @@ namespace InWorldz.Data.Assets.Stratus.Cache
             {
                 if (!_ids.Contains(assetId) && !_recentlyWritten.ContainsKey(assetId))
                 {
+                    return null;
+                }
+
+                // Auto-repair the case where we don't really have a cached item
+                if (RepairEmpty(assetId))
+                {
+                    // No asset: we shouldn't have gotten this far, but cleaned up tracking above.
+                    // Returning null here avoids using the cache which doesn't have it anyway.
                     return null;
                 }
 
