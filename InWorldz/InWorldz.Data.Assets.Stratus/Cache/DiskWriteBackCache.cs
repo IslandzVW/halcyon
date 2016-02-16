@@ -253,7 +253,6 @@ namespace InWorldz.Data.Assets.Stratus.Cache
                 }
 
                 // Auto-repair the case where we don't really have a cached item
-                FileInfo fileInfo = new System.IO.FileInfo(GetAssetFileName(assetId));
                 if (RepairEmpty(assetId))
                 {
                     // No asset: we shouldn't have gotten this far, but cleaned up tracking above.
