@@ -212,7 +212,7 @@ namespace OpenSim.Region.Framework
                         {
                             if (!pluginType.IsAbstract)
                             {
-                                if (pluginType.GetInterface("IRegionModule") != null)
+                                if (typeof(IRegionModule).IsAssignableFrom(pluginType))
                                 {
                                     modules.Add((IRegionModule)Activator.CreateInstance(pluginType));
                                 }
@@ -227,7 +227,7 @@ namespace OpenSim.Region.Framework
                         pluginAssembly.FullName, e.Message, e.StackTrace);
                     
                     // justincc: Right now this is fatal to really get the user's attention
-                    throw e;
+                    throw;
                 }
             }
 

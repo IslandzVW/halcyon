@@ -214,6 +214,9 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
         [ProtoMember(55)]
         public int LowestLODBytes;
 
+        [ProtoMember(56)]
+        public RenderMaterials RenderMaterials;
+
         static PrimShapeSnapshot()
         {
             ProtoBuf.Serializer.PrepareSerializer<PrimShapeSnapshot>();
@@ -276,7 +279,8 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 HighLODBytes = primitiveBaseShape.HighLODBytes,
                 MidLODBytes = primitiveBaseShape.MidLODBytes,
                 LowLODBytes = primitiveBaseShape.LowLODBytes,
-                LowestLODBytes = primitiveBaseShape.LowestLODBytes
+                LowestLODBytes = primitiveBaseShape.LowestLODBytes,
+                RenderMaterials = primitiveBaseShape.RenderMaterials
             };
         }
 
@@ -340,7 +344,8 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 HighLODBytes = this.HighLODBytes,
                 MidLODBytes = this.MidLODBytes,
                 LowLODBytes = this.LowLODBytes,
-                LowestLODBytes = this.LowestLODBytes
+                LowestLODBytes = this.LowestLODBytes,
+                RenderMaterials = this.RenderMaterials != null ? this.RenderMaterials : new RenderMaterials()
             };
         }
     }

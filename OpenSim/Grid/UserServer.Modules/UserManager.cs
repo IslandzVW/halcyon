@@ -195,7 +195,7 @@ namespace OpenSim.Grid.UserServer.Modules
             // any Unicode character, excluding the surrogate blocks, FFFE, and FFFF.
             // string re = @"[^\x09\x0A\x0D\x20-\xD7FF\xE000-\xFFFD\x10000-x10FFFF]";
             string re = @"[^a-zA-Z0-9\s\p{P}]";
-            return Regex.Replace(text, re, "");
+            return Regex.Replace(text, re, String.Empty);
         }
 
         /// <summary>

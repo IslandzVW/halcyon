@@ -682,13 +682,13 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void sendAccessList(uint flags, IClientAPI remote_client)
         {
 
-            if (flags == (uint) AccessList.Access || flags == (uint) AccessList.Both)
+            if ((flags & (uint) AccessList.Access) == (uint)AccessList.Access)
             {
                 List<UUID> avatars = createAccessListArrayByFlag(AccessList.Access);
                 remote_client.SendLandAccessListData(avatars,(uint) AccessList.Access,landData.LocalID);
             }
 
-            if (flags == (uint) AccessList.Ban || flags == (uint) AccessList.Both)
+            if ((flags & (uint)AccessList.Ban) == (uint)AccessList.Ban)
             {
                 List<UUID> avatars = createAccessListArrayByFlag(AccessList.Ban);
                 remote_client.SendLandAccessListData(avatars, (uint)AccessList.Ban, landData.LocalID);
@@ -1125,29 +1125,31 @@ namespace OpenSim.Region.CoreModules.World.Land
         public List<SceneObjectGroup> GetPrimsOverByOwner(UUID targetID, bool scriptedOnly)
         {
             List<SceneObjectGroup> prims = new List<SceneObjectGroup>();
+            List<SceneObjectGroup> myPrims;
 
             lock (primsOverMe)
             {
-                foreach (SceneObjectGroup obj in primsOverMe)
+                myPrims = new List<SceneObjectGroup>(primsOverMe);
+            }
+            foreach (SceneObjectGroup obj in myPrims)
+            {
+                if (obj.OwnerID == targetID)
                 {
-                    if (obj.OwnerID == targetID)
+                    if (scriptedOnly)
                     {
-                        if (scriptedOnly)
+                        bool containsScripts = false;
+                        foreach (SceneObjectPart part in obj.GetParts())
                         {
-                            bool containsScripts = false;
-                            foreach (SceneObjectPart part in obj.Children.Values)
+                            if (part.Inventory.ContainsScripts())
                             {
-                                if (part.Inventory.ContainsScripts())
-                                {
-                                    containsScripts = true;
-                                    break;
-                                }
+                                containsScripts = true;
+                                break;
                             }
-                            if (!containsScripts)
-                                continue;
                         }
-                        prims.Add(obj);
+                        if (!containsScripts)
+                            continue;
                     }
+                    prims.Add(obj);
                 }
             }
             return prims;

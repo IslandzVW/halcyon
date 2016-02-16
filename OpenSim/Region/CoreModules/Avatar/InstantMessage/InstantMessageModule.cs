@@ -24,6 +24,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
@@ -126,8 +127,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
             if (m_TransferModule != null)
             {
-                if (client != null && client.FirstName != null && client.FirstName != string.Empty
-                    && client.LastName != null && client.LastName != string.Empty)
+                if (client != null && !String.IsNullOrEmpty(client.FirstName) && !String.IsNullOrEmpty(client.LastName))
                 {
                     im.fromAgentName = client.Name;
                 }

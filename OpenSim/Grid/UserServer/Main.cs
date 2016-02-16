@@ -171,13 +171,13 @@ namespace OpenSim.Grid.UserServer
         /// <param name="inventoryService"></param>
         protected virtual void StartupUserServerModules()
         {
-            m_log.Info("[STARTUP]: Establishing data connection");                        
+            m_log.Info("[STARTUP]: Establishing data connection");
             
             //we only need core components so we can request them from here
             IInterServiceInventoryServices inventoryService;
             TryGet<IInterServiceInventoryServices>(out inventoryService);
             
-            CommunicationsManager commsManager = new UserServerCommsManager();            
+            CommunicationsManager commsManager = new UserServerCommsManager();
 
             //setup database access service, for now this has to be created before the other modules.
             m_userDataBaseService = new UserDataBaseService(commsManager);
@@ -224,7 +224,7 @@ namespace OpenSim.Grid.UserServer
         protected virtual void StartupLoginService()
         {
             m_loginService = new UserLoginService(
-                m_userDataBaseService, new LibraryRootFolder(Cfg.LibraryXmlfile), Cfg.MapServerURI, Cfg, Cfg.DefaultStartupMsg, new RegionProfileServiceProxy());
+                m_userDataBaseService, new LibraryRootFolder(Cfg.LibraryXmlfile), Cfg.MapServerURI, Cfg.ProfileServerURI, Cfg, Cfg.DefaultStartupMsg, new RegionProfileServiceProxy());
         }
 
         protected virtual void PostInitializeModules()
@@ -281,7 +281,7 @@ namespace OpenSim.Grid.UserServer
             {
                 m_log.ErrorFormat("[RADMIN] Shutdown: failed: {0}", e.Message);
                 m_log.DebugFormat("[RADMIN] Shutdown: failed: {0}", e.ToString());
-                throw e;
+                throw;
             }
 
             m_log.Info("[RADMIN]: Shutdown Administrator Request complete");

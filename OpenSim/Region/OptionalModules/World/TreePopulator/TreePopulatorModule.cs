@@ -176,7 +176,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
 
                     // 100 seconds to grow 1m
                     s_tree.Scale += new Vector3(0.1f, 0.1f, 0.1f);
-                    s_tree.ScheduleFullUpdate();
+                    s_tree.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
                     //s_tree.ScheduleTerseUpdate();
                 }
                 else
@@ -304,7 +304,7 @@ namespace OpenSim.Region.OptionalModules.World.TreePopulator
                     uuid, UUID.Zero, new Vector3(0.1f, 0.1f, 0.1f), Quaternion.Identity, position, Tree.Cypress1, false);
             
             m_trees.Add(tree.UUID);
-            tree.ScheduleGroupForFullUpdate();
+            tree.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
         }
 
         private void CalculateTrees_Elapsed(object sender, ElapsedEventArgs e)

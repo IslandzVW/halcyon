@@ -369,7 +369,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             try
             {
 
-                if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
+                if (String.IsNullOrEmpty(request.HttpMethod)) // Can't handle empty requests, not wasting a thread
                 {
                     buffer = SendHTML500(response);
                 }
@@ -532,8 +532,8 @@ namespace OpenSim.Framework.Servers.HttpServer
                         request.SeqNo,
                         request.HttpMethod,
                         request.Url.AbsolutePath,
-                        requestHandler != null ? requestHandler.Name : "",
-                        requestHandler != null ? requestHandler.Description : "",
+                        requestHandler != null ? requestHandler.Name : String.Empty,
+                        requestHandler != null ? requestHandler.Description : String.Empty,
                         request.RemoteIPEndPoint,
                         tickdiff);
                 }
@@ -593,8 +593,8 @@ namespace OpenSim.Framework.Servers.HttpServer
                     request.SeqNo,
                     request.HttpMethod,
                     request.Url.AbsolutePath,
-                    requestHandler != null ? requestHandler.Name : "",
-                    requestHandler != null ? requestHandler.Description : "",
+                    requestHandler != null ? requestHandler.Name : String.Empty,
+                    requestHandler != null ? requestHandler.Description : String.Empty,
                     tickdiff);
                 // note that request.RemoteIPEndPoint is often disposed when we reach here (e.g. remote end has crashed)
             }
@@ -621,8 +621,8 @@ namespace OpenSim.Framework.Servers.HttpServer
                     request.SeqNo,
                     request.HttpMethod,
                     request.Url.AbsolutePath,
-                    requestHandler != null ? requestHandler.Name : "",
-                    requestHandler != null ? requestHandler.Description : "");
+                    requestHandler != null ? requestHandler.Name : String.Empty,
+                    requestHandler != null ? requestHandler.Description : String.Empty);
 
                 try
                 {
@@ -921,7 +921,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             bool LegacyLLSDLoginLibOMV = (requestBody.Contains("passwd") && requestBody.Contains("mac") && requestBody.Contains("viewer_digest"));
 
-            if (requestBody.Length == 0)
+            if (String.IsNullOrEmpty(requestBody))
             // Get Request
             {
                 requestBody = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><llsd><map><key>request</key><string>get</string></map></llsd>";
@@ -1504,7 +1504,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
                 // We want this exception to halt the entire server since in current configurations we aren't too
                 // useful without inbound HTTP.
-                throw e;
+                throw;
             }
         }
 
@@ -1531,7 +1531,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         {
             lock (m_HTTPHandlers)
             {
-                if (httpMethod != null && httpMethod.Length == 0)
+                if (String.IsNullOrEmpty(httpMethod))
                 {
                     m_HTTPHandlers.Remove(path);
                     return;

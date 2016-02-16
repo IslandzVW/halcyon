@@ -254,7 +254,8 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                     string msg = 
                         String.Format("DynamicTextureModule: Error preparing image using URL {0}", Url);
                     scene.SimChat(Utils.StringToBytes(msg), ChatTypeEnum.Say,
-                                  0, part.ParentGroup.RootPart.AbsolutePosition, part.Name, part.UUID, false);
+                                  0, part.ParentGroup.RootPart.AbsolutePosition, part.Name, part.UUID, false,
+                                  part.OwnerID);
                     return;
                 }
 
@@ -313,7 +314,7 @@ namespace OpenSim.Region.CoreModules.Scripting.DynamicTexture
                 // tmptex.DefaultTexture.Fullbright = true;
 
                 part.Shape.Textures = tmptex;
-                part.ScheduleFullUpdate();
+                part.ScheduleFullUpdate(PrimUpdateFlags.Textures);
             }
 
             private byte[] BlendTextures(byte[] frontImage, byte[] backImage, bool setNewAlpha, byte newAlpha)

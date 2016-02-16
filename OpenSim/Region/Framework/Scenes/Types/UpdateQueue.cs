@@ -31,6 +31,7 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using OpenMetaverse;
 using OpenSim.Region.Framework.Scenes;
+using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Scenes.Types
 {
@@ -38,7 +39,7 @@ namespace OpenSim.Region.Framework.Scenes.Types
     {
         private Queue<SceneObjectPart> m_queue;
 
-        private C5.HashSet<uint> m_ids;
+        private C5.HashDictionary<uint, PrimUpdateFlags> m_ids;
 
         private object m_syncObject = new object();
 
@@ -56,7 +57,7 @@ namespace OpenSim.Region.Framework.Scenes.Types
         public UpdateQueue()
         {
             m_queue = new Queue<SceneObjectPart>();
-            m_ids = new C5.HashSet<uint>();
+            m_ids = new C5.HashDictionary<uint, PrimUpdateFlags>();
         }
 
         public void Clear()
@@ -68,31 +69,39 @@ namespace OpenSim.Region.Framework.Scenes.Types
             }
         }
 
-        public void Enqueue(SceneObjectPart part)
+        public void Enqueue(SceneObjectPart part, PrimUpdateFlags updateFlags)
         {
             lock (m_syncObject)
             {
-                if (!m_ids.Contains(part.LocalId))
+                PrimUpdateFlags flagsToset = updateFlags;
+                if (!m_ids.FindOrAdd(part.LocalId, ref flagsToset))
                 {
-                    m_ids.Add(part.LocalId);
                     m_queue.Enqueue(part);
+                }
+                else
+                {
+                    m_ids.Update(part.LocalId, flagsToset | updateFlags);
                 }
             }
         }
-
-        public SceneObjectPart Dequeue()
+        
+        public KeyValuePair<SceneObjectPart, PrimUpdateFlags>? Dequeue()
         {
             SceneObjectPart part = null;
+            PrimUpdateFlags updateFlags = PrimUpdateFlags.None;
             lock (m_syncObject)
             {
                 if (m_queue.Count > 0)
                 {
                     part = m_queue.Dequeue();
+                    m_ids.Find(part.LocalId, out updateFlags);
                     m_ids.Remove(part.LocalId);
+
+                    return new KeyValuePair<SceneObjectPart, PrimUpdateFlags>(part, updateFlags);
                 }
             }
 
-            return part;
+            return null;
         }
     }
 }

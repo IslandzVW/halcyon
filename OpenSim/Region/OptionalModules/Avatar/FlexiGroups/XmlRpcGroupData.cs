@@ -49,20 +49,19 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
         private static readonly ILog m_log =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private string m_serviceURL = string.Empty;
+        private string m_serviceURL = String.Empty;
 
-        private string m_groupReadKey  = string.Empty;
-        private string m_groupWriteKey = string.Empty;
+        private string m_groupReadKey  = String.Empty;
+        private string m_groupWriteKey = String.Empty;
 
         public XmlRpcGroupDataProvider(string serviceURL, bool disableKeepAlive, string groupReadKey, string groupWriteKey)
         {
-            m_serviceURL = serviceURL.Trim();
-
-            if ((serviceURL == null) ||
-                (serviceURL == string.Empty))
+            if (String.IsNullOrWhiteSpace(serviceURL))
             {
                 throw new Exception("Please specify a valid ServiceURL for XmlRpcGroupDataProvider in Halcyon.ini, [Groups], XmlRpcServiceURL");
             }
+
+            m_serviceURL = serviceURL.Trim();
 
             m_groupReadKey = groupReadKey;
             m_groupWriteKey = groupWriteKey;
@@ -181,7 +180,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             {
                 param["GroupID"] = GroupID.ToString();
             }
-            if ((GroupName != null) && (GroupName != string.Empty))
+            if (!String.IsNullOrEmpty(GroupName))
             {
                 param["Name"] = GroupName.ToString();
             }
@@ -706,14 +705,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
             if (data.Message == null)
             {
-                data.Message = string.Empty;
+                data.Message = String.Empty;
             }
 
             return data;
         }
         public bool AddGroupNotice(GroupRequestID requestID, UUID groupID, UUID noticeID, string fromName, string subject, string message, byte[] binaryBucket)
         {
-            string binBucket = OpenMetaverse.Utils.BytesToHexString(binaryBucket, "");
+            string binBucket = OpenMetaverse.Utils.BytesToHexString(binaryBucket, String.Empty);
 
             Hashtable param = new Hashtable();
             param["GroupID"] = groupID.ToString();

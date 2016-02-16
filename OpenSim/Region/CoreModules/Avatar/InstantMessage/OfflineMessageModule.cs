@@ -81,8 +81,8 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             {
                 if (m_SceneList.Count == 0)
                 {
-                    m_RestURL = cnf.GetString("OfflineMessageURL", "");
-                    if (m_RestURL == "")
+                    m_RestURL = cnf.GetString("OfflineMessageURL", String.Empty);
+                    if (String.IsNullOrEmpty(m_RestURL))
                     {
                         m_log.Error("[OFFLINE MESSAGING]: Module was enabled, but no URL is given, disabling");
                         enabled = false;

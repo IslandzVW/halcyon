@@ -167,7 +167,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             foreach (string host in rdbHosts)
             {
                 ConnectionFactory rdbFactory;
-                if ((++whichDB == 1) || (_rdbConnectionTemplateDebug.Trim() == String.Empty))
+                if ((++whichDB == 1) || String.IsNullOrWhiteSpace(_rdbConnectionTemplateDebug))
                     rdbFactory = new ConnectionFactory("MySQL", String.Format(_rdbConnectionTemplate, host));
                 else  // Special debugging support for multiple RDBs on one machine ("inworldz_rdb2", etc)
                     rdbFactory = new ConnectionFactory("MySQL", String.Format(_rdbConnectionTemplateDebug, host, whichDB));
@@ -1961,7 +1961,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             ScenePresence target_presence = m_scene.GetScenePresence(target); 
             if (target_presence == null) return;
 
-            ILandObject land = GetLandObject(target_presence.AbsolutePosition.X, target_presence.AbsolutePosition.Y);
+            Vector3 pos = target_presence.AbsolutePosition;
+            ILandObject land = GetLandObject(pos.X, pos.Y);
 
             if (m_scene.Permissions.CanEditParcel(client.AgentId, land, GroupPowers.LandEjectAndFreeze))
             {

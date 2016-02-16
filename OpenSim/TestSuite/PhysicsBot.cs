@@ -181,7 +181,7 @@ namespace OpenSim.TestSuite
 
         public string[] readexcuses()
         {
-            string allexcuses = "";
+            string allexcuses = String.Empty;
 
             string file = Path.Combine(Util.configDir(), "pCampBotSentences.txt");
             if (File.Exists(file))

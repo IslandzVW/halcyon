@@ -52,7 +52,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.User
             IConfig moduleConfig = source.Configs["Modules"];
             if (moduleConfig != null)
             {
-                string name = moduleConfig.GetString("UserServices", "");
+                string name = moduleConfig.GetString("UserServices", String.Empty);
                 if (name == Name)
                 {
                     m_Enabled = true;

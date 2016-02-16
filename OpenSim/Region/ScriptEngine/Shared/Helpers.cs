@@ -162,7 +162,7 @@ namespace OpenSim.Region.ScriptEngine.Shared
                 else
                     Type = 0x02; // Passive
 
-                foreach (SceneObjectPart p in part.ParentGroup.Children.Values)
+                foreach (SceneObjectPart p in part.ParentGroup.GetParts())
                 {
                     if (p.Inventory.ContainsScripts())
                     {

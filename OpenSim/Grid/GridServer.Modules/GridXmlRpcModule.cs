@@ -503,7 +503,7 @@ namespace OpenSim.Grid.GridServer.Modules
             if (requestData.ContainsKey("region_secret"))
             {
                 string regionsecret = (string)requestData["region_secret"];
-                if (regionsecret.Length > 0)
+                if (!String.IsNullOrEmpty(regionsecret))
                     sim.regionSecret = regionsecret;
                 else
                     sim.regionSecret = m_config.SimRecvKey;
@@ -602,7 +602,7 @@ namespace OpenSim.Grid.GridServer.Modules
                 //TheSim = GetRegion(new UUID((string) requestData["UUID"]));
                 uuid = requestData["UUID"].ToString();
                 m_log.InfoFormat("[LOGOUT]: Logging out region: {0}", uuid);
-                //                logToDB((new LLUUID((string)requestData["UUID"])).ToString(),"XmlRpcDeleteRegionMethod","", 5,"Attempting delete with UUID.");
+                //logToDB((new LLUUID((string)requestData["UUID"])).ToString(),"XmlRpcDeleteRegionMethod",String.Empty, 5,"Attempting delete with UUID.");
             }
             else
             {
@@ -612,7 +612,7 @@ namespace OpenSim.Grid.GridServer.Modules
 
             DataResponse insertResponse = m_gridDBService.DeleteRegion(uuid);
 
-            string insertResp = "";
+            string insertResp = String.Empty;
             switch (insertResponse)
             {
                 case DataResponse.RESPONSE_OK:

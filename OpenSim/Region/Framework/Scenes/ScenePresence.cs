@@ -178,7 +178,7 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_setAlwaysRun;
 
         private string m_movementAnimation = "DEFAULT";
-        private string m_previousMovement = "";        // this doubles as our thread reentrancy lock (critical region) on anim updates
+        private string m_previousMovement = String.Empty;        // this doubles as our thread reentrancy lock (critical region) on anim updates
         private long m_animPersistUntil = 0;
         private bool m_allowFalling = false;
         private bool m_useFlySlow = false;
@@ -213,7 +213,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool IsRestrictedToRegion;
 
-        public string JID = string.Empty;
+        public string JID = String.Empty;
 
         // Agent moves with a PID controller causing a force to be exerted.
         private float m_health = 100f;
@@ -1391,7 +1391,7 @@ namespace OpenSim.Region.Framework.Scenes
 #region Event Handlers
 
         /// <summary>
-        /// Sets avatar height in the phyiscs plugin
+        /// Sets avatar height in the physics plugin
         /// </summary>
         public void SetHeight(float height)
         {
@@ -1440,7 +1440,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // Release the lock before calling PostProcessMakeRootAgent, it calls functions that use lock
                     PostProcessMakeRootAgent(parent, m_flying);
 
-                    if ((m_callbackURI != null) && !m_callbackURI.Equals(""))
+                    if (!String.IsNullOrEmpty(m_callbackURI))
                     {
                         m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
                         Scene.SendReleaseAgent(m_rootRegionHandle, UUID, m_callbackURI);
@@ -1789,7 +1789,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     // use camera up angle when in mouselook and not flying or when holding the left mouse button down and not flying
                     // this prevents 'jumping' in inappropriate situations.
-                    if ((m_mouseLook && !physActor.Flying) || (m_leftButtonDown && !physActor.Flying)) 
+                    if ((m_mouseLook || m_leftButtonDown) && !physActor.Flying)
                         dirVectors = GetWalkDirectionVectors();
                     else
                         dirVectors = Dir_Vectors;
@@ -1941,6 +1941,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                         }
                     }
+
+                    // Determine whether the user has said to stop and the agent is not sitting.
+                    physActor.SetAirBrakes = (m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_STOP) != 0 && !IsInTransitOnPrim;
                 }
                 
                 // Cause the avatar to stop flying if it's colliding
@@ -2009,7 +2012,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Commented out this code since it could never have executed, but might still be informative.
 //            if (proxyObjectGroup != null)
 //            {
-                proxyObjectGroup.SendGroupFullUpdate();
+                proxyObjectGroup.SendGroupFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 remote_client.SendSitResponse(proxyObjectGroup.UUID, Vector3.Zero, Quaternion.Identity, true, Vector3.Zero, Vector3.Zero, false);
                 m_scene.DeleteSceneObject(proxyObjectGroup, false);
 //            }
@@ -2188,7 +2191,7 @@ namespace OpenSim.Region.Framework.Scenes
                     else
                     {
                         // Need to release controls from all scripts on ALL prim in this object where the target user is this one.
-                        SceneObjectPart[] parts = part.ParentGroup.GetParts();
+                        var parts = part.ParentGroup.GetParts();
                         foreach (SceneObjectPart prim in parts)
                         {
                             TaskInventoryDictionary taskIDict = prim.TaskInventory;
@@ -2334,7 +2337,9 @@ namespace OpenSim.Region.Framework.Scenes
             // If the primitive the player clicked on has no sit target, and one or more other linked objects have sit targets that are not full, the sit target of the object with the lowest link number will be used.
 
             // Get our own copy of the part array, and sort into the order we want to test
-            SceneObjectPart[] partArray = targetPart.ParentGroup.GetParts();
+            var allParts = targetPart.ParentGroup.GetParts();
+            SceneObjectPart[] partArray = allParts.ToArray();
+
             Array.Sort(partArray, delegate(SceneObjectPart p1, SceneObjectPart p2)
                        {
                            // we want the originally selected part first, then the rest in link order -- so make the selected part link num (-1)
@@ -2504,7 +2509,7 @@ namespace OpenSim.Region.Framework.Scenes
             HandleAgentSit(remoteClient, UUID);
             ControllingClient.SendSitResponse(vParentID, vPos, vRot, false, cameraAtOffset, cameraEyeOffset, forceMouselook);
             SceneView.SendFullUpdateToAllClients();
-            part.ParentGroup.ScheduleGroupForFullUpdate();//Tell all avatars about this object, as otherwise avatars will show up at <0,0,0> on the radar if they have not seen this object before (culling)
+            part.ParentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);//Tell all avatars about this object, as otherwise avatars will show up at <0,0,0> on the radar if they have not seen this object before (culling)
         }
 
         public void HandleAgentRequestSit(IClientAPI remoteClient, UUID agentID, UUID targetID, Vector3 offset)
@@ -4565,7 +4570,7 @@ namespace OpenSim.Region.Framework.Scenes
                     continue;
 
                 //Send an immediate update
-                presence.SceneView.SendGroupUpdate(gobj);
+                presence.SceneView.SendGroupUpdate(gobj, PrimUpdateFlags.ForcedFullUpdate);
             }
         }
 

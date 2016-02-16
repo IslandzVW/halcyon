@@ -220,7 +220,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                     query += " osgroup.GroupID = ?groupID ";
                     parms.Add("?groupID", GroupID);
                 }
-                else if ((GroupName != null) && (GroupName != string.Empty))
+                else if (!String.IsNullOrEmpty(GroupName))
                 {
                     query += " osgroup.Name = ?groupName ";
                     parms.Add("?groupName", GroupName);
@@ -1518,7 +1518,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 if (db == null)
                     return false;
 
-                string binBucketString = OpenMetaverse.Utils.BytesToHexString(binaryBucket, "");
+                string binBucketString = OpenMetaverse.Utils.BytesToHexString(binaryBucket, String.Empty);
 
                 string query = " INSERT INTO osgroupnotice" +
                                 " (GroupID, NoticeID, Timestamp, FromName, Subject, Message, BinaryBucket)" +
@@ -1613,7 +1613,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 data.AssetType = 0;
                 data.OwnerID = UUID.Zero;
                 data.ItemID = UUID.Zero;
-                data.Attachment = "";
+                data.Attachment = String.Empty;
             } else {
                 data.HasAttachment = true;
                 data.AssetType = bucket[1];
@@ -1636,7 +1636,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             data.noticeData.FromName = result["FromName"];
             data.noticeData.Subject = result["Subject"];
             if (data.Message == null)
-                data.Message = string.Empty;
+                data.Message = String.Empty;
 
             data.BinaryBucket = Utils.HexStringToBytes(result["BinaryBucket"], true);
 

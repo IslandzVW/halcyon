@@ -25,20 +25,6 @@ namespace OpenSim.Framework
         public delegate void ItemPurgedDelegate(T item);
         public event ItemPurgedDelegate OnItemPurged;
 
-        /// <summary>
-        /// The default value to use for the expiration timer if no value
-        /// is specified or its <= 0 and maxAge was set > 0).
-        /// </summary>
-        ///
-        public const int DEFAULT_EXPIRATION_TIMER_INTERVAL = 1 * 60 * 1000;
-
-        /// <summary>
-        /// The default value to use for the max age time if no value is specified.
-        /// </summary>
-        ///
-        public const int DEFAULT_MAX_AGE = 5 * 60 * 1000;
-
-
         private class KVPComparer<CK, CT> : IEqualityComparer<KeyValuePair<CK, CT>> 
         {
             public bool Equals(KeyValuePair<CK, CT> x, KeyValuePair<CK, CT> y)
@@ -63,7 +49,6 @@ namespace OpenSim.Framework
          /// <summary>
          /// A system timer and interval values used to age the cache;
          /// </summary>
-        private System.Threading.Timer _expireTimer = null;
         private Dictionary<K, DateTime> _lastAccessedTime = null;
         private int _minSize;
         private int _maxAge;
@@ -78,7 +63,7 @@ namespace OpenSim.Framework
         /// <param name="maxAge">The maximum age in milliseconds an an entry should live in cache 
         ///     before it's a candidate to be removed.</param>
         /// <param name="expireInterval">Time in milliseconds between checks for expired entries.</param>
-        public LRUCache(int capacity, bool useSizing = false, int minSize = 0, int maxAge = 0, int expireInterval = 0)
+        public LRUCache(int capacity, bool useSizing = false, int minSize = 0, int maxAge = 0)
         {
             _storage = new C5.HashedLinkedList<KeyValuePair<K, T>>(new KVPComparer<K, T>());
             _capacity = capacity;
@@ -92,62 +77,61 @@ namespace OpenSim.Framework
 
             _maxAge = maxAge;
             _minSize = (minSize <= 0 ? 0 : minSize);
-            _expireInterval = (expireInterval > 0 ? expireInterval : DEFAULT_EXPIRATION_TIMER_INTERVAL);
             _lastAccessedTime = null;
 
             if (_maxAge > 0)
             {
                 _lastAccessedTime = new Dictionary<K, DateTime>();
-                _expireTimer = new Timer(OnTimedEvent, null, _expireInterval, Timeout.Infinite);
             }
         }
 
         #region TimerDrivenAging
 
-        private void OnTimedEvent(Object state)
+        /// <summary>
+        /// Removes items that have not been accessed in maxAge from the list
+        /// </summary>
+        public void Maintain()
         {
-            lock (_storage)
-            {
-                var entries = new List<KeyValuePair<K, T>>();
-                int entriesSize = 0;
+            if (_maxAge == 0) return;
+            
+            var entries = new List<KeyValuePair<K, T>>();
+            int entriesSize = 0;
 
-                foreach (var entry in _storage)
-                {   
-                    DateTime lastAccess;
-                    if (_lastAccessedTime.TryGetValue(entry.Key, out lastAccess) == false)
-                        continue;
-                    var age = DateTime.Now - lastAccess;
+            foreach (var entry in _storage)
+            {   
+                DateTime lastAccess;
+                if (_lastAccessedTime.TryGetValue(entry.Key, out lastAccess) == false)
+                    continue;
+                var age = DateTime.Now - lastAccess;
 
-                    // Check to see if this is a candidate.  If not we move on because the cache
-                    // is in LRU order and we would have visited entries that are candidates already
-                    if (age.TotalMilliseconds <= (double)_maxAge)
+                // Check to see if this is a candidate.  If not we move on because the cache
+                // is in LRU order and we would have visited entries that are candidates already
+                if (age.TotalMilliseconds <= (double)_maxAge)
+                    break;
+
+                // See if there is a reserve we are maintaining.  If so and we are below it
+                // we'll break out and clean up.  This and subsequent entries should be preserved.
+                int entrySize = (_useSizing ? _objectSizes[entry.Key] : 1);
+                if ((RequiredReserve > 0) && 
+                    ((Size - (entrySize + entriesSize)) < RequiredReserve))
                         break;
 
-                    // See if there is a reserve we are maintaining.  If so and we are below it
-                    // we'll break out and clean up.  This and subsequent entries should be preserved.
-                    int entrySize = (_useSizing ? _objectSizes[entry.Key] : 1);
-                    if ((RequiredReserve > 0) && 
-                        ((Size - (entrySize + entriesSize)) < RequiredReserve))
-                            break;
-
-                    entriesSize += entrySize;
-                    entries.Add(entry);
-                }
-
-                // Clean up the storage we identified
-                foreach (var entry in entries)
-                {
-                    _storage.Remove(entry);
-                    this.AccountForRemoval(entry.Key);
-
-                    if (this.OnItemPurged != null)
-                    {
-                        OnItemPurged(entry.Value);
-                    }
-                }
+                entriesSize += entrySize;
+                entries.Add(entry);
             }
 
-            _expireTimer.Change(_expireInterval, Timeout.Infinite);
+            // Clean up the storage we identified
+            foreach (var entry in entries)
+            {
+                _storage.Remove(entry);
+                this.AccountForRemoval(entry.Key);
+
+                if (this.OnItemPurged != null)
+                {
+                    OnItemPurged(entry.Value);
+                }
+            }
+            
         }
 
         #endregion
@@ -164,32 +148,29 @@ namespace OpenSim.Framework
         {
             KeyValuePair<K, T> kvp = new KeyValuePair<K,T>(key, default(T));
 
-            lock (_storage)
+            if (_storage.Find(ref kvp))
             {
-                if (_storage.Find(ref kvp))
+                foundItem = kvp.Value;
+
+                //readd if we found it to update its position
+                _storage.Remove(kvp);
+                _storage.Add(kvp);
+
+                if (_lastAccessedTime != null)
                 {
-                    foundItem = kvp.Value;
-
-                    //readd if we found it to update its position
-                    _storage.Remove(kvp);
-                    _storage.Add(kvp);
-
-                    if (_lastAccessedTime != null)
+                    DateTime accessed;
+                    if (_lastAccessedTime.TryGetValue(key, out accessed))
                     {
-                        DateTime accessed;
-                        if (_lastAccessedTime.TryGetValue(key, out accessed))
-                        {
-                            accessed = DateTime.Now;
-                        }
+                        accessed = DateTime.Now;
                     }
+                }
 
-                    return true;
-                }
-                else
-                {
-                    foundItem = default(T);
-                    return false;
-                }
+                return true;
+            }
+            else
+            {
+                foundItem = default(T);
+                return false;
             }
         }
 
@@ -215,37 +196,34 @@ namespace OpenSim.Framework
         /// <returns>If the object already existed</returns>
         public bool Add(K key, T item, int size)
         {
-            lock (_storage)
+            KeyValuePair<K, T> kvp = new KeyValuePair<K, T>(key, item);
+
+            //does this list already contain the item?
+            //if so remove it so it gets moved to the bottom
+            bool removed = _storage.Remove(kvp);
+
+            //are we at capacity?
+            if ((!removed) && _totalSize >= _capacity)
             {
-                KeyValuePair<K, T> kvp = new KeyValuePair<K, T>(key, item);
-
-                //does this list already contain the item?
-                //if so remove it so it gets moved to the bottom
-                bool removed = _storage.Remove(kvp);
-
-                //are we at capacity?
-                if ((!removed) && _totalSize >= _capacity)
-                {
-                    EnsureCapacity(size);
-                }
-
-                //insert the new item
-                _storage.Add(kvp);
-
-                if (!removed)
-                {
-                    _totalSize += size;
-                    if (_objectSizes != null) _objectSizes[key] = size;
-                }
-
-                if (_lastAccessedTime != null)
-                {
-                    _lastAccessedTime.Remove(key);
-                    _lastAccessedTime.Add(key, DateTime.Now);
-                }
-
-                return removed;
+                EnsureCapacity(size);
             }
+
+            //insert the new item
+            _storage.Add(kvp);
+
+            if (!removed)
+            {
+                _totalSize += size;
+                if (_objectSizes != null) _objectSizes[key] = size;
+            }
+
+            if (_lastAccessedTime != null)
+            {
+                _lastAccessedTime.Remove(key);
+                _lastAccessedTime.Add(key, DateTime.Now);
+            }
+
+            return removed;
         }
 
         // Called with _storage already locked
@@ -266,32 +244,23 @@ namespace OpenSim.Framework
 
         public void Clear()
         {
-            lock (_storage)
-            {
-                _storage.Clear();
-                _totalSize = 0;
-                if (_objectSizes != null) _objectSizes.Clear();
-                if (_lastAccessedTime != null) _lastAccessedTime.Clear();
-            }
+            _storage.Clear();
+            _totalSize = 0;
+            if (_objectSizes != null) _objectSizes.Clear();
+            if (_lastAccessedTime != null) _lastAccessedTime.Clear();
         }
 
         public bool Contains(K key)
         {
-            lock (_storage)
-            {
-                KeyValuePair<K, T> kvp = new KeyValuePair<K, T>(key, default(T));
-                return _storage.Contains(kvp);
-            }
+            KeyValuePair<K, T> kvp = new KeyValuePair<K, T>(key, default(T));
+            return _storage.Contains(kvp);
         }
 
         public int Count
         {
             get
             {
-                lock (_storage)
-                {
-                    return _storage.Count;
-                }
+                return _storage.Count;
             }
         }
 
@@ -314,27 +283,21 @@ namespace OpenSim.Framework
         {
             get
             {
-                lock (_storage)
-                {
-                    return _storage.IsReadOnly;
-                }
+                return _storage.IsReadOnly;
             }
         }
 
         public bool Remove(K key)
         {
-            lock (_storage)
+            KeyValuePair<K, T> kvp = new KeyValuePair<K, T>(key, default(T));
+            if (_storage.Remove(kvp))
             {
-                KeyValuePair<K, T> kvp = new KeyValuePair<K, T>(key, default(T));
-                if (_storage.Remove(kvp))
-                {
-                    AccountForRemoval(key);
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                AccountForRemoval(key);
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -361,18 +324,12 @@ namespace OpenSim.Framework
 
         public IEnumerator<KeyValuePair<K, T>> GetEnumerator()
         {
-            lock (_storage)
-            {
-                return _storage.GetEnumerator();
-            }
+            return _storage.GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            lock (_storage)
-            {
-                return _storage.GetEnumerator();
-            }
+            return _storage.GetEnumerator();
         }
     }
 }

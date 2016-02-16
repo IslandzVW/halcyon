@@ -365,13 +365,13 @@ namespace OpenSim.Region.CoreModules.World.Terrain
 
                             string typeName = pluginType.Name;
 
-                            if (pluginType.GetInterface("ITerrainEffect", false) != null)
+                            if (typeof(ITerrainEffect).IsAssignableFrom(pluginType))
                             {
                                 ITerrainEffect terEffect = (ITerrainEffect) Activator.CreateInstance(library.GetType(pluginType.ToString()));
 
                                 InstallPlugin(typeName, terEffect);
                             }
-                            else if (pluginType.GetInterface("ITerrainLoader", false) != null)
+                            else if (typeof(ITerrainLoader).IsAssignableFrom(pluginType))
                             {
                                 ITerrainLoader terLoader = (ITerrainLoader) Activator.CreateInstance(library.GetType(pluginType.ToString()));
                                 m_loaders[terLoader.FileExtension] = terLoader;
@@ -1014,7 +1014,7 @@ namespace OpenSim.Region.CoreModules.World.Terrain
         private void InstallInterfaces()
         {
             // Load / Save
-            string supportedFileExtensions = "";
+            string supportedFileExtensions = String.Empty;
             foreach (KeyValuePair<string, ITerrainLoader> loader in m_loaders)
                 supportedFileExtensions += " " + loader.Key + " (" + loader.Value + ")";
 

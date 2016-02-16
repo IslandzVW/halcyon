@@ -95,13 +95,13 @@ namespace OpenSim.Servers.Base
             else
             {
                 string cert_path = networkConfig.GetString("cert_path", String.Empty);
-                if (cert_path == String.Empty)
+                if (String.IsNullOrEmpty(cert_path))
                 {
                     System.Console.WriteLine("Path to X509 certificate is missing, server can't start.");
                     Thread.CurrentThread.Abort();
                 }
                 string cert_pass = networkConfig.GetString("cert_pass", String.Empty);
-                if (cert_pass == String.Empty)
+                if (String.IsNullOrEmpty(cert_pass))
                 {
                     System.Console.WriteLine("Password for X509 certificate is missing, server can't start.");
                     Thread.CurrentThread.Abort();
@@ -122,13 +122,13 @@ namespace OpenSim.Servers.Base
                 uint https_port = (uint)networkConfig.GetInt("https_port", 0);
 
                 string cert_path = networkConfig.GetString("cert_path", String.Empty);
-                if (cert_path == String.Empty)
+                if (String.IsNullOrEmpty(cert_path))
                 {
                     System.Console.WriteLine("Path to X509 certificate is missing, server can't start.");
                     Thread.CurrentThread.Abort();
                 }
                 string cert_pass = networkConfig.GetString("cert_pass", String.Empty);
-                if (cert_pass == String.Empty)
+                if (String.IsNullOrEmpty(cert_pass))
                 {
                     System.Console.WriteLine("Password for X509 certificate is missing, server can't start.");
                     Thread.CurrentThread.Abort();

@@ -203,7 +203,7 @@ namespace OpenSim.Grid.UserServer
             else regY = Convert.ToUInt32(cmdparams[5]);
 
             if (cmdparams.Length < 7)
-                email = MainConsole.Instance.CmdPrompt("Email", "");
+                email = MainConsole.Instance.CmdPrompt("Email", String.Empty);
             else email = cmdparams[6];
 
             if (null == m_userDataBaseService.GetUserProfile(firstName, lastName))
@@ -290,7 +290,7 @@ namespace OpenSim.Grid.UserServer
                     UserLoginService loginService;
                     if (m_core.TryGet<UserLoginService>(out loginService))
                     {
-                        string filename = cmdparams.Length > 1 ? cmdparams[1] : "";
+                        string filename = cmdparams.Length > 1 ? cmdparams[1] : String.Empty;
                         m_loginService = loginService;
                         m_loginService.LoadDefaultRegionsFromFile(filename);
                     }
@@ -300,7 +300,7 @@ namespace OpenSim.Grid.UserServer
                     UserLoginService loginService;
                     if (m_core.TryGet<UserLoginService>(out loginService))
                     {
-                        string filename = cmdparams.Length > 1 ? cmdparams[1] : "";
+                        string filename = cmdparams.Length > 1 ? cmdparams[1] : String.Empty;
                         m_loginService = loginService;
                         m_loginService.LoadDefaultLoginsFromFile(filename);
                     }
@@ -341,7 +341,7 @@ namespace OpenSim.Grid.UserServer
                     {
                         string firstname = cmdparams[0];
                         string lastname = cmdparams[1];
-                        string message = "";
+                        string message = String.Empty;
 
                         for (int i = 2; i < cmdparams.Length; i++)
                             message += " " + cmdparams[i];

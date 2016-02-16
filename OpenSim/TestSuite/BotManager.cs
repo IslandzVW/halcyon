@@ -124,7 +124,7 @@ namespace OpenSim.TestSuite
         /// <returns></returns>
         private string CreateRandomName()
         {
-            string returnstring = "";
+            string returnstring = String.Empty;
             string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
 
             for (int i = 0; i < 7; i++)

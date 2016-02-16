@@ -108,8 +108,8 @@ namespace OpenSim.Framework
 
         private void checkAndAddConfigOption(ConfigurationOption option)
         {
-            if ((option.configurationKey != String.Empty && option.configurationQuestion != String.Empty) ||
-                (option.configurationKey != String.Empty && option.configurationUseDefaultNoPrompt))
+            if ((!String.IsNullOrEmpty(option.configurationKey) && !String.IsNullOrEmpty(option.configurationQuestion)) ||
+                (!String.IsNullOrEmpty(option.configurationKey) && option.configurationUseDefaultNoPrompt))
             {
                 if (!configurationOptions.Contains(option))
                 {
@@ -195,7 +195,7 @@ namespace OpenSim.Framework
                 return;
             }
 
-            if (configurationFilename.Trim() != String.Empty)
+            if (!String.IsNullOrWhiteSpace(configurationFilename))
             {
                 configurationPlugin.SetFileName(configurationFilename);
                 try
@@ -258,7 +258,7 @@ namespace OpenSim.Framework
                                  configOption.shouldIBeAsked(configOption.configurationKey)) ||
                                 configOption.shouldIBeAsked == null)
                             {
-                                if (configurationDescription.Trim() != String.Empty)
+                                if (!String.IsNullOrWhiteSpace(configurationDescription))
                                 {
                                     console_result =
                                         MainConsole.Instance.CmdPrompt(
@@ -296,7 +296,7 @@ namespace OpenSim.Framework
                             convertSuccess = true;
                             break;
                         case ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY:
-                            if (console_result.Length > 0)
+                            if (!String.IsNullOrEmpty(console_result))
                             {
                                 return_result = console_result;
                                 convertSuccess = true;
@@ -503,9 +503,7 @@ namespace OpenSim.Framework
                 {
                     if (!pluginType.IsAbstract)
                     {
-                        Type typeInterface = pluginType.GetInterface("IGenericConfig", true);
-
-                        if (typeInterface != null)
+                        if (typeof(IGenericConfig).IsAssignableFrom(pluginType))
                         {
                             plug =
                                 (IGenericConfig) Activator.CreateInstance(pluginAssembly.GetType(pluginType.ToString()));

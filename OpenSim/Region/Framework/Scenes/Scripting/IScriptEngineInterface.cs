@@ -29,7 +29,7 @@
 
 namespace OpenSim.Region.Framework.Scenes.Scripting
 {
-    public interface ScriptEngineInterface
+    public interface IScriptEngineInterface
     {
         void InitializeEngine(Scene Sceneworld);
         void Shutdown();

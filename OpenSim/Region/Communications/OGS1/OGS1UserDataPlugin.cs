@@ -1108,9 +1108,9 @@ namespace OpenSim.Region.Communications.OGS1
             if (data.Contains("custom_type"))
                 userData.CustomType = (string)data["custom_type"];
             else
-                userData.CustomType = "";
+                userData.CustomType = String.Empty;
             if (userData.CustomType == null)
-                userData.CustomType = "";
+                userData.CustomType = String.Empty;
 
             if (data.Contains("partner"))
                 userData.Partner = new UUID((string)data["partner"]);
@@ -1119,9 +1119,9 @@ namespace OpenSim.Region.Communications.OGS1
 
             if (data.Contains("profileURL"))
                 userData.ProfileURL = (string)data["profileURL"];
-            else userData.ProfileURL = "";
+            else userData.ProfileURL = String.Empty;
             if (userData.ProfileURL == null)
-                userData.ProfileURL = "";
+                userData.ProfileURL = String.Empty;
 
             return userData;
         }            

@@ -77,5 +77,17 @@ namespace OpenSim.Framework
         {
             return serverURI.TrimEnd(charsToTrim) + GetCapsSeedPath(capsObjectPath);
         }
+
+        /// <summary>
+        /// Create and return a caps string given a method name and optional path
+        /// </summary>
+        /// <returns>The CAP.</returns>
+        /// <param name="method">Method.</param>
+        /// <param name="appendedPath">Appended path.</param>
+        public static string CreateCAPS(string method, string appendedPath)
+        {
+            string caps = "/CAPS/" + method + "/" + UUID.Random() + appendedPath + "/";
+            return caps;
+        }
     }
 }

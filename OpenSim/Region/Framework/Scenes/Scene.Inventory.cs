@@ -1025,7 +1025,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             m_log.DebugFormat("[AGENT INVENTORY]: CopyInventoryItem {0} '{1}' asset {2}", oldItemID, item.Name, item.AssetID);
-            if (newName == String.Empty)
+            if (String.IsNullOrEmpty(newName))
             {
                 newName = item.Name;
             }
@@ -1090,7 +1090,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
                 }
 
-                if (newName != String.Empty)
+                if (!String.IsNullOrEmpty(newName))
                 {
                     InventoryItemBase item = userInfo.FindItem(itemID);
 
@@ -2193,7 +2193,7 @@ namespace OpenSim.Region.Framework.Scenes
             ReplaceItemArgs replaceArgs = new ReplaceItemArgs(destTaskItem, running, start_param);
             destPart.Inventory.AddReplaceInventoryItem(destTaskItem, false, true, replaceArgs);
 
-            return string.Empty;    // success, no error
+            return String.Empty;    // success, no error
         }
 
         /// <summary>
@@ -3255,7 +3255,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return true;
             }
 
-            string reason = "";
+            string reason = String.Empty;
             bool allowed = true;
             int landImpactNeeded = group.LandImpact;
 
@@ -3365,7 +3365,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (RezSelected)
                 {
                     //also tell the client there is a new object being rezzed
-                    foreach (SceneObjectPart part in group.Children.Values)
+                    foreach (SceneObjectPart part in group.GetParts())
                     {
                         part.AddFlag(PrimFlags.CreateSelected);
                     }
@@ -3387,7 +3387,7 @@ namespace OpenSim.Region.Framework.Scenes
             rootPart.Name = name;
             rootPart.Description = description;
 
-            List<SceneObjectPart> partList = new List<SceneObjectPart>(group.Children.Values);
+            var partList = group.GetParts();
 
             foreach (SceneObjectPart part in partList)
             {
@@ -3457,7 +3457,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // Fire on_rez
                     group.CreateScriptInstances(startParam, ScriptStartFlags.PostOnRez, DefaultScriptEngine, (int)ScriptStateSource.PrimData, null);
 
-                    rootPart.ScheduleFullUpdate();
+                    rootPart.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
 
             } 
@@ -3748,7 +3748,7 @@ namespace OpenSim.Region.Framework.Scenes
         private static void ResetGroupAfterDeserialization(UUID itemId, SceneObjectGroup grp)
         {
             grp.ResetInstance(true, false, UUID.Zero);
-            foreach (var part in grp.Children.Values)
+            foreach (var part in grp.GetParts())
             {
                 part.DoPostDeserializationCleanups(itemId);
                 part.TrimPermissions();
@@ -4048,7 +4048,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             group.CreateScriptInstances(param, ScriptStartFlags.PostOnRez, DefaultScriptEngine, (int)ScriptStateSource.PrimData, null);
-            rootPart.ScheduleFullUpdate();
+            rootPart.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
             reason = "success";
             return rootPart.ParentGroup;
@@ -4327,7 +4327,7 @@ namespace OpenSim.Region.Framework.Scenes
                     sog.SetOwnerId(ownerID);
                     sog.SetGroup(groupID, remoteClient);
 
-                    foreach (SceneObjectPart child in sog.Children.Values)
+                    foreach (SceneObjectPart child in sog.GetParts())
                         child.Inventory.ChangeInventoryOwner(ownerID);
                 }
                 else
@@ -4339,7 +4339,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (sog.GroupID != groupID)
                         continue;   // Must deed to the *current* object's group.
 
-                    foreach (SceneObjectPart child in sog.Children.Values)
+                    foreach (SceneObjectPart child in sog.GetParts())
                     {
                         child.LastOwnerID = child.OwnerID;
                         child.Inventory.ChangeInventoryOwner(groupID);

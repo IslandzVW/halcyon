@@ -32,6 +32,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 
 using log4net;
 using Nini.Config;
@@ -428,7 +429,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     if ((m_SimulatorFeatures == null) || (m_SimulatorFeatures.MeshEnabled == false))
                     {
                         OSDMap errorResponse = new OSDMap();
-                        errorResponse["uploader"] = "";
+                        errorResponse["uploader"] = String.Empty;
                         errorResponse["state"] = "error";
                         return (errorResponse);
                     }
@@ -451,7 +452,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
 
                     OSDMap errorResponse = new OSDMap();
-                    errorResponse["uploader"] = "";
+                    errorResponse["uploader"] = String.Empty;
                     errorResponse["state"] = "error";
                     return OSDParser.SerializeLLSDXmlString(errorResponse);
                 }
@@ -502,7 +503,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 catch (Exception)
                 {
                     OSDMap errorResponse = new OSDMap();
-                    errorResponse["uploader"] = "";
+                    errorResponse["uploader"] = String.Empty;
                     errorResponse["state"] = "error";
                     return OSDParser.SerializeLLSDXmlString(errorResponse);
                 }
@@ -650,7 +651,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 List<UUID> textures = new List<UUID>();
                 for (int i = 0; i < texture_list.Count; i++)
                 {
-                    AssetBase textureAsset = new AssetBase(UUID.Random(), assetName, (sbyte)AssetType.Texture, "");
+                    AssetBase textureAsset = new AssetBase(UUID.Random(), assetName, (sbyte)AssetType.Texture, String.Empty);
                     textureAsset.Data = texture_list[i].AsBinary();
 
                     try
@@ -737,7 +738,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     }
                     pbs.Textures = textureEntry;
 
-                    AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, (sbyte)AssetType.Mesh, "");
+                    AssetBase meshAsset = new AssetBase(UUID.Random(), assetName, (sbyte)AssetType.Mesh, String.Empty);
                     meshAsset.Data = mesh_data;
 
                     try
@@ -780,7 +781,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     SceneObjectPart prim = new SceneObjectPart(owner_id, pbs, position, Quaternion.Identity, Vector3.Zero, false);
 
                     prim.Name = assetName;
-                    prim.Description = "";
+                    prim.Description = String.Empty;
 
                     rotations.Add(rotation);
                     positions.Add(position);
@@ -801,26 +802,28 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 }
 
                 Vector3 rootPos = positions[0];
-                SceneObjectPart[] parts = grp.GetParts();
-
                 // Fix first link number
-                if (parts.Length > 1)
+                if (mesh_list.Count > 1)
                 {
-                    grp.RootPart.LinkNum++;
-
                     Quaternion rootRotConj = Quaternion.Conjugate(rotations[0]);
                     Quaternion tmprot;
                     Vector3 offset;
 
                     // Fix child rotations and positions
-                    for (int i = 1; i < rotations.Count; i++)
+                    foreach (SceneObjectPart part in grp.GetParts())
                     {
+                        // The part values are likely to come out of order from the collection,
+                        // but the positions and rotations arrays are ordered by link number.
+                        int i = part.LinkNum;
+                        if (i > 0) i--; // need to convert to 0-based except for single-prim
+                        if (i == 0)
+                            continue;   // the root prim does not need an adjustment
                         tmprot = rotations[i];
                         tmprot = rootRotConj * tmprot;
-                        parts[i].RotationOffset = tmprot;
+                        part.RotationOffset = tmprot;
                         offset = positions[i] - rootPos;
                         offset *= rootRotConj;
-                        parts[i].OffsetPosition = offset;
+                        part.OffsetPosition = offset;
                     }
 
                     grp.AbsolutePosition = rootPos;
@@ -869,7 +872,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                             }
 
                             byte[] ret = this.FetchInventoryDescendentsRequest((string)req.RequestData["body"],
-                                (string)req.RequestData["uri"], "", req.HttpRequest, req.HttpResponse);
+                                (string)req.RequestData["uri"], String.Empty, req.HttpRequest, req.HttpResponse);
 
                             var respData = new Hashtable();
                             respData["response_binary"] = ret;
@@ -1281,7 +1284,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 Hashtable response = new Hashtable();
                 response["int_response_code"] = 404;
                 response["content_type"] = "text/plain";
-                response["str_response_string"] = "";
+                response["str_response_string"] = String.Empty;
 
                 IClientAPI client = null;
                 m_Scene.TryGetClient(m_Caps.AgentID, out client); 
@@ -1384,7 +1387,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 Hashtable response = new Hashtable();
                 response["int_response_code"] = 404;
                 response["content_type"] = "text/plain";
-                response["str_response_string"] = ""; 
+                response["str_response_string"] = String.Empty; 
                 
                 OSDMap map = (OSDMap)OSDParser.DeserializeLLSDXml(request);
                 UUID folder_id = map["folder_id"].AsUUID();

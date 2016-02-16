@@ -68,10 +68,12 @@ namespace OpenSim.Region.CoreModules.Capabilities
         /// </summary>
         private OSDMap m_features = new OSDMap();
 
-        private string m_MapImageServerURL = string.Empty;
-        private string m_SearchURL = string.Empty;
+        private string m_MapImageServerURL = String.Empty;
+        private string m_SearchURL = String.Empty;
         private bool m_MeshEnabled = true;
         private bool m_PhysicsMaterialsEnabled = true;
+        private float m_RenderMaterialsCapability = 1.0f;
+        private int m_MaxMaterialsPerTransaction = 50;
         private bool m_DynamicPathfindingEnabled = false;
         private bool m_ExportSupported = true;
         private int m_whisperdistance = 10;
@@ -84,17 +86,19 @@ namespace OpenSim.Region.CoreModules.Capabilities
             IConfig config = source.Configs["SimulatorFeatures"];
             if (config != null)
             {
-                m_MapImageServerURL = config.GetString("MapImageServerURI", string.Empty);
-                if (m_MapImageServerURL != string.Empty)
+                m_MapImageServerURL = config.GetString("MapImageServerURI", String.Empty);
+                if (!String.IsNullOrEmpty(m_MapImageServerURL))
                 {
                     m_MapImageServerURL = m_MapImageServerURL.Trim();
                     if (!m_MapImageServerURL.EndsWith("/"))
                         m_MapImageServerURL = m_MapImageServerURL + "/";
                 }
 
-                m_SearchURL = config.GetString("SearchServerURI", string.Empty);
+                m_SearchURL = config.GetString("SearchServerURI", String.Empty);
                 m_MeshEnabled = config.GetBoolean("MeshEnabled", m_MeshEnabled);
                 m_PhysicsMaterialsEnabled = config.GetBoolean("PhysicsMaterialsEnabled", m_MeshEnabled);
+                m_RenderMaterialsCapability = config.GetFloat("RenderMaterialsCapability", m_RenderMaterialsCapability);
+                m_MaxMaterialsPerTransaction = config.GetInt("MaxMaterialsPerTransaction", m_MaxMaterialsPerTransaction);
                 m_DynamicPathfindingEnabled = config.GetBoolean("DynamicPathfindingEnabled", m_DynamicPathfindingEnabled);
                 m_ExportSupported = config.GetBoolean("ExportSupported", m_ExportSupported);
             }
@@ -161,6 +165,8 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 m_features["MeshUploadEnabled"] = m_MeshEnabled;
                 m_features["MeshXferEnabled"] = m_MeshEnabled;
                 m_features["PhysicsMaterialsEnabled"] = m_PhysicsMaterialsEnabled;
+                m_features["RenderMaterialsCapability"] = m_RenderMaterialsCapability;
+                m_features["MaxMaterialsPerTransaction"] = m_MaxMaterialsPerTransaction;
                 m_features["DynamicPathfindingEnabled"] = m_DynamicPathfindingEnabled;
     
                 OSDMap typesMap = new OSDMap();
@@ -171,9 +177,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
     
                 // Extra information for viewers that want to use it
                 OSDMap opensimFeatures = new OSDMap();
-                if (m_MapImageServerURL != string.Empty)
+                if (!String.IsNullOrEmpty(m_MapImageServerURL))
                     opensimFeatures["map-server-url"] = OSD.FromString(m_MapImageServerURL);
-                if (m_SearchURL != string.Empty)
+                if (!String.IsNullOrEmpty(m_SearchURL))
                     opensimFeatures["search-server-url"] = OSD.FromString(m_SearchURL);
                 opensimFeatures["ExportSupported"] = m_ExportSupported;
                 opensimFeatures["whisper-range"] = m_whisperdistance;

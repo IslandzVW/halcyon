@@ -309,7 +309,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 m_part.ParentGroup.AddActiveScriptCount(1);
-                m_part.ScheduleFullUpdate();
+                m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
             }
         }
 
@@ -478,7 +478,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected void AddInventoryItem(string name, TaskInventoryItem item, bool allowedDrop, bool fireEvents, ReplaceItemArgs replaceArgs)
         {
             name = FindAvailableInventoryName(name);
-            if (name == String.Empty)
+            if (String.IsNullOrEmpty(name))
                 return;
 
             item.ParentID = m_part.UUID;
@@ -607,7 +607,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
-                    m_part.ScheduleFullUpdate();
+                    m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
                     return true;
                 }
                 else
@@ -680,7 +680,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
-                    m_part.ScheduleFullUpdate();
+                    m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
                     return true;
                 }
                 else
@@ -727,7 +727,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 HandleAddRunningScript(newItem, replaceArgs);
             }
-            m_part.ScheduleFullUpdate();
+            m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
         }
 
         /// <summary>
@@ -840,14 +840,14 @@ namespace OpenSim.Region.Framework.Scenes
         // This function initializes or updates the member variable m_inventoryFileName as needed.
         private void UpdateInventoryTempFileName(IXfer xferManager)
         {
-            bool needNew = (m_inventoryFileName == String.Empty);   // if first instance
+            bool needNew = String.IsNullOrEmpty(m_inventoryFileName);   // if first instance
 
             // If the version has changed, we need a new file name even if we have one
             needNew |= (m_inventoryFileNameSerial < m_inventorySerial); // or new version
 
             if (needNew)
             {
-                // if (m_inventoryFileName != String.Empty) xferManager.RemoveNewFile(m_inventoryFileName); // replace existing with new update
+                // if (!String.IsNullOrEmpty(m_inventoryFileName)) xferManager.RemoveNewFile(m_inventoryFileName); // replace existing with new update
                 m_inventoryFileName = "inventory_" + UUID.Random().ToString() + ".tmp";
             }
         }
@@ -1057,6 +1057,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        private const uint PERM_MCT = (uint)PermissionMask.Copy | (uint)PermissionMask.Modify | (uint)PermissionMask.Transfer;
         public uint MaskEffectivePermissions()
         {
             uint mask = ScenePermBits.BASEMASK;
@@ -1073,6 +1074,8 @@ namespace OpenSim.Region.Framework.Scenes
                         mask &= ~(uint)PermissionMask.Modify;
                 }
             }
+            if ((mask & PERM_MCT) != PERM_MCT)
+                mask &= ~(uint)PermissionMask.Export;
             return mask;
         }
         public uint MaskEffectiveNextPermissions()
@@ -1091,6 +1094,8 @@ namespace OpenSim.Region.Framework.Scenes
                         mask &= ~(uint)PermissionMask.Modify;
                 }
             }
+            if ((mask & PERM_MCT) != PERM_MCT)
+                mask &= ~(uint)PermissionMask.Export;
             return mask;
         }
 
@@ -1206,7 +1211,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (item.InvType == (int)InventoryType.LSL)
                 {
                     string n = engine.GetXMLState(item.ItemID, stopScriptReason);
-                    if (n != "")
+                    if (!String.IsNullOrEmpty(n))
                     {
                         ret[item.ItemID] = n;
                     }

@@ -152,13 +152,14 @@ namespace OpenSim.Framework.Tests
         [Test]
         public void TestAgingRemovesEntriesPastExpirationInterval()
         {
-            var cache = new LRUCache<UUID, String>(10, maxAge : 1000, expireInterval : 1000);
+            var cache = new LRUCache<UUID, String>(10, maxAge : 1000);
 
             UUID firstEntryId = UUID.Random();
             String firstEntryData = "First Entry";
             cache.Add(firstEntryId, firstEntryData);
 
             Thread.Sleep(2 * 1000);
+            cache.Maintain();
 
             Assert.AreEqual(0, cache.Count);
             Assert.AreEqual(0, cache.Size);
@@ -171,7 +172,7 @@ namespace OpenSim.Framework.Tests
         [Test]
         public void TestAgingRemovesEntriesButPreservesReservedEntries()
         {
-            var cache = new LRUCache<UUID, String>(10, minSize : 1, maxAge : 1000, expireInterval : 1000);
+            var cache = new LRUCache<UUID, String>(10, minSize : 1, maxAge : 1000);
 
             UUID firstEntryId = UUID.Random();
             String firstEntryData = "First Entry";
@@ -182,6 +183,7 @@ namespace OpenSim.Framework.Tests
             cache.Add(secondEntryId, secondEntryData);
 
             Thread.Sleep(5 * 1000);
+            cache.Maintain();
 
             Assert.AreEqual(1, cache.Count);
             Assert.AreEqual(1, cache.Size);
@@ -203,11 +205,12 @@ namespace OpenSim.Framework.Tests
             UUID secondEntryId = UUID.Random();
             String secondEntryData = "Second Entry";
 
-            var cache = new LRUCache<UUID, String>(capacity: 250, useSizing: true, minSize: secondEntryData.Length, maxAge: 1000, expireInterval: 1000);
+            var cache = new LRUCache<UUID, String>(capacity: 250, useSizing: true, minSize: secondEntryData.Length, maxAge: 1000);
             cache.Add(firstEntryId, firstEntryData, firstEntryData.Length);
             cache.Add(secondEntryId, secondEntryData, secondEntryData.Length);
 
             Thread.Sleep(5 * 1000);
+            cache.Maintain();
 
             Assert.AreEqual(1, cache.Count);
             Assert.AreEqual(secondEntryData.Length, cache.Size);

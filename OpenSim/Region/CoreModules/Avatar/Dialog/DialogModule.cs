@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using log4net;
@@ -223,7 +224,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
 
         private string CombineParams(string[] commandParams, int pos)
         {
-            string result = string.Empty;
+            string result = String.Empty;
             for (int i = pos; i < commandParams.Length; i++)
             {
                 result += commandParams[i] + " ";

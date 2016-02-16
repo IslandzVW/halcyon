@@ -256,7 +256,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             foreach (SceneObjectGroup grp in presence.GetAttachments())
             {
                 if (CheckWhetherAttachmentShouldBeSent(grp))
-                    SendGroupUpdate(grp);
+                    SendGroupUpdate(grp, PrimUpdateFlags.ForcedFullUpdate);
             }
         }
 
@@ -464,7 +464,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                 if ((e).IsAttachedHUD && (e).OwnerID != m_presence.UUID)
                     continue;//Don't ever send HUD attachments to non-owners
 
-                SceneObjectPart[] sogParts = null;
+                IReadOnlyCollection<SceneObjectPart> sogParts = null;
                 bool needsParts = false;
                 lock (m_updateTimes)
                 {
@@ -527,14 +527,14 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                     return;
                 }
 
-                SendGroupUpdate(kvp.Value);
+                SendGroupUpdate(kvp.Value, PrimUpdateFlags.FindBest);
             }
         }
 
         private bool CheckWhetherAttachmentShouldBeSent(SceneObjectGroup e)
         {
             bool hasBeenUpdated = false;
-            SceneObjectPart[] attParts = e.GetParts();
+            var attParts = e.GetParts();
 
             lock (m_updateTimes)
             {
@@ -741,7 +741,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
 
             SceneObjectGroup lastSog = null;
             bool condition1 = false;
-            SceneObjectPart[] lastParentGroupParts = null;
+            IReadOnlyCollection<SceneObjectPart> lastParentGroupParts = null;
 
             while (m_partsUpdateQueue.Count > 0 && HasFinishedInitialUpdate)
             {
@@ -751,10 +751,12 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                     return;
                 }
 
-                SceneObjectPart part = m_partsUpdateQueue.Dequeue();
+                KeyValuePair<SceneObjectPart, PrimUpdateFlags>? kvp = m_partsUpdateQueue.Dequeue();
 
-                if (part.ParentGroup == null || part.ParentGroup.IsDeleted)
+                if (!kvp.HasValue || kvp.Value.Key.ParentGroup == null || kvp.Value.Key.ParentGroup.IsDeleted)
                     continue;
+
+                SceneObjectPart part = kvp.Value.Key;
 
                 double distance;
 
@@ -785,7 +787,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                     condition1 = false;
                 }
 
-                SceneObjectPart[] parentGroupParts = null;
+                IReadOnlyCollection<SceneObjectPart> parentGroupParts = null;
                 bool needsParentGroupParts = false;
                 lock (m_updateTimes)
                 {
@@ -858,14 +860,14 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
 
                     if (hasBeenUpdated)
                     {
-                        SendGroupUpdate(part.ParentGroup);
+                        SendGroupUpdate(part.ParentGroup, kvp.Value.Value);
                         lastSog = part.ParentGroup;
                         continue;
                     }
                 }
 
                 lastSog = part.ParentGroup;
-                SendPartUpdate(part);
+                SendPartUpdate(part, kvp.Value.Value);
             }
 
             /*if (queueCount > 0)
@@ -878,17 +880,17 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             m_presence.Scene.StatsReporter.AddAgentTime(Environment.TickCount - m_perfMonMS);
         }
 
-        public void SendGroupUpdate(SceneObjectGroup sceneObjectGroup)
+        public void SendGroupUpdate(SceneObjectGroup sceneObjectGroup, PrimUpdateFlags updateFlags)
         {
-            SendPartUpdate(sceneObjectGroup.RootPart);
+            SendPartUpdate(sceneObjectGroup.RootPart, updateFlags);
             foreach (SceneObjectPart part in sceneObjectGroup.GetParts())
             {
                 if (!part.IsRootPart())
-                    SendPartUpdate(part);
+                    SendPartUpdate(part, updateFlags);
             }
         }
 
-        public void SendPartUpdate(SceneObjectPart part)
+        public void SendPartUpdate(SceneObjectPart part, PrimUpdateFlags updateFlags)
         {
             ScenePartUpdate update = null;
 
@@ -941,7 +943,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             }
             if (sendFullUpdate)
             {
-                part.SendFullUpdate(m_presence.ControllingClient, m_presence.GenerateClientFlags(part.UUID));
+                part.SendFullUpdate(m_presence.ControllingClient, m_presence.GenerateClientFlags(part.UUID), updateFlags);
             }
             else if (sendTerseUpdate)
             {
@@ -956,11 +958,11 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                     if (part != part.ParentGroup.RootPart)
                         return;
 
-                    part.ParentGroup.SendFullUpdateToClient(m_presence.ControllingClient);
+                    part.ParentGroup.SendFullUpdateToClient(m_presence.ControllingClient, PrimUpdateFlags.FullUpdate);
                     return;
                 }
 
-                part.SendFullUpdate(m_presence.ControllingClient, m_presence.GenerateClientFlags(part.UUID));
+                part.SendFullUpdate(m_presence.ControllingClient, m_presence.GenerateClientFlags(part.UUID), PrimUpdateFlags.FullUpdate);
             }
         }
 
@@ -970,12 +972,12 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// THIS METHOD SHOULD ONLY BE CALLED FROM WITHIN THE SCENE LOOP!!
         /// </summary>
         /// <param name="part"></param>
-        public void QueuePartForUpdate(SceneObjectPart part)
+        public void QueuePartForUpdate(SceneObjectPart part, PrimUpdateFlags updateFlags)
         {
             if (m_presence.IsBot) return;
 
             // m_log.WarnFormat("[ScenePresence]: {0} Queuing update for {1} {2} {3}", part.ParentGroup.Scene.RegionInfo.RegionName, part.UUID.ToString(), part.LocalId.ToString(), part.ParentGroup.Name);
-            m_partsUpdateQueue.Enqueue(part);
+            m_partsUpdateQueue.Enqueue(part, updateFlags);
         }
 
         /// <summary>
