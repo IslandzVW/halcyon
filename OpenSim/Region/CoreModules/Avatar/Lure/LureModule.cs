@@ -45,7 +45,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
 
         private IMessageTransferModule m_TransferModule = null;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (config.Configs["Messaging"] != null)
             {
@@ -74,7 +74,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Lure
             client.OnTeleportLureRequest += OnTeleportLureRequest;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             m_TransferModule =
                 m_scenes[0].RequestModuleInterface<IMessageTransferModule>();

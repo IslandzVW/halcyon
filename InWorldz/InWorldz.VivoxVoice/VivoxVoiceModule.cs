@@ -118,7 +118,7 @@ namespace InWorldz.VivoxVoice
 
         private static readonly string EMPTY_RESPONSE = "<llsd><undef /></llsd>";
 
-        public void Initialise(IConfigSource config)
+        public void Initialize(IConfigSource config)
         {
 
             m_config = config.Configs["VivoxVoice"];
@@ -374,7 +374,7 @@ namespace InWorldz.VivoxVoice
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             // Do nothing.
         }
@@ -416,7 +416,7 @@ namespace InWorldz.VivoxVoice
         //
         // Note that OnRegisterCaps is called here via a closure
         // delegate containing the scene of the respective region (see
-        // Initialise()).
+        // Initialize()).
         // </summary>
         public void OnRegisterCaps(Scene scene, UUID agentID, Caps caps)
         {
@@ -598,7 +598,7 @@ namespace InWorldz.VivoxVoice
                 LLSDVoiceAccountResponse voiceAccountResponse =
                     new LLSDVoiceAccountResponse(agentname, password, m_vivoxSipUri, m_vivoxVoiceAccountApi);
 
-                string r = LLSDHelpers.SerialiseLLSDReply(voiceAccountResponse);
+                string r = LLSDHelpers.SerializeLLSDReply(voiceAccountResponse);
 
                 m_log.DebugFormat("[VivoxVoice][PROVISIONVOICE]: avatar \"{0}\": {1}", avatarName, r);
 
@@ -693,7 +693,7 @@ namespace InWorldz.VivoxVoice
                 creds["channel_uri"] = channel_uri;
 
                 parcelVoiceInfo = new LLSDParcelVoiceInfoResponse(scene.RegionInfo.RegionName, land.LocalID, creds);
-                string r = LLSDHelpers.SerialiseLLSDReply(parcelVoiceInfo);
+                string r = LLSDHelpers.SerializeLLSDReply(parcelVoiceInfo);
 
                 // m_log.DebugFormat("[VivoxVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": {4}", 
                 //                   scene.RegionInfo.RegionName, land.Name, land.LocalID, avatarName, r);
@@ -1069,18 +1069,6 @@ namespace InWorldz.VivoxVoice
             return false;
         }
 
-        // private static readonly string m_vivoxChannelById = "http://{0}/api2/viv_chan_mod.php?mode={1}&chan_id={2}&auth_token={3}";
-
-        // private XmlElement VivoxGetChannelById(string parent, string channelid)
-        // {
-        //     string requrl = String.Format(m_vivoxChannelById, m_vivoxServer, "get", channelid, m_authToken);
-
-        //     if (parent != null && parent != String.Empty)
-        //         return VivoxGetChild(parent, channelid);
-        //     else
-        //         return VivoxCall(requrl, true);
-        // }
-
         /// <summary>
         /// Delete a channel.
         /// Once again, there a multitude of options possible. In the simplest case 
@@ -1117,37 +1105,6 @@ namespace InWorldz.VivoxVoice
             return VivoxCall(requrl, true);
         }
 
-        // private XmlElement VivoxGetChild(string parent, string child)
-        // {
-
-        //     XmlElement children = VivoxListChildren(parent);
-        //     string count;
-
-        //    if (XmlFind(children, "response.level0.channel-search.count", out count))
-        //     {
-        //         int cnum = Convert.ToInt32(count);
-        //         for (int i = 0; i < cnum; i++)
-        //         {
-        //             string name;
-        //             string id;
-        //             if (XmlFind(children, "response.level0.channel-search.channels.channels.level4.name", i, out name))
-        //             {
-        //                 if (name == child)
-        //                 {
-        //                    if (XmlFind(children, "response.level0.channel-search.channels.channels.level4.id", i, out id))
-        //                     {
-        //                         return VivoxGetChannelById(null, id);
-        //                     }
-        //                 }
-        //             } 
-        //         }
-        //     }
-
-        //     // One we *know* does not exist.
-        //     return VivoxGetChannel(null, Guid.NewGuid().ToString());
-
-        // }
-   
         /// <summary>
         /// This method handles the WEB side of making a request over the
         /// Vivox interface. The returned values are tansferred to a has

@@ -125,7 +125,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
         {
             int successfulAssetRestores = 0;
             int failedAssetRestores = 0;
-            List<string> serialisedSceneObjects = new List<string>();
+            List<string> serializedSceneObjects = new List<string>();
             string filePath = "NONE";
             
             try
@@ -145,7 +145,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
                     if (filePath.StartsWith(ArchiveConstants.OBJECTS_PATH))
                     {
-                        serialisedSceneObjects.Add(Encoding.UTF8.GetString(data));
+                        serializedSceneObjects.Add(Encoding.UTF8.GetString(data));
                     }
                     else if (filePath.StartsWith(ArchiveConstants.ASSETS_PATH))
                     {
@@ -186,9 +186,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             }
 
             // Reload serialized prims
-            m_log.InfoFormat("[ARCHIVER]: Preparing {0} scene objects.  Please wait.", serialisedSceneObjects.Count);
+            m_log.InfoFormat("[ARCHIVER]: Preparing {0} scene objects.  Please wait.", serializedSceneObjects.Count);
 
-            IRegionSerialiserModule serialiser = m_scene.RequestModuleInterface<IRegionSerialiserModule>();
+            IRegionSerializerModule serializer = m_scene.RequestModuleInterface<IRegionSerializerModule>();
             int sceneObjectsLoadedCount = 0;
 
             List<SceneObjectGroup> backupObjects = new List<SceneObjectGroup>();
@@ -196,12 +196,12 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             bool objectFixingFailed = false;
 
-            foreach (string serialisedSceneObject in serialisedSceneObjects)
+            foreach (string serializedSceneObject in serializedSceneObjects)
             {
                 SceneObjectGroup sceneObject;
                 try
                 {
-                    sceneObject = serialiser.DeserializeGroupFromXml2(serialisedSceneObject);
+                    sceneObject = serializer.DeserializeGroupFromXml2(serializedSceneObject);
                 }
                 catch (Exception e)
                 {
@@ -306,7 +306,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                                 });
             }
 
-            m_log.InfoFormat("[ARCHIVER]: Loading {0} scene objects.  Please wait.", serialisedSceneObjects.Count);
+            m_log.InfoFormat("[ARCHIVER]: Loading {0} scene objects.  Please wait.", serializedSceneObjects.Count);
 
             // sceneObject is the one from backup to restore to the scene
             foreach (SceneObjectGroup backupObject in backupObjects)
@@ -339,7 +339,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
 
             m_log.InfoFormat("[ARCHIVER]: Restored {0} scene objects to the scene", sceneObjectsLoadedCount);
 
-            int ignoredObjects = serialisedSceneObjects.Count - sceneObjectsLoadedCount;
+            int ignoredObjects = serializedSceneObjects.Count - sceneObjectsLoadedCount;
 
             if (ignoredObjects > 0)
                 m_log.WarnFormat("[ARCHIVER]: Ignored {0} scene objects that already existed in the scene", ignoredObjects);

@@ -54,7 +54,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 
         private int m_DebugLevel = 0;
 
-        public virtual void Initialise(Scene scene, IConfigSource config)
+        public virtual void Initialize(Scene scene, IConfigSource config)
         {
             IConfig cnf = config.Configs["Messaging"];
             if (cnf != null)
@@ -87,7 +87,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             }
         }
 
-        public virtual void PostInitialise()
+        public virtual void PostInitialize()
         {
         }
 
@@ -533,7 +533,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             if (lookupAgent)
             {
                 // Non-cached user agent lookup.
-                upd = m_Scenes[0].CommsManager.UserService.GetAgentByUUID(toAgentID);
+                upd = m_Scenes[0].CommsManager.UserService.GetUserAgent(toAgentID,true);
 
                 if (upd != null)
                 {

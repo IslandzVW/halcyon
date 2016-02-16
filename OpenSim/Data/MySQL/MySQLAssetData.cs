@@ -49,17 +49,17 @@ namespace OpenSim.Data.MySQL
         #region IPlugin Members
 
         /// <summary>
-        /// <para>Initialises Asset interface</para>
+        /// <para>Initializes Asset interface</para>
         /// <para>
         /// <list type="bullet">
-        /// <item>Loads and initialises the MySQL storage plugin.</item>
+        /// <item>Loads and initializes the MySQL storage plugin.</item>
         /// <item>Warns and uses the obsolete mysql_connection.ini if connect string is empty.</item>
         /// <item>Check for migration</item>
         /// </list>
         /// </para>
         /// </summary>
         /// <param name="connect">connect string</param>
-        override public void Initialise(string connect)
+        override public void Initialize(string connect)
         {
             TicksToEpoch = new DateTime(1970,1,1).Ticks;
 
@@ -69,7 +69,7 @@ namespace OpenSim.Data.MySQL
             {
                 // This is old seperate config file
                 m_log.Warn("no connect string, using old mysql_connection.ini instead");
-                Initialise();
+                Initialize();
             }
             else
             {
@@ -78,16 +78,16 @@ namespace OpenSim.Data.MySQL
         }
 
         /// <summary>
-        /// <para>Initialises Asset interface</para>
+        /// <para>Initializes Asset interface</para>
         /// <para>
         /// <list type="bullet">
-        /// <item>Loads and initialises the MySQL storage plugin</item>
+        /// <item>Loads and initializes the MySQL storage plugin</item>
         /// <item>uses the obsolete mysql_connection.ini</item>
         /// </list>
         /// </para>
         /// </summary>
         /// <remarks>DEPRECATED and shouldn't be used</remarks>
-        public override void Initialise()
+        public override void Initialize()
         {
             IniFile GridDataMySqlFile = new IniFile("mysql_connection.ini");
             string hostname = GridDataMySqlFile.ParseFileReadValue("hostname");

@@ -457,7 +457,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (i.Name == item.Name)
                 {
                     ReplaceInventoryItem(i.ItemID, allowedDrop, fireEvents, replaceArgs);
-                    return;		// found it, all done
+                    return;        // found it, all done
                 }
             }
 
@@ -567,10 +567,10 @@ namespace OpenSim.Region.Framework.Scenes
                             item.Flags |= (uint)InventoryItemFlags.ObjectSlamPerm;
                     }
                     else
-					{
+                    {
                         item.Flags &= ~(uint)InventoryItemFlags.ObjectSlamPerm;
-						item.CurrentPermissions &= ~ScenePermBits.SLAM;
-					}
+                        item.CurrentPermissions &= ~ScenePermBits.SLAM;
+                    }
                 }
             }
 
@@ -603,11 +603,11 @@ namespace OpenSim.Region.Framework.Scenes
                             item.ItemID, AssetID);
                     }
                     item.AssetID = AssetID;
-					m_inventorySerial++;
+                    m_inventorySerial++;
                     m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
-					m_part.ScheduleFullUpdate();
+                    m_part.ScheduleFullUpdate();
                     return true;
                 }
                 else
@@ -880,26 +880,26 @@ namespace OpenSim.Region.Framework.Scenes
                     uint everyoneMask = 0;
                     uint baseMask = item.BasePermissions;
                     uint ownerMask = item.CurrentPermissions;
-					uint groupMask = item.GroupPermissions;
-					string itemID;
-					string desc;
-					
-					// only the owner of the item can see the UUIDs of Contents and possibly private data
-					if (ownerID == client.AgentId)
-					{
-						itemID = item.AssetID.ToString();
-						desc = item.Description;
+                    uint groupMask = item.GroupPermissions;
+                    string itemID;
+                    string desc;
+                    
+                    // only the owner of the item can see the UUIDs of Contents and possibly private data
+                    if (ownerID == client.AgentId)
+                    {
+                        itemID = item.AssetID.ToString();
+                        desc = item.Description;
 //                        m_log.DebugFormat("[ASSETS]: RequestInventoryFile returning item #{0} itemID {1} asset {2}", ++items, item.ItemID, item.AssetID);
-					}
-					else
-					{
-						itemID = UUID.Zero.ToString();
-						desc = "(not owner)";
-					}
+                    }
+                    else
+                    {
+                        itemID = UUID.Zero.ToString();
+                        desc = "(not owner)";
+                    }
 
                     invString.AddSectionEnd();
 
-					invString.AddItemStart();
+                    invString.AddItemStart();
                     invString.AddNameValueLine("item_id", item.ItemID.ToString());
                     invString.AddNameValueLine("parent_id", m_part.UUID.ToString());
 
@@ -907,7 +907,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     invString.AddNameValueLine("base_mask", Utils.UIntToHexString(baseMask));
                     invString.AddNameValueLine("owner_mask", Utils.UIntToHexString(ownerMask));
-					invString.AddNameValueLine("group_mask", Utils.UIntToHexString(groupMask));
+                    invString.AddNameValueLine("group_mask", Utils.UIntToHexString(groupMask));
                     invString.AddNameValueLine("everyone_mask", Utils.UIntToHexString(everyoneMask));
                     invString.AddNameValueLine("next_owner_mask", Utils.UIntToHexString(item.NextPermissions));
 
@@ -919,7 +919,7 @@ namespace OpenSim.Region.Framework.Scenes
                     invString.AddNameValueLine("group_id", item.GroupID.ToString());
                     invString.AddSectionEnd();
 
-					invString.AddNameValueLine("asset_id", itemID);
+                    invString.AddNameValueLine("asset_id", itemID);
                     invString.AddNameValueLine("type", TaskInventoryItem.Types[item.Type]);
                     invString.AddNameValueLine("inv_type", TaskInventoryItem.InvTypes[item.InvType]);
                     invString.AddNameValueLine("flags", Utils.UIntToHexString(item.Flags));
@@ -1059,7 +1059,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public uint MaskEffectivePermissions()
         {
-			uint mask = ScenePermBits.BASEMASK;
+            uint mask = ScenePermBits.BASEMASK;
 
             lock (m_items)
             {
@@ -1075,9 +1075,9 @@ namespace OpenSim.Region.Framework.Scenes
             }
             return mask;
         }
-		public uint MaskEffectiveNextPermissions()
-		{
-			uint mask = ScenePermBits.BASEMASK;
+        public uint MaskEffectiveNextPermissions()
+        {
+            uint mask = ScenePermBits.BASEMASK;
 
             lock (m_items)
             {
@@ -1091,10 +1091,10 @@ namespace OpenSim.Region.Framework.Scenes
                         mask &= ~(uint)PermissionMask.Modify;
                 }
             }
-			return mask;
-		}
+            return mask;
+        }
 
-		public void ApplyNextOwnerPermissions()
+        public void ApplyNextOwnerPermissions()
         {
             lock (m_items)
             {
@@ -1132,7 +1132,7 @@ namespace OpenSim.Region.Framework.Scenes
             return ownerChanged;
         }
 
-		public void ApplyGodPermissions(uint perms)
+        public void ApplyGodPermissions(uint perms)
         {
             lock (m_items)
             {
@@ -1142,9 +1142,9 @@ namespace OpenSim.Region.Framework.Scenes
                     item.BasePermissions = perms;
                 }
             }
-			m_inventorySerial++;
-			HasInventoryChanged = true;
-		}
+            m_inventorySerial++;
+            HasInventoryChanged = true;
+        }
 
         public bool ContainsScripts()
         {

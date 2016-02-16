@@ -318,7 +318,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             return prefix + Util.EscapeUriDataStringRfc3986(m_scene.RegionInfo.RegionName) + "/" + x.ToString() + "/" + y.ToString() + "/" + z.ToString();
         }
 
-        public void SendChatMessage(string message, byte type, OpenMetaverse.Vector3 fromPos, string fromName, OpenMetaverse.UUID fromAgentID, byte source, byte audible)
+        public void SendChatMessage(string message, byte type, OpenMetaverse.Vector3 fromPos, string fromName, OpenMetaverse.UUID fromAgentID, OpenMetaverse.UUID ownerID, byte source, byte audible)
         {
         }
 
@@ -332,7 +332,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 return;
 
             // check if destination is an avatar
-            if (m_scene.CommsManager.UserProfileCacheService.GetUserDetails(destId) != null)
+            if (m_scene.CommsManager.UserService.Key2Name(destId, false) != String.Empty)
             {
                 if (m_scene.GetScenePresence(destId) == null || m_scene.GetScenePresence(destId).IsChildAgent)
                     return;//Only allow giving items to users in the sim

@@ -25,12 +25,29 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using OpenSim.Region.CoreModules.World.Terrain;
+using OpenSim.Region.CoreModules.World.Terrain.FileLoaders;
 using OpenSim.Region.Framework.Scenes;
 
-namespace OpenSim.Region.CoreModules.World.Serialiser
+namespace OpenSim.Region.CoreModules.World.Serializer
 {
-    internal interface IFileSerialiser
+    internal class SerializeTerrain : IFileSerializer
     {
-        string WriteToFile(Scene scene, string dir);
+        #region IFileSerializer Members
+
+        public string WriteToFile(Scene scene, string dir)
+        {
+            ITerrainLoader fileSystemExporter = new RAW32();
+            string targetFileName = dir + "heightmap.r32";
+
+            lock (scene.Heightmap)
+            {
+                fileSystemExporter.SaveFile(targetFileName, scene.Heightmap);
+            }
+
+            return "heightmap.r32";
+        }
+
+        #endregion
     }
 }

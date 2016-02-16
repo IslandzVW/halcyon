@@ -201,7 +201,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             return true;
         }
 
-		public bool RequestUpdateInventoryItem(IClientAPI remoteClient, UUID transactionID, InventoryItemBase item)
+        public bool RequestUpdateInventoryItem(IClientAPI remoteClient, UUID transactionID, InventoryItemBase item)
         {
             AssetXferUploader uploader = GetTransactionUploader(transactionID);
             if (uploader == null)
@@ -210,7 +210,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 return false;
             }
 
-            CachedUserInfo userInfo = Manager.MyScene.CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+            CachedUserInfo userInfo = Manager.MyScene.CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
             if (userInfo == null)
             {
                 m_log.WarnFormat("[ASSET TRANSACTIONS]: Could not find user {0} for transaction {1} for inventory update {2}",
@@ -224,19 +224,19 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 // This upload transaction is complete.
                 XferUploaders.Remove(transactionID);
 
-    			UUID assetID = UUID.Combine(transactionID, remoteClient.SecureSessionId);
+                UUID assetID = UUID.Combine(transactionID, remoteClient.SecureSessionId);
                 if (asset == null || asset.FullID != assetID)
                 {
                     m_log.ErrorFormat("[ASSETS]: RequestUpdateInventoryItem wrong asset ID or not found {0}", asset == null ? "null" : asset.FullID.ToString());
                     return;
                 }
 
-			    // Assets never get updated, new ones get created
+                // Assets never get updated, new ones get created
                 UUID oldID = asset.FullID;
-			    asset.FullID = UUID.Random();
-			    asset.Name = item.Name;
-			    asset.Description = item.Description;
-			    asset.Type = (sbyte)item.AssetType;
+                asset.FullID = UUID.Random();
+                asset.Name = item.Name;
+                asset.Description = item.Description;
+                asset.Type = (sbyte)item.AssetType;
 
                 try
                 {
@@ -266,7 +266,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 waitEvent.Dispose();
             });
 
-			return true;	// userInfo item was updated
+            return true;    // userInfo item was updated
         }
 
     }

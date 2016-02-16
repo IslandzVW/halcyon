@@ -39,8 +39,8 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 {
     public class AssetTransactionModule : IRegionModule, IAgentAssetTransactions
     {
-		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-		private readonly Dictionary<UUID, Scene> RegisteredScenes = new Dictionary<UUID, Scene>();
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly Dictionary<UUID, Scene> RegisteredScenes = new Dictionary<UUID, Scene>();
         private bool m_dumpAssetsToFile = false;
         private Scene m_scene = null;
 
@@ -63,11 +63,11 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (!RegisteredScenes.ContainsKey(scene.RegionInfo.RegionID))
             {
-                // m_log.Debug("initialising AgentAssetTransactionModule");
+                // m_log.Debug("initializing AgentAssetTransactionModule");
                 RegisteredScenes.Add(scene.RegionInfo.RegionID, scene);
                 scene.RegisterModuleInterface<IAgentAssetTransactions>(this);
 
@@ -93,7 +93,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -199,7 +199,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         {
                         m_log.DebugFormat(
                             "[TRANSACTIONS MANAGER] Called HandleItemUpdateFromTransaction with item {0} transaction {1}",
-							item.Name, transactionID);
+                            item.Name, transactionID);
 
             AgentAssetTransactions transactions = GetUserTransactions(remoteClient.AgentId);
 
@@ -221,7 +221,7 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
         {
                         m_log.DebugFormat(
                             "[TRANSACTIONS MANAGER] Called HandleTaskItemUpdateFromTransaction with part {0} transaction {1}",
-							item.Name, transactionID);
+                            item.Name, transactionID);
 
             AgentAssetTransactions transactions = GetUserTransactions(remoteClient.AgentId);
 
@@ -266,10 +266,10 @@ namespace OpenSim.Region.CoreModules.Agent.AssetTransaction
                 remoteClient.SendAgentAlertMessage("Server error uploading asset. Could not allocate uploader.", false);
                 return;
             }
-//		    m_log.Debug("HandleUDPUploadRequest(Initialise) - assetID: " + assetID.ToString() + " transaction: " + transaction.ToString() + " type: " + type.ToString() + " storelocal: " + storeLocal + " tempFile: " + tempFile);
+//            m_log.Debug("HandleUDPUploadRequest(Initialize) - assetID: " + assetID.ToString() + " transaction: " + transaction.ToString() + " type: " + type.ToString() + " storelocal: " + storeLocal + " tempFile: " + tempFile);
 
             // Okay, start the upload.
-            uploader.Initialise(remoteClient, assetID, transaction, type, data, storeLocal, tempFile);
+            uploader.Initialize(remoteClient, assetID, transaction, type, data, storeLocal, tempFile);
         }
 
         /// <summary>

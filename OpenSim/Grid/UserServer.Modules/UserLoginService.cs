@@ -112,7 +112,7 @@ namespace OpenSim.Grid.UserServer.Modules
         private Dictionary<string, RegionLoginFailure> _LastRegionFailure = new Dictionary<string, RegionLoginFailure>();
 
         public UserLoginService(
-            UserManagerBase userManager,
+            OpenSim.Framework.Communications.UserProfileManager userManager,
             LibraryRootFolder libraryRootFolder, string mapServerURI,
             UserConfig config, string welcomeMess, IRegionProfileRouter regionProfileService)
             : base(userManager, libraryRootFolder, welcomeMess, mapServerURI)

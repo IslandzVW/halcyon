@@ -112,7 +112,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             m_scene = scene;
 
@@ -273,7 +273,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -309,12 +309,12 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         // with the powers requested (powers = 0 for no powers check)
         protected bool IsGroupActiveRole(UUID groupID, UUID userID, ulong powers)
         {
-			ScenePresence sp = m_scene.GetScenePresence(userID);
-			if (sp == null)
-				return false;
+            ScenePresence sp = m_scene.GetScenePresence(userID);
+            if (sp == null)
+                return false;
 
             IClientAPI client = sp.ControllingClient;
-			return ((groupID == client.ActiveGroupId) && (client.ActiveGroupPowers != 0) &&
+            return ((groupID == client.ActiveGroupId) && (client.ActiveGroupPowers != 0) &&
                 ((powers == 0) || ((client.ActiveGroupPowers & powers) == powers)));
         }
 
@@ -492,12 +492,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             
             if (m_allowGridGods)
             {
-                CachedUserInfo profile = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(user);
-                if (profile != null && profile.UserProfile != null)
-                {
-                    if (profile.UserProfile.GodLevel >= 200)
-                        return true;
-                }
+                UserProfileData profile = m_scene.CommsManager.UserService.GetUserProfile(user);
+                return (profile != null) && (profile.GodLevel >= 200);
             }
 
             return false;
@@ -527,7 +523,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         public bool FriendHasEditPermission(UUID owner, UUID friend)
         {
             //the friend in this case will always be the active user in the scene
-            CachedUserInfo user = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(friend);
+            CachedUserInfo user = m_scene.CommsManager.UserService.GetUserDetails(friend);
             if (user != null)
             {
                 if (user.HasPermissionFromFriend(owner, (uint)OpenMetaverse.FriendRights.CanModifyObjects))
@@ -558,40 +554,40 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (task == null)
                 return (uint)0;
 
-			uint baseflags = (uint)task.GetEffectiveObjectFlags();	// folded (PrimFlags) type, not PermissionsMask
+            uint baseflags = (uint)task.GetEffectiveObjectFlags();    // folded (PrimFlags) type, not PermissionsMask
             UUID objectOwner = task.OwnerID;
-			bool isOwner = false;
+            bool isOwner = false;
 
             // Remove any of the objectFlags that are temporary.  
-			// These will get added back if appropriate in the next bit of code
-			baseflags &= (uint)
-                ~(PrimFlags.ObjectCopy			| // Tells client you can copy the object
-                  PrimFlags.ObjectModify		| // tells client you can modify the object
-                  PrimFlags.ObjectMove			| // tells client that you can move the object (only, no mod)
-                  PrimFlags.ObjectTransfer		| // tells the client that you can /take/ the object if you don't own it
-                  PrimFlags.ObjectYouOwner		| // Tells client that you're the owner of the object
-                  PrimFlags.ObjectOwnerModify	| // Tells client that you're the owner of the object
-                  PrimFlags.ObjectYouOfficer	  // Tells client that you've got group object editing permission. Used when ObjectGroupOwned is set
+            // These will get added back if appropriate in the next bit of code
+            baseflags &= (uint)
+                ~(PrimFlags.ObjectCopy            | // Tells client you can copy the object
+                  PrimFlags.ObjectModify        | // tells client you can modify the object
+                  PrimFlags.ObjectMove            | // tells client that you can move the object (only, no mod)
+                  PrimFlags.ObjectTransfer        | // tells the client that you can /take/ the object if you don't own it
+                  PrimFlags.ObjectYouOwner        | // Tells client that you're the owner of the object
+                  PrimFlags.ObjectOwnerModify    | // Tells client that you're the owner of the object
+                  PrimFlags.ObjectYouOfficer      // Tells client that you've got group object editing permission. Used when ObjectGroupOwned is set
                     );
 
-			// Start by calculating the common/base rights to apply to everyone including the owner.
-			// Add bits in as rights allow, then make an override pass to turn off bits as needed at the end.
+            // Start by calculating the common/base rights to apply to everyone including the owner.
+            // Add bits in as rights allow, then make an override pass to turn off bits as needed at the end.
 
-			// Only remove any owner if the object actually doesn't have any owner
+            // Only remove any owner if the object actually doesn't have any owner
             if (objectOwner == UUID.Zero)
             {
-				baseflags &= (uint)~PrimFlags.ObjectAnyOwner;
+                baseflags &= (uint)~PrimFlags.ObjectAnyOwner;
             }
             else
             {
                 //there is an owner, make sure the bit is set
-				baseflags |= (uint)PrimFlags.ObjectAnyOwner;
-				if (user == objectOwner)
-					isOwner = true;
+                baseflags |= (uint)PrimFlags.ObjectAnyOwner;
+                if (user == objectOwner)
+                    isOwner = true;
             }
 
-			// Start with a mask for the owner and a friend with Edit perms.
-			uint objflags = AddClientFlags(task.OwnerMask, baseflags);	// common flags for those who can edit
+            // Start with a mask for the owner and a friend with Edit perms.
+            uint objflags = AddClientFlags(task.OwnerMask, baseflags);    // common flags for those who can edit
             // Object owners edit their own content unrestricted by other user checks
             if (isOwner)
             {
@@ -605,40 +601,40 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 (m_bypassPermissions     || // no perms checks
                 sp.GodLevel >= 200   || // Admin should be able to edit anything else in the sim (including admin objects)
                 FriendHasEditPermission(objectOwner, user))) // friend with permissions
-			{
-				return RestrictClientFlags(task, objflags);	// minimal perms checks, act like owner
-			}
+            {
+                return RestrictClientFlags(task, objflags);    // minimal perms checks, act like owner
+            }
 
-			/////////////////////////////////////////////////////////////
-			// No returns from the function after this, now we add flags,
-			// then apply retriction overrides when returning.
-			// Not the owner, or a friend with Edit permissions, or admin,
-			// so start again. Reset again to baseflags, and start adding
-			// Note that more than one test may apply,
-			// "else" or "return" isn't necessarily correct
-			objflags = AddClientFlags(task.EveryoneMask, baseflags);
+            /////////////////////////////////////////////////////////////
+            // No returns from the function after this, now we add flags,
+            // then apply retriction overrides when returning.
+            // Not the owner, or a friend with Edit permissions, or admin,
+            // so start again. Reset again to baseflags, and start adding
+            // Note that more than one test may apply,
+            // "else" or "return" isn't necessarily correct
+            objflags = AddClientFlags(task.EveryoneMask, baseflags);
 
             if (task.OwnerID != UUID.Zero)
-				objflags |= (uint)PrimFlags.ObjectAnyOwner;
-			if (m_scene.IsLandOwner(user, task.AbsolutePosition))
+                objflags |= (uint)PrimFlags.ObjectAnyOwner;
+            if (m_scene.IsLandOwner(user, task.AbsolutePosition))
             {
                 // On Plus regions, non-EO parcel owners users can only move their own objects
                 if ((task.OwnerID == user) || m_scene.IsEstateManager(user) || (m_scene.RegionInfo.Product != ProductRulesUse.PlusUse))
-				    objflags |= (uint)PrimFlags.ObjectMove;
+                    objflags |= (uint)PrimFlags.ObjectMove;
             }
 
-			if (HasGroupPermission(user, task.AbsolutePosition, 0))
+            if (HasGroupPermission(user, task.AbsolutePosition, 0))
             {
-				objflags |= GenerateGroupLandFlags(user, task.AbsolutePosition, objflags, task.EveryoneMask);
+                objflags |= GenerateGroupLandFlags(user, task.AbsolutePosition, objflags, task.EveryoneMask);
             }
 
             // Group permissions
-			if ((task.GroupID != UUID.Zero) && IsAgentInGroupRole(task.GroupID, user, 0))
-			{
-				objflags |= AddClientFlags(task.GroupMask, objflags);
-			}
+            if ((task.GroupID != UUID.Zero) && IsAgentInGroupRole(task.GroupID, user, 0))
+            {
+                objflags |= AddClientFlags(task.GroupMask, objflags);
+            }
 
-			return RestrictClientFlags(task, objflags);
+            return RestrictClientFlags(task, objflags);
         }
 
         private uint GenerateGroupLandFlags(UUID user, Vector3 parcelLocation, uint objflags, uint objectEveryoneMask)
@@ -670,64 +666,64 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             else return objflags;
         }
 
-		// Adds flags to the second parameter (PrimFlags) based on the first parameter (PermissionsMask) and returns the result.
-		// Accepts collections of PermissionsMask bits and PrimFlags bits, respectively.
-		// Returns a collection of PrimFlags bits, not PermissionsMask bits.
-		private uint AddClientFlags(uint permissionMask, uint primFlags)
+        // Adds flags to the second parameter (PrimFlags) based on the first parameter (PermissionsMask) and returns the result.
+        // Accepts collections of PermissionsMask bits and PrimFlags bits, respectively.
+        // Returns a collection of PrimFlags bits, not PermissionsMask bits.
+        private uint AddClientFlags(uint permissionMask, uint primFlags)
         {
             // We are adding the temporary objectflags to the object's objectflags based on the
-			// permission flag given.  These change the F flags on the client.
-			if ((permissionMask & (uint)PermissionMask.Copy) != 0)
-			{
-				primFlags |= (uint)PrimFlags.ObjectCopy;
-			}
+            // permission flag given.  These change the F flags on the client.
+            if ((permissionMask & (uint)PermissionMask.Copy) != 0)
+            {
+                primFlags |= (uint)PrimFlags.ObjectCopy;
+            }
 
-			if ((permissionMask & (uint)PermissionMask.Move) != 0)
-			{
-				primFlags |= (uint)PrimFlags.ObjectMove;
-			}
+            if ((permissionMask & (uint)PermissionMask.Move) != 0)
+            {
+                primFlags |= (uint)PrimFlags.ObjectMove;
+            }
 
-			if ((permissionMask & (uint)PermissionMask.Modify) != 0)
-			{
-				primFlags |= (uint)PrimFlags.ObjectModify;
-			}
+            if ((permissionMask & (uint)PermissionMask.Modify) != 0)
+            {
+                primFlags |= (uint)PrimFlags.ObjectModify;
+            }
 
-			if ((permissionMask & (uint)PermissionMask.Transfer) != 0)
-			{
-				primFlags |= (uint)PrimFlags.ObjectTransfer;
-			}
+            if ((permissionMask & (uint)PermissionMask.Transfer) != 0)
+            {
+                primFlags |= (uint)PrimFlags.ObjectTransfer;
+            }
 
-			return primFlags;
+            return primFlags;
         }
 
-		// Filters out flags from the second parameter (task (SOP) PrimFlags) based on the first parameter (PermissionsMask) and returns the result.
-		// Intended to be applied to flags other than the owner
-		// Accepts and returns collections of PrimFlags bits, further filtering the ones returned in the function above.
-		private uint RestrictClientFlags(SceneObjectPart task, uint primFlags)
-		{
-			// Continue to reduce the folded perms as appropriate for friends with Edit and others
-			if ((task.OwnerMask & (uint)PermissionMask.Transfer) == 0)
-			{
-				// without transfer, a friend with edit cannot copy or transfer
-				primFlags &= ~(uint)PrimFlags.ObjectCopy;
-				primFlags &= ~(uint)PrimFlags.ObjectTransfer;
-			}
-			else
-			if ((task.OwnerMask & (uint)PermissionMask.Copy) == 0)	// Transfer but it is no-copy
-			{
-				// don't allow a friend with edit to take the only copy
-				primFlags &= ~(uint)PrimFlags.ObjectCopy;
-				primFlags &= ~(uint)PrimFlags.ObjectTransfer;
-			}
+        // Filters out flags from the second parameter (task (SOP) PrimFlags) based on the first parameter (PermissionsMask) and returns the result.
+        // Intended to be applied to flags other than the owner
+        // Accepts and returns collections of PrimFlags bits, further filtering the ones returned in the function above.
+        private uint RestrictClientFlags(SceneObjectPart task, uint primFlags)
+        {
+            // Continue to reduce the folded perms as appropriate for friends with Edit and others
+            if ((task.OwnerMask & (uint)PermissionMask.Transfer) == 0)
+            {
+                // without transfer, a friend with edit cannot copy or transfer
+                primFlags &= ~(uint)PrimFlags.ObjectCopy;
+                primFlags &= ~(uint)PrimFlags.ObjectTransfer;
+            }
+            else
+            if ((task.OwnerMask & (uint)PermissionMask.Copy) == 0)    // Transfer but it is no-copy
+            {
+                // don't allow a friend with edit to take the only copy
+                primFlags &= ~(uint)PrimFlags.ObjectCopy;
+                primFlags &= ~(uint)PrimFlags.ObjectTransfer;
+            }
 
-			if (task.IsAttachment)	// attachment and not the owner
-			{
-				// Disable others editing the owner's attachments
-				primFlags &= (uint)~(PrimFlags.ObjectModify | PrimFlags.ObjectMove);
-			}
+            if (task.IsAttachment)    // attachment and not the owner
+            {
+                // Disable others editing the owner's attachments
+                primFlags &= (uint)~(PrimFlags.ObjectModify | PrimFlags.ObjectMove);
+            }
 
-			return primFlags;
-		}
+            return primFlags;
+        }
 
         protected bool HasReturnPermission(UUID currentUser, UUID objId, bool denyOnLocked)
         {
@@ -855,15 +851,6 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         /// <returns></returns>
         protected GenericPermissionResult GenericObjectPermission(UUID currentUser, UUID objId, bool denyOnLocked, uint requiredPermissionMask)
         {
-            // Default: deny
-            GenericPermissionResult permission = new GenericPermissionResult
-            {
-                Reason = GenericPermissionResult.ResultReason.Other,
-                Success = false
-            };
-
-            bool locked = false;
-
             SceneObjectGroup group = FindGroup(objId);
             if (group == null)
             {
@@ -874,8 +861,15 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 };
             }
 
-            UUID objectOwner = group.OwnerID;
-            locked = ((group.RootPart.OwnerMask & PERM_LOCKED) == 0);   // only locked when neither bit is on
+            // Admin should be able to edit anything in the sim (including admin objects)
+            if (IsGodUser(currentUser))
+            {
+                return new GenericPermissionResult
+                {
+                    Reason = GenericPermissionResult.ResultReason.Admin,
+                    Success = true
+                };
+            }
 
             // People shouldn't be able to do anything with locked objects, except the Administrator
             // The 'set permissions' runs through a different permission check, so when an object owner
@@ -883,17 +877,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             //
             // Nobody but the object owner can set permissions on an object
             //
-
-            // Admin should be able to edit anything in the sim (including admin objects)
-            if (IsGodUser(currentUser))
-            {
-                permission = new GenericPermissionResult
-                {
-                    Reason = GenericPermissionResult.ResultReason.Admin,
-                    Success = true
-                };
-            }
-
+            bool locked = ((group.RootPart.OwnerMask & PERM_LOCKED) == 0);   // only locked when neither bit is on
             if (locked && denyOnLocked)
             {
                 return new GenericPermissionResult
@@ -905,55 +889,58 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             if ((group.RootPart.OwnerMask & requiredPermissionMask) != requiredPermissionMask)
             {
-                permission = new GenericPermissionResult
+                return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.NoPerm,
                     Success = false
                 };
             }
 
-            // Object owners should be able to edit their own content
+            UUID objectOwner = group.OwnerID;
             if (currentUser == objectOwner)
             {
-                permission = new GenericPermissionResult
+                // Object owners should be able to edit their own content
+                return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.Owner,
                     Success = true
                 };
             }
-            else if (group.IsAttachment)
+
+            if (group.IsAttachment)
             {
-                permission = new GenericPermissionResult
+                return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.Attachment,
                     Success = false
                 };
             }
-            else 
-            {
-                bool friendEdit = FriendHasEditPermission(objectOwner, currentUser);
 
-                permission = new GenericPermissionResult
+            if (FriendHasEditPermission(objectOwner, currentUser))
+            {
+                return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.FriendEdit,
-                    Success = friendEdit
+                    Success = true
                 };
             }
-            if (permission.Success)
-                return permission;
 
             // Group members should be able to edit group objects
-            if ((permission.Success != true) && (group.GroupID != UUID.Zero) && ((group.RootPart.GroupMask & (uint)PermissionMask.Modify) == (uint)PermissionMask.Modify) && IsAgentInGroupRole(group.GroupID, currentUser, 0))
+            if ((group.GroupID != UUID.Zero) && ((group.RootPart.GroupMask & (uint)PermissionMask.Modify) == (uint)PermissionMask.Modify) && IsAgentInGroupRole(group.GroupID, currentUser, 0))
             {
                 // Return immediately, so that the administrator can shares group objects
-                permission = new GenericPermissionResult
+                return new GenericPermissionResult
                 {
                     Reason = GenericPermissionResult.ResultReason.Group,
                     Success = true
                 };
             }
 
-            return permission;
+            return new GenericPermissionResult
+            {
+                Reason = GenericPermissionResult.ResultReason.NoPerm,
+                Success = false
+            };
         }
 
         #endregion
@@ -963,7 +950,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         {
             // Setting this to true so that cool stuff can happen until we define what determines Generic Communication Permission
             bool permission = true;
-			// string reason = "Only registered users may communicate with another account.";
+            // string reason = "Only registered users may communicate with another account.";
 
             // Uhh, we need to finish this before we enable it..   because it's blocking all sorts of goodies and features
             /*if (IsAdministrator(user))
@@ -1124,9 +1111,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             {
                 //They can't even edit the object
                 return false;
-			}
+            }
 
-			SceneObjectPart part = scene.GetSceneObjectPart(objectID);
+            SceneObjectPart part = scene.GetSceneObjectPart(objectID);
             if (part == null)
                 return false;
 
@@ -1238,7 +1225,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (objectID == UUID.Zero) // User inventory
             {
                 CachedUserInfo userInfo =
-                        scene.CommsManager.UserProfileCacheService.GetUserDetails(user);
+                        scene.CommsManager.UserService.GetUserDetails(user);
             
                 if (userInfo == null)
                 {
@@ -1249,7 +1236,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 InventoryItemBase assetRequestItem = userInfo.FindItem(notecard);
                 if (assetRequestItem == null) // Library item
                 {
-                    assetRequestItem = scene.CommsManager.UserProfileCacheService.LibraryRoot.FindItem(notecard);
+                    assetRequestItem = scene.CommsManager.LibraryRoot.FindItem(notecard);
 
                     if (assetRequestItem != null) // Implicitly readable
                         return true;
@@ -1565,13 +1552,13 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 // Else only the Plus user (and possibly partner) can rez in a Plus parcel.
                 if (owner == parcel.landData.OwnerID)
                     return true;
-                // Otherwise, only the Plus user' partner can rez in a Plus parcel.
+                // Otherwise, only the Plus user's partner can rez in a Plus parcel.
                 if (scene.RegionInfo.AllowPartnerRez)
                 {
-                    CachedUserInfo parcelOwnerInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(parcel.landData.OwnerID);
-                    if (parcelOwnerInfo != null)
-                        if (parcelOwnerInfo.UserProfile.Partner != UUID.Zero)
-                            if (parcelOwnerInfo.UserProfile.Partner == owner)
+                    UserProfileData parcelOwner = m_scene.CommsManager.UserService.GetUserProfile(parcel.landData.OwnerID);
+                    if (parcelOwner != null)
+                        if (parcelOwner.Partner != UUID.Zero)
+                            if (parcelOwner.Partner == owner)
                                 return true;
                 }
                 return false;
@@ -1593,10 +1580,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 // Owner doesn't match the land parcel, check partner perms.
                 if (scene.RegionInfo.AllowPartnerRez)
                 {   // this one is will not be called based on current products (Scenic, Plus) but completes the rule set for objects.
-                    CachedUserInfo parcelOwnerInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(parcel.landData.OwnerID);
-                    if (parcelOwnerInfo != null)
-                        if (parcelOwnerInfo.UserProfile.Partner != UUID.Zero)
-                            if (parcelOwnerInfo.UserProfile.Partner == group.OwnerID)
+                    UserProfileData parcelOwner = m_scene.CommsManager.UserService.GetUserProfile(parcel.landData.OwnerID);
+                    if (parcelOwner != null)
+                        if (parcelOwner.Partner != UUID.Zero)
+                            if (parcelOwner.Partner == group.OwnerID)
                                 return true;
                 }
 
@@ -1638,10 +1625,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (scene.RegionInfo.AllowPartnerRez)
             {
                 // this one is will not be called based on current products (Scenic, Plus) but completes the rule set for the remaining cases.
-                CachedUserInfo parcelOwnerInfo = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(parcel.landData.OwnerID);
-                if (parcelOwnerInfo != null)
-                    if (parcelOwnerInfo.UserProfile.Partner != UUID.Zero)
-                        if (parcelOwnerInfo.UserProfile.Partner == owner)
+                UserProfileData parcelOwner = m_scene.CommsManager.UserService.GetUserProfile(parcel.landData.OwnerID);
+                if (parcelOwner != null)
+                    if (parcelOwner.Partner != UUID.Zero)
+                        if (parcelOwner.Partner == owner)
                             return true;
             } 
             
@@ -1831,7 +1818,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (objectID == UUID.Zero) // User inventory
             {
                 CachedUserInfo userInfo =
-                        scene.CommsManager.UserProfileCacheService.GetUserDetails(user);
+                        scene.CommsManager.UserService.GetUserDetails(user);
             
                 if (userInfo == null)
                 {
@@ -1842,7 +1829,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 InventoryItemBase assetRequestItem = userInfo.FindItem(script);
                 if (assetRequestItem == null) // Library item
                 {
-                    assetRequestItem = m_scene.CommsManager.UserProfileCacheService.LibraryRoot.FindItem(script);
+                    assetRequestItem = m_scene.CommsManager.LibraryRoot.FindItem(script);
 
                     if (assetRequestItem != null) // Implicitly readable
                         return true;
@@ -1933,7 +1920,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (objectID == UUID.Zero) // User inventory
             {
                 CachedUserInfo userInfo =
-                        scene.CommsManager.UserProfileCacheService.GetUserDetails(user);
+                        scene.CommsManager.UserService.GetUserDetails(user);
             
                 if (userInfo == null)
                 {
@@ -1944,7 +1931,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 InventoryItemBase assetRequestItem = userInfo.FindItem(notecard);
                 if (assetRequestItem == null) // Library item
                 {
-                    assetRequestItem = m_scene.CommsManager.UserProfileCacheService.LibraryRoot.FindItem(notecard);
+                    assetRequestItem = m_scene.CommsManager.LibraryRoot.FindItem(notecard);
 
                     if (assetRequestItem != null) // Implicitly readable
                         return true;

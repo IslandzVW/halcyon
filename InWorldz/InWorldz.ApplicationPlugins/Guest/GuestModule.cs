@@ -50,7 +50,7 @@ namespace InWorldz.ApplicationPlugins.GuestModule
     /// [GuestModule]
     ///     Enabled = true
     /// 
-    /// into OpenSim.ini.
+    /// into Halcyon.ini.
     /// </summary>
     public class GuestModule : INonSharedRegionModule
     {
@@ -79,7 +79,7 @@ namespace InWorldz.ApplicationPlugins.GuestModule
             get { return null; }
         }
 
-        public void Initialise(IConfigSource source)
+        public void Initialize(IConfigSource source)
         {
             IConfig config = source.Configs[Name];
             if (config == null) return;
@@ -124,11 +124,8 @@ namespace InWorldz.ApplicationPlugins.GuestModule
             if (!m_enabled) return;
             if (chat.Message == "" || chat.SenderUUID == chat.DestinationUUID) return;
 
-            CachedUserInfo info = m_scene.CommsManager.UserProfileCacheService.GetUserDetails(chat.SenderUUID);
-            if (info == null) return;
-
-
-            if (info.UserProfile.SurName == "Guest")
+            string lastName = m_scene.CommsManager.UserService.GetLastName(chat.SenderUUID, false);
+            if (lastName == "Guest")
             {
                 //scan for and remove hyperlinks
                 //v2 recognizes .com, .org, and .net links with or without HTTP/S in them..

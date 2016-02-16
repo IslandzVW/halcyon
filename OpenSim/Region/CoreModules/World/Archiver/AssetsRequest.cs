@@ -130,7 +130,7 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     // We want to stop using the asset cache thread asap 
                     // as we now need to do the work of producing the rest of the archive
                     Thread newThread = new Thread(PerformAssetsRequestCallback);
-                    newThread.Name = "OpenSimulator archiving thread post assets receipt";
+                    newThread.Name = "Halcyon archiving thread post assets receipt";
                     newThread.Start();
                 }
             }

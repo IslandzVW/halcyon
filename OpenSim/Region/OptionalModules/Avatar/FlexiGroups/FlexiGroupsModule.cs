@@ -54,7 +54,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
     public class FlexiGroupsModule : ISharedRegionModule, IGroupsModule
     {
         /// <summary>
-        /// ; To use this module, you must specify the following in your OpenSim.ini
+        /// ; To use this module, you must specify the following in your Halcyon.ini
         /// [GROUPS]
         /// Enabled = true
         /// Module  = XmlRpcGroups
@@ -96,7 +96,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
         #region IRegionModuleBase Members
 
-        public void Initialise(IConfigSource config)
+        public void Initialize(IConfigSource config)
         {
             IConfig groupsConfig = config.Configs["Groups"];
 
@@ -207,7 +207,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
         #region ISharedRegionModule Members
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             // NoOp
         }
@@ -606,7 +606,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                         return;
                     }
 
-                    CachedUserInfo ownerUserInfo = m_sceneList[0].CommsManager.UserProfileCacheService.GetUserDetails(ownerID);
+                    CachedUserInfo ownerUserInfo = m_sceneList[0].CommsManager.UserService.GetUserDetails(ownerID);
                     if (ownerUserInfo == null)
                     {
                         m_log.ErrorFormat("[GROUPS]: Failed to find notice sender {0} for item {1}", ownerID, itemId);
@@ -701,7 +701,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 UUID itemId = notice.noticeData.ItemID;
 
                 // we need a userInfo structure to get the sessionID to use in case the inventory service needs a secure service connection
-                CachedUserInfo userInfo = m_sceneList[0].CommsManager.UserProfileCacheService.GetUserDetails(remoteClient.AgentId);
+                CachedUserInfo userInfo = m_sceneList[0].CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
                 if (userInfo == null)
                 {
                     m_log.ErrorFormat("[GROUPS]: Failed to find notice recipient {0} for item {1}", remoteClient.AgentId, itemId);
@@ -844,6 +844,10 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
         public bool IsAgentInGroup(IClientAPI remoteClient, UUID groupID)
         {
+            // Use the known in-memory group membership data if available before going to db.
+            if (remoteClient != null)
+                remoteClient.IsGroupMember(groupID);
+
             return m_groupData.IsAgentInGroup(groupID, remoteClient.AgentId);
         }
 
@@ -992,6 +996,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
             return m_groupData.GetAgentGroupMembership(null, agentID, groupID);
+        }
+
+        // Returns null on error, empty list if not in any groups.
+        public List<UUID> GetAgentGroupList(UUID agentID)
+        {
+            if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+
+            return m_groupData.GetAgentGroupList(null, agentID);
         }
 
         public void UpdateGroupInfo(IClientAPI remoteClient, UUID groupID, string charter, bool showInList, UUID insigniaID, int membershipFee, bool openEnrollment, bool allowPublish, bool maturePublish)
@@ -1417,9 +1429,9 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
         // agentID and agentName are only used if remoteClient is null.
         // agentID/agentName is the requesting user, typically owner of the script requesting it.
         public int InviteGroupRequest(IClientAPI remoteClient, UUID agentID, string agentName, UUID groupID, UUID invitedAgentID, UUID roleID)
-		{
+        {
             GroupRequestID grID = GetClientGroupRequestID(remoteClient);
-			GroupRecord groupInfo = m_groupData.GetGroupRecord(grID, groupID, null);
+            GroupRecord groupInfo = m_groupData.GetGroupRecord(grID, groupID, null);
             IScene scene = m_sceneList[0];
 
             if (remoteClient != null)
@@ -1429,13 +1441,13 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 scene = remoteClient.Scene;
             }
 
-			string groupName;
-			if (groupInfo != null)
-				groupName = groupInfo.GroupName;
-			else
-				groupName = "(unknown)";
+            string groupName;
+            if (groupInfo != null)
+                groupName = groupInfo.GroupName;
+            else
+                groupName = "(unknown)";
 
-			if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
+            if (m_debugEnabled) m_log.DebugFormat("[GROUPS]: {0} called", System.Reflection.MethodBase.GetCurrentMethod().Name);
 
             // Get the list of users who have this sender muted.
             m_muteListModule = m_sceneList[0].RequestModuleInterface<IMuteListModule>();

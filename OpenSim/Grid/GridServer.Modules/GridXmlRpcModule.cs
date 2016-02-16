@@ -54,10 +54,6 @@ namespace OpenSim.Grid.GridServer.Modules
         protected GridConfig m_config;
 
         protected IMessagingServerDiscovery m_messagingServerMapper;
-        /// <value>
-        /// Used to notify old regions as to which OpenSim version to upgrade to
-        /// </value>
-        private string m_opensimVersion;
 
         protected BaseHttpServer m_httpServer;
 
@@ -71,16 +67,15 @@ namespace OpenSim.Grid.GridServer.Modules
         {
         }
 
-        public void Initialise(string opensimVersion, IRegionProfileService gridDBService, IGridServiceCore gridCore, GridConfig config)
+        public void Initialize(IRegionProfileService gridDBService, IGridServiceCore gridCore, GridConfig config)
         {
-            m_opensimVersion = opensimVersion;
             m_gridDBService = gridDBService;
             m_gridCore = gridCore;
             m_config = config;
             RegisterHandlers();
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             IMessagingServerDiscovery messagingModule;
             if (m_gridCore.TryGet<IMessagingServerDiscovery>(out messagingModule))
@@ -302,8 +297,8 @@ namespace OpenSim.Grid.GridServer.Modules
                     String.Format(
                         "Your region service implements OGS1 interface version {0}"
                         + " but this grid requires that the region implement OGS1 interface version {1} to connect."
-                        + "  Try changing to OpenSimulator {2}",
-                        majorInterfaceVersion, VersionInfo.MajorInterfaceVersion, m_opensimVersion));
+                        + "  Try changing to {2}",
+                        majorInterfaceVersion, VersionInfo.MajorInterfaceVersion, VersionInfo.ShortVersion));
             }
 
             existingSim = m_gridDBService.GetRegion(sim.regionHandle);
@@ -657,13 +652,6 @@ namespace OpenSim.Grid.GridServer.Modules
             {
                 UUID regionID = new UUID((string)requestData["region_UUID"]);
                 simData = m_gridDBService.GetRegion(regionID);
-#if false   // this happens all the time normally and pollutes the log 
-                if (simData == null)
-                {
-                    m_log.WarnFormat("[DATA] didn't find regionID {0} from {1}",
-                                     regionID, request.Params.Count > 1 ? request.Params[1] : "unknown source");
-                }
-#endif
             }
             else if (requestData.ContainsKey("region_handle"))
             {

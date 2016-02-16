@@ -58,7 +58,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
         private List<Scene> m_SceneList = new List<Scene>();
         private string m_RestURL = String.Empty;
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (!enabled)
                 return;
@@ -96,7 +96,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (!enabled)
                 return;
@@ -170,7 +170,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
 #if TESTING_OFFLINES
         // This test code just tests the handling of offline IMs and group notices, in the absence of a web server and offline.php script.
         // It stores the most recent (only) offline message, and where it goes to many recipients, it only stores the last recipient added.
-        private MemoryStream m_DummyOffline = null;
+        private List<MemoryStream> m_DummyOfflines = new List<MemoryStream>();
 
         private void DebugStoreIM(GridInstantMessage im)
         {
@@ -186,19 +186,29 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
                 serializer.Serialize(writer, im);
                 writer.Flush();
             }
+            lock(m_DummyOfflines)
+            {
+                m_DummyOfflines.Add(buffer);
+            }
 
-            string debug = buffer.ToString();
-            m_DummyOffline = buffer;
+            // string debug = buffer.ToString();
         }
 
-        private GridInstantMessage DebugFetchIM()
+        private List<GridInstantMessage> DebugFetchIMs()
         {
-            if (m_DummyOffline == null)
-                return null;    // no messages sent yet
-            XmlSerializer deserializer = new XmlSerializer(typeof (GridInstantMessage));
-            m_DummyOffline.Seek(0, SeekOrigin.Begin);
-            // we should check im.toAgentID here but for this testing, it will return the last one to anybody.
-            return (GridInstantMessage)deserializer.Deserialize(m_DummyOffline);
+            List<GridInstantMessage> offlines = new List<GridInstantMessage>();
+            lock (m_DummyOfflines)
+            {
+                foreach (MemoryStream offline in m_DummyOfflines)
+                {
+                    XmlSerializer deserializer = new XmlSerializer(typeof(GridInstantMessage));
+                    offline.Seek(0, SeekOrigin.Begin);
+                    // we should check im.toAgentID here but for this testing, it will return the last one to anybody.
+                    offlines.Add((GridInstantMessage)deserializer.Deserialize(offline));
+                }
+                m_DummyOfflines.Clear();    // we've fetched these
+            }
+            return offlines;
         }
 #endif
 
@@ -209,10 +219,7 @@ namespace OpenSim.Region.CoreModules.Avatar.InstantMessage
             try
             {
 #if TESTING_OFFLINES
-                msglist = new List<GridInstantMessage>();
-                GridInstantMessage im = DebugFetchIM();
-                if (im != null)
-                    msglist.Add(im);
+                msglist = DebugFetchIMs();
 #else
                 msglist = SynchronousRestObjectPoster.BeginPostObject<UUID, List<GridInstantMessage>>(
                       "POST", m_RestURL + "/RetrieveMessages/", client.AgentId);

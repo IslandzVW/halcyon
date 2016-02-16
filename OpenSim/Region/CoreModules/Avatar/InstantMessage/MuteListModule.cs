@@ -69,7 +69,7 @@ namespace OpenSim.Region.CoreModules.Avatar.MuteList
         };
         Dictionary<UUID, Dictionary<UUID, MuteListEntry>> MuteListCache = new Dictionary<UUID, Dictionary<UUID, MuteListEntry>>();
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             if (!enabled)
                 return;
@@ -113,7 +113,7 @@ namespace OpenSim.Region.CoreModules.Avatar.MuteList
             }
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (!enabled)
                 return;

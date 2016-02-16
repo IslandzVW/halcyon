@@ -195,13 +195,6 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
             //this avatar is history.
             _avatar.ScenePresence.Reset(_avatar.TransitArgs.DestinationRegion);
 
-            // the user may change their profile information in other region,
-            // so the userinfo in UserProfileCache is not reliable any more, delete it
-            if (_avatar.ScenePresence.Scene.NeedSceneCacheClear(_avatar.UserId))
-            {
-                _avatar.ScenePresence.Scene.CommsManager.UserProfileCacheService.RemoveUser(_avatar.UserId);
-            }
-
             _avatar.ScenePresence.Scene.EventManager.TriggerAvatarLeavingRegion(_avatar.ScenePresence, 
                 _avatar.TransitArgs.DestinationRegion);
         }
@@ -214,7 +207,7 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
             ulong newRegionHandle = _avatar.TransitArgs.DestinationRegion.RegionHandle;
             SimpleRegionInfo neighbourRegion = _avatar.TransitArgs.DestinationRegion;
             Vector3 pos = _avatar.TransitArgs.LocationInDestination;
-            AgentLocomotionFlags locomotionFlags = 0    ;
+            AgentLocomotionFlags locomotionFlags = 0;
 
             if (_avatar.TransitArgs.Type == TransitType.OutboundCrossing)
             {
@@ -236,6 +229,7 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
             }
             else
             {
+                // _log.WarnFormat("[SCENE COMM]: SendChildAgentUpdate2 for {0} position {1} was {2}", cAgent.AgentID, pos, cAgent.Position);
                 cAgent.Position = pos;
             }
 

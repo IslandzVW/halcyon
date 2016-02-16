@@ -46,7 +46,7 @@ namespace OpenSim.Framework.Communications
         /// </summary>
         /// Reverses the effect of AddTemporaryUserProfile
         /// <param name="uuid">The UUID of the profile to remove.</param>
-        void RemoveTemporaryUserProfile(UUID userid);
+        void RemoveTemporaryUserProfile(UUID uuid);
 
         /// <summary>
         /// Loads a user profile by name
@@ -54,28 +54,40 @@ namespace OpenSim.Framework.Communications
         /// <param name="firstName">First name</param>
         /// <param name="lastName">Last name</param>
         /// <returns>A user profile.  Returns null if no profile is found</returns>
+        UserProfileData GetUserProfile(string firstName, string lastName, bool forceRefresh);
         UserProfileData GetUserProfile(string firstName, string lastName);
-        //UserInterestsData GetUserInterests(UUID userId);
+        UserProfileData GetUserProfile(string name);
+        //UserInterestsData GetUserInterests(UUID uuid);
 
         /// <summary>
         /// Loads a user profile from a database by UUID
         /// </summary>
         /// <param name="userId">The target UUID</param>
         /// <returns>A user profile.  Returns null if no user profile is found.</returns>
-        UserProfileData GetUserProfile(UUID userId);
-        
+        UserProfileData GetUserProfile(UUID uuid, bool forceRefresh);
+        UserProfileData GetUserProfile(UUID uuid);
+
         UserProfileData GetUserProfile(Uri uri);
+
+        // Just call these if all you need is the name from cache.
+        UUID Name2Key(string firstName, string lastName);
+        UUID Name2Key(string name);
+        string Key2Name(UUID uuid, bool onlyIfCached);
+        bool Key2Names(UUID uuid, bool onlyIfCached, out string firstName, out string lastName);
+        string GetLastName(UUID uuid, bool onlyIfCached);
+        string GetFirstName(UUID uuid, bool onlyIfCached);
 
         Uri GetUserUri(UserProfileData userProfile);
 
-        UserAgentData GetAgentByUUID(UUID userId);
+        UserAgentData GetUserAgent(UUID uuid, bool forceRefresh);
+        UserAgentData GetUserAgent(UUID uuid);
 
         void ClearUserAgent(UUID avatarID);
         List<AvatarPickerAvatar> GenerateAgentPickerRequestResponse(UUID QueryID, string Query);
 
         UserProfileData SetupMasterUser(string firstName, string lastName);
         UserProfileData SetupMasterUser(string firstName, string lastName, string password);
-        UserProfileData SetupMasterUser(UUID userId);
+        UserProfileData SetupMasterUser(UUID uuid);
 
         /// <summary>
         /// Update the user's profile.
@@ -118,7 +130,7 @@ namespace OpenSim.Framework.Communications
         /// <param name="regionhandle">regionhandle</param>
         /// <param name="position">final position</param>
         /// <param name="lookat">final lookat</param>
-        void LogOffUser(UUID userid, UUID regionid, ulong regionhandle, Vector3 position, Vector3 lookat);
+        void LogOffUser(UUID uuid, UUID regionid, ulong regionhandle, Vector3 position, Vector3 lookat);
 
         /// <summary>
         /// Logs off a user on the user server (deprecated as of 2008-08-27)
@@ -129,7 +141,7 @@ namespace OpenSim.Framework.Communications
         /// <param name="posx">final position x</param>
         /// <param name="posy">final position y</param>
         /// <param name="posz">final position z</param>
-        void LogOffUser(UUID userid, UUID regionid, ulong regionhandle, float posx, float posy, float posz);
+        void LogOffUser(UUID uuid, UUID regionid, ulong regionhandle, float posx, float posy, float posz);
 
         /// <summary>
         /// Returns a list of FriendsListItems that describe the friends and permissions in the friend relationship 
@@ -145,7 +157,7 @@ namespace OpenSim.Framework.Communications
 
         // This probably shouldn't be here, it belongs to IAuthentication
         // But since Scenes only have IUserService references, I'm placing it here for now.
-        bool VerifySession(UUID userID, UUID sessionID);
+        bool VerifySession(UUID uuid, UUID sessionID);
 
         /// <summary>
         /// Save user preferences.  See UserPreferencesData for more information
@@ -155,7 +167,7 @@ namespace OpenSim.Framework.Communications
         /// <summary>
         /// Retrieve preferences.  See UserPreferencesData for more information
         /// </summary>
-        UserPreferencesData RetrieveUserPreferences(UUID userId);
+        UserPreferencesData RetrieveUserPreferences(UUID uuid);
 
                 /// <summary>
         /// A new user has moved into a region in this instance so retrieve their profile from the user service.
@@ -165,21 +177,22 @@ namespace OpenSim.Framework.Communications
         /// it might be helpful in order to avoid an initial response delay later on
         /// 
         /// <param name="userID"></param>
-        void AddCachedUser(UUID userID);
+        void CacheUser(UUID uuid);
 
         /// <summary>
         /// Remove this user's profile cache.
         /// </summary>
         /// <param name="userID"></param>
         /// <returns>true if the user was successfully removed, false otherwise</returns>
-        bool RemoveCachedUser(UUID userId);
+        bool UncacheUser(UUID uuid);
 
         /// <summary>
         /// This function keeps the user profile in memory for the duration of an agent being in a region.
+        /// These two functions are more of a migrate from/to one cache to/from the local user cache, than add/remove.
         /// </summary>
         /// <param name="userID"></param>
-        void AddLocalUser(UUID userID);
-        void RemoveLocalUser(UUID userID);
+        void MakeLocalUser(UUID uuid);
+        void UnmakeLocalUser(UUID uuid);
 
         /// <summary>
         /// Get details of the given user.
@@ -187,7 +200,7 @@ namespace OpenSim.Framework.Communications
         /// If the user isn't in cache then the user is requested from the profile service.  
         /// <param name="userID"></param>
         /// <returns>null if no user details are found</returns>
-        CachedUserInfo GetUserDetails(UUID userID);
+        CachedUserInfo GetUserDetails(UUID uuid);
 
         /// <summary>
         /// Get details of the given user.

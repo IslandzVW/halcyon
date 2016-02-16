@@ -251,6 +251,9 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
 
+            // Prime (cache) the owner's group list.
+            m_parentScene.UserGroupsGet(sceneObject.OwnerID);
+
             foreach (SceneObjectPart part in sceneObject.Children.Values)
             {
                 Vector3 scale = part.Shape.Scale;
@@ -799,7 +802,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (group == skipGroup)
                         continue;   // don't remove this one
                     if (group.OwnerID != remoteClient.AgentId)
-                        continue;	// don't remove others' attachments
+                        continue;    // don't remove others' attachments
                     byte currentAttachment = group.GetCurrentAttachmentPoint();
                     if (currentAttachment != (byte)AttachmentPt)
                         continue;   // we don't care about that attachment point

@@ -63,7 +63,7 @@ namespace OpenSim.Grid.UserServer
 
         protected UserDataBaseService m_userDataBaseService;
 
-        public UserManager m_userManager;
+        public Modules.UserManager m_userManager;
 
         protected UserServerAvatarAppearanceModule m_avatarAppearanceModule;
         protected UserServerFriendsModule m_friendsModule;
@@ -123,8 +123,8 @@ namespace OpenSim.Grid.UserServer
 
             StartOtherComponents();
 
-            //PostInitialise the modules
-            PostInitialiseModules();
+            //PostInitialize the modules
+            PostInitializeModules();
 
             //register http handlers and start http server
             m_log.Info("[STARTUP]: Starting HTTP process");
@@ -181,26 +181,26 @@ namespace OpenSim.Grid.UserServer
 
             //setup database access service, for now this has to be created before the other modules.
             m_userDataBaseService = new UserDataBaseService(commsManager);
-            m_userDataBaseService.Initialise(this);
+            m_userDataBaseService.Initialize(this);
 
-            //TODO: change these modules so they fetch the databaseService class in the PostInitialise method
-            m_userManager = new UserManager(m_userDataBaseService);
-            m_userManager.Initialise(this);
+            //TODO: change these modules so they fetch the databaseService class in the PostInitialize method
+            m_userManager = new Modules.UserManager(m_userDataBaseService);
+            m_userManager.Initialize(this);
 
             m_avatarAppearanceModule = new UserServerAvatarAppearanceModule(m_userDataBaseService);
-            m_avatarAppearanceModule.Initialise(this);
+            m_avatarAppearanceModule.Initialize(this);
 
             m_friendsModule = new UserServerFriendsModule(m_userDataBaseService);
-            m_friendsModule.Initialise(this);
+            m_friendsModule.Initialize(this);
 
             m_consoleCommandModule = new UserServerCommandModule();
-            m_consoleCommandModule.Initialise(this);
+            m_consoleCommandModule.Initialize(this);
 
             m_messagesService = new MessageServersConnector();
-            m_messagesService.Initialise(this);
+            m_messagesService.Initialize(this);
 
             m_gridInfoService = new GridInfoServiceModule();
-            m_gridInfoService.Initialise(this);
+            m_gridInfoService.Initialize(this);
         }
 
         protected virtual void StartOtherComponents()
@@ -214,7 +214,7 @@ namespace OpenSim.Grid.UserServer
             RegisterInterface<UserLoginService>(m_loginService); //TODO: should be done in the login service
 
             m_eventDispatcher = new UserServerEventDispatchModule(m_userManager, m_messagesService, m_loginService);
-            m_eventDispatcher.Initialise(this);
+            m_eventDispatcher.Initialize(this);
         }
 
         /// <summary>
@@ -225,22 +225,18 @@ namespace OpenSim.Grid.UserServer
         {
             m_loginService = new UserLoginService(
                 m_userDataBaseService, new LibraryRootFolder(Cfg.LibraryXmlfile), Cfg.MapServerURI, Cfg, Cfg.DefaultStartupMsg, new RegionProfileServiceProxy());
-            
-            //if (Cfg.EnableHGLogin)
-            //    m_loginAuthService = new UserLoginAuthService(m_userDataBaseService, inventoryService, new LibraryRootFolder(Cfg.LibraryXmlfile), 
-            //        Cfg, Cfg.DefaultStartupMsg, new RegionProfileServiceProxy());
         }
 
-        protected virtual void PostInitialiseModules()
+        protected virtual void PostInitializeModules()
         {
-            m_consoleCommandModule.PostInitialise(); //it will register its Console command handlers in here
-            m_userDataBaseService.PostInitialise();
-            m_messagesService.PostInitialise();
-            m_eventDispatcher.PostInitialise(); //it will register event handlers in here
-            m_gridInfoService.PostInitialise();
-            m_userManager.PostInitialise();
-            m_avatarAppearanceModule.PostInitialise();
-            m_friendsModule.PostInitialise();
+            m_consoleCommandModule.PostInitialize(); //it will register its Console command handlers in here
+            m_userDataBaseService.PostInitialize();
+            m_messagesService.PostInitialize();
+            m_eventDispatcher.PostInitialize(); //it will register event handlers in here
+            m_gridInfoService.PostInitialize();
+            m_userManager.PostInitialize();
+            m_avatarAppearanceModule.PostInitialize();
+            m_friendsModule.PostInitialize();
         }
 
         protected virtual void RegisterHttpHandlers()

@@ -34,7 +34,7 @@ namespace OpenSim.Framework
     /// </summary>
     public interface IAssetServer : IPlugin
     {
-        void Initialise(ConfigSettings settings);
+        void Initialize(ConfigSettings settings);
         
         /// <summary>
         /// Start the asset server
@@ -66,18 +66,18 @@ namespace OpenSim.Framework
         void UpdateAsset(AssetBase asset);
     }
 
-    public class AssetClientPluginInitialiser : PluginInitialiserBase
+    public class AssetClientPluginInitializer : PluginInitializerBase
     {
         private ConfigSettings config;
 
-        public AssetClientPluginInitialiser (ConfigSettings p_sv)
+        public AssetClientPluginInitializer (ConfigSettings p_sv)
         {
             config = p_sv;
         }
-        public override void Initialise (IPlugin plugin)
+        public override void Initialize (IPlugin plugin)
         {
             IAssetServer p = plugin as IAssetServer;
-            p.Initialise (config);
+            p.Initialize (config);
         }
     }
 

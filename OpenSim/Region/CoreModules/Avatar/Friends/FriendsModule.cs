@@ -121,7 +121,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
 
             IConfig profileConfig = config.Configs["Profile"];
@@ -157,7 +157,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
             scene.EventManager.OnClientClosed += ClientClosed;
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
             if (m_scenes.Count > 0)
             {
@@ -503,12 +503,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
         
         public void OfferFriendship(UUID fromUserId, IClientAPI toUserClient, string offerMessage)
         {
-            CachedUserInfo userInfo = m_initialScene.CommsManager.UserProfileCacheService.GetUserDetails(fromUserId);
-                
-            if (userInfo != null)
+            string name = m_initialScene.CommsManager.UserService.Key2Name(fromUserId,false);
+            if (name != String.Empty)
             {
                 GridInstantMessage msg = new GridInstantMessage(
-                    toUserClient.Scene, fromUserId, userInfo.UserProfile.Name, toUserClient.AgentId,
+                    toUserClient.Scene, fromUserId, name, toUserClient.AgentId,
                     (byte)InstantMessageDialog.FriendshipOffered, offerMessage, false, Vector3.Zero); 
             
                 FriendshipOffered(msg);
@@ -685,7 +684,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             // find the folder for the friend...
             InventoryFolderBase folder =
-                initiator.Scene.CommsManager.UserProfileCacheService.GetUserDetails(toAgentID).FindFolderForType((int)InventoryType.CallingCard);
+                initiator.Scene.CommsManager.UserService.GetUserDetails(toAgentID).FindFolderForType((int)InventoryType.CallingCard);
             if (folder != null)
             {
                 // ... and add the calling card
@@ -731,11 +730,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 m_log.Debug("[FRIEND]: Remote agent detected.");
 
                 // fetch the friend's name for the calling card.
-                CachedUserInfo info = m_initialScene.CommsManager.UserProfileCacheService.GetUserDetails(friendID);
+                string name = m_initialScene.CommsManager.UserService.Key2Name(friendID,false);
 
                 // create calling card
-                CreateCallingCard(client, friendID, callingCardFolders[0],
-                                  info.UserProfile.FirstName + " " + info.UserProfile.SurName);
+                if (name != String.Empty)
+                    CreateCallingCard(client, friendID, callingCardFolders[0], name);
 
                 // Compose (remote) response to friend.
                 GridInstantMessage msg = new GridInstantMessage(client.Scene, agentID, client.Name, friendID,
@@ -800,7 +799,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
                 for (int retry = 0; retry < 3; ++retry)
                 {
                     // wasn't sent, so ex-friend wasn't around on this region-server. Fetch info and try to send
-                    UserAgentData data = m_initialScene.CommsManager.UserService.GetAgentByUUID(exfriendID);
+                    UserAgentData data = m_initialScene.CommsManager.UserService.GetUserAgent(exfriendID);
                     
                     if (null == data)
                         break;

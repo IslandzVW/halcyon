@@ -58,11 +58,6 @@ namespace OpenSim.Grid.GridServer
             get { return m_config; }
         }
 
-        public string Version
-        {
-            get { return m_version; }
-        }
-
         protected List<IGridPlugin> m_plugins = new List<IGridPlugin>();
 
         public void Work()
@@ -136,7 +131,7 @@ namespace OpenSim.Grid.GridServer
         protected virtual void LoadPlugins()
         {
             PluginLoader<IGridPlugin> loader =
-                new PluginLoader<IGridPlugin>(new GridPluginInitialiser(this));
+                new PluginLoader<IGridPlugin>(new GridPluginInitializer(this));
 
             loader.Load("/OpenSim/GridServer");
             m_plugins = loader.Plugins;

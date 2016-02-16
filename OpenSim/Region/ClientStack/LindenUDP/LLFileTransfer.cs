@@ -187,15 +187,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         public XferUploadHandler(IClientAPI pRemoteClient, string pClientFilename)
         {
-            Initialise(UUID.Zero, pClientFilename);
+            Initialize(UUID.Zero, pClientFilename);
         }
 
         public XferUploadHandler(IClientAPI pRemoteClient, UUID fileID)
         {
-            Initialise(fileID, String.Empty);
+            Initialize(fileID, String.Empty);
         }
 
-        private void Initialise(UUID fileID, string fileName)
+        private void Initialize(UUID fileID, string fileName)
         {
             m_asset = new AssetBase(fileID, fileName, type, UUID.Zero.ToString());
             m_asset.Data = new byte[0];

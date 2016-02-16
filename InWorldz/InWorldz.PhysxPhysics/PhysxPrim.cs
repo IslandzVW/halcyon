@@ -855,6 +855,24 @@ namespace InWorldz.PhysxPhysics
             ));
         }
 
+        public override void ForceAboveParcel(float height)
+        {
+            _scene.QueueCommand(
+                new Commands.GenericSyncCmd(this,
+                    (PhysxScene scene) =>
+                    {
+                        OpenMetaverse.Vector3 newPos = _position;
+                        //place this object back above the parcel
+                        newPos.Z = height;
+
+                        if (_dynActor != null)
+                        {
+                            _dynActor.GlobalPose = PhysUtil.PositionToMatrix(newPos, _rotation);
+                        }
+                    }
+             ));
+        }
+
         public override IMaterial GetMaterial()
         {
             lock (_properties)
@@ -2406,15 +2424,15 @@ namespace InWorldz.PhysxPhysics
         {
             try
             {
-	            foreach (PhysX.Shape shape in shapes)
-	            {
-	                shape.SimulationFilterData = new PhysX.FilterData(flags, shape.SimulationFilterData.Word1,
-	                    shape.SimulationFilterData.Word2, shape.SimulationFilterData.Word3);
+                foreach (PhysX.Shape shape in shapes)
+                {
+                    shape.SimulationFilterData = new PhysX.FilterData(flags, shape.SimulationFilterData.Word1,
+                        shape.SimulationFilterData.Word2, shape.SimulationFilterData.Word3);
 
                     if (_hasSimulated)
-	                    shape.ResetFiltering();
-	            }
-			}
+                        shape.ResetFiltering();
+                }
+            }
             catch (Exception e)
             {
                 m_log.ErrorFormat("[PhysxPrim]: SetTouchNotificationOnGivenShapes exception:\n   {0}", e);

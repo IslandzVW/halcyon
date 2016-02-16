@@ -52,6 +52,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void sendLandProperties(int sequence_id, bool snap_selection, int request_result, IClientAPI remote_client);
         void updateLandProperties(LandUpdateArgs args, IClientAPI remote_client);
         bool DenyParcelAccess(UUID avatar, out ParcelPropertiesStatus reason);
+        bool DenyParcelAccess(SceneObjectGroup group, bool checkSitters, out ParcelPropertiesStatus reason);
         bool isBannedFromLand(UUID avatar);
         bool isRestrictedFromLand(UUID avatar);
         void sendLandUpdateToClient(IClientAPI remote_client, int sequence_id, bool snap_selection);

@@ -20,7 +20,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 using Nini.Config;
-using log4net;  
+using log4net;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
@@ -28,10 +28,11 @@ using OpenSim;
 using OpenSim.Framework;
 using OpenSim.Framework.Communications.Cache;
 using OpenSim.Framework.Geom;
+using OpenSim.Framework.Servers;
 using OpenSim.Region.CoreModules;
-using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.CoreModules.World.Land;
 using OpenSim.Region.CoreModules.World.Terrain;
+using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Physics.Manager.Vehicle;
@@ -1141,12 +1142,12 @@ namespace InWorldz.Phlox.Engine
         public string resolveName(UUID objecUUID)
         {
             // try avatar username surname
-            CachedUserInfo profile = World.CommsManager.UserProfileCacheService.GetUserDetails(objecUUID);
-            if (profile != null && profile.UserProfile != null)
+            string name = World.CommsManager.UserService.Key2Name(objecUUID, false);
+            if (name != String.Empty)
             {
-                string avatarname = profile.UserProfile.FirstName + " " + profile.UserProfile.SurName;
-                return avatarname;
+                return name;
             }
+
             // try an scene object
             SceneObjectPart SOP = World.GetSceneObjectPart(objecUUID);
             if (SOP != null)
@@ -3792,14 +3793,13 @@ namespace InWorldz.Phlox.Engine
 
             // TODO: figure out values for client, fromSession, and imSessionID
             // client.SendInstantMessage(m_host.UUID, fromSession, message, user, imSessionID, m_host.Name, AgentManager.InstantMessageDialog.MessageFromAgent, (uint)Util.UnixTimeSinceEpoch());
-            UUID friendTransactionID = UUID.Random();
 
             //m_pendingFriendRequests.Add(friendTransactionID, fromAgentID);
 
             GridInstantMessage msg = new GridInstantMessage();
-            msg.fromAgentID = new Guid(m_host.OwnerID.ToString());
+			msg.fromAgentID = new Guid(m_host.OwnerID.ToString()); // fromAgentID.Guid;
             msg.toAgentID = agentId.Guid;
-            msg.imSessionID = new Guid(friendTransactionID.ToString()); // This is the item we're mucking with here
+			msg.imSessionID = new Guid(m_host.UUID.ToString()); // This is the item we're mucking with here
             msg.timestamp = (uint)Util.UnixTimeSinceEpoch();// timestamp;
             msg.fromAgentName = m_host.Name;
             // Cap the message length at 1024.
@@ -5386,6 +5386,7 @@ namespace InWorldz.Phlox.Engine
 
         private bool GetAgentData(UUID uuid, int data, out string reply)
         {
+            // Grab the profile even if only CurrentAgent is needed so that it uses the profile cache with timeout.
             UserProfileData userProfile = World.CommsManager.UserService.GetUserProfile(uuid);
 
             reply = String.Empty;
@@ -5393,6 +5394,11 @@ namespace InWorldz.Phlox.Engine
             switch (data)
             {
                 case ScriptBaseClass.DATA_ONLINE:
+                    Scene scene = m_host.ParentGroup.Scene;
+                    ScenePresence SP = scene.GetScenePresence(uuid);
+                    if (SP != null) // user is here, always allow this
+                        reply = "1";
+                    else
                     if ((userProfile == null) || (!userProfile.CurrentAgent.AgentOnline))
                     {
                         reply = "0";
@@ -5404,25 +5410,18 @@ namespace InWorldz.Phlox.Engine
                     }
                     else
                     {   // user is online... are they in this region?
-                        Scene scene = m_host.ParentGroup.Scene;
-                        ScenePresence SP = scene.GetScenePresence(uuid);
-                        if (SP != null) // user is here, always allow this
+                        if (IsScriptOwnerFriendOf(uuid))
                             reply = "1";
                         else
                         {
-                            if (IsScriptOwnerFriendOf(uuid))
-                                reply = "1";
-                            else
+                            UserPreferencesData prefs = scene.CommsManager.UserService.RetrieveUserPreferences(uuid);
+                            reply = "0";
+                            if (prefs != null)
                             {
-                                UserPreferencesData prefs = scene.CommsManager.UserService.RetrieveUserPreferences(uuid);
-                                reply = "0";
-                                if (prefs != null)
-                                {
-                                    // This is where we check the "Only friend and groups know I'm online" option.
-                                    // Only applies to friends (not groups) in InWorldz (for now at least).
-                                    if (prefs.ListedInDirectory)
-                                        reply = "1";
-                                }
+                                // This is where we check the "Only friend and groups know I'm online" option.
+                                // Only applies to friends (not groups) in InWorldz (for now at least).
+                                if (prefs.ListedInDirectory)
+                                    reply = "1";
                             }
                         }
                     }
@@ -6085,7 +6084,7 @@ namespace InWorldz.Phlox.Engine
             }
             else
             {
-                x = rot.X / s; // normalise axis
+                x = rot.X / s; // normalize axis
                 y = rot.Y / s;
                 z = rot.Z / s;
             }
@@ -11070,8 +11069,7 @@ namespace InWorldz.Phlox.Engine
 
         public string llGetSimulatorHostname()
         {
-            
-            return System.Environment.MachineName;
+            return llGetEnv("simulator_hostname");
         }
 
         //  <summary>
@@ -11489,7 +11487,7 @@ namespace InWorldz.Phlox.Engine
                         if (simulator == World.RegionInfo.RegionName)
                             reply = m_host.ParentGroup.Scene.GetSimulatorVersion();
                         else
-                            reply = "InWorldz";
+                            reply = VersionInfo.SoftwareName;
                         break;
                     default:
                         // ScriptSleep(1000);
@@ -12562,23 +12560,6 @@ namespace InWorldz.Phlox.Engine
                 userAgent.IndexOf("InWorldz", StringComparison.CurrentCultureIgnoreCase) < 0)
                 return; // Not the embedded browser. Is this check good enough?  
 
-#if false
-            // Use the IP address of the client and check against the request
-            // seperate logins from the same IP will allow all of them to get non-text/plain as long
-            // as the owner is in the region. Same as SL!
-            string logonFromIPAddress = agent.ControllingClient.RemoteEndPoint.Address.ToString();
-            string requestFromIPAddress = m_UrlModule.GetHttpHeader(key, "remote_addr");
-            //m_log.Debug("IP from header='" + requestFromIPAddress + "' IP from endpoint='" + logonFromIPAddress + "'");
-            if (requestFromIPAddress == null || requestFromIPAddress.Trim() == "")
-                return;
-            if (logonFromIPAddress == null || logonFromIPAddress.Trim() == "")
-                return;
-
-            // If the request isnt from the same IP address then the request cannot be from the owner
-            if (!requestFromIPAddress.Trim().Equals(logonFromIPAddress.Trim()))
-                return;
-#endif
-
             switch (type)
             {
                 case ScriptBaseClass.CONTENT_TYPE_HTML:
@@ -13394,12 +13375,9 @@ namespace InWorldz.Phlox.Engine
 
             try
             {
-                UUID agentID = UUID.Zero;
-
-                CachedUserInfo userInfo = World.CommsManager.UserProfileCacheService.GetUserDetails(firstname, lastname);
-                if (null != userInfo)
+                UUID agentID = World.CommsManager.UserService.Name2Key(firstname, lastname);
+                if (agentID != UUID.Zero)
                 {
-                    agentID = userInfo.UserProfile.ID;
                     // local avatars are cached lookups, so don't penalize if local
                     ScenePresence avatar = World.GetScenePresence(agentID);
                     if (avatar != null) 
@@ -13818,13 +13796,13 @@ namespace InWorldz.Phlox.Engine
             return rc;
         }
 
-        public string UserNameToReport(UUID agentId)
+        public string UserNameToReport(UUID agentId, bool onlyIfCached)
         {
-            CachedUserInfo profile = World.CommsManager.UserProfileCacheService.GetUserDetails(agentId);
-            if (profile == null)
-                return agentId.ToString();
+            string name = World.CommsManager.UserService.Key2Name(agentId, onlyIfCached);
+            if (name != String.Empty)
+                return name;
 
-            return profile.UserProfile.Name;
+            return agentId.ToString();
         }
 
         public string GroupNameToReport(UUID groupId)
@@ -13855,10 +13833,10 @@ namespace InWorldz.Phlox.Engine
                         string msg = null;
                         switch (action) {
                         case ScriptBaseClass.ESTATE_ACCESS_ALLOWED_AGENT_ADD:
-                                msg = UserNameToReport(targetId) + " has been added to the allowed user list for " + regionName;
+                                msg = UserNameToReport(targetId, false) + " has been added to the allowed user list for " + regionName;
                             break;
                         case ScriptBaseClass.ESTATE_ACCESS_ALLOWED_AGENT_REMOVE:
-                            msg = UserNameToReport(targetId) + " has been removed from the allowed user list for " + regionName;
+                            msg = UserNameToReport(targetId, false) + " has been removed from the allowed user list for " + regionName;
                             break;
                         case ScriptBaseClass.ESTATE_ACCESS_ALLOWED_GROUP_ADD:
                             msg = GroupNameToReport(targetId) + " has been added to the allowed group list for " + regionName;
@@ -13867,10 +13845,10 @@ namespace InWorldz.Phlox.Engine
                             msg = GroupNameToReport(targetId) + " has been removed from the allowed group list for " + regionName;
                             break;
                         case ScriptBaseClass.ESTATE_ACCESS_BANNED_AGENT_ADD:
-                            msg = UserNameToReport(targetId) + " has been banned from " + regionName;
+                            msg = UserNameToReport(targetId, false) + " has been banned from " + regionName;
                             break;
                         case ScriptBaseClass.ESTATE_ACCESS_BANNED_AGENT_REMOVE:
-                            msg = UserNameToReport(targetId) + " has been removed from the banned list for " + regionName;
+                            msg = UserNameToReport(targetId, false) + " has been removed from the banned list for " + regionName;
                             break;
                         default:
                             break;
@@ -14469,7 +14447,7 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List iwListRemoveDuplicates(LSL_List src)
         {
-			if(src.Length <= 1) return src;
+            if(src.Length <= 1) return src;
             //yarrr...
             return new LSL_List(  src.Data.Distinct().ToList()  );
         }
@@ -14513,11 +14491,11 @@ namespace InWorldz.Phlox.Engine
                 {
                     if(elements.Data.Contains<object>(src.Data[i]) == false)
                     {
-						if(count == -1 || counted < count)
-						{
-							ret.Add(src.Data[i]);
-							counted++;
-						}
+                        if(count == -1 || counted < count)
+                        {
+                            ret.Add(src.Data[i]);
+                            counted++;
+                        }
                     }
                 }
             }
@@ -15179,9 +15157,9 @@ namespace InWorldz.Phlox.Engine
                     });
             }
 
-			//Helper function for Ascii Compression
-			// Adapted from public domain code by Becky Pippen
-			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
+            //Helper function for Ascii Compression
+            // Adapted from public domain code by Becky Pippen
+            // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             private static string encode15BitsToChar(int num) {
                 if (num < 0 || num >= 0x8000) return "�";
                 num += 0x1000;
@@ -15193,19 +15171,19 @@ namespace InWorldz.Phlox.Engine
                 ));
             }
 
-			//Helper function for Ascii Compression
-			// Adapted from public domain code by Becky Pippen
-			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
+            //Helper function for Ascii Compression
+            // Adapted from public domain code by Becky Pippen
+            // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             private static int charToInt(string src, int index) {
                 if (index < 0) index = src.Length + index;
                 if (Math.Abs(index) >= src.Length) return 0;
                 char c = src[index];
                 return (int)c;
             }
-			
-			//Helper function for Ascii Compression
-			// Adapted from public domain code by Becky Pippen
-			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
+            
+            //Helper function for Ascii Compression
+            // Adapted from public domain code by Becky Pippen
+            // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             private static int decodeCharTo15Bits(string ch)
             {
                 int t = Convert.ToChar(ch);
@@ -15215,8 +15193,8 @@ namespace InWorldz.Phlox.Engine
             }
 
             //Compress an ascii string by encoding two characters into a single 15bit character.
-			// Adapted from public domain code by Becky Pippen
-			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
+            // Adapted from public domain code by Becky Pippen
+            // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             public static string AsciiCompress(string str)
             {
                 if (str == "") return str;
@@ -15244,8 +15222,8 @@ namespace InWorldz.Phlox.Engine
             }
 
             //Decompress an ascii string from 15bit encoding.
-			// Adapted from public domain code by Becky Pippen
-			// http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
+            // Adapted from public domain code by Becky Pippen
+            // http://wiki.secondlife.com/wiki/User:Becky_Pippen/Text_Storage
             public static string AsciiDecompress(string str)
             {
                 if (str == "") return str;
@@ -16032,8 +16010,8 @@ namespace InWorldz.Phlox.Engine
             if (!UUID.TryParse(botID, out botUUID) || (botUUID == UUID.Zero))
                 return new LSL_List();
 
-            CachedUserInfo userInfo = World.CommsManager.UserProfileCacheService.GetUserDetails(botUUID);
-            if (userInfo == null)
+            UserProfileData profile = World.CommsManager.UserService.GetUserProfile(botUUID);
+            if (profile == null)
                 return new LSL_List();
 
             List<object> list = new List<object>();
@@ -16044,16 +16022,16 @@ namespace InWorldz.Phlox.Engine
                 switch (param)
                 {
                     case ScriptBaseClass.BOT_ABOUT_TEXT:
-                        list.Add((string)userInfo.UserProfile.AboutText);
+                        list.Add((string)profile.AboutText);
                         break;
                     case ScriptBaseClass.BOT_EMAIL:
-                        list.Add((string)userInfo.UserProfile.Email);
+                        list.Add((string)profile.Email);
                         break;
                     case ScriptBaseClass.BOT_IMAGE_UUID:
-                        list.Add((string)userInfo.UserProfile.Image.ToString());
+                        list.Add((string)profile.Image.ToString());
                         break;
                     case ScriptBaseClass.BOT_PROFILE_URL:
-                        list.Add((string)userInfo.UserProfile.ProfileURL);
+                        list.Add((string)profile.ProfileURL);
                         break;
                 }
             }
@@ -16134,34 +16112,34 @@ namespace InWorldz.Phlox.Engine
 
             try
             {
-				
-				if(matchType > 2)
-				{
-					if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for botSearchBotOutfits");
-					else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for botSearchBotOutfits");
-				}
-				else 
-				{
-					IBotManager manager = World.RequestModuleInterface<IBotManager>();
-					if (manager != null)
-					{
-						List<string> itms = manager.GetBotOutfitsByOwner(m_host.OwnerID);
-						int count=0;
-						foreach(string outfit in itms)
-						{
-							if(pattern == "" || iwMatchString(outfit, pattern, matchType) == 1)
-							{
-								if (count >= start && (end == -1 || count <= end))
-								{
-									retVal.Add(outfit);
-								}
-								count++;
-								if (end != -1 && count > end)
-									break;
-							}
-						}
-					}
-				}
+                
+                if(matchType > 2)
+                {
+                    if (matchType == 3) LSLError("IW_MATCH_COUNT is not a valid matching type for botSearchBotOutfits");
+                    else if (matchType == 4) LSLError("IW_MATCH_COUNT_REGEX is not a valid matching type for botSearchBotOutfits");
+                }
+                else 
+                {
+                    IBotManager manager = World.RequestModuleInterface<IBotManager>();
+                    if (manager != null)
+                    {
+                        List<string> itms = manager.GetBotOutfitsByOwner(m_host.OwnerID);
+                        int count=0;
+                        foreach(string outfit in itms)
+                        {
+                            if(pattern == "" || iwMatchString(outfit, pattern, matchType) == 1)
+                            {
+                                if (count >= start && (end == -1 || count <= end))
+                                {
+                                    retVal.Add(outfit);
+                                }
+                                count++;
+                                if (end != -1 && count > end)
+                                    break;
+                            }
+                        }
+                    }
+                }
             }
             finally
             {
@@ -16335,8 +16313,7 @@ namespace InWorldz.Phlox.Engine
                 UUID userID;
                 if (!UUID.TryParse(avatar, out userID))
                 {
-                    CachedUserInfo userInfo = World.CommsManager.UserProfileCacheService.GetUserDetails(avatar.Split(' ')[0], avatar.Split(' ')[1]);
-                    if (userInfo == null)
+                    if (World.CommsManager.UserService.Name2Key(avatar) == null)
                         return ScriptBaseClass.BOT_USER_NOT_FOUND;
                 }
 

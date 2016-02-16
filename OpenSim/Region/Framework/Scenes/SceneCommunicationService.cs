@@ -442,7 +442,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (count > 0)
                 return true;
             else
-            	return false;
+                return false;
         }
 
         private int NextTickCheck(int then, string msg)

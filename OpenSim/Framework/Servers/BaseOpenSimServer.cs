@@ -77,11 +77,6 @@ namespace OpenSim.Framework.Servers
         /// </summary>
         protected string m_startupDirectory = Environment.CurrentDirectory;
 
-        /// <summary>
-        /// Server version information.  Usually VersionInfo + information about svn revision, operating system, etc.
-        /// </summary>
-        protected string m_version;
-
         protected string m_pidFile = String.Empty;
         
         /// <summary>
@@ -104,8 +99,7 @@ namespace OpenSim.Framework.Servers
         public BaseOpenSimServer()
         {
             m_startuptime = DateTime.Now;
-            m_version = VersionInfo.Version;
-            
+
             // Random uuid for private data
             m_osSecret = UUID.Random().ToString();
 
@@ -297,7 +291,7 @@ namespace OpenSim.Framework.Servers
         }
 
         /// <summary>
-        /// Performs initialisation of the scene, such as loading configuration from disk.
+        /// Performs initialization of the scene, such as loading configuration from disk.
         /// </summary>
         public virtual void Startup()
         {
@@ -306,7 +300,7 @@ namespace OpenSim.Framework.Servers
             StartupSpecific();
 
             // Report the version number near the end so you can still see it after startup.
-            m_log.Info("[STARTUP]: Version: " + m_version + "\n");
+            m_log.Info("[STARTUP]: Version: " + VersionInfo.Version + "\n");
 
             TimeSpan timeTaken = DateTime.Now - m_startuptime;
             m_log.InfoFormat("[STARTUP]: Startup took {0}m {1}s", timeTaken.Minutes, timeTaken.Seconds);
@@ -395,7 +389,7 @@ namespace OpenSim.Framework.Servers
             switch (showParams[0])
             {                       
                 case "info":
-                    Notice("Version: " + m_version);
+                    Notice("Version: " + VersionInfo.Version);
                     Notice("Startup directory: " + m_startupDirectory);
                     break;
 
@@ -415,7 +409,7 @@ namespace OpenSim.Framework.Servers
                 case "version":
                     Notice(
                         String.Format(
-                            "Version: {0} (interface version {1})", m_version, VersionInfo.MajorInterfaceVersion));
+                            "Version: {0}", VersionInfo.Version));
                     break;
             }
         }
@@ -483,16 +477,16 @@ namespace OpenSim.Framework.Servers
         }
 
         public string StatReport(OSHttpRequest httpRequest)
-		{
-			// If we catch a request for "callback", wrap the response in the value for jsonp
-			if( httpRequest.QueryString["callback"] != null)
-			{
-				return httpRequest.QueryString["callback"] + "(" + m_stats.XReport((DateTime.Now - m_startuptime).ToString() , m_version ) + ");";
-			} 
-			else 
-			{
-            	return m_stats.XReport((DateTime.Now - m_startuptime).ToString() , m_version ); 
-			}
+        {
+            // If we catch a request for "callback", wrap the response in the value for jsonp
+            if( httpRequest.QueryString["callback"] != null)
+            {
+                return httpRequest.QueryString["callback"] + "(" + m_stats.XReport((DateTime.Now - m_startuptime).ToString() , VersionInfo.FullVersion ) + ");";
+            } 
+            else 
+            {
+                return m_stats.XReport((DateTime.Now - m_startuptime).ToString() , VersionInfo.FullVersion );
+            }
         }
            
         protected void RemovePIDFile()

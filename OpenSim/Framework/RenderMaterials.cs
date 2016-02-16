@@ -12,7 +12,7 @@ namespace OpenSim.Framework
     /// A single textured face. Don't instantiate this class yourself, use the
     /// methods in RenderMaterials
     /// </summary>
-	[ProtoContract]
+    [ProtoContract]
     public class RenderMaterial : ICloneable
     {
         public enum eDiffuseAlphaMode : byte
@@ -68,31 +68,31 @@ namespace OpenSim.Framework
             set { NormalID = new UUID(value); }
         }
 
-		[ProtoMember(2)]
+        [ProtoMember(2)]
         public float NormalOffsetX {
             get;
             set;
         }
 
-		[ProtoMember(3)]
+        [ProtoMember(3)]
         public float NormalOffsetY {
             get;
             set;
         }
 
-		[ProtoMember(4)]
+        [ProtoMember(4)]
         public float NormalRepeatX {
             get;
             set;
         }
 
-		[ProtoMember(5)]
+        [ProtoMember(5)]
         public float NormalRepeatY {
             get;
             set;
         }
 
-		[ProtoMember(6)]
+        [ProtoMember(6)]
         public float NormalRotation {
             get;
             set;
@@ -109,31 +109,31 @@ namespace OpenSim.Framework
             set { SpecularID = new UUID(value); }
         }
 
-		[ProtoMember(8)]
+        [ProtoMember(8)]
         public float SpecularOffsetX {
             get;
             set;
         }
 
-		[ProtoMember(9)]
+        [ProtoMember(9)]
         public float SpecularOffsetY {
             get;
             set;
         }
 
-		[ProtoMember(10)]
+        [ProtoMember(10)]
         public float SpecularRepeatX {
             get;
             set;
         }
 
-		[ProtoMember(11)]
+        [ProtoMember(11)]
         public float SpecularRepeatY {
             get;
             set;
         }
 
-		[ProtoMember(12)]
+        [ProtoMember(12)]
         public float SpecularRotation {
             get;
             set;
@@ -151,25 +151,25 @@ namespace OpenSim.Framework
             set { SpecularLightColor.FromBytes(value, 0, false); }
         }
 
-		[ProtoMember(14)]
+        [ProtoMember(14)]
         public byte SpecularLightExponent {
             get;
             set;
         }
 
-		[ProtoMember(15)]
+        [ProtoMember(15)]
         public byte EnvironmentIntensity {
             get;
             set;
         }
 
-		[ProtoMember(16)]
+        [ProtoMember(16)]
         public byte DiffuseAlphaMode {
             get;
             set;
         }
 
-		[ProtoMember(17)]
+        [ProtoMember(17)]
         public byte AlphaMaskCutoff {
             get;
             set;
@@ -251,7 +251,7 @@ namespace OpenSim.Framework
 
         public override string ToString ()
         {
-			return string.Format ("NormalID : {0}, NormalOffsetX : {1}, NormalOffsetY : {2}, NormalRepeatX : {3}, NormalRepeatY : {4}, NormalRotation : {5}, SpecularID : {6}, SpecularOffsetX : {7}, SpecularOffsetY : {8}, SpecularRepeatX : {9}, SpecularRepeatY : {10}, SpecularRotation : {11}, SpecularLightColor : {12}, SpecularLightExponent : {13}, EnvironmentIntensity : {14}, DiffuseAlphaMode : {15}, AlphaMaskCutoff : {16}", 
+            return string.Format ("NormalID : {0}, NormalOffsetX : {1}, NormalOffsetY : {2}, NormalRepeatX : {3}, NormalRepeatY : {4}, NormalRotation : {5}, SpecularID : {6}, SpecularOffsetX : {7}, SpecularOffsetY : {8}, SpecularRepeatX : {9}, SpecularRepeatY : {10}, SpecularRotation : {11}, SpecularLightColor : {12}, SpecularLightExponent : {13}, EnvironmentIntensity : {14}, DiffuseAlphaMode : {15}, AlphaMaskCutoff : {16}", 
                 NormalID, NormalOffsetX, NormalOffsetY, NormalRepeatX, NormalRepeatY, NormalRotation, SpecularID, SpecularOffsetX, SpecularOffsetY, SpecularRepeatX, SpecularRepeatY, SpecularRotation, SpecularLightColor, SpecularLightExponent, EnvironmentIntensity, DiffuseAlphaMode, AlphaMaskCutoff);
         }
 
@@ -329,17 +329,17 @@ namespace OpenSim.Framework
     /// has a texture UUID of Y, every face would be textured with X except for
     /// face 18 that uses Y. In practice however, primitives utilize a maximum
     /// of nine faces.  The values in this dictionary are linked through a UUID 
-	/// key to the textures in a TextureEntry via MaterialID there.</remarks>
-	[ProtoContract]
+    /// key to the textures in a TextureEntry via MaterialID there.</remarks>
+    [ProtoContract]
     public class RenderMaterials
-	{
+    {
 #region Properties
 
-		[ProtoMember(1)]
+        [ProtoMember(1)]
         public Dictionary<String, RenderMaterial> Materials {
-			get;
-			private set;
-		}
+            get;
+            private set;
+        }
 #endregion
 
         public RenderMaterials()
@@ -374,25 +374,25 @@ namespace OpenSim.Framework
 
         public override int GetHashCode ()
         {
-			lock (Materials) {
-				int hashcode = 0;
-				foreach (var mat in Materials.Values)
-					hashcode ^= mat.GetHashCode ();
+            lock (Materials) {
+                int hashcode = 0;
+                foreach (var mat in Materials.Values)
+                    hashcode ^= mat.GetHashCode ();
 
-				return hashcode;
-			}
+                return hashcode;
+            }
         }
 
         public override string ToString ()
         {
-			lock (Materials) {
-				StringBuilder builder = new StringBuilder ();
-				builder.Append ("[ ");
-				foreach (KeyValuePair<string, RenderMaterial> entry in Materials)
-					builder.AppendFormat (" MaterialId : {0}, RenderMaterial : {{ {1} }} ", entry.Key, entry.Value.ToString ());
-				builder.Append(" ]");
-				return builder.ToString();
-			};
+            lock (Materials) {
+                StringBuilder builder = new StringBuilder ();
+                builder.Append ("[ ");
+                foreach (KeyValuePair<string, RenderMaterial> entry in Materials)
+                    builder.AppendFormat (" MaterialId : {0}, RenderMaterial : {{ {1} }} ", entry.Key, entry.Value.ToString ());
+                builder.Append(" ]");
+                return builder.ToString();
+            };
         }
     }
 }

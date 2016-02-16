@@ -101,7 +101,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
         private WorkArrivedDelegate _workArrivedDelegate;
         #region IRegionModule Members
 
-        public void Initialise(Scene scene, IConfigSource config)
+        public void Initialize(Scene scene, IConfigSource config)
         {
             // wrap this in a try block so that defaults will work if
             // the config file doesn't specify otherwise.
@@ -128,7 +128,7 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
             m_pending = Queue.Synchronized(m_pendingQ);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 
@@ -681,15 +681,15 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 
         public ListenerInfo(int handle, uint localID, UUID ItemID, UUID hostID, int channel, string name, UUID id, string message)
         {
-            Initialise(handle, localID, ItemID, hostID, channel, name, id, message);
+            Initialize(handle, localID, ItemID, hostID, channel, name, id, message);
         }
 
         public ListenerInfo(ListenerInfo li, string name, UUID id, string message)
         {
-            Initialise(li.m_handle, li.m_localID, li.m_itemID, li.m_hostID, li.m_channel, name, id, message);
+            Initialize(li.m_handle, li.m_localID, li.m_itemID, li.m_hostID, li.m_channel, name, id, message);
         }
 
-        private void Initialise(int handle, uint localID, UUID ItemID, UUID hostID, int channel, string name,
+        private void Initialize(int handle, uint localID, UUID ItemID, UUID hostID, int channel, string name,
                                 UUID id, string message)
         {
             m_active = true;

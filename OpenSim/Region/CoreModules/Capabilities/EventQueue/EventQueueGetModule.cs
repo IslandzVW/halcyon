@@ -67,7 +67,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         #region INonSharedRegionModule methods
 
-        public virtual void Initialise(IConfigSource config)
+        public virtual void Initialize(IConfigSource config)
         {
             MainConsole.Instance.Commands.AddCommand(
                 "Comms",
@@ -80,7 +80,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 HandleDebugEq);
         }
 
-        public void PostInitialise()
+        public void PostInitialize()
         {
         }
 

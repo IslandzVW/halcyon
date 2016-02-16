@@ -236,7 +236,7 @@ namespace OpenSim
                     config = defaultConfig.AddConfig("StandAlone");
 
                 config.Set("accounts_authenticate", true);
-                config.Set("welcome_message", "Welcome to OpenSimulator");
+                config.Set("welcome_message", "Welcome to Halcyon");
                 config.Set("inventory_plugin", "OpenSim.Data.SQLite.dll");
                 config.Set("inventory_source", "");
                 config.Set("userDatabase_plugin", "OpenSim.Data.SQLite.dll");

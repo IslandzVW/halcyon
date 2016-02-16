@@ -71,6 +71,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
         GroupMembershipData GetAgentGroupMembership(GroupRequestID requestID, UUID AgentID, UUID GroupID);
         List<GroupMembershipData> GetAgentGroupMemberships(GroupRequestID requestID, UUID AgentID);
+        List<UUID> GetAgentGroupList(GroupRequestID requestID, UUID AgentID); // Returns null on error, empty list if not in any groups.
         bool IsAgentInGroup(UUID groupID, UUID agentID);
 
         bool AddGroupNotice(GroupRequestID requestID, UUID groupID, UUID noticeID, string fromName, string subject, string message, byte[] binaryBucket);
