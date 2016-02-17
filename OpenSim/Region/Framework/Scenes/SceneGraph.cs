@@ -2263,6 +2263,9 @@ namespace OpenSim.Region.Framework.Scenes
                     if (OnObjectDuplicate != null)
                         OnObjectDuplicate(original, copy);
 
+                    // Signal a new object in the scene 
+                    m_parentScene.EventManager.TriggerObjectAddedToScene(copy);
+
                     return copy;
                 }
             }
