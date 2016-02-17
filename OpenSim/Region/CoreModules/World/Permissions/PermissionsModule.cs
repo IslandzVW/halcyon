@@ -1571,6 +1571,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if ((parcel.landData.Flags & ((int)ParcelFlags.CreateObjects)) == (uint)ParcelFlags.CreateObjects)
                 return true;    // we're done here, no need to check more
 
+            ulong roleNeeded = (ulong)GroupPowers.AllowRez;
+            if ((parcel.landData.Flags & (uint)ParcelFlags.CreateGroupObjects) == (uint)ParcelFlags.CreateGroupObjects)
+                roleNeeded = (ulong)GroupPowers.None; // if group rezzing is enabled, we just need to be a member, no specific role ability
+
             // Is an object rezzing the other object?
             if (objectID != UUID.Zero)
             {   // A scripted object is doing the rezzing...
@@ -1610,18 +1614,16 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 }
 
                 // Create role enabled for this group member on group land?
-                if (GenericParcelPermission(group.OwnerID, parcel, (ulong)GroupPowers.AllowRez))
+                if (GenericParcelPermission(group.OwnerID, parcel, roleNeeded))
                     return true;    // we're done here, no need to check more
 
                 return false;
             }
 
             // An agent/avatar is doing the rezzing...
-            if ((parcel.landData.Flags & (uint)ParcelFlags.CreateGroupObjects) == (uint)ParcelFlags.CreateGroupObjects)
-                if (GenericParcelPermission(owner, parcel, 0))
-                    return true;    // we're done here, no need to check more
-            // Create role enabled for this group member on group land?
-            if (GenericParcelPermission(owner, parcel, (ulong)GroupPowers.AllowRez))
+
+            // Create role enabled for this group member on group land, or parcel is group-enabled?
+            if (GenericParcelPermission(owner, parcel, roleNeeded))
                 return true;    // we're done here, no need to check more
 
             // Owner doesn't match the land parcel, check partner perms.
