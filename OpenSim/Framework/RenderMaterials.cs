@@ -498,6 +498,11 @@ namespace OpenSim.Framework
             }
         }
 
+        public RenderMaterials Copy()
+        {
+            return RenderMaterials.FromBytes(this.ToBytes(), 0);
+        }
+
         public override bool Equals(object obj)
         {
             if (obj == null)
@@ -545,7 +550,7 @@ namespace OpenSim.Framework
                     builder.AppendFormat (" MaterialId : {0}, RenderMaterial : {{ {1} }} ", entry.Key.ToString(), entry.Value.ToString ());
                 builder.Append(" ]");
                 return builder.ToString();
-            };
+            }
         }
     }
 }

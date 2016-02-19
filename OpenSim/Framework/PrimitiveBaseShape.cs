@@ -462,10 +462,9 @@ namespace OpenSim.Framework
         {
             PrimitiveBaseShape shape = (PrimitiveBaseShape)MemberwiseClone();
             shape.TextureEntryBytes = (byte[])TextureEntryBytes.Clone();
-            if (shape.Media != null)
-            {
-                shape.Media = new PrimMedia(Media);
-            }
+            shape.Media = new PrimMedia(Media);
+            shape.RenderMaterials = RenderMaterials.Copy();
+
             return shape;
         }
 
