@@ -911,7 +911,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
         }
 
-        public void SendAppearance(OpenMetaverse.UUID agentID, byte[] visualParams, byte[] textureEntry)
+        public void SendAppearance(AvatarAppearance app)
         {
         }
 
