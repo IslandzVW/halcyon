@@ -3313,7 +3313,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SendWearables()
         {   
-            ControllingClient.SendWearables(m_appearance.GetWearables().ToArray(), m_appearance.Serial++);
+            ControllingClient.SendWearables(m_appearance.GetWearables().ToArray(), m_appearance.Serial);
         }
 
         /// <summary>
