@@ -81,6 +81,7 @@ namespace OpenSim.Framework.Communications.Services
         private Int32 circuitCode;
         private uint regionX;
         private uint regionY;
+        private string cof_version;
 
         // Login
         private string firstname;
@@ -164,6 +165,7 @@ namespace OpenSim.Framework.Communications.Services
             lookAt = "[r0.99949799999999999756,r0.03166859999999999814,r0]";
             RegionX = (uint) 255232;
             RegionY = (uint) 254976;
+            CofVersion = "0";
 
             // Classifieds;
             AddClassifiedCategory((Int32) 1, "Shopping");
@@ -399,6 +401,7 @@ namespace OpenSim.Framework.Communications.Services
                 responseData["message"] = welcomeMessage;
                 responseData["region_x"] = (Int32)(RegionX * Constants.RegionSize);
                 responseData["region_y"] = (Int32)(RegionY * Constants.RegionSize);
+                responseData["cof_version"] = CofVersion;
 
                 responseData["map-server-url"] = MapServerURI;
                 if (!String.IsNullOrWhiteSpace(ProfileServerURI)) { // Just in case it's not set, let's let the viewers do as they will.
@@ -504,6 +507,7 @@ namespace OpenSim.Framework.Communications.Services
                 map["message"] = OSD.FromString(welcomeMessage);
                 map["region_x"] = OSD.FromInteger(RegionX * Constants.RegionSize);
                 map["region_y"] = OSD.FromInteger(RegionY * Constants.RegionSize);
+                map["cof_version"] = OSD.FromString(CofVersion);
 
                 map["max-agent-groups"] = OSD.FromInteger(Constants.MaxGroups);
 
@@ -650,6 +654,12 @@ namespace OpenSim.Framework.Communications.Services
         {
             get { return regionY; }
             set { regionY = value; }
+        }
+
+        public String CofVersion
+        {
+            get { return cof_version; }
+            set { cof_version = value; }
         }
 
         public string SunTexture
