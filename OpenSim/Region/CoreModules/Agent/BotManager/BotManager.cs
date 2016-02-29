@@ -740,7 +740,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public Vector3 GetBotPosition(UUID botID, UUID attemptingUser)
         {
-            if (GetBotWithPermission(botID, attemptingUser) == null)
+            if (GetBot(botID) == null)
                 return Vector3.Zero;
 
             ScenePresence sp = m_scene.GetScenePresence(botID);
