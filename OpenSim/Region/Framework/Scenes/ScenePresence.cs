@@ -3313,7 +3313,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SendWearables()
         {   
-            ControllingClient.SendWearables(m_appearance.GetWearables().ToArray(), m_appearance.Serial++);
+            ControllingClient.SendWearables(m_appearance.GetWearables().ToArray(), m_appearance.Serial);
         }
 
         /// <summary>
@@ -3343,8 +3343,7 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.WarnFormat("[SP]: Sending avatar appearance for {0} to {1}. Face[0]: {2}, Owner: {3}", this.Name, avatar.Name,
             //    m_appearance.Texture.FaceTextures[0] != null ? m_appearance.Texture.FaceTextures[0].TextureID.ToString() : "null", m_appearance.Owner);
 
-            avatar.ControllingClient.SendAppearance(
-                m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes());
+            avatar.ControllingClient.SendAppearance(m_appearance);
         }
 
         private void InitialAttachmentRez()
@@ -3381,7 +3380,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="texture"></param>
         /// <param name="visualParam"></param>
-        public void SetAppearance(byte[] texture, List<byte> visualParam, WearableCache[] cachedItems)
+        public void SetAppearance(byte[] texture, List<byte> visualParam, WearableCache[] cachedItems, uint serial)
         {
             Primitive.TextureEntry textureEnt = new Primitive.TextureEntry(texture, 0, texture.Length);
             m_appearance.SetAppearance(textureEnt, visualParam.ToArray());
@@ -3398,6 +3397,9 @@ namespace OpenSim.Region.Framework.Scenes
                 if(m_appearance.Texture != null && m_appearance.Texture.FaceTextures[index] != null)
                     bakedTextures.Add(cache.CacheID, m_appearance.Texture.FaceTextures[index].TextureID);
             }
+
+            // Cof version number.
+            m_appearance.Serial = (int)serial;
 
             if (!this.IsInTransit)
             {

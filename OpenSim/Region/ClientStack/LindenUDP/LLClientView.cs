@@ -3037,12 +3037,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(aw, ThrottleOutPacketType.Task);
         }
 
-        public void SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry)
+        public void SendAppearance(AvatarAppearance app)
         {
+            // UUID agentID, byte[] visualParams, byte[] textureEntry)
+            // m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes()
+
             // Disallow any self-referencing AvatarAppearance packets
-            if (agentID == this.AgentId)
+            if (app.Owner == this.AgentId)
             {
-                m_log.ErrorFormat("[CLIENT]: Refusing to send self-update of AvatarAppearance to {0}", agentID.ToString());
+                m_log.ErrorFormat("[CLIENT]: Refusing to send self-update of AvatarAppearance to {0}", app.Owner.ToString());
                 return;
             }
 
@@ -3050,26 +3053,36 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // TODO: don't create new blocks if recycling an old packet
             int clientParamsLength = MaxVisualParams();
 
-            if (clientParamsLength > visualParams.Length)
-                clientParamsLength = visualParams.Length;
+            if (clientParamsLength > app.VisualParams.Length)
+                clientParamsLength = app.VisualParams.Length;
 
             avp.VisualParam = new AvatarAppearancePacket.VisualParamBlock[clientParamsLength];
-            avp.ObjectData.TextureEntry = textureEntry;
+            avp.ObjectData.TextureEntry = app.Texture.GetBytes();
 
             AvatarAppearancePacket.VisualParamBlock avblock = null;
 
             for (int i = 0; i < clientParamsLength; i++)
             {
                 avblock = new AvatarAppearancePacket.VisualParamBlock();
-                avblock.ParamValue = (i < visualParams.Length) ? visualParams[i] : AvatarAppearance.VISUALPARAM_DEFAULT;
+                avblock.ParamValue = (i < app.VisualParams.Length) ? app.VisualParams[i] : AvatarAppearance.VISUALPARAM_DEFAULT;
                 avp.VisualParam[i] = avblock;
             }
 
-            // Coff Version and SSA flag. Currently ununsed.
-            avp.AppearanceData = new AvatarAppearancePacket.AppearanceDataBlock[0];
+            // Coff Version and SSA flag.
+            avp.AppearanceData = 
+                new AvatarAppearancePacket.AppearanceDataBlock[1]
+                {
+                    new AvatarAppearancePacket.AppearanceDataBlock()
+                    {
+                        CofVersion = app.Serial,
+                        AppearanceVersion = (int)RegionProtocols.None
+                    }
+                };
+
+            // TODO Add AvatarHoverPacket block here 
 
             avp.Sender.IsTrial = false;
-            avp.Sender.ID = agentID;
+            avp.Sender.ID = app.Owner;
             OutPacket(avp, ThrottleOutPacketType.Task);
         }
 
@@ -8012,7 +8025,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         };
                         items[i] = cache;
                     }
-                    handlerSetAppearance(appear.ObjectData.TextureEntry, visualparams, items);
+
+                    uint serial = appear.AgentData.SerialNum;
+
+                    handlerSetAppearance(appear.ObjectData.TextureEntry, visualparams, items, serial);
                 }
                 catch (Exception e)
                 {
