@@ -522,6 +522,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         public bool FriendHasEditPermission(UUID owner, UUID friend)
         {
+            // There's one easy optimization we should ensure isn't the case before proceeding further.
+            if (friend == owner)
+                return true;
+
             //the friend in this case will always be the active user in the scene
             CachedUserInfo user = m_scene.CommsManager.UserService.GetUserDetails(friend);
             if (user != null)
