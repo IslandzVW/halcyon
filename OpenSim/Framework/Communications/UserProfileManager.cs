@@ -783,6 +783,36 @@ namespace OpenSim.Framework.Communications
         }
 
         /// <summary>
+        /// Check if this user can access another's items.
+        /// </summary>
+        /// <param name="friendlistowner">This user (to check).</param>
+        /// <param name="friendId">The ID of the other user (friend owner of the items).</param>
+        /// <param name="permissionMask">Desired permission.</param>
+        /// <param name="noFetch">If true, don't make any net/storage calls. Memory only.</param>
+        /// <returns>true if permission is available</returns>
+        public bool UserHasFriendPerms(UUID friendlistowner, UUID friendId, uint permissionMask, bool noFetch)
+        {
+            CachedUserInfo userInfo = null;
+
+            if (noFetch)
+            {
+                // Can be called this way on crossings to prevent lookups.
+                TimestampedItem<CachedUserInfo> item;
+                lock (m_userInfoLock)
+                {
+                    // Ignore timeouts etc if this is a noFetch/fastCheck call.
+                    if (!m_userInfoByUUID.TryGetValue(friendlistowner, out item))
+                        return false;   // user will need to repeat the operation not in a crossing.
+                }
+                userInfo = item.Item;
+            } else {
+                userInfo = GetUserInfo(friendlistowner);
+            }
+
+            return userInfo.HasPermissionFromFriend(friendId, permissionMask);
+        }
+
+        /// <summary>
         /// Resets the currentAgent in the user profile
         /// </summary>
         /// <param name="agentID">The agent's ID</param>

@@ -1048,7 +1048,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public uint GenerateClientFlags(UUID ObjectID)
         {
-            return m_scene.Permissions.GenerateClientFlags(m_uuid, ObjectID);
+            return m_scene.Permissions.GenerateClientFlags(m_uuid, ObjectID, false);
         }
 
 #region Status Methods

@@ -123,6 +123,16 @@ namespace OpenSim.Framework.Communications
         void UpdateUserFriendPerms(UUID friendlistowner, UUID friend, uint perms);
 
         /// <summary>
+        /// Check if this user can access another's items.
+        /// </summary>
+        /// <param name="friendlistowner">This user (to check).</param>
+        /// <param name="friendId">The ID of the other user (friend owner of the items).</param>
+        /// <param name="permissionMask">Desired permission.</param>
+        /// <param name="noFetch">If true, don't make any net/storage calls. Memory only.</param>
+        /// <returns>true if permission is available</returns>
+        bool UserHasFriendPerms(UUID friendlistowner, UUID friendId, uint permissionMask, bool noFetch);
+
+        /// <summary>
         /// Logs off a user on the user server
         /// </summary>
         /// <param name="userid">UUID of the user</param>
