@@ -520,26 +520,16 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         #region Object Permissions
 
-        public bool FriendHasEditPermission(UUID owner, UUID friend)
+        public bool FriendHasEditPermission(UUID owner, UUID friend, bool fastCheck)
         {
             // There's one easy optimization we should ensure isn't the case before proceeding further.
             if (friend == owner)
                 return true;
 
-            //the friend in this case will always be the active user in the scene
-            CachedUserInfo user = m_scene.CommsManager.UserService.GetUserDetails(friend);
-            if (user != null)
-            {
-                if (user.HasPermissionFromFriend(owner, (uint)OpenMetaverse.FriendRights.CanModifyObjects))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return m_scene.CommsManager.UserService.UserHasFriendPerms(owner, friend, (uint)OpenMetaverse.FriendRights.CanModifyObjects, fastCheck);
         }
 
-        public uint GenerateClientFlags(UUID user, UUID objID)
+        public uint GenerateClientFlags(UUID user, UUID objID, bool fastCheck)
         {
             // Here's the way this works,
             // ObjectFlags and Permission flags are two different enumerations
@@ -604,7 +594,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (sp != null &&
                 (m_bypassPermissions     || // no perms checks
                 sp.GodLevel >= 200   || // Admin should be able to edit anything else in the sim (including admin objects)
-                FriendHasEditPermission(objectOwner, user))) // friend with permissions
+                FriendHasEditPermission(objectOwner, user, fastCheck))) // friend with permissions
             {
                 return RestrictClientFlags(task, objflags);    // minimal perms checks, act like owner
             }
@@ -920,7 +910,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 };
             }
 
-            if (FriendHasEditPermission(objectOwner, currentUser))
+            if (FriendHasEditPermission(objectOwner, currentUser, false))
             {
                 return new GenericPermissionResult
                 {
@@ -1709,7 +1699,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             //generic object permission will return TRUE for someone who has friend edit permissions,
             //but we do not want them to take
-            if (part.OwnerID != stealer && this.FriendHasEditPermission(part.OwnerID, stealer))
+            if (part.OwnerID != stealer && this.FriendHasEditPermission(part.OwnerID, stealer, false))
             {
                 return false;
             }
