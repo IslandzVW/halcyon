@@ -809,6 +809,9 @@ namespace OpenSim.Framework.Communications
                 userInfo = GetUserInfo(friendlistowner);
             }
 
+            if (userInfo == null)
+                return false;
+
             return userInfo.HasPermissionFromFriend(friendId, permissionMask);
         }
 
