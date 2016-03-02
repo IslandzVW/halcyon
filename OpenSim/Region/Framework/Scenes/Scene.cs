@@ -2930,7 +2930,7 @@ namespace OpenSim.Region.Framework.Scenes
                 newObject.RootPart.ParentGroup.CreateScriptInstances(null, ScriptStartFlags.FromCrossing, DefaultScriptEngine, (int)ScriptStateSource.PrimData, null);
 
                 //there are avatars coming over, they need an immediate update
-                newObject.SendFullUpdateToAllClientsImmediate();
+                newObject.SendFullUpdateToAllClientsImmediate(true);
             }
             else
             {

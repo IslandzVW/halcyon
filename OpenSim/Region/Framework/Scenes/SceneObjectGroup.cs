@@ -1925,33 +1925,33 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SendFullUpdateToClient(IClientAPI remoteClient, PrimUpdateFlags updateFlags)
         {
-            SendPartFullUpdate(remoteClient, RootPart, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, RootPart.UUID), updateFlags);
+            SendPartFullUpdate(remoteClient, RootPart, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, RootPart.UUID, false), updateFlags);
 
             m_children.ForEachPart((SceneObjectPart part) => {
                 if (part != RootPart)
-                    SendPartFullUpdate(remoteClient, part, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, part.UUID), updateFlags);
+                    SendPartFullUpdate(remoteClient, part, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, part.UUID, false), updateFlags);
             });
         }
 
-        public void SendFullUpdateToAllClientsImmediate()
+        public void SendFullUpdateToAllClientsImmediate(bool fastCheck)
         {
             IEnumerable<ScenePresence> avatars = Scene.GetScenePresences();
             foreach (var sp in avatars)
             {
-                this.SendFullUpdateToClientImmediate(sp.ControllingClient);
+                this.SendFullUpdateToClientImmediate(sp.ControllingClient, fastCheck);
             }
         }
 
-        public void SendFullUpdateToClientImmediate(IClientAPI remoteClient)
+        public void SendFullUpdateToClientImmediate(IClientAPI remoteClient, bool fastCheck)
         {
             //Since this is immediate, the update flags are ignored, but for clarity, we'll use ForcedFullUpdate
-            SendPartFullUpdate(remoteClient, RootPart, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, RootPart.UUID),
+            SendPartFullUpdate(remoteClient, RootPart, m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, RootPart.UUID, fastCheck),
                 true, PrimUpdateFlags.ForcedFullUpdate);
             
             m_children.ForEachPart((SceneObjectPart part) => {
                 if (part != RootPart)
                     SendPartFullUpdate(remoteClient, part,
-                        m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, part.UUID), true, PrimUpdateFlags.ForcedFullUpdate);
+                        m_scene.Permissions.GenerateClientFlags(remoteClient.AgentId, part.UUID, fastCheck), true, PrimUpdateFlags.ForcedFullUpdate);
             });
         }
 
