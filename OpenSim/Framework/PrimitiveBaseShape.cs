@@ -1299,7 +1299,17 @@ namespace OpenSim.Framework
             }
             public PrimMedia(PrimMedia other) : base()
             {
-                m_MediaFaces = (other == null) ? null : other.CopyArray();
+                if ((other == null) || (other.m_MediaFaces == null))
+                {
+                    New(0);
+                }
+                else
+                {
+                    lock (this)
+                    {
+                        m_MediaFaces = other.CopyArray();
+                    }
+                }
             }
 
             public int Count
@@ -1360,6 +1370,9 @@ namespace OpenSim.Framework
             {
                 lock (this)
                 {
+                    if (m_MediaFaces == null)
+                        return null;
+
                     int len = m_MediaFaces.Length;
                     MediaEntry[] copyFaces = new MediaEntry[len];
                     for (int x=0; x<len; x++)
@@ -1406,10 +1419,13 @@ namespace OpenSim.Framework
                             OSDArray meArray = new OSDArray();
                             lock (this)
                             {
-                                foreach (MediaEntry me in m_MediaFaces)
+                                if (m_MediaFaces != null)
                                 {
-                                    OSD osd = (null == me ? new OSD() : me.GetOSD());
-                                    meArray.Add(osd);
+                                    foreach (MediaEntry me in m_MediaFaces)
+                                    {
+                                        OSD osd = (null == me ? new OSD() : me.GetOSD());
+                                        meArray.Add(osd);
+                                    }
                                 }
                             }
 
