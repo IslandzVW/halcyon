@@ -801,18 +801,18 @@ namespace OpenSim.Framework.Communications
                 lock (m_userInfoLock)
                 {
                     // Ignore timeouts etc if this is a noFetch/fastCheck call.
-                    if (!m_userInfoByUUID.TryGetValue(friendlistowner, out item))
+                    if (!m_userInfoByUUID.TryGetValue(friendId, out item))
                         return false;   // user will need to repeat the operation not in a crossing.
                 }
                 userInfo = item.Item;
             } else {
-                userInfo = GetUserInfo(friendlistowner);
+                userInfo = GetUserInfo(friendId);
             }
 
             if (userInfo == null)
                 return false;
 
-            return userInfo.HasPermissionFromFriend(friendId, permissionMask);
+            return userInfo.HasPermissionFromFriend(friendlistowner, permissionMask);
         }
 
         /// <summary>
