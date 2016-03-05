@@ -2140,7 +2140,7 @@ namespace InWorldz.Phlox.Engine
                     textureChanged = true;
                 }
                 if (textureChanged)
-                    part.UpdateTexture(tex);
+                    part.UpdateTexture(tex, false);
                 return;
             }
         }
