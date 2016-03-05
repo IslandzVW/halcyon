@@ -910,7 +910,7 @@ namespace OpenSim.Region.Framework.Scenes
             //fact that a bunch of methods are called when the attachment rezzes
             group.HasGroupChanged = isTainted;
             if (!silent)
-                group.SendFullUpdateToAllClientsImmediate();
+                group.SendFullUpdateToAllClientsImmediate(false);
 
             if ((flags & AttachFlags.DontFireOnAttach) == 0)
             {

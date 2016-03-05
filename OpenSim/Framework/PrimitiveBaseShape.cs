@@ -1299,7 +1299,7 @@ namespace OpenSim.Framework
             }
             public PrimMedia(PrimMedia other) : base()
             {
-                m_MediaFaces = other.CopyArray();
+                m_MediaFaces = (other == null) ? null : other.CopyArray();
             }
 
             public int Count
