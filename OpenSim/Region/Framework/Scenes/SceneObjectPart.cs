@@ -4696,7 +4696,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="tex"></param>
         /// <param name="doChangedEvent"></param>
-        public void UpdateTexture(Primitive.TextureEntry tex, bool doChangedEvent = true)
+        public void UpdateTexture(Primitive.TextureEntry tex, bool doChangedEvent = false)
         {
             m_shape.Textures = tex;
 
