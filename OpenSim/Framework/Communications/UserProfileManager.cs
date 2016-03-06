@@ -799,7 +799,7 @@ namespace OpenSim.Framework.Communications
         /// <param name="permissionMask">Desired permission.</param>
         /// <param name="noFetch">If true, don't make any net/storage calls. Memory only.</param>
         /// <returns>true if permission is available</returns>
-        public bool UserHasFriendPerms(UUID friendlistowner, UUID friendId, uint permissionMask, bool noFetch)
+        public bool UserHasFriendPerms(UUID requestingFriend, UUID objectOwner, uint permissionMask, bool noFetch)
         {
             CachedUserInfo userInfo = null;
 
@@ -810,18 +810,18 @@ namespace OpenSim.Framework.Communications
                 lock (m_userInfoLock)
                 {
                     // Ignore timeouts etc if this is a noFetch/fastCheck call.
-                    if (!m_userInfoByUUID.TryGetValue(friendId, out item))
+                    if (!m_userInfoByUUID.TryGetValue(requestingFriend, out item))
                         return false;   // user will need to repeat the operation not in a crossing.
                 }
                 userInfo = item.Item;
             } else {
-                userInfo = GetUserInfo(friendId);
+                userInfo = GetUserInfo(requestingFriend);
             }
 
             if (userInfo == null)
                 return false;
 
-            return userInfo.HasPermissionFromFriend(friendlistowner, permissionMask);
+            return userInfo.HasPermissionFromFriend(objectOwner, permissionMask);
         }
 
         /// <summary>
@@ -1521,10 +1521,10 @@ namespace OpenSim.Framework.Communications
         public void UpdateFriendPerms(UUID uuid, UUID friendID, uint perms)
         {
             //if the friend is here we need to change their permissions for the given user
-            CachedUserInfo cachedUserDetails = this.GetUserDetails(uuid);
+            CachedUserInfo cachedUserDetails = this.GetUserDetails(friendID);
             if (cachedUserDetails != null)
             {
-                cachedUserDetails.AdjustPermissionsFromFriend(friendID, perms);
+                cachedUserDetails.AdjustPermissionsFromFriend(uuid, perms);
             }
         }
 
