@@ -526,7 +526,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if (requestingFriend == objectOwner)
                 return true;
 
-            return m_scene.CommsManager.UserService.UserHasFriendPerms(requestingFriend, objectOwner, (uint)OpenMetaverse.FriendRights.CanModifyObjects, fastCheck);
+            return m_scene.CommsManager.UserService.UserHasFriendPerms(requestingFriend, objectOwner, (uint)FriendRights.CanModifyObjects, fastCheck);
         }
 
         public uint GenerateClientFlags(UUID user, UUID objID, bool fastCheck)
