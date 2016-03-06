@@ -84,14 +84,14 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             {
                 if ((SMTPConfig = m_Config.Configs["SMTP"]) == null)
                 {
-                    m_log.InfoFormat("[SMTP] SMTP server not configured");
+                    m_log.InfoFormat("[SMTP]: SMTP server not configured");
                     m_Enabled = false;
                     return;
                 }
 
                 if (!SMTPConfig.GetBoolean("enabled", false))
                 {
-                    m_log.InfoFormat("[SMTP] module disabled in configuration");
+                    m_log.InfoFormat("[SMTP]: module disabled in configuration");
                     m_Enabled = false;
                     return;
                 }
@@ -105,7 +105,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             }
             catch (Exception e)
             {
-                m_log.Error("[EMAIL] DefaultEmailModule not configured: "+ e.Message);
+                m_log.Error("[EMAIL]: DefaultEmailModule not configured: "+ e.Message);
                 m_Enabled = false;
                 return;
             }
@@ -129,7 +129,7 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                     }
                 }
 
-                m_log.Info("[EMAIL] Activated DefaultEmailModule");
+                m_log.Info("[EMAIL]: Activated DefaultEmailModule");
             }
         }
 
@@ -163,57 +163,46 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             System.Threading.Thread.Sleep(delay);
         }
 
-        private bool IsLocal(UUID objectID)
-        {
-            string unused;
-            return (null != findPrim(objectID, out unused));
-        }
-
+        // This function returns the first region name found in ObjectRegionName even if the object is not found.
         private SceneObjectPart findPrim(UUID objectID, out string ObjectRegionName)
         {
+            ObjectRegionName = String.Empty;
             lock (m_Scenes)
             {
                 foreach (Scene s in m_Scenes.Values)
                 {
                     SceneObjectPart part = s.GetSceneObjectPart(objectID);
-                    if (part != null)
+                    if ((part != null) || (ObjectRegionName == String.Empty))
                     {
                         ObjectRegionName = s.RegionInfo.RegionName;
                         uint localX = (s.RegionInfo.RegionLocX * 256);
                         uint localY = (s.RegionInfo.RegionLocY * 256);
                         ObjectRegionName = ObjectRegionName + " (" + localX + ", " + localY + ")";
-                        return part;
+                        if (part != null)
+                            return part;
                     }
                 }
             }
-            ObjectRegionName = String.Empty;
             return null;
         }
 
-        private void resolveNamePositionRegionName(UUID objectID, out string ObjectName, out string ObjectAbsolutePosition, out string ObjectRegionName)
+        private bool resolveNamePositionRegionName(UUID objectID, out string ObjectName, out string ObjectAbsolutePosition, out string ObjectRegionName)
         {
-            string m_ObjectRegionName;
-            int objectLocX;
-            int objectLocY;
-            int objectLocZ;
-            SceneObjectPart part = findPrim(objectID, out m_ObjectRegionName);
-            if (part != null)
+            SceneObjectPart part = findPrim(objectID, out ObjectRegionName);
+            // ObjectRegionName is initialized by findPrim either way.
+            if (part == null)
             {
-                objectLocX = (int)part.AbsolutePosition.X;
-                objectLocY = (int)part.AbsolutePosition.Y;
-                objectLocZ = (int)part.AbsolutePosition.Z;
-                ObjectAbsolutePosition = "(" + objectLocX + ", " + objectLocY + ", " + objectLocZ + ")";
-                ObjectName = part.Name;
-                ObjectRegionName = m_ObjectRegionName;
-                return;
+                lock (m_Scenes)
+                {
+                    ObjectName = "Object " + objectID.ToString();
+                    ObjectAbsolutePosition = Vector3.Zero.ToString();
+                }
+                return false;
             }
-            objectLocX = (int)part.AbsolutePosition.X;
-            objectLocY = (int)part.AbsolutePosition.Y;
-            objectLocZ = (int)part.AbsolutePosition.Z;
-            ObjectAbsolutePosition = "(" + objectLocX + ", " + objectLocY + ", " + objectLocZ + ")";
+
+            ObjectAbsolutePosition = String.Format("({0},{1},{2})", (int)part.AbsolutePosition.X, (int)part.AbsolutePosition.Y, (int)part.AbsolutePosition.Z);
             ObjectName = part.Name;
-            ObjectRegionName = m_ObjectRegionName;
-            return;
+            return true;
         }
 
         /// <summary>
@@ -239,15 +228,13 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
             bool isEMailStrictMatch = EMailreStrict.IsMatch(address);
             if (!isEMailStrictMatch)
             {
-                m_log.Error("[EMAIL] REGEX Problem in EMail Address: "+address);
+                m_log.Error("[EMAIL]: REGEX Problem in EMail Address: "+address);
                 return;
             }
 
             string LastObjectName = String.Empty;
             string LastObjectPosition = String.Empty;
             string LastObjectRegionName = String.Empty;
-
-            resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName);
 
             try
             {
@@ -260,7 +247,8 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 //Subject
                 emailMessage.Subject = subject;
                 //TEXT Body
-                resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName);
+                if (!resolveNamePositionRegionName(objectID, out LastObjectName, out LastObjectPosition, out LastObjectRegionName))
+                    m_log.WarnFormat("[EMAIL]: Could not find sending object {0} in region.", objectID);
                 emailMessage.BodyText = "Object-Name: " + LastObjectName +
                             "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
                             LastObjectPosition + "\n\n" + body;
@@ -287,11 +275,11 @@ namespace OpenSim.Region.CoreModules.Scripting.EmailModules
                 emailMessage.Send(smtpServer);
 
                 //Log
-                m_log.Info("[EMAIL] EMail sent to: " + address + " from object: " + objectID.ToString() + "@" + m_HostName);
+                m_log.Info("[EMAIL]: EMail sent to: " + address + " from object: " + objectID.ToString() + "@" + m_HostName);
             }
             catch (Exception e)
             {
-                m_log.Error("[EMAIL] DefaultEmailModule Exception: " + e.Message);
+                m_log.Error("[EMAIL]: DefaultEmailModule Exception: " + e.Message);
             }
         }
 

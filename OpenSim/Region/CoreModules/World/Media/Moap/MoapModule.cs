@@ -328,15 +328,18 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 return String.Empty;
             }
 
-            if (null == part.Shape.Media)
-                return String.Empty;
-
             ObjectMediaResponse resp = new ObjectMediaResponse();
-
             resp.PrimID = primId;
 
             lock (part.Shape.Media)
+            {
+                if (null == part.Shape.Media)
+                    return String.Empty;
+
                 resp.FaceMedia = part.Shape.Media.CopyArray();
+                if (null == resp.FaceMedia)
+                    return String.Empty;
+            }
 
             resp.Version = part.MediaUrl;
 
