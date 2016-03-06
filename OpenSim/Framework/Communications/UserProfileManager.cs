@@ -769,17 +769,26 @@ namespace OpenSim.Framework.Communications
         public virtual void AddNewUserFriend(UUID friendlistowner, UUID friend, uint perms)
         {
             m_storage.AddNewUserFriend(friendlistowner, friend, perms);
+
+            CachedUserInfo userInfo = GetUserInfo(friend);
+            if (userInfo != null) userInfo.AdjustPermissionsFromFriend(friendlistowner, perms);
         }
 
         public virtual void RemoveUserFriend(UUID friendlistowner, UUID friend)
         {
             m_storage.RemoveUserFriend(friendlistowner, friend);
+
+            CachedUserInfo userInfo = GetUserInfo(friend);
+            if (userInfo != null) userInfo.RemoveFromFriendsCache(friendlistowner);
         }
 
         public virtual void UpdateUserFriendPerms(UUID friendlistowner, UUID friend, uint perms)
         {
             if (friendlistowner == UUID.Zero) return;
             m_storage.UpdateUserFriendPerms(friendlistowner, friend, perms);
+
+            CachedUserInfo userInfo = GetUserInfo(friend);
+            if (userInfo != null) userInfo.AdjustPermissionsFromFriend(friendlistowner, perms);
         }
 
         /// <summary>
@@ -1512,10 +1521,10 @@ namespace OpenSim.Framework.Communications
         public void UpdateFriendPerms(UUID uuid, UUID friendID, uint perms)
         {
             //if the friend is here we need to change their permissions for the given user
-            CachedUserInfo cachedUserDetails = this.GetUserDetails(friendID);
+            CachedUserInfo cachedUserDetails = this.GetUserDetails(uuid);
             if (cachedUserDetails != null)
             {
-                cachedUserDetails.AdjustPermissionsFromFriend(uuid, perms);
+                cachedUserDetails.AdjustPermissionsFromFriend(friendID, perms);
             }
         }
 

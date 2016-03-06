@@ -180,6 +180,15 @@ namespace OpenSim.Framework.Communications.Cache
             }
         }
 
+        public void RemoveFromFriendsCache(UUID friendId)
+        {
+            lock (_permissionsGivenByFriends)
+            {
+                if (_permissionsGivenByFriends.ContainsKey(friendId))
+                    _permissionsGivenByFriends.Remove(friendId);
+            }
+        }
+
         /// <summary>
         /// Check if a calling card already exists in the given folder with the name given
         /// </summary>
