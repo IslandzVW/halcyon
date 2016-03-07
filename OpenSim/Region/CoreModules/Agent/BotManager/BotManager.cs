@@ -133,6 +133,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 }
 
                 ILandObject parcel = m_scene.LandChannel.GetLandObject(startPos.X, startPos.Y);
+                if (parcel == null)
+                {
+                    reason = "Land parcel could not be found at "+ ((int)startPos.X).ToString() + "," + ((int)startPos.Y).ToString();
+                    return UUID.Zero;
+                }
+
                 ParcelPropertiesStatus status;
                 if (parcel.DenyParcelAccess(owner, out status))
                 {
@@ -192,14 +198,17 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     }
                 }
 
-                if (!CheckAttachmentCount(appearance, parcel, appearance.Owner, out reason))
+                BotClient client = new BotClient(firstName, lastName, m_scene, startPos, owner);
+
+                // Replace all wearables and attachments item IDs with new ones so that they cannot be found in the
+                // owner's avatar appearance in case the user is in the same region, wearing some of the same items.
+                RemapWornItems(client.AgentID, appearance);
+
+                if (!CheckAttachmentCount(client.AgentID, appearance, parcel, appearance.Owner, out reason))
                 {
                     //Too many objects already on this parcel/region
                     return UUID.Zero;
                 }
-
-
-                BotClient client = new BotClient(firstName, lastName, m_scene, startPos, owner);
 
                 originalOwner = appearance.Owner;
                 appearance.Owner = client.AgentID;
@@ -271,17 +280,44 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             return UUID.Zero;
         }
 
-        public bool CheckAttachmentCount(AvatarAppearance appearance, ILandObject parcel, UUID originalOwner, out string reason)
+        private void RemapWornItems(UUID botID, AvatarAppearance appearance)
+        {
+            // save before Clear calls
+            List<AvatarWearable> wearables = appearance.GetWearables();
+            List<AvatarAttachment> attachments = appearance.GetAttachments();
+            appearance.ClearWearables();
+            appearance.ClearAttachments();
+
+            // Remap bot outfit with new item IDs
+            foreach (AvatarWearable w in wearables)
+            {
+                AvatarWearable newWearable = new AvatarWearable(w);
+                // store a reversible back-link to the original inventory item ID.
+                newWearable.ItemID = w.ItemID ^ botID;
+                appearance.SetWearable(newWearable);
+            }
+
+            foreach (AvatarAttachment a in attachments)
+            {
+                // store a reversible back-link to the original inventory item ID.
+                UUID itemID = a.ItemID ^ botID;
+                appearance.SetAttachment(a.AttachPoint, true, itemID, a.AssetID);
+            }
+        }
+
+        public bool CheckAttachmentCount(UUID botID, AvatarAppearance appearance, ILandObject parcel, UUID originalOwner, out string reason)
         {
             int landImpact = 0;
             foreach (AvatarAttachment attachment in appearance.GetAttachments())
             {
-                if (attachment.ItemID == UUID.Zero)
+                // get original itemID
+                UUID origItemID = attachment.ItemID ^ botID;
+                if (origItemID == UUID.Zero)
                     continue;
 
                 IInventoryProviderSelector inventorySelect = ProviderRegistry.Instance.Get<IInventoryProviderSelector>();
                 var provider = inventorySelect.GetProvider(originalOwner);
-                InventoryItemBase item = provider.GetItem(attachment.ItemID, UUID.Zero);
+                InventoryItemBase item = provider.GetItem(origItemID, UUID.Zero);
 
                 SceneObjectGroup grp = m_scene.GetObjectFromItem(item);
                 if (grp != null)
@@ -312,15 +348,16 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
             foreach (AvatarAttachment attachment in attachments)
             {
-                if (attachment.ItemID == UUID.Zero)
+                UUID origItemID = attachment.ItemID ^ sp.UUID;
+                if (origItemID == UUID.Zero)
                     continue;
 
                 // Are we already attached?
-                if (sp.Appearance.GetAttachmentForItem(attachment.ItemID) == null)
+                if (sp.Appearance.GetAttachmentForItem(origItemID) == null)
                 {
                     IInventoryProviderSelector inventorySelect = ProviderRegistry.Instance.Get<IInventoryProviderSelector>();
                     var provider = inventorySelect.GetProvider(originalOwner);
-                    InventoryItemBase item = provider.GetItem(attachment.ItemID, UUID.Zero);
+                    InventoryItemBase item = provider.GetItem(origItemID, UUID.Zero);
                     if ((item.CurrentPermissions & (uint)PermissionMask.Copy) != (uint)PermissionMask.Copy)
                     {
                         if (ownerSP == null)
@@ -331,7 +368,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     }
 
                     SceneObjectGroup grp = m_scene.RezObject(sp.ControllingClient, sp.ControllingClient.ActiveGroupId,
-                        attachment.ItemID, Vector3.Zero, Vector3.Zero, UUID.Zero, (byte)1, true,
+                        origItemID, Vector3.Zero, Vector3.Zero, UUID.Zero, (byte)1, true,
                         false, false, sp.UUID, true, (uint)attachment.AttachPoint, 0, null, item, false);
 
                     if (grp != null)
@@ -566,13 +603,19 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     }
                 }
 
-                ILandObject parcel = m_scene.LandChannel.GetLandObject(sp.AbsolutePosition.X, sp.AbsolutePosition.Y);
+                Vector3 pos = sp.AbsolutePosition;
+                ILandObject parcel = m_scene.LandChannel.GetLandObject(pos.X, pos.Y);
                 if (parcel == null)
                 {
-                    reason = "Land parcel could not be found.";
+                    reason = "Land parcel could not be found at " + ((int)pos.X).ToString() + "," + ((int)pos.Y).ToString();
                     return false;
                 }
-                if (!CheckAttachmentCount(appearance, parcel, appearance.Owner, out reason))
+
+                // Replace all wearables and attachments item IDs with new ones so that they cannot be found in the
+                // owner's avatar appearance in case the user is in the same region, wearing some of the same items.
+                RemapWornItems(bot.AgentID, appearance);     // allocate temp IDs for the new outfit.
+
+                if (!CheckAttachmentCount(bot.AgentID, appearance, parcel, appearance.Owner, out reason))
                 {
                     //Too many objects already on this parcel/region
                     return false;
@@ -583,14 +626,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 appearance.Owner = bot.AgentID;
                 appearance.IsBotAppearance = true;
 
-
                 sp.Appearance = appearance;
                 if (appearance.AvatarHeight > 0)
                     sp.SetHeight(appearance.AvatarHeight);
                 sp.SendInitialData();
 
                 List<AvatarAttachment> attachments = sp.Appearance.GetAttachments();
-
                 foreach (SceneObjectGroup group in sp.GetAttachments())
                 {
                     sp.Appearance.DetachAttachment(group.GetFromItemID());

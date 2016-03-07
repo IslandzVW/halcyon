@@ -431,8 +431,13 @@ namespace OpenSim.Framework
         {
             lock (Materials)
             {
-                return Materials[id.Guid];
+                if (Materials.ContainsKey(id.Guid))
+                    return Materials[id.Guid];
             }
+
+            // If we get here, there is no material by that ID.
+            // It's a struct (can't return a null), we must return *some* material.
+            return (RenderMaterial)RenderMaterial.DefaultMaterial.Clone();
         }
 
         public List<RenderMaterial> GetMaterials()

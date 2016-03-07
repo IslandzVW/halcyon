@@ -5867,13 +5867,14 @@ namespace InWorldz.Phlox.Engine
                 {
                     if (pusheeav != null)
                     {
-                        if (pusheeav.PhysicsActor != null)
+                        PhysicsActor pa = pusheeav.PhysicsActor;
+                        if (pa != null)
                         {
                             if (local != 0)
                             {
                                 applied_linear_impulse *= m_host.GetWorldRotation();
                             }
-                            pusheeav.PhysicsActor.AddForce(applied_linear_impulse, (local!=0) ? ForceType.LocalLinearImpulse : ForceType.GlobalLinearImpulse);
+                            pa.AddForce(applied_linear_impulse, (local!=0) ? ForceType.LocalLinearImpulse : ForceType.GlobalLinearImpulse);
                         }
                     }
                 }
@@ -7065,11 +7066,11 @@ namespace InWorldz.Phlox.Engine
             // note: this may need some tweaking when walking downhill. you "fall down" for a brief instant
             // and don't collide when walking downhill, which instantly registers as in-air, briefly. should
             // there be some minimum non-collision threshold time before claiming the avatar is in-air?
+            PhysicsActor pa = agent.PhysicsActor;
             if ((flags & ScriptBaseClass.AGENT_WALKING) == 0 && 
                 (flags & ScriptBaseClass.AGENT_SITTING) == 0 &&
                 (flags & ScriptBaseClass.AGENT_CROUCHING) == 0 &&
-                agent.PhysicsActor != null &&
-                !agent.PhysicsActor.IsColliding)
+                pa != null && !pa.IsColliding)
             {
                 flags |= ScriptBaseClass.AGENT_IN_AIR;
             }
@@ -7691,7 +7692,7 @@ namespace InWorldz.Phlox.Engine
 
         public int llOverMyLand(string id)
         {
-            
+            ILandObject parcel = null;
             UUID key = new UUID();
             if (UUID.TryParse(id, out key))
             {
@@ -7700,8 +7701,7 @@ namespace InWorldz.Phlox.Engine
                 if (presence != null) // object is an avatar
                 {
                     pos = presence.AbsolutePosition;
-                    if (m_host.OwnerID == World.LandChannel.GetLandObject(pos.X, pos.Y).landData.OwnerID)
-                        return 1;
+                    parcel = World.LandChannel.GetLandObject(pos.X, pos.Y);
                 }
                 else // object is not an avatar
                 {
@@ -7709,19 +7709,21 @@ namespace InWorldz.Phlox.Engine
                     if (obj != null)
                     {
                         pos = obj.AbsolutePosition;
-                        if (m_host.OwnerID == World.LandChannel.GetLandObject(pos.X, pos.Y).landData.OwnerID)
-                            return 1;
+                        parcel = World.LandChannel.GetLandObject(pos.X, pos.Y);
                     }
                 }
             }
 
-            return 0;
+            return (parcel != null) && (m_host.OwnerID == parcel.landData.OwnerID) ? 1 : 0;
         }
 
         public string llGetLandOwnerAt(LSL_Vector pos)
         {
-            
-            return World.LandChannel.GetLandObject((float)pos.X, (float)pos.Y).landData.OwnerID.ToString();
+            UUID owner = UUID.Zero;
+            ILandObject parcel = World.LandChannel.GetLandObject((float)pos.X, (float)pos.Y);
+            if (parcel != null)
+                owner = parcel.landData.OwnerID;
+            return owner.ToString();
         }
 
         /// <summary>
@@ -8522,7 +8524,8 @@ namespace InWorldz.Phlox.Engine
         public void llAddToLandPassList(string avatar, float hours)
         {
             UUID key;
-            ILandObject landObject = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+            Vector3 landpos = m_host.AbsolutePosition;
+            ILandObject landObject = World.LandChannel.GetLandObject(landpos.X, landpos.Y);
             if (World.Permissions.CanEditParcel(m_host.OwnerID, landObject, GroupPowers.LandManageAllowed))
             {
                 ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
@@ -10150,6 +10153,8 @@ namespace InWorldz.Phlox.Engine
         public string llGetParcelMusicURL()
         {
             ILandObject land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y);
+            if (land == null)
+                return String.Empty;
 
             return land.GetMusicUrl();
         }
@@ -12090,9 +12095,10 @@ namespace InWorldz.Phlox.Engine
                         {
                             // We don't have a mass without a PhysActor, so we need to come up something.
                             // For now fix the null reference crash and use same as child agent.
-                            if (avatar.PhysicsActor == null)
+                            PhysicsActor pa = avatar.PhysicsActor;
+                            if (pa == null)
                                 return 0.01f;
-                            return (float)avatar.PhysicsActor.Mass;
+                            return (float)pa.Mass;
                         }
                     }
                 }
@@ -12728,8 +12734,9 @@ namespace InWorldz.Phlox.Engine
         {
             
             UUID key;
-            LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).landData;
-            if (land.OwnerID == m_host.OwnerID)
+            Vector3 landpos = m_host.AbsolutePosition;
+            ILandObject landObject = World.LandChannel.GetLandObject(landpos.X, landpos.Y);
+            if (World.Permissions.CanEditParcel(m_host.OwnerID, landObject, GroupPowers.LandManageAllowed))
             {
                 ParcelManager.ParcelAccessEntry entry = new ParcelManager.ParcelAccessEntry();
                 if (UUID.TryParse(avatar, out key))
@@ -12737,7 +12744,7 @@ namespace InWorldz.Phlox.Engine
                     entry.AgentID = key;
                     entry.Flags = AccessList.Ban;
                     entry.Time = DateTime.Now.AddHours(hours);
-                    land.ParcelAccessList.Add(entry);
+                    landObject.landData.ParcelAccessList.Add(entry);
                 }
             }
             
@@ -12748,16 +12755,17 @@ namespace InWorldz.Phlox.Engine
         {
             
             UUID key;
-            LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).landData;
-            if (land.OwnerID == m_host.OwnerID)
+            Vector3 landpos = m_host.AbsolutePosition;
+            ILandObject landObject = World.LandChannel.GetLandObject(landpos.X, landpos.Y);
+            if (World.Permissions.CanEditParcel(m_host.OwnerID, landObject, GroupPowers.LandManageAllowed))
             {
                 if (UUID.TryParse(avatar, out key))
                 {
-                    foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
+                    foreach (ParcelManager.ParcelAccessEntry entry in landObject.landData.ParcelAccessList)
                     {
                         if (entry.AgentID == key && entry.Flags == AccessList.Access)
                         {
-                            land.ParcelAccessList.Remove(entry);
+                            landObject.landData.ParcelAccessList.Remove(entry);
                             break;
                         }
                     }
@@ -12771,16 +12779,17 @@ namespace InWorldz.Phlox.Engine
         {
             
             UUID key;
-            LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).landData;
-            if (land.OwnerID == m_host.OwnerID)
+            Vector3 landpos = m_host.AbsolutePosition;
+            ILandObject landObject = World.LandChannel.GetLandObject(landpos.X, landpos.Y);
+            if (World.Permissions.CanEditParcel(m_host.OwnerID, landObject, GroupPowers.LandManageAllowed))
             {
                 if (UUID.TryParse(avatar, out key))
                 {
-                    foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
+                    foreach (ParcelManager.ParcelAccessEntry entry in landObject.landData.ParcelAccessList)
                     {
                         if (entry.AgentID == key && entry.Flags == AccessList.Ban)
                         {
-                            land.ParcelAccessList.Remove(entry);
+                            landObject.landData.ParcelAccessList.Remove(entry);
                             break;
                         }
                     }
@@ -13137,15 +13146,15 @@ namespace InWorldz.Phlox.Engine
 
         public void llResetLandBanList()
         {
-            
-            LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).landData;
-            if (land.OwnerID == m_host.OwnerID)
+            Vector3 landpos = m_host.AbsolutePosition;
+            ILandObject landObject = World.LandChannel.GetLandObject(landpos.X, landpos.Y);
+            if (World.Permissions.CanEditParcel(m_host.OwnerID, landObject, GroupPowers.LandManageAllowed))
             {
-                foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
+                foreach (ParcelManager.ParcelAccessEntry entry in landObject.landData.ParcelAccessList)
                 {
                     if (entry.Flags == AccessList.Ban)
                     {
-                        land.ParcelAccessList.Remove(entry);
+                        landObject.landData.ParcelAccessList.Remove(entry);
                     }
                 }
             }
@@ -13155,15 +13164,15 @@ namespace InWorldz.Phlox.Engine
 
         public void llResetLandPassList()
         {
-            
-            LandData land = World.LandChannel.GetLandObject(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).landData;
-            if (land.OwnerID == m_host.OwnerID)
+            Vector3 landpos = m_host.AbsolutePosition;
+            ILandObject landObject = World.LandChannel.GetLandObject(landpos.X, landpos.Y);
+            if (World.Permissions.CanEditParcel(m_host.OwnerID, landObject, GroupPowers.LandManageAllowed))
             {
-                foreach (ParcelManager.ParcelAccessEntry entry in land.ParcelAccessList)
+                foreach (ParcelManager.ParcelAccessEntry entry in landObject.landData.ParcelAccessList)
                 {
                     if (entry.Flags == AccessList.Access)
                     {
-                        land.ParcelAccessList.Remove(entry);
+                        landObject.landData.ParcelAccessList.Remove(entry);
                     }
                 }
             }

@@ -195,11 +195,11 @@ namespace OpenSim.Region.Framework.Connection
         {
             if (stage == AvatarTransit.TransitStage.SendBegin)
             {
-                Physics.Manager.PhysicsActor pa = ScenePresence.PhysicsActor;
+                var pa = ScenePresence.PhysicsActor;
 
                 if (pa != null)
                 {
-                    ScenePresence.PhysicsActor.Suspend();
+                    pa.Suspend();
                 }
 
                 if (_capsControl != null) _capsControl.PauseTraffic();
@@ -215,7 +215,7 @@ namespace OpenSim.Region.Framework.Connection
 
                 if (stage == AvatarTransit.TransitStage.SendError)
                 {
-                    Physics.Manager.PhysicsActor pa = ScenePresence.PhysicsActor;
+                    var pa = ScenePresence.PhysicsActor;
 
                     if (pa != null)
                     {

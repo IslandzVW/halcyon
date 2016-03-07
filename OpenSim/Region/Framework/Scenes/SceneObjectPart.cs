@@ -1764,8 +1764,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (flag == PrimFlags.TemporaryOnRez)
                     ResetExpire();
-                if((flag & PrimFlags.Scripted) != 0 && !ParentGroup.IsScripted)
-                    ParentGroup.CheckIfScriptedStatusChanged();
+                if (ParentGroup != null)    // null when called from the persistence backup
+                    if((flag & PrimFlags.Scripted) != 0 && !ParentGroup.IsScripted)
+                        ParentGroup.RecalcScriptedStatus();
             }
         }
 
@@ -2842,7 +2843,7 @@ namespace OpenSim.Region.Framework.Scenes
                 _flags &= ~flag;
                 if ((flag & PrimFlags.Scripted) != 0)
                     if(ParentGroup != null)
-                        ParentGroup.CheckIfScriptedStatusChanged();
+                        ParentGroup.RecalcScriptedStatus();
             }
             //m_log.Debug("prev: " + prevflag.ToString() + " curr: " + Flags.ToString());
             //ScheduleFullUpdate();
@@ -3087,8 +3088,10 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
 
             clientFlags &= ~(uint) PrimFlags.CreateSelected;
-            if (ParentGroup.IsScripted && ParentGroup.RootPart == this)
+            if ((uint)(_flags & PrimFlags.Scripted) != 0)
                 clientFlags |= (uint)PrimFlags.Scripted;
+            else
+                clientFlags &= ~(uint)PrimFlags.Scripted;
 
             if (remoteClient.AgentId == _ownerID)
             {
@@ -3111,8 +3114,10 @@ namespace OpenSim.Region.Framework.Scenes
         public void SendFullUpdateToClientImmediate(IClientAPI remoteClient, Vector3 lPos, uint clientFlags)
         {
             clientFlags &= ~(uint)PrimFlags.CreateSelected;
-            if (ParentGroup.IsScripted && ParentGroup.RootPart == this)
+            if ((uint)(_flags & PrimFlags.Scripted) != 0)
                 clientFlags |= (uint)PrimFlags.Scripted;
+            else
+                clientFlags &= ~(uint)PrimFlags.Scripted;
 
             if (remoteClient.AgentId == _ownerID)
             {

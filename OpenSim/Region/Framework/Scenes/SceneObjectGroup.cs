@@ -1534,7 +1534,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 RecalcPrimWeights();
             }
-            CheckIfScriptedStatusChanged();
+            RecalcScriptedStatus();
         }
 
         /// <summary>
@@ -1556,7 +1556,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Update the ServerWeight/LandImpact
             RecalcPrimWeights();
-            CheckIfScriptedStatusChanged();
+            RecalcScriptedStatus();
         }
 
         /// <summary>
@@ -1715,7 +1715,16 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part == null)
                     return;
                 if (part != RootPart)
-                    part.ObjectFlags = objectflagupdate;
+                {
+                    // Preserve the Scripted flag status for each part.
+                    bool isScripted = (part.Flags & PrimFlags.Scripted) != 0;
+                    part.ObjectFlags = objectflagupdate;    // update
+                    // Now restore the per-part Scripted flag.
+                    if (isScripted)
+                        part.ObjectFlags |= (uint)PrimFlags.Scripted;
+                    else
+                        part.ObjectFlags &= ~(uint)PrimFlags.Scripted;
+                }
                 aggregateScriptEvents |= part.AggregateScriptEvents;
             });
 
@@ -2707,8 +2716,8 @@ namespace OpenSim.Region.Framework.Scenes
             // Update the ServerWeight/LandImpact And StreamingCost
             RecalcPrimWeights();
 
-            this.RootPart.ClearUndoState();
-            this.CheckIfScriptedStatusChanged();
+            RootPart.ClearUndoState();
+            RecalcScriptedStatus();
 
             HasGroupChanged = true;
             ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
@@ -2806,7 +2815,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Update the ServerWeight/LandImpact and StreamingCost
             RecalcPrimWeights();
-            CheckIfScriptedStatusChanged();
+            RecalcScriptedStatus();
 
             if (sendGroupUpdate)
             {
@@ -4589,36 +4598,20 @@ namespace OpenSim.Region.Framework.Scenes
         /// Checks if this group or any of its children are scripted and sets 
         /// a flag appropriately if so
         /// </summary>
-        /// <returns>True if the scripted status changed, false if not</returns>
-        public bool CheckIfScriptedStatusChanged()
+        public void RecalcScriptedStatus()
         {
-            bool oldIsScripted = IsScripted;
-            bool newIsScripted = false;
-
-            if ((RootPart.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
-                newIsScripted = true;
-
-            if (!newIsScripted && this.PrimCount > 1)
+            bool scripted = false;
+            foreach (SceneObjectPart part in  m_children.GetAllParts())
             {
-                foreach(SceneObjectPart part in m_children.GetAllParts())
+                if (part == null)
+                    continue;
+                if ((part.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
                 {
-                    if (part == null || part == RootPart)
-                        continue;
-                    if ((part.GetEffectiveObjectFlags() & PrimFlags.Scripted) != 0)
-                    {
-                        newIsScripted = true;
-                        break;
-                    }
+                    scripted = true;
+                    break;
                 }
             }
-
-            if(oldIsScripted != newIsScripted)
-            {
-                IsScripted = newIsScripted;
-                return true;
-            }
-
-            return false;
+            IsScripted = scripted;
         }
 
         

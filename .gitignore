@@ -248,3 +248,5 @@ bin4
 
 #Other ignores
 *.oar
+bin/blacklist.old
+bin/blacklist.txt

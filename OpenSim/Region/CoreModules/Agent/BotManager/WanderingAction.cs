@@ -126,7 +126,10 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
             ScenePresence botPresence = m_controller.Scene.GetScenePresence(m_controller.Bot.AgentID);
             if (botPresence != null)
-                StopMoving(botPresence, botPresence.PhysicsActor != null ? botPresence.PhysicsActor.Flying : false, true);
+            {
+                var pa = botPresence.PhysicsActor;
+                StopMoving(botPresence, pa != null && pa.Flying, true);
+            }
         }
 
         public override void TriggerFinishedMovement(ScenePresence botPresence)

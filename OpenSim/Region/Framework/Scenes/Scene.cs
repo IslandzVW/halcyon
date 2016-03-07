@@ -2122,7 +2122,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 AddRestoredSceneObject(group, true, true);
                 SceneObjectPart rootPart = group.GetChildPart(group.UUID);
-                rootPart.ObjectFlags &= ~(uint)PrimFlags.Scripted;
+                group.RecalcScriptedStatus();
                 rootPart.TrimPermissions();
 
                 // Check if it rezzed off-world...
@@ -2335,7 +2335,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Pass 0 for landImpact here so that it can be tested separately.
             if (Permissions.CanRezObject(0, ownerID, UUID.Zero, pos, false))
             {
-                reason = ". Cannot determine land parcel.";
+                reason = ". Cannot determine land parcel at "+(int)pos.X+","+(int)pos.Y;
                 ILandObject parcel = LandChannel.GetLandObject(pos.X, pos.Y);
                 if (parcel != null)
                 {
@@ -3171,6 +3171,7 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnSpinUpdate += m_sceneGraph.SpinObject;
             client.OnDeRezObjects += DeRezObjects;
             client.OnRezObject += RezObject;
+            client.OnRestoreObject += RestoreObject;
             client.OnRezSingleAttachmentFromInv += RezSingleAttachment;
             client.OnRezMultipleAttachmentsFromInv += RezMultipleAttachments;
             client.OnDetachAttachmentIntoInv += DetachSingleAttachmentToInv;
@@ -4744,7 +4745,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             // Preserve flying status to viewer; must be set before SendLocalTeleport.
-            if ((avatar.PhysicsActor != null) && avatar.PhysicsActor.Flying)
+            PhysicsActor pa = avatar.PhysicsActor;
+            if (pa != null && pa.Flying)
                 teleportFlags |= TeleportFlags.IsFlying;
             else
                 teleportFlags &= ~TeleportFlags.IsFlying;
