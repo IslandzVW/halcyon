@@ -228,6 +228,8 @@ namespace OpenSim.Framework.Communications
             }
         }
 
+        private Dictionary<UUID, object> m_fetchLocks = new Dictionary<UUID, object>();
+
         public UserProfileData GetUserProfile(UUID uuid, bool forceRefresh)
         {
             if (uuid == UUID.Zero)
@@ -235,36 +237,83 @@ namespace OpenSim.Framework.Communications
 
             UserProfileData profile;
 
-            // Temp profiles do not exist in permanent storage, cannot force refresh.
-            if (m_tempDataByUUID.TryGetValue(uuid, out profile))
-                return profile;
-
-            if (!forceRefresh)
+            const int ATTEMPTS = 3;
+            int attempts = 0;
+            do
             {
-                lock (m_userDataLock)
+
+                // Temp profiles do not exist in permanent storage, cannot force refresh.
+                if (m_tempDataByUUID.TryGetValue(uuid, out profile))
+                    return profile;
+
+                if (!forceRefresh)
                 {
-                    profile = TryGetUserProfile(uuid, false);
-                    if (profile != null)
+                    lock (m_userDataLock)
                     {
-                        // Make sure we also have an AgentData for the profile.
-                        profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
-                        return profile;
+                        profile = TryGetUserProfile(uuid, false);
+                        if (profile != null)
+                        {
+                            // Make sure we also have an AgentData for the profile.
+                            profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
+                            return profile;
+                        }
                     }
                 }
-            }
 
-            // Else cache expired, or forcing a refresh of a normal cached profile.
-            profile = m_storage.GetUserProfileData(uuid);
-            if (profile != null)
-            {
-                profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
-                ReplaceUserData(profile);
-            }
-            else
-                RemoveUserData(uuid);
+                // Else cache expired, or forcing a refresh of a normal cached profile.
+                object myLock = new object();
+                object uuidLock = null;
+                // grab a tentative claim on fetching this uuid by locking the new object
+                lock (myLock)
+                {
+                    // now see if we're the first ones in on this uuid
+                    lock (m_fetchLocks)
+                    {
+                        if (m_fetchLocks.ContainsKey(uuid))
+                        {
+                            // someone else is working on this uuid, use their lock object
+                            uuidLock = m_fetchLocks[uuid];
+                        }
+                        else
+                        {
+                            // we're first ones in, ours will be the lock object
+                            m_fetchLocks[uuid] = myLock;
+                            uuidLock = myLock;
+                        }
+                    }
+
+                    // Now try to lock it. If original owner/fetcher, we already have it locked above on lock(fetchLock).
+                    // If not the original owner, this will block until the original fetcher finishes.
+                    lock (uuidLock)
+                    {
+                        if (uuidLock == myLock)
+                        {
+                            profile = m_storage.GetUserProfileData(uuid);
+                            if (profile != null)
+                            {
+                                profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
+                                ReplaceUserData(profile);
+                            }
+                            else
+                                RemoveUserData(uuid);
+
+                            // no longer outstanding
+                            m_fetchLocks.Remove(uuid);
+                        }
+                        else
+                        {
+                            if (attempts == 0) // first time in
+                                attempts = ATTEMPTS;
+                            else
+                                attempts--;
+                        }
+                    }
+                }
+            } while (attempts > 0);
 
             return profile;
         }
+
         public UserProfileData GetUserProfile(UUID uuid)
         {
             return GetUserProfile(uuid, false);
