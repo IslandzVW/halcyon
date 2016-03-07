@@ -520,13 +520,13 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         #region Object Permissions
 
-        public bool FriendHasEditPermission(UUID owner, UUID friend, bool fastCheck)
+        public bool FriendHasEditPermission(UUID objectOwner, UUID requestingFriend, bool fastCheck)
         {
             // There's one easy optimization we should ensure isn't the case before proceeding further.
-            if (friend == owner)
+            if (requestingFriend == objectOwner)
                 return true;
 
-            return m_scene.CommsManager.UserService.UserHasFriendPerms(owner, friend, (uint)OpenMetaverse.FriendRights.CanModifyObjects, fastCheck);
+            return m_scene.CommsManager.UserService.UserHasFriendPerms(requestingFriend, objectOwner, (uint)FriendRights.CanModifyObjects, fastCheck);
         }
 
         public uint GenerateClientFlags(UUID user, UUID objID, bool fastCheck)

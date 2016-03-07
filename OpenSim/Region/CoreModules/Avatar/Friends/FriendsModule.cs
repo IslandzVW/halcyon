@@ -960,26 +960,23 @@ namespace OpenSim.Region.CoreModules.Avatar.Friends
 
             foreach (FriendListItem item in friendList)
             {
-                if (((item.FriendListOwnerPerms | item.FriendPerms) & (uint)FriendRights.CanSeeOnline) != 0)
+                // friend is allowed to see my presence => add
+                if ((item.FriendPerms & (uint)FriendRights.CanSeeOnline) != 0)
                 {
-                    // friend is allowed to see my presence => add
-                    if ((item.FriendListOwnerPerms & (uint)FriendRights.CanSeeOnline) != 0)
-                    {
-                        friendIDsToSendTo.Add(item.Friend);
-                    }
+                    friendIDsToSendTo.Add(item.Friend);
+                }
 
-                    if ((item.FriendPerms & (uint)FriendRights.CanSeeOnline) != 0)
+                if ((item.FriendListOwnerPerms & (uint)FriendRights.CanSeeOnline) != 0)
+                {
+                    bool friendOnline;
+                    if (!friendOnlineStatus.TryGetValue(item.Friend, out friendOnline))
                     {
-                        bool friendOnline;
-                        if (!friendOnlineStatus.TryGetValue(item.Friend, out friendOnline))
-                        {
-                            friendOnline = false;
-                        }
+                        friendOnline = false;
+                    }
                         
-                        if (friendOnline)
-                        {
-                            candidateFriendIDsToReceive.Add(item.Friend);
-                        }
+                    if (friendOnline)
+                    {
+                        candidateFriendIDsToReceive.Add(item.Friend);
                     }
                 }
             }

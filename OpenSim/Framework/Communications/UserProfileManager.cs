@@ -769,17 +769,26 @@ namespace OpenSim.Framework.Communications
         public virtual void AddNewUserFriend(UUID friendlistowner, UUID friend, uint perms)
         {
             m_storage.AddNewUserFriend(friendlistowner, friend, perms);
+
+            CachedUserInfo userInfo = GetUserInfo(friend);
+            if (userInfo != null) userInfo.AdjustPermissionsFromFriend(friendlistowner, perms);
         }
 
         public virtual void RemoveUserFriend(UUID friendlistowner, UUID friend)
         {
             m_storage.RemoveUserFriend(friendlistowner, friend);
+
+            CachedUserInfo userInfo = GetUserInfo(friend);
+            if (userInfo != null) userInfo.RemoveFromFriendsCache(friendlistowner);
         }
 
         public virtual void UpdateUserFriendPerms(UUID friendlistowner, UUID friend, uint perms)
         {
             if (friendlistowner == UUID.Zero) return;
             m_storage.UpdateUserFriendPerms(friendlistowner, friend, perms);
+
+            CachedUserInfo userInfo = GetUserInfo(friend);
+            if (userInfo != null) userInfo.AdjustPermissionsFromFriend(friendlistowner, perms);
         }
 
         /// <summary>
@@ -790,7 +799,7 @@ namespace OpenSim.Framework.Communications
         /// <param name="permissionMask">Desired permission.</param>
         /// <param name="noFetch">If true, don't make any net/storage calls. Memory only.</param>
         /// <returns>true if permission is available</returns>
-        public bool UserHasFriendPerms(UUID friendlistowner, UUID friendId, uint permissionMask, bool noFetch)
+        public bool UserHasFriendPerms(UUID requestingFriend, UUID objectOwner, uint permissionMask, bool noFetch)
         {
             CachedUserInfo userInfo = null;
 
@@ -801,18 +810,18 @@ namespace OpenSim.Framework.Communications
                 lock (m_userInfoLock)
                 {
                     // Ignore timeouts etc if this is a noFetch/fastCheck call.
-                    if (!m_userInfoByUUID.TryGetValue(friendlistowner, out item))
+                    if (!m_userInfoByUUID.TryGetValue(requestingFriend, out item))
                         return false;   // user will need to repeat the operation not in a crossing.
                 }
                 userInfo = item.Item;
             } else {
-                userInfo = GetUserInfo(friendlistowner);
+                userInfo = GetUserInfo(requestingFriend);
             }
 
             if (userInfo == null)
                 return false;
 
-            return userInfo.HasPermissionFromFriend(friendId, permissionMask);
+            return userInfo.HasPermissionFromFriend(objectOwner, permissionMask);
         }
 
         /// <summary>
