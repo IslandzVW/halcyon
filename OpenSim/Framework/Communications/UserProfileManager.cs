@@ -284,7 +284,9 @@ namespace OpenSim.Framework.Communications
                     {
                         if (uuidLock == myLock)
                         {
+                            attempts = 0; // We're in, no more retries.
                             profile = m_storage.GetUserProfileData(uuid);
+                            // m_log.WarnFormat("Fetching profile for [{0}]: {1}", uuid, profile == null ? "null" : profile.Name);
                             if (profile != null)
                             {
                                 profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
