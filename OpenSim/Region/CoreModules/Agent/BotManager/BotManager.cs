@@ -232,7 +232,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 };
 
                 m_scene.ConnectionManager.NewConnection(data, Region.Framework.Connection.EstablishedBy.Login);
-                m_scene.AddNewClient(client);
+                m_scene.AddNewClient(client, true);
                 m_scene.ConnectionManager.TryAttachUdpCircuit(client);
 
                 ScenePresence sp;
