@@ -269,14 +269,10 @@ namespace OpenSim.Framework.Communications
                     // now see if we're the first ones in on this uuid
                     lock (m_fetchLocks)
                     {
-                        if (m_fetchLocks.ContainsKey(uuid))
+                        // check if someone else is working on this uuid, use their lock object
+                        if (!m_fetchLocks.TryGetValue(uuid, out uuidLock))
                         {
-                            // someone else is working on this uuid, use their lock object
-                            uuidLock = m_fetchLocks[uuid];
-                        }
-                        else
-                        {
-                            // we're first ones in, ours will be the lock object
+                            // nope, this is the first one in, myLock will be the lock object
                             m_fetchLocks[uuid] = myLock;
                             uuidLock = myLock;
                         }
@@ -288,7 +284,9 @@ namespace OpenSim.Framework.Communications
                     {
                         if (uuidLock == myLock)
                         {
+                            attempts = 0; // We're in, no more retries.
                             profile = m_storage.GetUserProfileData(uuid);
+                            // m_log.WarnFormat("Fetching profile for [{0}]: {1}", uuid, profile == null ? "null" : profile.Name);
                             if (profile != null)
                             {
                                 profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
@@ -298,7 +296,10 @@ namespace OpenSim.Framework.Communications
                                 RemoveUserData(uuid);
 
                             // no longer outstanding
-                            m_fetchLocks.Remove(uuid);
+                            lock (m_fetchLocks)
+                            {
+                                m_fetchLocks.Remove(uuid);
+                            }
                         }
                         else
                         {
@@ -710,7 +711,8 @@ namespace OpenSim.Framework.Communications
                 }
             }
 
-            UserProfileData profile = m_storage.GetUserProfileData(uuid);
+            // Need to update UserAgentData. Also check if UserProfile needs an update.
+            UserProfileData profile = GetUserProfile(uuid, false);
             if (profile == null)
             {
                 FlushCachedInfo(uuid);
