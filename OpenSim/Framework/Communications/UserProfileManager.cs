@@ -269,14 +269,10 @@ namespace OpenSim.Framework.Communications
                     // now see if we're the first ones in on this uuid
                     lock (m_fetchLocks)
                     {
-                        if (m_fetchLocks.ContainsKey(uuid))
+                        // check if someone else is working on this uuid, use their lock object
+                        if (!m_fetchLocks.TryGetValue(uuid, out uuidLock))
                         {
-                            // someone else is working on this uuid, use their lock object
-                            uuidLock = m_fetchLocks[uuid];
-                        }
-                        else
-                        {
-                            // we're first ones in, ours will be the lock object
+                            // nope, this is the first one in, myLock will be the lock object
                             m_fetchLocks[uuid] = myLock;
                             uuidLock = myLock;
                         }
@@ -298,7 +294,10 @@ namespace OpenSim.Framework.Communications
                                 RemoveUserData(uuid);
 
                             // no longer outstanding
-                            m_fetchLocks.Remove(uuid);
+                            lock (m_fetchLocks)
+                            {
+                                m_fetchLocks.Remove(uuid);
+                            }
                         }
                         else
                         {
