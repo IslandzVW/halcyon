@@ -711,7 +711,8 @@ namespace OpenSim.Framework.Communications
                 }
             }
 
-            UserProfileData profile = m_storage.GetUserProfileData(uuid);
+            // Need to update UserAgentData. Also check if UserProfile needs an update.
+            UserProfileData profile = GetUserProfile(uuid, false);
             if (profile == null)
             {
                 FlushCachedInfo(uuid);
