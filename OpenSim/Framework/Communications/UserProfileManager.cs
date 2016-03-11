@@ -285,15 +285,28 @@ namespace OpenSim.Framework.Communications
                         if (uuidLock == myLock)
                         {
                             attempts = 0; // We're in, no more retries.
-                            profile = m_storage.GetUserProfileData(uuid);
-                            // m_log.WarnFormat("Fetching profile for [{0}]: {1}", uuid, profile == null ? "null" : profile.Name);
-                            if (profile != null)
+
+                            // Now that we've got a "write lock" on the profile data, 
+                            // try to find it in the cache again in case it was added between locks
+                            // Temp profiles do not exist in permanent storage, cannot force refresh.
+                            if (!m_tempDataByUUID.TryGetValue(uuid, out profile))
                             {
-                                profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
-                                ReplaceUserData(profile);
+                                // not a temp profile (bot)
+                                profile = TryGetUserProfile(uuid, false);
+                                if (profile == null)
+                                {
+                                    // still not found, get it from User service (or db if this is User).
+                                    profile = m_storage.GetUserProfileData(uuid);
+                                    // m_log.WarnFormat("Fetching profile for [{0}]: {1}", uuid, profile == null ? "null" : profile.Name);
+                                    if (profile != null)
+                                    {
+                                        profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
+                                        ReplaceUserData(profile);
+                                    }
+                                    else
+                                        RemoveUserData(uuid);
+                                }
                             }
-                            else
-                                RemoveUserData(uuid);
 
                             // no longer outstanding
                             lock (m_fetchLocks)
