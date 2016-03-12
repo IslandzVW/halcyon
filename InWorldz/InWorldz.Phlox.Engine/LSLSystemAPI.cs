@@ -8760,8 +8760,10 @@ namespace InWorldz.Phlox.Engine
             if (!String.IsNullOrEmpty(result))
             {
                 // validation error updating script
-                if (result == "PIN")    // special case for public error (let's not match the silly SL "illegal" text)
-                    ShoutError("llRemoteLoadScriptPin: Script update denied - PIN mismatch.");
+				if (result == "PIN")    // special case for public error (let's not match the silly SL "illegal" text)
+                    ShoutError ("llRemoteLoadScriptPin: Script update denied - PIN mismatch.");
+				else if (result == "NO PIN")
+					ShoutError ("llRemoteLoadScriptPin: Script update denied - PIN not set.");
                 else
                     ScriptShoutError("llRemoteLoadScriptPin: " + result);
             }
