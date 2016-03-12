@@ -8702,6 +8702,11 @@ namespace InWorldz.Phlox.Engine
 
         public void llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param)
         {
+			if (pin == 0) {
+				ScriptShoutError ("llRemoteLoadScriptPin: PIN cannot be zero.");
+				ScriptSleep(3000);
+				return;
+			}
             
             bool found = false;
             UUID destId = UUID.Zero;
