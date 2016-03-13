@@ -151,6 +151,8 @@ namespace OpenSim.Framework.Configuration.XML
                 File.Delete(oldFile);
             File.Move(fileName, oldFile);
             File.Move(newFile, fileName);
+            if (File.Exists(fileName) && File.Exists(oldFile))
+                File.Delete(oldFile);
             needsCommit = false;
         }
 
