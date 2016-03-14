@@ -190,18 +190,13 @@ namespace OpenSim.Framework.Communications
 
         private void RemoveUserData(UUID uuid)
         {
+            // never remove temp profiles this way
             lock (m_userDataLock)
             {
                 UserProfileData profile;
                 if (m_localUser.TryGetValue(uuid, out profile))
                 {
                     m_localUser.Remove(uuid);
-                    if (m_userDataByName.ContainsKey(profile.Name))
-                        m_userDataByName.Remove(profile.Name);
-                }
-                if (m_tempDataByUUID.TryGetValue(uuid, out profile))
-                {
-                    m_tempDataByUUID.Remove(uuid);
                     if (m_userDataByName.ContainsKey(profile.Name))
                         m_userDataByName.Remove(profile.Name);
                 }
@@ -243,12 +238,12 @@ namespace OpenSim.Framework.Communications
             {
 
                 // Temp profiles do not exist in permanent storage, cannot force refresh.
-                if (m_tempDataByUUID.TryGetValue(uuid, out profile))
-                    return profile;
-
-                if (!forceRefresh)
+                lock (m_userDataLock)
                 {
-                    lock (m_userDataLock)
+                    if (m_tempDataByUUID.TryGetValue(uuid, out profile))
+                        return profile;
+
+                    if (!forceRefresh)
                     {
                         profile = TryGetUserProfile(uuid, false);
                         if (profile != null)
@@ -297,14 +292,20 @@ namespace OpenSim.Framework.Communications
                                 {
                                     // still not found, get it from User service (or db if this is User).
                                     profile = m_storage.GetUserProfileData(uuid);
-                                    // m_log.WarnFormat("Fetching profile for [{0}]: {1}", uuid, profile == null ? "null" : profile.Name);
                                     if (profile != null)
                                     {
                                         profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
                                         ReplaceUserData(profile);
                                     }
                                     else
-                                        RemoveUserData(uuid);
+                                    {
+                                        // not found in storage. If this is now known in temp profiles, return it,
+                                        // otherwise remove it from non-temp profile info.
+                                        if (!m_tempDataByUUID.TryGetValue(uuid, out profile))
+                                        {
+                                            RemoveUserData(uuid);
+                                        }
+                                    }
                                 }
                             }
 
