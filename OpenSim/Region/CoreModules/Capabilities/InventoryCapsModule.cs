@@ -1058,7 +1058,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                                 {
                                     m_log.ErrorFormat(
                                         "[CAPS/INVENTORY] Failed to resolve link to item {0} for {1}: {2}",
-                                        item.AssetID, m_Caps.AgentID, e);
+                                        item.AssetID, m_Caps.AgentID, e.Message);
                                 }
                             }
                         } 
