@@ -590,13 +590,15 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             }
 
             ScenePresence sp = m_scene.GetScenePresence(user);
-
-            if (sp != null &&
-                (m_bypassPermissions     || // no perms checks
-                sp.GodLevel >= 200   || // Admin should be able to edit anything else in the sim (including admin objects)
-                FriendHasEditPermission(objectOwner, user, fastCheck))) // friend with permissions
+            // bots don't have friends let alone friend edit perms, skip the costly checks.
+            if (sp != null && !sp.IsBot)
             {
-                return RestrictClientFlags(task, objflags);    // minimal perms checks, act like owner
+                if (m_bypassPermissions || // no perms checks
+                    sp.GodLevel >= 200 || // Admin should be able to edit anything else in the sim (including admin objects)
+                    FriendHasEditPermission(objectOwner, user, fastCheck)) // friend with permissions
+                {
+                    return RestrictClientFlags(task, objflags);    // minimal perms checks, act like owner
+                }
             }
 
             /////////////////////////////////////////////////////////////

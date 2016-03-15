@@ -190,18 +190,13 @@ namespace OpenSim.Framework.Communications
 
         private void RemoveUserData(UUID uuid)
         {
+            // never remove temp profiles this way
             lock (m_userDataLock)
             {
                 UserProfileData profile;
                 if (m_localUser.TryGetValue(uuid, out profile))
                 {
                     m_localUser.Remove(uuid);
-                    if (m_userDataByName.ContainsKey(profile.Name))
-                        m_userDataByName.Remove(profile.Name);
-                }
-                if (m_tempDataByUUID.TryGetValue(uuid, out profile))
-                {
-                    m_tempDataByUUID.Remove(uuid);
                     if (m_userDataByName.ContainsKey(profile.Name))
                         m_userDataByName.Remove(profile.Name);
                 }
@@ -243,12 +238,12 @@ namespace OpenSim.Framework.Communications
             {
 
                 // Temp profiles do not exist in permanent storage, cannot force refresh.
-                if (m_tempDataByUUID.TryGetValue(uuid, out profile))
-                    return profile;
-
-                if (!forceRefresh)
+                lock (m_userDataLock)
                 {
-                    lock (m_userDataLock)
+                    if (m_tempDataByUUID.TryGetValue(uuid, out profile))
+                        return profile;
+
+                    if (!forceRefresh)
                     {
                         profile = TryGetUserProfile(uuid, false);
                         if (profile != null)
@@ -285,15 +280,34 @@ namespace OpenSim.Framework.Communications
                         if (uuidLock == myLock)
                         {
                             attempts = 0; // We're in, no more retries.
-                            profile = m_storage.GetUserProfileData(uuid);
-                            // m_log.WarnFormat("Fetching profile for [{0}]: {1}", uuid, profile == null ? "null" : profile.Name);
-                            if (profile != null)
+
+                            // Now that we've got a "write lock" on the profile data, 
+                            // try to find it in the cache again in case it was added between locks
+                            // Temp profiles do not exist in permanent storage, cannot force refresh.
+                            if (!m_tempDataByUUID.TryGetValue(uuid, out profile))
                             {
-                                profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
-                                ReplaceUserData(profile);
+                                // not a temp profile (bot)
+                                profile = TryGetUserProfile(uuid, false);
+                                if (profile == null)
+                                {
+                                    // still not found, get it from User service (or db if this is User).
+                                    profile = m_storage.GetUserProfileData(uuid);
+                                    if (profile != null)
+                                    {
+                                        profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
+                                        ReplaceUserData(profile);
+                                    }
+                                    else
+                                    {
+                                        // not found in storage. If this is now known in temp profiles, return it,
+                                        // otherwise remove it from non-temp profile info.
+                                        if (!m_tempDataByUUID.TryGetValue(uuid, out profile))
+                                        {
+                                            RemoveUserData(uuid);
+                                        }
+                                    }
+                                }
                             }
-                            else
-                                RemoveUserData(uuid);
 
                             // no longer outstanding
                             lock (m_fetchLocks)

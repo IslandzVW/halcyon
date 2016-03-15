@@ -99,11 +99,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
             try
             {
-                UserProfileData userCheckData = m_scene.CommsManager.UserService.GetUserProfile(firstName, lastName);
-                if (userCheckData != null)
+                // do simple limit/string tests first before profile lookups
+                if ((firstName.Trim() == String.Empty) || (lastName.Trim() == String.Empty))
                 {
-                    reason = "Invalid name: This name has already been taken.";
-                    return UUID.Zero;//You cannot use the same name as another user.
+                    reason = "Invalid name: Bots require both first and last name.";
+                    return UUID.Zero;
                 }
                 if (lastName.ToLower().Contains("inworldz") || firstName.ToLower().Contains("inworldz"))
                 {
@@ -124,6 +124,13 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         reason = "The maximum number of bots has been reached.";
                         return UUID.Zero;
                     }
+                }
+
+                UserProfileData userCheckData = m_scene.CommsManager.UserService.GetUserProfile(firstName, lastName);
+                if (userCheckData != null)
+                {
+                    reason = "Invalid name: This name has already been taken.";
+                    return UUID.Zero;//You cannot use the same name as another user.
                 }
                 if (!m_scene.Permissions.CanRezObject(0, owner, UUID.Zero, startPos, false))
                 {
@@ -231,6 +238,17 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     startpos = startPos
                 };
 
+                // Now that we're ready to add this bot, one last name check inside the lock.
+                lock (m_bots)
+                {
+                    if (GetBot(firstName, lastName) != null)
+                    {
+                        reason = "Invalid name: A bot with this name already exists.";
+                        return UUID.Zero;//You cannot use the same name as another bot.
+                    }
+                    m_bots.Add(client.AgentId, client);
+                }
+
                 m_scene.ConnectionManager.NewConnection(data, Region.Framework.Connection.EstablishedBy.Login);
                 m_scene.AddNewClient(client, true);
                 m_scene.ConnectionManager.TryAttachUdpCircuit(client);
@@ -264,8 +282,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         InitialAttachmentRez(sp, appearance.GetAttachments(), originalOwner, isSavedOutfit);
                     }).Start();
 
-                    lock (m_bots)
-                        m_bots.Add(client.AgentId, client);
                     BotRegisterForPathUpdateEvents(client.AgentID, itemID, owner);
 
                     reason = null;
@@ -407,6 +423,21 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     return null;
                 return bot;
             }
+        }
+
+        public IBot GetBot(string first, string last)
+        {
+            string testName = String.Format("{0} {1}", first, last).ToLower();
+            List<UUID> ownedBots = new List<UUID>();
+            lock (m_bots)
+            {
+                foreach (IBot bot in m_bots.Values)
+                {
+                    if (bot.Name.ToLower() == testName)
+                        return bot;
+                }
+            }
+            return null;
         }
 
         private IBot GetBotWithPermission(UUID botID, UUID attemptingUser)
