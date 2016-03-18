@@ -1499,7 +1499,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[BASE HTTP SERVER]: Error - {0}" + e.Message);
+                m_log.ErrorFormat("[BASE HTTP SERVER]: Error - {0}", e.Message);
                 m_log.ErrorFormat("[BASE HTTP SERVER]: Tip: Do you have permission to listen on port {0} ?", m_port);
                 m_log.ErrorFormat("[BASE HTTP SERVER]: Try:    netssh http add urlacl url={0}://+:{1}/ user={2}", 
                     Secure ? "https" : "http", m_port, Environment.UserName);
