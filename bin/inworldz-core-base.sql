@@ -1453,7 +1453,7 @@ CREATE TABLE `users` (
   `homeRegionID` char(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
   `userFlags` int(11) NOT NULL DEFAULT '0',
   `godLevel` int(11) NOT NULL DEFAULT '0',
-  `iz_level` int(1) unsigned NOT NULL,
+  `iz_level` int(1) unsigned NOT NULL DEFAULT '0',
   `customType` varchar(32) NOT NULL DEFAULT '',
   `partner` char(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
   `email` varchar(250) DEFAULT NULL,
