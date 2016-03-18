@@ -430,7 +430,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             }
 
             // Update the texture entry which will force an update to connected clients
-            sop.UpdateTexture(te);
+            sop.UpdateTexture(te,true);
 
             // If the material has changed and it wasn't previously Zero 
             // Deallocate the old value if its not in use and signal the change
