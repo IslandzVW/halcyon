@@ -33,7 +33,6 @@ namespace OpenSim.Framework
     public interface IEventArgs
     {
         IScene Scene { get; set; }
-        IClientAPI Sender { get; set; }
     }
 
     /// <summary>
@@ -109,18 +108,6 @@ namespace OpenSim.Framework
         }
 
         #region IEventArgs Members
-
-        /// TODO: Sender and SenderObject should just be Sender and of
-        /// type IChatSender
-
-        /// <summary>
-        /// The client responsible for sending the message, or null.
-        /// </summary>
-        public IClientAPI Sender
-        {
-            get { return m_sender; }
-            set { m_sender = value; }
-        }
         
         public UUID SenderUUID
         {

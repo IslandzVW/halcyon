@@ -325,7 +325,6 @@ namespace InWorldz.ApplicationPlugins.AvatarRemoteCommandModule
                 Message = message,
                 Position = presence.AbsolutePosition,
                 Scene = presence.Scene,
-                Sender = presence.ControllingClient,
                 SenderUUID = presence.UUID,
                 Type = ChatTypeEnum.Say
             });
