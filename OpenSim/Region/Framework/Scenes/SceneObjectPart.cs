@@ -4695,14 +4695,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// until someone calls them.
         /// </summary>
         /// <param name="tex"></param>
-        /// <param name="doChangedEvent"></param>
-        public void UpdateTexture(Primitive.TextureEntry tex, bool doChangedEvent = true)
+        public void UpdateTexture(Primitive.TextureEntry tex)
         {
             m_shape.Textures = tex;
 
-            //Prevent scripted texture changes from firing CHANGED_TEXTURE, matching SL behavior
-            if(doChangedEvent)
-                TriggerScriptChangedEvent(Changed.TEXTURE);
+            TriggerScriptChangedEvent(Changed.TEXTURE);
             ParentGroup.HasGroupChanged = true;
             ScheduleFullUpdate(PrimUpdateFlags.Textures);
         }
