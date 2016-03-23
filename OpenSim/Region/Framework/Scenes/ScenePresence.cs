@@ -3546,8 +3546,9 @@ namespace OpenSim.Region.Framework.Scenes
             sLLVector3 tempCameraCenter = new sLLVector3(new Vector3(m_CameraCenter.X, m_CameraCenter.Y, m_CameraCenter.Z));
             cadu.cameraPosition = tempCameraCenter;
             cadu.drawdistance = m_DrawDistance;
-            if (m_scene.Permissions.IsGod(new UUID(cadu.AgentID)))
-                cadu.godlevel = m_godlevel;
+            if (!this.IsBot)    // bots don't need IsGod checks
+                if (m_scene.Permissions.IsGod(new UUID(cadu.AgentID)))
+                    cadu.godlevel = m_godlevel;
             cadu.GroupAccess = 0;
             cadu.Position = new sLLVector3(pos);
             cadu.regionHandle = m_scene.RegionInfo.RegionHandle;

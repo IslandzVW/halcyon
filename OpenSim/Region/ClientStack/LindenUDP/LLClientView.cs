@@ -1029,7 +1029,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 RefreshGroupMembership();   // Do this before AddNewClient since it will send the data down
             }
 
-            m_scene.AddNewClient(this);
+            m_scene.AddNewClient(this, false);
 
             // check if we've already received the CompleteAgentMovement packet for this client
             if (_receivedCompleteAgentMovement)

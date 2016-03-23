@@ -520,13 +520,13 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         #region Object Permissions
 
-        public bool FriendHasEditPermission(UUID owner, UUID friend, bool fastCheck)
+        public bool FriendHasEditPermission(UUID objectOwner, UUID requestingFriend, bool fastCheck)
         {
             // There's one easy optimization we should ensure isn't the case before proceeding further.
-            if (friend == owner)
+            if (requestingFriend == objectOwner)
                 return true;
 
-            return m_scene.CommsManager.UserService.UserHasFriendPerms(owner, friend, (uint)OpenMetaverse.FriendRights.CanModifyObjects, fastCheck);
+            return m_scene.CommsManager.UserService.UserHasFriendPerms(requestingFriend, objectOwner, (uint)FriendRights.CanModifyObjects, fastCheck);
         }
 
         public uint GenerateClientFlags(UUID user, UUID objID, bool fastCheck)
@@ -590,13 +590,15 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             }
 
             ScenePresence sp = m_scene.GetScenePresence(user);
-
-            if (sp != null &&
-                (m_bypassPermissions     || // no perms checks
-                sp.GodLevel >= 200   || // Admin should be able to edit anything else in the sim (including admin objects)
-                FriendHasEditPermission(objectOwner, user, fastCheck))) // friend with permissions
+            // bots don't have friends let alone friend edit perms, skip the costly checks.
+            if (sp != null && !sp.IsBot)
             {
-                return RestrictClientFlags(task, objflags);    // minimal perms checks, act like owner
+                if (m_bypassPermissions || // no perms checks
+                    sp.GodLevel >= 200 || // Admin should be able to edit anything else in the sim (including admin objects)
+                    FriendHasEditPermission(objectOwner, user, fastCheck)) // friend with permissions
+                {
+                    return RestrictClientFlags(task, objflags);    // minimal perms checks, act like owner
+                }
             }
 
             /////////////////////////////////////////////////////////////

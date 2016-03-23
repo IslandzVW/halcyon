@@ -2216,6 +2216,9 @@ namespace OpenSim.Region.Framework.Scenes
                         "[PRIM INVENTORY]: " +
                         "Script in object {0} : {1}, attempted to load script {2} : {3} into object {4} : {5} with invalid pin {6}",
                         srcPart.Name, srcId, srcTaskItem.Name, srcTaskItem.ItemID, destPart.Name, destId, pin);
+				if (destPart.ScriptAccessPin == 0) {
+					return "NO PIN";
+				}
                 return "PIN";   // signal a different response to the caller
             }
 

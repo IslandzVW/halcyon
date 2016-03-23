@@ -8702,6 +8702,11 @@ namespace InWorldz.Phlox.Engine
 
         public void llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param)
         {
+			if (pin == 0) {
+				ScriptShoutError ("llRemoteLoadScriptPin: PIN cannot be zero.");
+				ScriptSleep(3000);
+				return;
+			}
             
             bool found = false;
             UUID destId = UUID.Zero;
@@ -8760,8 +8765,10 @@ namespace InWorldz.Phlox.Engine
             if (!String.IsNullOrEmpty(result))
             {
                 // validation error updating script
-                if (result == "PIN")    // special case for public error (let's not match the silly SL "illegal" text)
-                    ShoutError("llRemoteLoadScriptPin: Script update denied - PIN mismatch.");
+				if (result == "PIN")    // special case for public error (let's not match the silly SL "illegal" text)
+                    ShoutError ("llRemoteLoadScriptPin: Script update denied - PIN mismatch.");
+				else if (result == "NO PIN")
+					ShoutError ("llRemoteLoadScriptPin: Script update denied - PIN not set.");
                 else
                     ScriptShoutError("llRemoteLoadScriptPin: " + result);
             }

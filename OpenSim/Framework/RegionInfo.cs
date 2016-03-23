@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Xml;
@@ -1005,8 +1006,11 @@ namespace OpenSim.Framework
             lastMapUUID = mapUUID;
             lastMapRefresh = Util.UnixTimeSinceEpoch().ToString();
 
-            configMember.forceSetConfigurationOption("lastmap_uuid", mapUUID.ToString());
-            configMember.forceSetConfigurationOption("lastmap_refresh", lastMapRefresh);
+            Dictionary<string, string> options = new Dictionary<string, string>();
+            options.Add("lastmap_uuid", mapUUID.ToString());
+            options.Add("lastmap_refresh", lastMapRefresh);
+
+            configMember.forceUpdateConfigurationOptions(options);
         }
 
         public OSDMap PackRegionInfoData()

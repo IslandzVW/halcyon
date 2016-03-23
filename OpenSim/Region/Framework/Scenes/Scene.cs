@@ -3108,7 +3108,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Add/Remove Avatar Methods
 
-        public override void AddNewClient(IClientAPI client)
+        public override void AddNewClient(IClientAPI client, bool isBot)
         {
             SubscribeToClientEvents(client);
             ScenePresence presence;
@@ -3143,7 +3143,8 @@ namespace OpenSim.Region.Framework.Scenes
                     "[SCENE]: Adding new child agent for {0} in {1}",
                     client.Name, RegionInfo.RegionName);
 
-                CommsManager.UserService.CacheUser(client.AgentId);
+                if (!isBot)
+                    CommsManager.UserService.CacheUser(client.AgentId);
 
                 CreateAndAddScenePresence(client);
             }
