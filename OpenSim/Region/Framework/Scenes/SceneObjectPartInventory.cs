@@ -493,11 +493,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (allowedDrop)
                     m_part.TriggerScriptChangedEvent(Changed.ALLOWED_DROP);
-                else {
+                else
                     m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
-                    if (m_part.IsRootPart() == false)
-                        m_part.ParentGroup.RootPart.TriggerScriptChangedEvent(Changed.INVENTORY);
-                }
             }
 
             m_inventorySerial++;
@@ -529,6 +526,7 @@ namespace OpenSim.Region.Framework.Scenes
                 foreach (TaskInventoryItem item in items)
                 {
                     m_items.Add(item.ItemID, item);
+                    m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
                 }
             }
 
@@ -540,6 +538,7 @@ namespace OpenSim.Region.Framework.Scenes
             lock (m_items)
             {
                 m_items.Add(item.ItemID, item);
+                m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
             }
 
             m_inventorySerial++;
@@ -605,8 +604,6 @@ namespace OpenSim.Region.Framework.Scenes
                     item.AssetID = AssetID;
                     m_inventorySerial++;
                     m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
-                    if (m_part.IsRootPart() == false)
-                        m_part.ParentGroup.RootPart.TriggerScriptChangedEvent(Changed.INVENTORY);
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
                     m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
@@ -679,8 +676,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                     m_inventorySerial++;
                     m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
-                    if (m_part.IsRootPart() == false)
-                        m_part.ParentGroup.RootPart.TriggerScriptChangedEvent(Changed.INVENTORY);
 
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
@@ -717,17 +712,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_items.Remove(itemID);
             _removedItems.Add(itemID);
             m_inventorySerial++;
-
-            bool doChangedInventory = true;
-            if ((m_items[itemID].CurrentPermissions & (uint)PermissionMask.Copy) != (uint)PermissionMask.Copy && newItem == null)
-                doChangedInventory = false;
-
-            if(doChangedInventory)
-            {
-                m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
-                if (m_part.IsRootPart() == false)
-                    m_part.ParentGroup.RootPart.TriggerScriptChangedEvent(Changed.INVENTORY);
-            }
+            m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
             HasInventoryChanged = true;
             m_part.ParentGroup.HasGroupChanged = true;
 
