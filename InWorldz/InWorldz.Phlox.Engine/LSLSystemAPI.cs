@@ -1002,8 +1002,7 @@ namespace InWorldz.Phlox.Engine
             if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
-            world.SimChat(Utils.StringToBytes(text),
-                          type, channelID, part.AbsolutePosition, part.Name, part.UUID, false, destID, part.OwnerID);
+            world.SimChat(text, type, channelID, part, destID);
 
             IWorldComm wComm = world.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(type, channelID, part.Name, part.UUID, text, destID);
@@ -11971,9 +11970,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llOwnerSay(string msg)
         {
-            World.SimChatBroadcast(Utils.StringToBytes(msg), ChatTypeEnum.Owner, 0,
-                                   m_host.AbsolutePosition, m_host.Name, m_host.UUID, false,
-                                   m_host.OwnerID);
+            World.SimChat(msg, ChatTypeEnum.Owner, 0, m_host, UUID.Zero, true);
 
             ScriptSleep(15);
         }

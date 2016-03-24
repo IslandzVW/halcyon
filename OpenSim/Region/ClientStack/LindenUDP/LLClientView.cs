@@ -7564,7 +7564,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 args.Position = fromPos;
 
                 args.Scene = Scene;
-                args.Sender = this;
                 args.SenderUUID = this.AgentId;
                 args.DestinationUUID = UUID.Zero;
 
@@ -7646,7 +7645,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 args.Type = ChatTypeEnum.Say;
                 args.Position = pos;
                 args.Scene = Scene;
-                args.Sender = this;
+                args.SenderUUID = this.AgentId;
                 args.DestinationUUID = UUID.Zero;
 
                 ChatMessage handlerChatFromClient2 = OnChatFromClient;

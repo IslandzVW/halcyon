@@ -253,7 +253,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             chatFromClient.Message = message;
             chatFromClient.Position = StartPos;
             chatFromClient.Scene = m_scene;
-            chatFromClient.Sender = this;
             chatFromClient.SenderUUID = AgentId;
             chatFromClient.Type = sourceType;
 

@@ -573,7 +573,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             c.Channel = 0;
             c.Position = PosOfGod;
             c.From = m_whoami;
-            c.Sender = null;
             c.SenderUUID = UUID.Zero;
             c.Scene = scene;
 
@@ -589,7 +588,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             c.Channel = 0;
             c.Position = PosOfGod;
             c.From = m_whoami;
-            c.Sender = null;
             c.SenderUUID = UUID.Zero;
             c.Scene = agent.Scene;
 
