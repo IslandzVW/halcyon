@@ -4408,6 +4408,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_closed = true;
 
             ClearSceneView();
+            SceneView.ClearAllTracking();
         }
 
         /// <summary>
