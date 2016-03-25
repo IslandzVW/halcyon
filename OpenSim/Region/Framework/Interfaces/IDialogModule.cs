@@ -26,6 +26,7 @@
  */
 
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 
 namespace OpenSim.Region.Framework.Interfaces
@@ -38,15 +39,7 @@ namespace OpenSim.Region.Framework.Interfaces
         /// </summary>
         /// <param name="client"></param>
         /// <param name="message"></param>        
-        void SendAlertToUser(IClientAPI client, string message);      
-        
-        /// <summary>
-        /// Send an alert message to a particular user.
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="message"></param>
-        /// <param name="modal"></param>        
-        void SendAlertToUser(IClientAPI client, string message, bool modal);
+        void SendAlertToUser(IClientAPI client, string message);
         
         /// <summary>
         /// Send a non-modal alert message to a particular user.
@@ -58,25 +51,41 @@ namespace OpenSim.Region.Framework.Interfaces
         /// <summary>
         /// Send an alert message to a particular user.
         /// </summary>
-        /// <param name="agentID"></param>
-        /// <param name="message"></param>
-        /// <param name="modal"></param>
-        void SendAlertToUser(UUID agentID, string message, bool modal);
-        
-        /// <summary>
-        /// Send an alert message to a particular user.
-        /// </summary>
         /// <param name="firstName"></param>
         /// <param name="lastName"></param>
         /// <param name="message"></param>
         /// <param name="modal"></param>
         void SendAlertToUser(string firstName, string lastName, string message, bool modal);
-        
+
+        /// <summary>
+        /// Send an alert message to a particular user.
+        /// </summary>
+        /// <param name="agentID">Agent</param>
+        /// <param name="message">Message</param>
+        /// <param name="infoMessage">Info message</param>
+        /// <param name="extraParams">Extra parameters</param>
+        void SendAlertToUser(UUID agentID, string message, string infoMessage, OSD extraParams);
+
+        /// <summary>
+        /// Send an alert message to a particular user.
+        /// </summary>
+        /// <param name="client">Client</param>
+        /// <param name="message">Message</param>
+        /// <param name="infoMessage">Info message</param>
+        /// <param name="extraParams">Extra parameters</param>
+        void SendAlertToUser(IClientAPI client, string message, string infoMessage, OSD extraParams);
+
+        /// <summary>
+        /// Conveneience method for sending simple general alerts to all users in the scene.
+        /// </summary>
+        /// <param name="message">Message</param>
+        void SendGeneralAlert(string message);
+
         /// <summary>
         /// Send an alert message to all users in the scene.  
         /// </summary>
         /// <param name="message"></param>
-        void SendGeneralAlert(string message);
+        void SendGeneralAlert(string message, string infoMessage, OSD extraParams);
         
         /// <summary>
         /// Send a dialog box to a particular user.

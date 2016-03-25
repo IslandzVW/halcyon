@@ -34,6 +34,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OpenSim.Framework;
+using OpenMetaverse.StructuredData;
 
 namespace InWorldz.Testing
 {
@@ -855,6 +856,11 @@ namespace InWorldz.Testing
         public void SendAlertMessage(string message)
         {
             
+        }
+
+        public void SendAlertMessage(string message, string infoMessage, OSD extraParams)
+        {
+            /* no op */
         }
 
         public void SendAgentAlertMessage(string message, bool modal)

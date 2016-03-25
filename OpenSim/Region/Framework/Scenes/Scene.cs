@@ -38,8 +38,9 @@ using System.Timers;
 using System.Xml;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.Packets;
 using OpenMetaverse.Imaging;
+using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Communications;
@@ -1015,8 +1016,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_restartTimer.Elapsed += new ElapsedEventHandler(RestartTimer_Elapsed);
                 m_log.Info("[REGION]: Restarting Region in " + (seconds / 60) + " minutes");
                 m_restartTimer.Start();
-                m_dialogModule.SendNotificationToUsersInRegion(
-                    UUID.Random(), String.Empty, RegionInfo.RegionName + ": Restarting in " + (seconds / 60) + " minutes");
+                SendRestartAlert(seconds);
             }
         }
 
@@ -1030,10 +1030,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_RestartTimerCounter <= m_incrementsof15seconds)
             {
                 if (m_RestartTimerCounter == 4 || m_RestartTimerCounter == 6 || m_RestartTimerCounter == 7)
-                    m_dialogModule.SendNotificationToUsersInRegion(
-                        UUID.Random(),
-                        String.Empty,
-                        RegionInfo.RegionName + ": Restarting in " + ((8 - m_RestartTimerCounter) * 15) + " seconds");
+                {
+                    SendRestartAlert((8 - m_RestartTimerCounter) * 15);
+                }
             }
             else
             {
@@ -1041,6 +1040,13 @@ namespace OpenSim.Region.Framework.Scenes
                 m_restartTimer.AutoReset = false;
                 RestartNow();
             }
+        }
+
+        private void SendRestartAlert(float seconds)
+        {
+            string message = String.Format("The region you are in now ({0}) is about to restart. If you stay in this region, you will be logged out", RegionInfo.RegionName);
+            OSD paramMap = new OSDMap{ { "SECONDS", OSD.FromReal(seconds) } }; // *TODO: Make this work with RegionRestartMinutes notice as well?
+            m_dialogModule.SendGeneralAlert(message, "RegionRestartSeconds", paramMap);
         }
 
         // This causes the region to restart immediatley.
@@ -3528,8 +3534,8 @@ namespace OpenSim.Region.Framework.Scenes
                 UserProfile.HomeLookAt = lookAt;
                 CommsManager.UserService.UpdateUserProfile(UserProfile);
 
-                // FUBAR ALERT: this needs to be "Home position set." so the viewer saves a home-screenshot.
-                m_dialogModule.SendAlertToUser(remoteClient, "Home position set.");
+                m_dialogModule.SendAlertToUser(remoteClient, "Home position set.", "HomePositionSet", new OSD());
+
             }
             else
             {
