@@ -185,6 +185,10 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             if (UseCulling == false)
                 return;
 
+            //Bots don't get to check for updates
+            if (m_presence.IsBot)
+                return;
+
             //With 25K objects, this method takes around 10ms if the client has seen none of the objects in the sim
             if (m_presence.DrawDistance <= 0)
                 return;
@@ -345,6 +349,10 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// </summary>
         public void SendInitialFullUpdateToAllClients()
         {
+            //Bots don't get to check for updates
+            if (m_presence.IsBot)
+                return;
+
             m_perfMonMS = Environment.TickCount;
 
             List<ScenePresence> avatars = m_presence.Scene.GetScenePresences();
@@ -408,6 +416,10 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// </summary>
         public void SendFullUpdateToAllClients()
         {
+            //Bots don't get to check for updates
+            if (m_presence.IsBot)
+                return;
+
             m_perfMonMS = Environment.TickCount;
 
             // only send update from root agents to other clients; children are only "listening posts"
@@ -710,6 +722,10 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                 return;
             }
 
+            //Bots don't get to check for updates
+            if (m_presence.IsBot)
+                return;
+
             if (m_presence.IsInTransit)
                 return; // disable prim updates during a crossing, but leave them queued for after transition
             if (!m_presence.IsChildAgent && !m_presence.IsFullyInRegion) 
@@ -889,6 +905,10 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
 
         public void SendGroupUpdate(SceneObjectGroup sceneObjectGroup, PrimUpdateFlags updateFlags)
         {
+            //Bots don't get to send updates
+            if (m_presence.IsBot)
+                return;
+
             SendPartUpdate(sceneObjectGroup.RootPart, updateFlags);
             foreach (SceneObjectPart part in sceneObjectGroup.GetParts())
             {
@@ -992,7 +1012,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// 
         /// SHOULD ONLY BE CALLED FROM CHILDREN OF THE SCENE LOOP!!
         /// </summary>
-        private void ClearAllTracking()
+        public void ClearAllTracking()
         {
             if (m_partsUpdateQueue.Count > 0)
                 m_partsUpdateQueue.Clear();
@@ -1013,6 +1033,10 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// <param name="localIds"></param>
         public void SendKillObjects(SceneObjectGroup grp, List<uint> localIds)
         {
+            //Bots don't get to check for updates
+            if (m_presence.IsBot)
+                return;
+
             //Only send the kill object packet if we have seen this object
             lock (m_updateTimes)
             {
@@ -1033,6 +1057,10 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// <param name="y"></param>
         public void TerrainPatchUpdated(float[] serialized, int x, int y)
         {
+            //Bots don't get to check for updates
+            if (m_presence.IsBot)
+                return;
+
             //Check to make sure that we only send it if we can see it or culling is disabled
             if ((UseCulling == false) || ShowTerrainPatchToClient(x, y))
                 m_presence.ControllingClient.SendLayerData(x, y, serialized);
