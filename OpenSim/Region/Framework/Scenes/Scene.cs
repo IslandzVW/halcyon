@@ -1042,10 +1042,10 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private void SendRestartAlert(float seconds)
+        private void SendRestartAlert(int seconds)
         {
             string message = String.Format("The region you are in now ({0}) is about to restart. If you stay in this region, you will be logged out", RegionInfo.RegionName);
-            OSD paramMap = new OSDMap{ { "SECONDS", OSD.FromReal(seconds) } }; // *TODO: Make this work with RegionRestartMinutes notice as well?
+            OSD paramMap = new OSDMap{ { "SECONDS", OSD.FromInteger(seconds) } }; // *TODO: Make this work with RegionRestartMinutes notice as well?
             m_dialogModule.SendGeneralAlert(message, "RegionRestartSeconds", paramMap);
         }
 
