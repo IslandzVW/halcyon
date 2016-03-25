@@ -999,12 +999,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="seconds">float indicating duration before restart.</param>
         public virtual void Restart(float seconds)
         {
-            // notifications are done in 15 second increments
-            // so ..   if the number of seconds is less then 15 seconds, it's not really a restart request
-            // It's a 'Cancel restart' request.
-
             // RestartNow() does immediate restarting.
-            if (seconds < 15)
+            if (seconds == -1)
             {
                 m_restartTimer.Stop();
                 m_dialogModule.SendGeneralAlert("Restart Aborted");
