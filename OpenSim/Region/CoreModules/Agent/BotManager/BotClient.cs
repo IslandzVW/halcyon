@@ -41,6 +41,7 @@ using System.Xml;
 using OpenSim.Region.Framework.Interfaces;
 using log4net;
 using System.Reflection;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Region.CoreModules.Agent.BotManager
 {
@@ -1119,6 +1120,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public void SendAlertMessage(string message)
         {
+        }
+
+        public void SendAlertMessage(string message, string infoMessage, OSD extraParams)
+        {
+            /* no op */
         }
 
         public void SendAgentAlertMessage(string message, bool modal)
