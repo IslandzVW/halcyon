@@ -335,6 +335,8 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             // 2 stage check is needed.
             if (otherClient == null)
                 return;
+            if (otherClient.IsBot)
+                return;
             if (otherClient.ControllingClient == null)
                 return;
             if (m_presence.Appearance.Texture == null)

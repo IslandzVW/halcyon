@@ -1488,7 +1488,8 @@ namespace OpenSim.Region.Framework.Scenes
             // the inventory arrives
             // m_scene.GetAvatarAppearance(m_controllingClient, out m_appearance);
 
-            SendAvatarData(ControllingClient, true);
+            if (!IsBot)
+                SendAvatarData(ControllingClient, true);
             SceneView.SendInitialFullUpdateToAllClients();
             SendAnimPack();
         }
@@ -3448,7 +3449,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            SendAvatarData(m_controllingClient, false);
+            if (!IsBot)
+                SendAvatarData(m_controllingClient, false);
         }
 
         /// <summary>
@@ -3524,7 +3526,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
             }
 
-            if (m_sceneView != null && m_sceneView.UseCulling)
+            if (m_sceneView != null && m_sceneView.UseCulling && !IsBot)
             {
                 //Check to see if the agent has moved enough to warrent another culling check
                 if (Util.GetDistanceTo(pos, posLastCullCheck) > m_sceneView.DistanceBeforeCullingRequired)
