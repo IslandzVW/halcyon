@@ -412,10 +412,6 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// </summary>
         public void SendFullUpdateToAllClients()
         {
-            //Bots don't get to check for updates
-            if (m_presence.IsBot)
-                return;
-
             m_perfMonMS = Environment.TickCount;
 
             // only send update from root agents to other clients; children are only "listening posts"
