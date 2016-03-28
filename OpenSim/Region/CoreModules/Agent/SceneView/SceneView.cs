@@ -351,10 +351,6 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// </summary>
         public void SendInitialFullUpdateToAllClients()
         {
-            //Bots don't get to check for updates
-            if (m_presence.IsBot)
-                return;
-
             m_perfMonMS = Environment.TickCount;
 
             List<ScenePresence> avatars = m_presence.Scene.GetScenePresences();
