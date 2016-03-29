@@ -391,8 +391,9 @@ namespace OpenSim.Region.CoreModules.Scripting.WorldComm
 
         private void DeliverClientMessage(Object sender, OSChatMessage e)
         {
-            if (null != e.Sender)
-                DeliverMessage(e.Type, e.Channel, e.Sender.Name, e.Sender.AgentId, e.Message, e.Position, UUID.Zero);
+            ScenePresence sp;
+            if (m_scene.TryGetAvatar(e.SenderUUID, out sp))
+                DeliverMessage(e.Type, e.Channel, sp.Name, e.SenderUUID, e.Message, e.Position, UUID.Zero);
             else
                 DeliverMessage(e.Type, e.Channel, e.From, UUID.Zero, e.Message, e.Position, UUID.Zero);
         }

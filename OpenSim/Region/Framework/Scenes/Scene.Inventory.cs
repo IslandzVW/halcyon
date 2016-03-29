@@ -3087,27 +3087,37 @@ namespace OpenSim.Region.Framework.Scenes
 
         private Dictionary<UUID, KnownAssetUpdateRequest> _pendingAssetUpdates = new Dictionary<UUID, KnownAssetUpdateRequest>();
 
+        public void DeleteAttachment(SceneObjectGroup grp)
+        {
+            if (grp != null)
+            {
+                grp.DetachToInventoryPrep();
+                DeleteSceneObject(grp, false);
+                return;
+            }
+        }
+
         public void SaveAndDeleteAttachment(IClientAPI remoteClient, SceneObjectGroup grp, UUID assetID, UUID agentID)
         {
             if (grp != null)
             {
                 m_log.DebugFormat("[DETACH]: Saving attachpoint {0}: [{1}] {2}", grp.GetCurrentAttachmentPoint(), grp.UUID, grp.Name);
 
-                grp.DetachToInventoryPrep();
-
                 if (!grp.HasGroupChanged && grp.GroupScriptEvents == 0)
                 {
                     m_log.InfoFormat("[ATTACHMENT]: Save request for {0} which is unchanged", grp.UUID);
-                    DeleteSceneObject(grp, false);
+                    DeleteAttachment(grp);
                     return;
                 }
 
                 if (grp.IsTempAttachment)
                 {
                     m_log.InfoFormat("[ATTACHMENT]: Ignored save request for {0} which is temporary", grp.UUID);
-                    DeleteSceneObject(grp, false);
+                    DeleteAttachment(grp);
                     return;
                 }
+
+                grp.DetachToInventoryPrep();
 
                 KnownAssetUpdateRequest updateReq = new KnownAssetUpdateRequest
                 {
@@ -4499,16 +4509,26 @@ namespace OpenSim.Region.Framework.Scenes
         {
             UUID groupId = UUID.Zero;
             ScenePresence presence;
+            bool isBot = false;
+
             if (TryGetAvatar(remoteClient.AgentId, out presence))
             {
+                isBot = presence.IsBot;
+                if (isBot)
+                    itemID ^= presence.UUID;    // use original itemID from owner's inventory
                 groupId = presence.Appearance.DetachAttachment(itemID);
                 IAvatarFactory ava = RequestModuleInterface<IAvatarFactory>();
                 if (ava != null)
-                    ava.UpdateDatabase(remoteClient.AgentId, presence.Appearance, null, null);
-
+                {
+                    if (!isBot)
+                        ava.UpdateDatabase(remoteClient.AgentId, presence.Appearance, null, null);
+                }
             }
 
-            m_sceneGraph.DetachSingleAttachmentToInv(itemID, groupId, remoteClient);
+            if (isBot)
+                m_sceneGraph.DetachSingleBotAttachment(itemID, groupId, remoteClient);
+            else
+                m_sceneGraph.DetachSingleAttachmentToInv(itemID, groupId, remoteClient);
         }
 
         public void GetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID)

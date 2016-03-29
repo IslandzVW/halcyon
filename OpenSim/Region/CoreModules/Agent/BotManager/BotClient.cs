@@ -41,6 +41,7 @@ using System.Xml;
 using OpenSim.Region.Framework.Interfaces;
 using log4net;
 using System.Reflection;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Region.CoreModules.Agent.BotManager
 {
@@ -58,6 +59,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         private Dictionary<string, UUID> m_defaultAnimations = new Dictionary<string, UUID>();
         private bool m_frozenUser = false;
         private bool m_closing = false;
+        private static int m_depth = 0;
 
         #endregion
 
@@ -78,6 +80,13 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             TimeCreated = DateTime.Now;
 
             InitDefaultAnimations();
+
+            m_log.Warn("[BOTCLIENT]: Constructor, clients now: " + (++m_depth).ToString());
+        }
+
+        ~BotClient()
+        {
+            m_log.Warn("[BOTCLIENT]: Destructor, clients now: " + (--m_depth).ToString());
         }
 
         #endregion
@@ -253,7 +262,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             chatFromClient.Message = message;
             chatFromClient.Position = StartPos;
             chatFromClient.Scene = m_scene;
-            chatFromClient.Sender = this;
             chatFromClient.SenderUUID = AgentId;
             chatFromClient.Type = sourceType;
 
@@ -1120,6 +1128,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public void SendAlertMessage(string message)
         {
+        }
+
+        public void SendAlertMessage(string message, string infoMessage, OSD extraParams)
+        {
+            /* no op */
         }
 
         public void SendAgentAlertMessage(string message, bool modal)

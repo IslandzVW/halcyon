@@ -126,7 +126,6 @@ namespace OpenSim.Region.CoreModules.Scripting.RegionReady
                 c.Message += numScriptsFailed.ToString() + "," + message;
                 c.Type = ChatTypeEnum.Region;
                 c.Position = new Vector3(128, 128, 30);
-                c.Sender = null;
                 c.SenderUUID = UUID.Zero;
 
                 m_log.InfoFormat("[RegionReady]: Region \"{0}\" is ready: \"{1}\" on channel {2}",

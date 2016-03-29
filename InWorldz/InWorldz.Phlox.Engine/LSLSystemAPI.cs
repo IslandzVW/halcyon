@@ -1002,8 +1002,7 @@ namespace InWorldz.Phlox.Engine
             if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
-            world.SimChat(Utils.StringToBytes(text),
-                          type, channelID, part.AbsolutePosition, part.Name, part.UUID, false, destID, part.OwnerID);
+            world.SimChat(text, type, channelID, part, destID);
 
             IWorldComm wComm = world.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(type, channelID, part.Name, part.UUID, text, destID);
@@ -11995,9 +11994,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llOwnerSay(string msg)
         {
-            World.SimChatBroadcast(Utils.StringToBytes(msg), ChatTypeEnum.Owner, 0,
-                                   m_host.AbsolutePosition, m_host.Name, m_host.UUID, false,
-                                   m_host.OwnerID);
+            World.SimChat(msg, ChatTypeEnum.Owner, 0, m_host, UUID.Zero, true);
 
             ScriptSleep(15);
         }
@@ -12718,6 +12715,14 @@ namespace InWorldz.Phlox.Engine
             
             ScriptShoutError("llRefreshPrimURL - not yet supported");
             // ScriptSleep(20000);
+        }
+
+        //Returns true if the URL's format is valid.
+        public int iwValidateURL(string url)
+        {
+            Uri uriResult;
+            bool ret = Uri.TryCreate(url, UriKind.Absolute, out uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+            return Convert.ToInt32(ret);
         }
 
         public string llEscapeURL(string url)
@@ -15271,11 +15276,16 @@ namespace InWorldz.Phlox.Engine
             //Returns true if a codec is available for conversions
             public static bool HasCodec(string codec)
             {
-                if (codec == "base16") return true;
-                if (codec == "uuid") return true;
-                if (codec == "base64") return true;
-                if (codec == "base64-safe") return true;
-                if (codec == "base4096" || codec == "base4k") return true;
+                switch (codec.ToLower())
+                {
+                    case "base16":
+                    case "uuid":
+                    case "base64":
+                    case "base64-safe":
+                    case "base4096":
+                    case "base4k":
+                        return true;
+                }
                 return false;
             }
 
@@ -15316,7 +15326,7 @@ namespace InWorldz.Phlox.Engine
             //
             public static string Encode(byte[] bytes, string codec)
             {
-                switch (codec)
+                switch (codec.ToLower())
                 {
                     case "base16":
                         return EncodeBase16(bytes);
@@ -15357,7 +15367,7 @@ namespace InWorldz.Phlox.Engine
             //
             public static byte[] Decode(string str, string codec)
             {
-                switch (codec)
+                switch (codec.ToLower())
                 {
                     case "base16":
                         return DecodeBase16(str);
@@ -15398,7 +15408,7 @@ namespace InWorldz.Phlox.Engine
             //
             public static int Validate(string str, string codec)
             {
-                switch (codec)
+                switch (codec.ToLower())
                 {
                     case "base16":
                         return ValidateBase16(str);
@@ -15955,11 +15965,17 @@ namespace InWorldz.Phlox.Engine
                     break;
                 case "md5":
                 case "sha1":
+                case "sha-1":
                 case "sha128":
+                case "sha-128":
                 case "sha2":
+                case "sha-2":
                 case "sha256":
+                case "sha-256":
                 case "sha384":
+                case "sha-384":
                 case "sha512":
+                case "sha-512":
                     string outCodec = "base16";
                     string nonce = String.Empty;
                     if (extraParams.Length >= 0 && extraParams.Length % 2 == 0)

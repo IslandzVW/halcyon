@@ -2721,18 +2721,33 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             sendAgentDataUpdate.AgentData.LastName = Util.StringToBytes256(lastname);
             OutPacket(sendAgentDataUpdate, ThrottleOutPacketType.Task);
         }
+           
+        /// <summary>
+        /// A convenience function for sending simple alert messages to the client.
+        /// </summary>
+        /// <param name="message">Message</param>
+        public void SendAlertMessage(string message)
+        {
+            SendAlertMessage(message, String.Empty, new OSD());
+        }
 
         /// <summary>
-        /// Send an alert message to the client.  On the Linden client (tested 1.19.1.4), this pops up a brief duration
-        /// blue information box in the bottom right hand corner.
+        /// Send an alert message to the client.
         /// </summary>
-        /// <param name="message"></param>
-        public void SendAlertMessage(string message)
+        /// <param name="message"></param>        
+        /// <param name="infoMessage">Info message</param>
+        /// <param name="extraParams">Extra parameters</param>
+        public void SendAlertMessage(string message, string infoMessage, OSD extraParams)
+
         {
             AlertMessagePacket alertPack = (AlertMessagePacket)PacketPool.Instance.GetPacket(PacketType.AlertMessage);
             alertPack.AlertData = new AlertMessagePacket.AlertDataBlock();
             alertPack.AlertData.Message = Util.StringToBytes256(message);
-            alertPack.AlertInfo = new AlertMessagePacket.AlertInfoBlock[0];
+            alertPack.AlertInfo = new AlertMessagePacket.AlertInfoBlock[1];
+            alertPack.AlertInfo[0] = new AlertMessagePacket.AlertInfoBlock();
+            alertPack.AlertInfo[0].Message = Util.StringToBytes256(infoMessage);
+            alertPack.AlertInfo[0].ExtraParams = OSDParser.SerializeLLSDXmlBytes(extraParams);
+
             OutPacket(alertPack, ThrottleOutPacketType.Task);
         }
 
@@ -2756,6 +2771,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <returns></returns>
         protected AgentAlertMessagePacket BuildAgentAlertPacket(string message, bool modal)
         {
+            if (!modal && !message.StartsWith("ALERT: ") && !message.StartsWith("NOTIFY: ")
+                && message != "Home position set." && message != "You died and have been teleported to your home location")
+            {
+                message = "/" + message;
+            }
             AgentAlertMessagePacket alertPack = (AgentAlertMessagePacket)PacketPool.Instance.GetPacket(PacketType.AgentAlertMessage);
             alertPack.AgentData.AgentID = AgentId;
             alertPack.AlertData.Message = Util.StringToBytes256(message);
@@ -7564,7 +7584,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 args.Position = fromPos;
 
                 args.Scene = Scene;
-                args.Sender = this;
                 args.SenderUUID = this.AgentId;
                 args.DestinationUUID = UUID.Zero;
 
@@ -7646,7 +7665,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 args.Type = ChatTypeEnum.Say;
                 args.Position = pos;
                 args.Scene = Scene;
-                args.Sender = this;
+                args.SenderUUID = this.AgentId;
                 args.DestinationUUID = UUID.Zero;
 
                 ChatMessage handlerChatFromClient2 = OnChatFromClient;
@@ -7665,7 +7684,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 if (msgpack.MessageBlock.ToAgentID != m_frozenBy)
                 {
-                    // determin if we should report that the IM was blocked
+                    // determine if we should report that the IM was blocked
                     if ((msgpack.MessageBlock.Dialog == (byte)InstantMessageDialog.MessageFromAgent) ||
                         (msgpack.MessageBlock.Dialog == (byte)InstantMessageDialog.InventoryOffered))
                         SendAlertMessage("You have been frozen by " + m_frozenByName + ". You are only allowed to send IMs to " + m_frozenByName + " while frozen.");

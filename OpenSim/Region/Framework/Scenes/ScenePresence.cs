@@ -879,10 +879,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-#endregion
+        #endregion
 
-#region Constructor(s)
+        #region Constructor(s)
 
+        private static int m_depth = 0;
         private ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo)
         {
             m_regionHandle = reginfo.RegionHandle;
@@ -903,6 +904,8 @@ namespace OpenSim.Region.Framework.Scenes
                 m_grouptitle = gm.GetGroupTitle(m_uuid);
 
             m_scriptEngines = m_scene.RequestModuleInterfaces<IScriptModule>();
+
+            m_log.Warn("[PRESENCE]: Constructor, clients now: " + (++m_depth).ToString());
 
             ISceneViewModule sceneViewModule = m_scene.RequestModuleInterface<ISceneViewModule>();
             if (sceneViewModule != null)
@@ -931,6 +934,11 @@ namespace OpenSim.Region.Framework.Scenes
             : this(client, world, reginfo)
         {
             m_appearance = appearance;
+        }
+
+        ~ScenePresence()
+        {
+            m_log.Warn("[PRESENCE]: Destructor, clients now: " + (--m_depth).ToString());
         }
 
         public void RegisterToEvents()
@@ -1480,7 +1488,8 @@ namespace OpenSim.Region.Framework.Scenes
             // the inventory arrives
             // m_scene.GetAvatarAppearance(m_controllingClient, out m_appearance);
 
-            SendAvatarData(ControllingClient, true);
+            if (!IsBot)
+                SendAvatarData(ControllingClient, true);
             SceneView.SendInitialFullUpdateToAllClients();
             SendAnimPack();
         }
@@ -3440,7 +3449,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            SendAvatarData(m_controllingClient, false);
+            if (!IsBot)
+                SendAvatarData(m_controllingClient, false);
         }
 
         /// <summary>
@@ -3516,7 +3526,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
             }
 
-            if (m_sceneView != null && m_sceneView.UseCulling)
+            if (m_sceneView != null && m_sceneView.UseCulling && !IsBot)
             {
                 //Check to see if the agent has moved enough to warrent another culling check
                 if (Util.GetDistanceTo(pos, posLastCullCheck) > m_sceneView.DistanceBeforeCullingRequired)
@@ -4408,6 +4418,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_closed = true;
 
             ClearSceneView();
+            SceneView.ClearAllTracking();
         }
 
         /// <summary>
