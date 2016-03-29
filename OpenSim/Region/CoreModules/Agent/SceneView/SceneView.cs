@@ -153,6 +153,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         #endregion
 
         #region Constructor
+        private static int m_depth = 0;
 
         public SceneView(ScenePresence presence, bool useCulling)
         {
@@ -163,8 +164,15 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
 
             //Update every 1/4th a draw distance
             DistanceBeforeCullingRequired = _MINIMUM_DRAW_DISTANCE / 8;
+
+            m_log.Warn("[SCENEVIEW]: Constructor, depth now: " + (++m_depth).ToString());
         }
 
+        ~SceneView()
+        {
+            //m_updateTimes
+            m_log.Warn("[SCENEVIEW]: Destructor, depth now: " + (--m_depth).ToString());
+        }
         #endregion
 
         #region Culler Methods
@@ -326,6 +334,8 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                 return;//Never send data from a child client
             // 2 stage check is needed.
             if (otherClient == null)
+                return;
+            if (otherClient.IsBot)
                 return;
             if (otherClient.ControllingClient == null)
                 return;
