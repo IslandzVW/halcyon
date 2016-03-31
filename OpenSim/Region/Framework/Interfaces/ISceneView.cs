@@ -164,6 +164,11 @@ namespace OpenSim.Region.Framework.Interfaces
         void ClearAllTracking();
 
         /// <summary>
+        /// Clears data structures and nulls/frees external references.
+        /// </summary>
+        void Close();
+
+        /// <summary>
         /// Send a terse update for an avatar if they are within draw distance
         /// </summary>
         /// <param name="scenePresence"></param>

@@ -905,7 +905,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_scriptEngines = m_scene.RequestModuleInterfaces<IScriptModule>();
 
-            m_log.Warn("[PRESENCE]: Constructor, clients now: " + (++m_depth).ToString());
+            m_log.WarnFormat("[PRESENCE]: Constructor for {0}, clients now: {1}", m_name, ++m_depth);
 
             ISceneViewModule sceneViewModule = m_scene.RequestModuleInterface<ISceneViewModule>();
             if (sceneViewModule != null)
@@ -938,7 +938,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         ~ScenePresence()
         {
-            m_log.Warn("[PRESENCE]: Destructor, clients now: " + (--m_depth).ToString());
+            m_log.WarnFormat("[PRESENCE]: Destructor for {0}, clients now: {1}", m_name, --m_depth);
         }
 
         public void RegisterToEvents()
@@ -4418,7 +4418,8 @@ namespace OpenSim.Region.Framework.Scenes
             m_closed = true;
 
             ClearSceneView();
-            SceneView.ClearAllTracking();
+            SceneView.Close();
+            m_sceneView = null;
         }
 
         /// <summary>

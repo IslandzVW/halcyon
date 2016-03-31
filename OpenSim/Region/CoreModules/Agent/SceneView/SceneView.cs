@@ -172,6 +172,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         {
             //m_updateTimes
             m_log.Warn("[SCENEVIEW]: Destructor, depth now: " + (--m_depth).ToString());
+            m_presence = null;
         }
         #endregion
 
@@ -280,6 +281,12 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         public void ClearScene()
         {
             m_presencesInView.Clear();
+        }
+
+        public void Close()
+        {
+            ClearAllTracking();
+            m_presence = null;
         }
 
         /// <summary>
