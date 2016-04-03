@@ -7882,15 +7882,15 @@ namespace InWorldz.Phlox.Engine
             return m_ScriptEngine.GetUsedMemory(m_itemID);
         }
 
-        public int LIMIT_64K = 64 * 1024;
+        public int LIMIT_128K = 128 * 1024;
         public int llGetMemoryLimit()
         {
-            return LIMIT_64K;
+			return LIMIT_128K;
         }
 
         public int llSetMemoryLimit(int limit)
         {
-            if (limit == LIMIT_64K)
+			if (limit == LIMIT_128K)
                 return 1;
 
             return 0;
