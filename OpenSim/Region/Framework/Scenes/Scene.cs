@@ -998,7 +998,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Given float seconds, this will restart the region.
         /// </summary>
         /// <param name="seconds">float indicating duration before restart.</param>
-        public virtual void Restart(float seconds)
+        public virtual void Restart(int seconds)
         {
             // RestartNow() does immediate restarting.
             if (seconds == -1)
@@ -1010,7 +1010,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Now we figure out what to set the timer to that does the notifications and calls, RestartNow()
                 m_restartTimer.Interval = 15000;
-                m_incrementsof15seconds = (int)seconds / 15;
+                m_incrementsof15seconds = seconds / 15;
                 m_RestartTimerCounter = 0;
                 m_restartTimer.AutoReset = true;
                 m_restartTimer.Elapsed += new ElapsedEventHandler(RestartTimer_Elapsed);
