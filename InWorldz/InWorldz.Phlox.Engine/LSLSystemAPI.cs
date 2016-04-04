@@ -8699,12 +8699,28 @@ namespace InWorldz.Phlox.Engine
             m_host.ScriptAccessPin = pin;
         }
 
-        public void llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param)
+		//Functions same as llRemoteLoadScriptPin, but returns an integer flag to indicate success,
+		//  instead of calling ScriptShoutError
+		public int iwRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param) {
+			return RemoteLoadScriptPin(target, name, pin, running, start_param, false);
+		}
+
+		public void llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param) {
+			RemoteLoadScriptPin (target, name, pin, running, start_param, true);
+		}
+
+		//A proxy for llRemoteLoadScriptPin and iwRemoteLoadScriptPin
+		//Uses integer constants as return codes to indicate success or failure
+		//  IW_REMOTELOAD_SUCCESS =  1	Function succeeded
+		//  IW_REMOTELOAD_FAILURE =  0	Function failed, for various reasons
+		//  IW_REMOTELOAD_BAD_PIN = -1	The pin did not match the target's pin
+		//  IW_REMOTELOAD_NO_PIN  = -2	The target did not have a pin set
+		public int RemoteLoadScriptPin(string target, string name, int pin, int running, int start_param, bool doShout)
         {
 			if (pin == 0) {
 				ScriptShoutError ("llRemoteLoadScriptPin: PIN cannot be zero.");
 				ScriptSleep(3000);
-				return;
+				return 0;
 			}
             
             bool found = false;
@@ -8713,26 +8729,26 @@ namespace InWorldz.Phlox.Engine
 
             if (!UUID.TryParse(target, out destId))
             {
-                llSay(0, "Could not parse key " + target);
-                return;
+				llSay(0, "Could not parse key " + target);
+                return 0;
             }
 
             // Target must be a different prim than the one containing the script, owned by the same user.
             SceneObjectPart part = m_host.ParentGroup.Scene.GetSceneObjectPart(destId);
             if (part == null)
             {
-                ScriptShoutError("llRemoteLoadScriptPin: Target prim ["+destId.ToString()+"] not found.");
-                return;
+				ScriptShoutError("llRemoteLoadScriptPin: Target prim ["+destId.ToString()+"] not found.");
+                return 0;
             }
             if (m_host.OwnerID != part.OwnerID)
             {
-                ScriptShoutError("llRemoteLoadScriptPin: Target prim ownership does not match.");
-                return;
+				ScriptShoutError("llRemoteLoadScriptPin: Target prim ownership does not match.");
+                return 0;
             }
             if (m_host.UUID == destId)
             {
-                ScriptShoutError("llRemoteLoadScriptPin: Target prim cannot be the source prim.");
-                return;
+				ScriptShoutError("llRemoteLoadScriptPin: Target prim cannot be the source prim.");
+                return 0;
             }
 
             // copy the first script found with this inventory name
@@ -8755,24 +8771,32 @@ namespace InWorldz.Phlox.Engine
 
             if (!found)
             {
-                llSay(0, "Could not find script " + name);
-                return;
+				llSay(0, "Could not find script " + name);
+                return 0;
             }
 
             // the rest of the permission checks are done in RezScript, so check the pin there as well
             string result = World.RezScript(srcId, m_host, destId, pin, running, start_param);
+			int ret = 1;
             if (!String.IsNullOrEmpty(result))
             {
                 // validation error updating script
-				if (result == "PIN")    // special case for public error (let's not match the silly SL "illegal" text)
-                    ShoutError ("llRemoteLoadScriptPin: Script update denied - PIN mismatch.");
-				else if (result == "NO PIN")
-					ShoutError ("llRemoteLoadScriptPin: Script update denied - PIN not set.");
-                else
-                    ScriptShoutError("llRemoteLoadScriptPin: " + result);
+				if (result == "PIN") {    // special case for public error (let's not match the silly SL "illegal" text)
+					if (doShout)
+						ShoutError ("llRemoteLoadScriptPin: Script update denied - PIN mismatch.");
+					ret = -1;
+				} else if (result == "NO PIN") {
+					if(doShout)
+						ShoutError ("llRemoteLoadScriptPin: Script update denied - PIN not set.");
+					ret = -2;
+				} else {
+					ScriptShoutError ("llRemoteLoadScriptPin: " + result);
+					ret = 0;
+				}
             }
             // this will cause the delay even if the script pin or permissions were wrong - seems ok
             ScriptSleep(3000);
+			return ret;
         }
 
         public void llOpenRemoteDataChannel()
