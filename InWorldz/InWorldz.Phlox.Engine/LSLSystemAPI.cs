@@ -14693,6 +14693,9 @@ namespace InWorldz.Phlox.Engine
 
             try
             {
+                if (trimmed == String.Empty)
+                    return null;
+
                 if (IsJsonFramed(trimmed, '[', ']'))
                     return LitJson.JsonMapper.ToObject(trimmed);
 
@@ -14834,7 +14837,7 @@ namespace InWorldz.Phlox.Engine
                 else
                     o= OSDParser.DeserializeJson(str);
                 JsonSetSpecific(null, o, specifiers, 0, value);
-                return OSDParser.SerializeJsonString(o);
+                return OSDToJsonStringValue(o);
             }
             catch (Exception)
             {
