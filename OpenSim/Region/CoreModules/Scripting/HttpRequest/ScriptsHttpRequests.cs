@@ -296,10 +296,15 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                         case (int)HttpRequestConstants.HTTP_CUSTOM_HEADER:
                             string key = parms[i++];
                             string value = parms[i++];
-                            // Don't overwrite values.  Keeps us from clobbering
-                            // The standard X-Secondlife params with user ones.
-                            if (headers.ContainsKey(key) == false)
-                                headers.Add(key, value);
+                            if (key.ToLower().StartsWith("x-secondlife"))
+                            {
+                                // Don't overwrite values.  Keeps us from clobbering
+                                // The standard X-Secondlife params with user ones.
+                                if (headers.ContainsKey(key) == false)
+                                    headers.Add(key, value);
+                            }
+                            else
+                                headers[key] = value;
                             break;
 
                         case (int)HttpRequestConstants.HTTP_PRAGMA_NO_CACHE:
