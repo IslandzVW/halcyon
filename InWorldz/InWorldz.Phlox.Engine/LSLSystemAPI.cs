@@ -13104,8 +13104,7 @@ namespace InWorldz.Phlox.Engine
             httpHeaders["X-SecondLife-Owner-Key"] = m_host.ObjectOwner.ToString();
             string userAgent = config.Configs["Network"].GetString("user_agent", null);
             if (userAgent == null)
-                userAgent = "LSL Script (Mozilla Compatible)";
-
+                userAgent = "InWorldz LSL/"+ VersionInfo.Version+ " (http://inworldz.com)";
             httpHeaders["User-Agent"] = userAgent;
 
             UUID reqId = httpScriptMod.StartHttpRequest(m_host.ParentGroup.UUID, m_localID, m_itemID, url, param, httpHeaders, body);
