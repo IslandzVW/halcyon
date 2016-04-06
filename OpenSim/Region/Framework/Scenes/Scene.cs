@@ -4740,13 +4740,19 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (!set && (parcel.OwnerID != avatar.UUID) && (fromParcel.GlobalID != parcel.GlobalID))
                 {   // Changing parcels and not the owner.
-                    if ((parcel.LandingType == LandingType.LandingPoint) && (parcel.UserLocation != Vector3.Zero))
-                    {   // Parcel in landing point mode with a location specified.
-                        if (!(IsGodUser(avatar.UUID) || IsEstateManager(avatar.UUID) || IsEstateOwnerPartner(avatar.UUID)))
-                        {
+                    if (!(IsGodUser(avatar.UUID) || IsEstateManager(avatar.UUID) || IsEstateOwnerPartner(avatar.UUID)))
+                    {
+                        if ((parcel.LandingType == LandingType.LandingPoint) && (parcel.UserLocation != Vector3.Zero))
+                        {   // Parcel in landing point mode with a location specified.
                             // Force the user to the landing point.
                             position = parcel.UserLocation;
                             lookAt = parcel.UserLookAt;
+                        }
+                        else
+                        if ((parcel.LandingType == LandingType.Blocked))
+                        {
+                            avatar.ControllingClient.SendTeleportFailed("Teleport routing at destination parcel is blocked.");
+                            return;
                         }
                     }
                 }
