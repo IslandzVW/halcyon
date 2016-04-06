@@ -248,6 +248,24 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             }
         }
 
+        // Called only from HTTP_CUSTOM_HEADER.
+        private bool ScriptCanChangeHeader(string key)
+        {
+            string targetKey = key.ToLower();
+
+            // Content-type must be set via HTTP_MIMETYPE
+            if (targetKey == "content-type")
+                return false;
+
+            // These are reserved for internal use only.
+            if (targetKey == "user-agent")
+                return false;
+            if (targetKey.StartsWith("x-secondlife"))
+                return false;
+
+            return true;
+        }
+
         public UUID StartHttpRequest(UUID sogId, uint localID, UUID itemID, string url, string[] parms, Dictionary<string, string> headers, string body)
         {
             //if there are already too many requests globally, reject this one
@@ -296,10 +314,19 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                         case (int)HttpRequestConstants.HTTP_CUSTOM_HEADER:
                             string key = parms[i++];
                             string value = parms[i++];
-                            // Don't overwrite values.  Keeps us from clobbering
-                            // The standard X-Secondlife params with user ones.
-                            if (headers.ContainsKey(key) == false)
-                                headers.Add(key, value);
+                            // The script is not allowed to override some of the headers.
+                            if (ScriptCanChangeHeader(key))
+                            {
+                                if (headers.ContainsKey(key))
+                                {
+                                    // In SL, duplicate headers add to the existing header after a comma+space
+                                    headers[key] += ", " + value;
+                                }
+                                else
+                                {
+                                    headers.Add(key, value);
+                                }
+                            }
                             break;
 
                         case (int)HttpRequestConstants.HTTP_PRAGMA_NO_CACHE:
