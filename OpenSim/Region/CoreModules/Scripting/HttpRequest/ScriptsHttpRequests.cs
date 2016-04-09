@@ -258,8 +258,8 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                 return false;
 
             // These are reserved for internal use only.
-            if (targetKey == "user-agent")
-                return false;
+            // if (targetKey == "user-agent")   // SL allows appending multi-line text on the end of the URL to achieve this.
+            //    return false;                 // instead we'll just allow it normally.
             if (targetKey.StartsWith("x-secondlife"))
                 return false;
 
