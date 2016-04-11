@@ -118,6 +118,53 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
             _finished = false;
             SendRequest();
         }
+
+        // Supports http://httpwg.org/specs/rfc7233.html#byte.ranges
+        // e.g. "range: bytes=200-299", or "range: bytes=300-" or "range: bytes=-99,100-199,200-"
+        private void AddRequestRanges(string headerValue)
+        {
+            string temp = headerValue.Trim();
+            if (temp.IndexOf("bytes") != 0)
+                return;
+            temp = temp.Remove(0, 5).Trim();
+            if (temp.IndexOf("=") != 0)
+                return;
+            string remaining = temp.Remove(0, 1).Trim();
+            int start, end;
+            while (remaining.Length > 0)
+            {
+                string chunk;
+                int pos = remaining.IndexOf(",");
+                if (pos > 0)
+                {
+                    // more than one range
+                    chunk = remaining.Substring(0, pos).Trim();
+                    remaining = remaining.Remove(0, pos + 1).Trim();
+                } else
+                {
+                    // just this one range
+                    chunk = remaining;
+                    remaining = String.Empty;
+                }
+
+                // chunk has one range in it
+                pos = chunk.IndexOf("-");
+                if (pos == 0)
+                {
+                    // no starting value
+                    start = 0;
+                } else
+                {
+                    start = Convert.ToInt32(chunk.Substring(0,pos));
+                }
+                temp = chunk.Substring(pos+1);
+                if (temp.Length > 0)
+                    end = Convert.ToInt32(temp);
+                else // no end value
+                    end = int.MaxValue;
+                Request.AddRange(start,end);
+            }
+        }
         /*
          * TODO: More work on the response codes.  Right now
          * returning 200 for success or 499 for exception
@@ -156,8 +203,56 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
 
                 foreach (KeyValuePair<string, string> entry in ResponseHeaders)
                 {
+                    // There are some headers (like "user-agent") that cannot be set via the Headers member.
+                    // See https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.headers%28v=vs.110%29.aspx
+                    if (entry.Key.ToLower().Equals("accept"))
+                        Request.Accept = entry.Value;
+                    else
+                    if (entry.Key.ToLower().Equals("content-length"))
+                        Request.ContentLength = Convert.ToInt64(entry.Value);
+                    else
+                    if (entry.Key.ToLower().Equals("content-type"))
+                        Request.ContentType = entry.Value;
+                    else
+                    if (entry.Key.ToLower().Equals("expect"))
+                        Request.Expect = entry.Value;
+                    else
+                    if (entry.Key.ToLower().Equals("host"))
+                        Request.Host = entry.Value;
+                    else
+                    if (entry.Key.ToLower().Equals("date"))
+                        Request.Date = Convert.ToDateTime(entry.Value);
+                    else
+                    if (entry.Key.ToLower().Equals("if-modified-since"))
+                        Request.IfModifiedSince = Convert.ToDateTime(entry.Value);
+                    else
+                    if (entry.Key.ToLower().Equals("range"))
+                        AddRequestRanges(entry.Value);
+                    else
                     if (entry.Key.ToLower().Equals("user-agent"))
                         Request.UserAgent = entry.Value;
+                    else
+                    if (entry.Key.ToLower().Equals("transfer-encoding"))
+                    {
+                        Request.SendChunked = true;
+                        Request.TransferEncoding = entry.Value;
+                    }
+                    else
+                    if (entry.Key.ToLower().Equals("connection"))
+                    {
+                        string tempValue = entry.Value.ToLower();
+                        int pos = tempValue.IndexOf("keep-alive");
+                        if (pos >= 0)
+                        {
+                            tempValue = tempValue.Remove(pos, 10).Trim();
+                            Request.KeepAlive = true;
+                        }
+                        else
+                        {
+                            Request.KeepAlive = false;
+                        }
+                        Request.Connection = tempValue;
+                    }
                     else
                         Request.Headers[entry.Key] = entry.Value;
                 }
