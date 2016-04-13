@@ -4164,6 +4164,18 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
 
+            if (SceneGraph.GetRootAgentCount() + 1 > RegionInfo.RegionSettings.AgentLimit)
+            {
+                if (RegionInfo.EstateSettings.HasAccess(agentId) == false)
+                {
+                    m_log.WarnFormat(
+                        "[SCENE]: User {0} ({1}) was denied access to the region because agent limit was reached",
+                        agentId, userName);
+                    reason = "Region is full";
+                    return false;
+                }
+            }
+
             if (IsBlacklistedUser(agentId))
             {
                 m_log.WarnFormat("[SCENE]: Denied access to: {0} ({1}) at {2} because the user is blacklisted",
