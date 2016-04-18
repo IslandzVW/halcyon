@@ -1683,6 +1683,16 @@ namespace OpenSim.Region.Framework.Scenes
             if (taskItem == null)
                 return null;
 
+            // Either the taskItem must be copyable (copy operation), or the enclosing object must be modifyable (move operation).
+            if ((taskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0) // rules out a copy
+            {
+                if ((part.OwnerMask & (uint)PermissionMask.Modify) == 0)        // rules out a move
+                {
+                    remoteClient.SendAlertMessage("Cannot remove a no-copy item from a no-modify object.");
+                    return null;
+                }
+            }
+
             if (remoteClient == null)
             {
                 UserProfileData profile = CommsManager.UserService.GetUserProfile(AgentId);
