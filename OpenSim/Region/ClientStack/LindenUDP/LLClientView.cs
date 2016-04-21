@@ -7587,6 +7587,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 args.SenderUUID = this.AgentId;
                 args.DestinationUUID = UUID.Zero;
 
+                // Force avatar position to be server-known avatar position. (Former contents of FixPositionOfChatMessage.)
+                ScenePresence avatar;
+                if (((Scene)Scene).TryGetAvatar(args.SenderUUID, out avatar))
+                    args.Position = avatar.AbsolutePosition;
+
                 ChatMessage handlerChatFromClient = OnChatFromClient;
                 if (handlerChatFromClient != null)
                     handlerChatFromClient(this, args);
