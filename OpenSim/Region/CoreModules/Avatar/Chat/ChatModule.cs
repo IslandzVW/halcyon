@@ -112,22 +112,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             client.OnChatFromClient += OnChatFromClient;
         }
 
-        protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)
-        {
-            if (c.SenderUUID == UUID.Zero)
-            {
-                //this is from a dialog, dont adjust the pos
-                return c;
-            }
-
-            ScenePresence avatar;
-            Scene scene = (Scene)c.Scene;
-            if (scene.TryGetAvatar(c.SenderUUID, out avatar))
-                c.Position = avatar.AbsolutePosition;
-
-            return c;
-        }
-
         private bool PrefilterChat(Object sender, OSChatMessage c)
         {
             if (c.Type != ChatTypeEnum.Say)
@@ -154,8 +138,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
         public virtual void OnChatFromClient(Object sender, OSChatMessage c)
         {
-            c = FixPositionOfChatMessage(c);
-
             if (PrefilterChat(sender, c))
                 return;
 
