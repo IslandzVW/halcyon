@@ -265,6 +265,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             chatFromClient.SenderUUID = AgentId;
             chatFromClient.Type = sourceType;
 
+            // Force avatar position to be server-known avatar position. (Former contents of FixPositionOfChatMessage.)
+            ScenePresence avatar;
+            if (m_scene.TryGetAvatar(m_UUID, out avatar))
+                chatFromClient.Position = avatar.AbsolutePosition;
+
             OnChatFromClient(this, chatFromClient);
         }
 
