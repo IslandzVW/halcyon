@@ -546,9 +546,10 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             CachedUserInfo profile = m_scene.CommsManager.UserService.GetUserDetails(clientView.AgentId);
             if (profile != null)
             {
-                // we need to clean out the existing textures
                 AvatarAppearance appearance = avatar.Appearance;
-                avatar.Appearance.ResetAppearance();
+
+                // we need to clean out the existing textures
+                appearance.Texture = AvatarAppearance.GetDefaultTexture();
 
                 List<AvatarWearable> wearables = new List<AvatarWearable>();
                 lock (_currentlyWaitingCOFBuilds)
