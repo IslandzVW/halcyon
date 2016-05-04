@@ -772,5 +772,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int BOT_EMAIL = 2;
         public const int BOT_IMAGE_UUID = 3;
         public const int BOT_PROFILE_URL = 4;
+
+        // Return codes for iwDeliverInventory and iwDeliverInventoryList
+        public const int IW_DELIVER_OK = 0;
+        public const int IW_DELIVER_BADKEY = 1;
+        public const int IW_DELIVER_MUTED = 2;
+        public const int IW_DELIVER_ITEM = 3;
+        public const int IW_DELIVER_PRIM = 4;
+        public const int IW_DELIVER_USER = 5;
+        public const int IW_DELIVER_PERM = 6;
+        public const int IW_DELIVER_NONE = 7;
     }
 }
