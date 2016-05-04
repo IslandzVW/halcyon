@@ -4393,15 +4393,19 @@ namespace OpenSim.Region.Framework.Scenes
         public void Close()
         {
             m_remotePresences.OnScenePresenceClosed();
+            m_remotePresences = null;
 
             List<SceneObjectGroup> attList = GetAttachments();
 
             // Save and Delete attachments from scene only if we're a root and not a bot
-            if ((!IsChildAgent) && (!IsBot))
+            if (!IsChildAgent)
             {
                 foreach (SceneObjectGroup grp in attList)
                 {
-                    m_scene.SaveAndDeleteAttachment(null, grp, grp.GetFromItemID(), grp.OwnerID);
+                    if (IsBot)
+                        m_scene.DeleteAttachment(grp);
+                    else
+                        m_scene.SaveAndDeleteAttachment(null, grp, grp.GetFromItemID(), grp.OwnerID);
                 }
             }
 
@@ -4419,6 +4423,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             ClearSceneView();
             SceneView.ClearAllTracking();
+            m_sceneView = null; // free the reference
+            m_controllingClient = null;
         }
 
         /// <summary>
@@ -4623,8 +4629,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_controllingClient = client;
             m_regionInfo = region;
             m_scene = scene;
-
-            RegisterToEvents();
         }
 
         internal void AddForce(OpenMetaverse.Vector3 force, ForceType ftype)

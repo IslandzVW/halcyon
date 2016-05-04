@@ -730,6 +730,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 //we have to do the actual close work in another thread because otherwise
                 //this one will stay on the active jobs list and deadlock the closure
                 Util.FireAndForget(this.CloseWorker);
+                m_clientInterfaces.Clear();
             }
         }
 
@@ -8051,6 +8052,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
 
                     uint serial = appear.AgentData.SerialNum;
+
+                    m_log.InfoFormat("[LLCV]: Avatar appearance update ({0}) for user {1}", serial, this.Name);
 
                     handlerSetAppearance(appear.ObjectData.TextureEntry, visualparams, items, serial);
                 }
