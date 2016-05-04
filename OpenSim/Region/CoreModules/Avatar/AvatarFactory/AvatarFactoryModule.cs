@@ -657,6 +657,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         {
             lock (_pendingUpdates)
             {
+                // m_log.InfoFormat("[LLCV]: Avatar database update ({0}) queued for user {1}", appearance.Serial, user);
                 if (_pendingUpdates.ContainsKey(user))
                 {
                     _pendingUpdates.Remove(user);
@@ -731,6 +732,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 {
                     if (upd.CallBack != null) 
                         upd.CallBack();
+                    m_log.InfoFormat("[LLCV]: Avatar database update ({0}) committing for user {1}", upd.Appearance.Serial, upd.UserId);
                     m_scene.CommsManager.AvatarService.UpdateUserAppearance(upd.UserId, upd.Appearance);
                     if (upd.BakedTextures != null && upd.BakedTextures.Count > 0)
                         m_scene.CommsManager.AvatarService.SetCachedBakedTextures(upd.BakedTextures);

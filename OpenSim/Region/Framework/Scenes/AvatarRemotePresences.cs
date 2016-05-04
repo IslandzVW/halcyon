@@ -169,6 +169,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             StopManagingPresences();
 
+            _sp = null; // release the SP reference
+
             _scene.EventManager.OnMakeRootAgent -= EventManager_OnMakeRootAgent;
             _scene.EventManager.OnMakeChildAgent -= EventManager_OnMakeChildAgent;
         }
