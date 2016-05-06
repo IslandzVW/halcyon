@@ -5272,7 +5272,7 @@ namespace InWorldz.Phlox.Engine
             if (!found)
             {
                 ScriptShoutError(String.Format("Could not find item '{0}'", inventory));
-                return ScriptBaseClass.IW_DELIVER_ITEM;
+                return ScriptBaseClass.IW_DELIVER_NONE;
             }
 
             // check if destination is a part (much faster than checking if it's an avatar)
@@ -5322,12 +5322,18 @@ namespace InWorldz.Phlox.Engine
             return ScriptBaseClass.IW_DELIVER_OK;
         }
 
-        public void GiveLinkInventory(SceneObjectPart part, string destination, string inventory, int delay, bool includeRC)
+        private void GiveLinkInventory(int linknumber, string destination, string inventory, int delay, bool includeRC)
         {
-            int rc = -1;
+            int rc = ScriptBaseClass.IW_DELIVER_PRIM;   // part not found
             try
             {
-                rc = _GiveInventory(part, destination, inventory);
+                var parts = GetLinkParts(linknumber);
+                foreach (SceneObjectPart part in parts)
+                {
+                    rc = _GiveInventory(part, destination, inventory);
+                    if (rc != ScriptBaseClass.IW_DELIVER_NONE)
+                        return; // give results from the first matching prim only
+                }
             }
             finally
             {
@@ -5339,25 +5345,15 @@ namespace InWorldz.Phlox.Engine
         }
         public void llGiveInventory(string destination, string inventory)
         {
-            GiveLinkInventory(m_host, destination, inventory, 2000, false);
+            GiveLinkInventory(ScriptBaseClass.LINK_THIS, destination, inventory, 2000, false);
         }
         public void iwGiveLinkInventory(int linknumber, string destination, string inventory)
         {
-            var parts = GetLinkParts(linknumber);
-            foreach (SceneObjectPart part in parts)
-            {
-                GiveLinkInventory(part, destination, inventory, 2000, false);
-                break;  // stop on the first match
-            }
+            GiveLinkInventory(linknumber, destination, inventory, 2000, false);
         }
         public void iwDeliverInventory(int linknumber, string destination, string inventory)
         {
-            var parts = GetLinkParts(linknumber);
-            foreach (SceneObjectPart part in parts)
-            {
-                GiveLinkInventory(part, destination, inventory, 100, true);
-                break;  // stop on the first match
-            }
+            GiveLinkInventory(linknumber, destination, inventory, 100, true);
         }
 
         private void RemoveLinkInventory(SceneObjectPart part, string name)
@@ -8361,7 +8357,7 @@ namespace InWorldz.Phlox.Engine
 
             if (itemList.Count == 0)
             {   // Nothing to give.
-                return ScriptBaseClass.IW_DELIVER_ITEM;
+                return ScriptBaseClass.IW_DELIVER_NONE;
             }
 
             string reason;
@@ -8387,12 +8383,18 @@ namespace InWorldz.Phlox.Engine
             return ScriptBaseClass.IW_DELIVER_OK;
         }
 
-        public void GiveLinkInventoryList(SceneObjectPart part, string destination, string category, LSL_List inventory, int delay, bool includeRC)
+        private void GiveInventoryList(int linknumber, string destination, string category, LSL_List inventory, int delay, bool includeRC)
         {
-            int rc = -1;
+            int rc = ScriptBaseClass.IW_DELIVER_PRIM;   // part not found
             try
             {
-                rc = _GiveLinkInventoryList(part, destination, category, inventory, includeRC);
+                var parts = GetLinkParts(linknumber);
+                foreach (SceneObjectPart part in parts)
+                {
+                    rc = _GiveLinkInventoryList(part, destination, category, inventory, includeRC);
+                    if (rc != ScriptBaseClass.IW_DELIVER_NONE)
+                        return; // give results from the first matching prim only
+                }
             }
             finally
             {
@@ -8404,25 +8406,15 @@ namespace InWorldz.Phlox.Engine
         }
         public void llGiveInventoryList(string destination, string category, LSL_List inventory)
         {
-            GiveLinkInventoryList(m_host, destination, category, inventory, 3000, false);
+            GiveInventoryList(ScriptBaseClass.LINK_THIS, destination, category, inventory, 3000, false);
         }
         public void iwGiveLinkInventoryList(int linknumber, string destination, string category, LSL_List inventory)
         {
-            var parts = GetLinkParts(linknumber);
-            foreach (SceneObjectPart part in parts)
-            {
-                GiveLinkInventoryList(part, destination, category, inventory, 3000, false);
-                return; // give the first match only
-            }
+            GiveInventoryList(linknumber, destination, category, inventory, 3000, false);
         }
         public void iwDeliverInventoryList(int linknumber, string destination, string category, LSL_List inventory)
         {
-            var parts = GetLinkParts(linknumber);
-            foreach (SceneObjectPart part in parts)
-            {
-                GiveLinkInventoryList(part, destination, category, inventory, 100, true);
-                return; // give the first match only
-            }
+            GiveInventoryList(linknumber, destination, category, inventory, 100, true);
         }
 
         public void llSetVehicleType(int type)
