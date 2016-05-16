@@ -1692,16 +1692,9 @@ namespace OpenSim.Region.Framework.Scenes
                 return null;
             }
 
-            // Either the taskItem must be copyable (copy operation), or the enclosing object must be modifyable (move operation).
-            if ((taskItem.CurrentPermissions & (uint)PermissionMask.Copy) == 0) // rules out a copy
-            {
-                if ((part.OwnerMask & (uint)PermissionMask.Modify) == 0)        // rules out a move
-                {
-                    remoteClient.SendAlertMessage("Cannot remove a no-copy item from a no-modify object.");
-                    reason = "perm";
-                    return null;
-                }
-            }
+            // Normally either the taskItem must be copyable (copy operation), or the enclosing object must be modifyable (move operation).
+            // But SL allows *moves* but not *deletes* in this case, and IW has creators depending on this in no-mod boxed deliverables.
+            // See commit f5e488ba572cc0cd2ca22c01068a166bc8dcfabf now reverted.
 
             if (remoteClient == null)
             {
