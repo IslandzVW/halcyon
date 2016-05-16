@@ -50,8 +50,12 @@ namespace OpenSim.Framework
         public readonly static int TEXTURE_COUNT = 21;
         public readonly static byte[] BAKE_INDICES = new byte[] { 8, 9, 10, 11, 19, 20 };
 
-        protected UUID m_owner; 
-        protected int m_serial = 0;
+        // The viewer defines the initial/default/unknown appearance serial number (version)
+        // in LLViewerInventoryCategory, as VERSION_INITIAL=-1 and VERSION_UNKNOWN=-1 (not zero).
+        public readonly static int VERSION_INITIAL = -1;
+
+        protected UUID m_owner;
+        protected int m_serial = VERSION_INITIAL;
         protected byte[] m_visualparams;
         protected Primitive.TextureEntry m_texture;
         protected Dictionary<int, AvatarWearable> m_wearables;
@@ -130,7 +134,7 @@ namespace OpenSim.Framework
         public AvatarAppearance(UUID owner)
         {
             m_owner = owner;
-            m_serial = 0;
+            m_serial = VERSION_INITIAL;
             m_attachments = new Dictionary<int, List<AvatarAttachment>>();
             m_wearables = new Dictionary<int, AvatarWearable>();
             
@@ -151,7 +155,7 @@ namespace OpenSim.Framework
 //            m_log.WarnFormat("[AVATAR APPEARANCE] create initialized appearance");
 
             m_owner = owner;
-            m_serial = 0;
+            m_serial = VERSION_INITIAL;
             m_attachments = new Dictionary<int, List<AvatarAttachment>>();
             m_wearables = new Dictionary<int, AvatarWearable>();
 
@@ -189,7 +193,7 @@ namespace OpenSim.Framework
 
             if (appearance == null)
             {
-                m_serial = 0;
+                m_serial = VERSION_INITIAL;
                 m_owner = UUID.Zero;
                 SetDefaultWearables();
                 SetDefaultTexture();
@@ -245,7 +249,7 @@ namespace OpenSim.Framework
         public virtual void ResetAppearance()
         {
 //            m_log.WarnFormat("[AVATAR APPEARANCE]: Reset appearance");
-            m_serial = 0;
+            m_serial = VERSION_INITIAL;
             SetDefaultTexture();
         }
         
