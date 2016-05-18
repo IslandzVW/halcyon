@@ -36,6 +36,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Framework.Statistics;
 using System.Text;
+using System.Linq;
 using OpenSim.Framework;
 using Amib.Threading;
 
@@ -136,9 +137,30 @@ namespace OpenSim.Framework.Communications.Cache
             ProviderRegistry.Instance.RegisterInterface<IAssetCache>(this);
         }        
 
+        private string GetMinAvgMax(float[] data, string format)
+        {
+            if (data.Length == 0)
+                return String.Format(format, 0.0f, 0.0f, 0.0f);
+
+            return String.Format(format, data.Min(), data.Average(), data.Max());
+        }
+
         public void ShowState()
         {
-            
+            AssetStats stats = m_assetServer.GetStats();
+            float RHits = (stats.nGet > 0) ? ((float)stats.nGetHit / (float)stats.nGet) : 1.0f;
+            m_log.InfoFormat("[ASSET_STATS]: reads={0} complete={1}, hits={2} ({3}%), {4}",
+                stats.nGet, stats.nGetComplete, stats.nGetHit, (int)(RHits*100),
+                GetMinAvgMax(stats.allGets, "min/avg/max={0}/{1}/{2}")
+                );
+            float WHits = (stats.nPut > 0) ? ((float)stats.nPutHit / (float)stats.nPut) : 1.0f;
+            m_log.InfoFormat("[ASSET_STATS]: writes={0}, hits={1} ({2}%), {3}",
+                stats.nPut, stats.nPutHit, (int)(WHits*100),
+                GetMinAvgMax(stats.allPuts, "min/avg/max={0}/{1}/{2}")
+                );
+            m_log.InfoFormat("[ASSET_STATS]: Total={0}, readErr init/missing={1}/{2}, writeErr exist/TO/NTO/ex/web/io={3}/{4}/{5}/{6}/{7}/{8}", 
+                stats.nTotal, stats.nGetInit, stats.nGetNotFound, 
+                stats.nPutExists, stats.nPutTO, stats.nPutNTO, stats.nPutExcept, stats.nPutExceptWeb, stats.nPutExceptIO);
         }
 
         // Shortcut test to see if we can return null for the asset without fetching.
