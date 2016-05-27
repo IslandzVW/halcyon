@@ -188,6 +188,47 @@ namespace OpenSim.Framework.Communications
             return null;    // not in cache
         }
 
+        private string CombineNames(string fname, string lname)
+        {
+            return fname.Trim() + " " + lname.Trim();
+        }
+        private string DictName(string name)
+        {
+            return name.Trim().ToUpper();
+        }
+        private string DictName(string fname, string lname)
+        {
+            return DictName(CombineNames(fname, lname));
+        }
+
+        private UUID TryGetUUIDByName(string name, bool removeIfFound)
+        {
+            string dictName = DictName(name);
+            UserProfileData profile;
+            lock (m_userDataLock)
+            {
+                // m_userDataByName includes both regular and local UserProfileData entries.
+                if (!m_userDataByName.TryGetValue(dictName, out profile))
+                    return UUID.Zero;    // not known
+
+                if (removeIfFound)
+                    m_userDataByName.Remove(dictName);
+            }
+
+            return profile.ID;
+        }
+
+        private UUID TryGetUUIDByName(string fname, string lname, bool removeIfFound)
+        {
+            string name = CombineNames(fname, lname);
+            return TryGetUUIDByName(name, removeIfFound);
+        }
+
+        private void RemoveName(string name)
+        {
+            TryGetUUIDByName(name, true);
+        }
+
         private void RemoveUserData(UUID uuid)
         {
             // never remove temp profiles this way
@@ -197,15 +238,13 @@ namespace OpenSim.Framework.Communications
                 if (m_localUser.TryGetValue(uuid, out profile))
                 {
                     m_localUser.Remove(uuid);
-                    if (m_userDataByName.ContainsKey(profile.Name))
-                        m_userDataByName.Remove(profile.Name);
+                    RemoveName(profile.Name);
                 }
                 TimestampedItem<UserProfileData> item;
                 if (m_userDataByUUID.TryGetValue(uuid, out item))
                 {
                     m_userDataByUUID.Remove(uuid);
-                    if (m_userDataByName.ContainsKey(item.Item.Name))
-                        m_userDataByName.Remove(item.Item.Name);
+                    RemoveName(item.Item.Name);
                 }
             }
         }
@@ -216,9 +255,8 @@ namespace OpenSim.Framework.Communications
             {
                 if (m_userDataByUUID.Contains(profile.ID))
                     m_userDataByUUID.Remove(profile.ID);
-                if (m_userDataByName.ContainsKey(profile.Name))
-                    m_userDataByName.Remove(profile.Name);
-                m_userDataByName.Add(profile.Name, profile);
+                RemoveName(profile.Name);
+                m_userDataByName.Add(DictName(profile.Name), profile);
                 m_userDataByUUID.Add(profile.ID, new TimestampedItem<UserProfileData>(profile));
             }
         }
@@ -343,13 +381,10 @@ namespace OpenSim.Framework.Communications
                 return null;    // fast exit for no user specified
 
             UserProfileData profile;
-            lock (m_userDataLock)
-            {
-                // m_userDataByName includes both regular and local UserProfileData entries.
-                if (m_userDataByName.TryGetValue(name, out profile))
-                    uuid = profile.ID;
-            }
-            // Now if know the UUID, outside the lock, just use the other function.
+
+            uuid = TryGetUUIDByName(name, false);
+
+            // Now if we know the UUID, just use the other function.
             if (uuid != UUID.Zero)
                 return GetUserProfile(uuid, forceRefresh);  // in case it has expired
 
@@ -381,16 +416,11 @@ namespace OpenSim.Framework.Communications
         // Just call these if all you need is the name from cache.
         public UUID Name2Key(string firstName, string lastName)
         {
-            string name = firstName.Trim() + " " + lastName.Trim();
-            UserProfileData profile;
+            UUID uuid = TryGetUUIDByName(firstName, lastName, false);
+            if (uuid != UUID.Zero)
+                return uuid;
 
-            lock (m_userDataLock)
-            {
-                if (m_userDataByName.TryGetValue(name, out profile))
-                    return profile.ID;
-            }
-
-            profile = GetUserProfile(firstName, lastName, false);   // also adds to cache
+            UserProfileData profile = GetUserProfile(firstName, lastName, false);   // also adds to cache
             if (profile != null)
                 return profile.ID;
 
@@ -755,9 +785,9 @@ namespace OpenSim.Framework.Communications
                     m_tempDataByUUID.Remove(userProfile.ID);
                 m_tempDataByUUID.Add(userProfile.ID, userProfile);
 
-                if (m_userDataByName.ContainsKey(userProfile.Name))
-                    m_userDataByName.Remove(userProfile.Name);
-                m_userDataByName.Add(userProfile.Name, userProfile);
+                string dictName = DictName(userProfile.Name);
+                RemoveName(dictName);
+                m_userDataByName.Add(dictName, userProfile);
             }
         }
 
@@ -770,8 +800,7 @@ namespace OpenSim.Framework.Communications
                 if (m_tempDataByUUID.ContainsKey(uuid))
                 {
                     string name = m_tempDataByUUID[uuid].Name;
-                    if (m_userDataByName.ContainsKey(name))
-                        m_userDataByName.Remove(name);
+                    RemoveName(name);
                     m_tempDataByUUID.Remove(uuid);
                 }
             }
@@ -1642,7 +1671,7 @@ namespace OpenSim.Framework.Communications
                     RemoveUserData(uuid);
 
                     m_localUser[uuid] = profile;
-                    m_userDataByName[profile.Name] = profile;
+                    m_userDataByName[DictName(profile.Name)] = profile;
                 }
             }
             if (profile != null)
@@ -1667,7 +1696,7 @@ namespace OpenSim.Framework.Communications
                 RemoveUserData(uuid);
 
                 m_localUser[uuid] = profile;
-                m_userDataByName[profile.Name] = profile;
+                m_userDataByName[DictName(profile.Name)] = profile;
 
             }
 
