@@ -103,8 +103,8 @@ namespace OpenSim.Framework.Communications
         /// User profiles indexed by name
         /// This MUST be kept in sync with all UserProfileData lists
         /// </summary>
-        private readonly Dictionary<string, UserProfileData> m_userDataByName
-            = new Dictionary<string, UserProfileData>();
+        private readonly Dictionary<string, UUID> m_userByName
+            = new Dictionary<string, UUID>();
 
         ///////////// Caches for CachedUserInfo //////////////
 
@@ -204,18 +204,18 @@ namespace OpenSim.Framework.Communications
         private UUID TryGetUUIDByName(string name, bool removeIfFound)
         {
             string dictName = DictName(name);
-            UserProfileData profile;
+            UUID uuid;
             lock (m_userDataLock)
             {
-                // m_userDataByName includes both regular and local UserProfileData entries.
-                if (!m_userDataByName.TryGetValue(dictName, out profile))
+                // m_userByName includes both regular and local UserProfileData entries.
+                if (!m_userByName.TryGetValue(dictName, out uuid))
                     return UUID.Zero;    // not known
 
                 if (removeIfFound)
-                    m_userDataByName.Remove(dictName);
+                    m_userByName.Remove(dictName);
             }
 
-            return profile.ID;
+            return uuid;
         }
 
         private UUID TryGetUUIDByName(string fname, string lname, bool removeIfFound)
@@ -256,7 +256,7 @@ namespace OpenSim.Framework.Communications
                 if (m_userDataByUUID.Contains(profile.ID))
                     m_userDataByUUID.Remove(profile.ID);
                 RemoveName(profile.Name);
-                m_userDataByName.Add(DictName(profile.Name), profile);
+                m_userByName.Add(DictName(profile.Name), profile.ID);
                 m_userDataByUUID.Add(profile.ID, new TimestampedItem<UserProfileData>(profile));
             }
         }
@@ -787,7 +787,7 @@ namespace OpenSim.Framework.Communications
 
                 string dictName = DictName(userProfile.Name);
                 RemoveName(dictName);
-                m_userDataByName.Add(dictName, userProfile);
+                m_userByName.Add(dictName, userProfile.ID);
             }
         }
 
@@ -1671,7 +1671,7 @@ namespace OpenSim.Framework.Communications
                     RemoveUserData(uuid);
 
                     m_localUser[uuid] = profile;
-                    m_userDataByName[DictName(profile.Name)] = profile;
+                    m_userByName[DictName(profile.Name)] = profile.ID;
                 }
             }
             if (profile != null)
@@ -1696,7 +1696,7 @@ namespace OpenSim.Framework.Communications
                 RemoveUserData(uuid);
 
                 m_localUser[uuid] = profile;
-                m_userDataByName[DictName(profile.Name)] = profile;
+                m_userByName[DictName(profile.Name)] = profile.ID;
 
             }
 
