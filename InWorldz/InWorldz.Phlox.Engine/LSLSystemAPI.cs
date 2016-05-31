@@ -5082,8 +5082,11 @@ namespace InWorldz.Phlox.Engine
                                 if (engine.GetScriptState(inv.Value.ItemID))
                                     total++;
                                 break;
-                            case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:  // total mem possible (64K)
+                            case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:  // total mem possible (128K)
                                 total += engine.GetMaxMemory();
+                                break;
+                            case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
+                                total += m_ScriptEngine.GetUsedMemory(inv.Value.ItemID);
                                 break;
                         }
                     }
@@ -5152,6 +5155,7 @@ namespace InWorldz.Phlox.Engine
                     case ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:
+                    case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
                         total += GetObjectScriptTotal(group, which);
                         break;
                 }
@@ -13476,6 +13480,7 @@ namespace InWorldz.Phlox.Engine
                     case ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:
+                    case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
                         ret.Add(GetAgentTotals(av, param));
                         break;
                     case ScriptBaseClass.OBJECT_SCRIPT_TIME:
@@ -13609,6 +13614,7 @@ namespace InWorldz.Phlox.Engine
                             case ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT:
                             case ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT:
                             case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:
+                            case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
                                 ret.Add(GetObjectScriptTotal(part.ParentGroup, param));
                                 break;
                             case ScriptBaseClass.OBJECT_SCRIPT_TIME:
