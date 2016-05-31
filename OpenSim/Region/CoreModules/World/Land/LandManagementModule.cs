@@ -520,6 +520,10 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void RefreshParcelInfo(IClientAPI remote_client, bool force)
         {
+            // remote_client can be null on botRemoveBot (or if the agent disconnects)
+            // because CompleteMovement calls RefreshParcelInfo from an async thread.
+            if (remote_client == null) return;
+
             ScenePresence avatar = m_scene.GetScenePresence(remote_client.AgentId);
             if (avatar != null)
             {
