@@ -2360,24 +2360,84 @@ namespace OpenSim.Region.Framework.Scenes
 
         /// <summary>
         /// Set the owner of the root part.
+        /// This specific method does not send a full update (caller must).
         /// </summary>
         /// <param name="part"></param>
         /// <param name="cAgentID"></param>
         /// <param name="cGroupID"></param>
         public void SetRootPartOwner(SceneObjectPart part, UUID cAgentID, UUID cGroupID)
         {
-            part.LastOwnerID = part.OwnerID;
-            part.OwnerID = cAgentID;
             part.GroupID = cGroupID;
 
             if (part.OwnerID != cAgentID)
             {
+                part.LastOwnerID = part.OwnerID;
+                part.OwnerID = cAgentID;
+
                 // Apply Next Owner Permissions if we're not bypassing permissions
                 if (!m_scene.Permissions.BypassPermissions())
                     ApplyNextOwnerPermissions();
             }
 
             part.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
+        }
+
+        /// <summary>
+        /// Changes the ownership of a SOG that is currently live and in the scene
+        /// </summary>
+        /// <param name="AgentId">The new user taking ownership</param>
+        /// <param name="ActiveGroupId">The group to assign to the prim (or UUID.Zero)</param>
+        /// <returns>Whether the operation succeeded or failed </returns>
+        public bool ChangeOwner(UUID AgentId, UUID ActiveGroupId)
+        {
+            uint effectivePerms = this.GetEffectivePermissions(true);
+
+            if (AgentId == this.OwnerID)
+            {
+                // new owner already owns this item
+                return false;
+            }
+            if ((effectivePerms & (uint)PermissionMask.Transfer) == 0)
+            {
+                // This object (or something in the Contents of one of the prims) does not appear to be transferable
+                return false;
+            }
+
+            this.SetOwnerId(AgentId);
+            this.SetRootPartOwner(this.RootPart, AgentId, ActiveGroupId);
+
+            var partList = this.GetParts();
+
+            if (this.Scene.Permissions.PropagatePermissions())
+            {
+                foreach (SceneObjectPart child in partList)
+                {
+                    child.Inventory.ChangeInventoryOwner(AgentId);
+                    child.ApplyNextOwnerPermissions();
+                }
+            }
+
+            this.Rationalize(AgentId, false);
+            this.HasGroupChanged = true;
+            this.RezzedFromFolderId = UUID.Zero;
+            Scene.InspectForAutoReturn(this);
+            return true;
+        }
+
+        /// <summary>
+        /// Changes the ownership of a SOG that is currently live and in the scene
+        /// </summary>
+        /// <param name="newOwner">The controlling client for the new user taking ownership</param>
+        /// <returns>Whether the operation succeeded or failed </returns>
+        public bool ChangeOwner(IClientAPI newOwner)
+        {
+            bool result = ChangeOwner(newOwner.AgentId, newOwner.ActiveGroupId);
+            if (result)
+            {
+                GetProperties(newOwner);
+                ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
+            }
+            return result;
         }
 
         /// <summary>
