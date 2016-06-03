@@ -2242,7 +2242,17 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_parentScene.Permissions.CanDuplicateObject(original.PrimCount, original.UUID, AgentID, original.AbsolutePosition))
                 {
-                    SceneObjectGroup copy = original.Copy(AgentID, GroupID, true);
+                    ScenePresence sp;
+                    if (!TryGetAvatar(AgentID, out sp)) sp = null;
+                    UUID ActiveGroupID = UUID.Zero;
+                    IClientAPI remoteClient = null;
+                    if (sp != null)
+                        remoteClient = sp.ControllingClient;
+                    if (remoteClient  != null)
+                        ActiveGroupID = remoteClient.ActiveGroupId;
+
+                    // Clone it but don't change owner yet (if required).
+                    SceneObjectGroup copy = original.Copy(original.OwnerID, original.GroupID, true);
                     copy.AbsolutePosition = copy.AbsolutePosition + offset;
                     copy.ResetInstance(true, true, UUID.Zero);
 
@@ -2268,6 +2278,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                     m_numPrim += copy.PrimCount;
 
+                    if (copy.OwnerID != AgentID)
+                        copy.ChangeOwner(AgentID, GroupID);
+
                     if (rot != Quaternion.Identity)
                     {
                         copy.UpdateGroupRotation(rot, true);
@@ -2275,6 +2288,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                     copy.CreateScriptInstances(0, ScriptStartFlags.None, m_parentScene.DefaultScriptEngine, 0, null);
                     copy.HasGroupChanged = true;
+                    if (remoteClient != null)
+                        copy.GetProperties(remoteClient);
                     copy.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
                     if (OnObjectDuplicate != null)
