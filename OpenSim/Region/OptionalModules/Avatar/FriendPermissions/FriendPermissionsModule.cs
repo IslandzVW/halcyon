@@ -104,13 +104,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.FriendPermissions
                 db.QueryNoResults(  "UPDATE userfriends " +
                                         "SET friendPerms = ?rights " +
                                     "WHERE ownerID = ?ownerID AND friendID = ?friendID;",
-                                    
                                     parms );
-
             }
 
             m_scene.CommsManager.UserService.UpdateUserFriendPerms(grantor, grantee, (uint)rights);
             sender.SendChangeUserRights(grantor, grantee, rights);
+            Framework.Scenes.ScenePresence receiver = m_scene.GetScenePresence(grantee);
+            if ((receiver != null) && (receiver.ControllingClient != null))
+                receiver.ControllingClient.SendChangeUserRights(grantor, grantee, rights);
         }
     }
 }
