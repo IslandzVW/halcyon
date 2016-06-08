@@ -1628,7 +1628,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private InventoryItemBase CreateAgentInventoryItemFromTask(UUID destAgent, SceneObjectPart part, UUID itemId)
+        private InventoryItemBase CreateAgentInventoryItemFromTask(UUID destAgent, SceneObjectPart part, UUID itemId, out string reason)
         {
             TaskInventoryItem taskItem = part.Inventory.GetInventoryItem(itemId);
 
@@ -1639,12 +1639,13 @@ namespace OpenSim.Region.Framework.Scenes
                         + " inventory item from a prim's inventory item "
                         + " but the required item does not exist in the prim's inventory",
                     itemId, part.Name, part.UUID);
-
+                reason = "item";
                 return null;
             }
 
             if ((destAgent != taskItem.OwnerID) && ((taskItem.CurrentPermissions & (uint)PermissionMask.Transfer) == 0))
             {
+                reason = "perm";
                 return null;
             }
 
@@ -1662,6 +1663,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             CalcItemPermsFromTaskItem(agentItem, taskItem, (part.OwnerID != destAgent));
 
+            reason = "";
             return agentItem;
         }
 
@@ -1674,14 +1676,25 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         /// <param name="itemID"></param>
         public InventoryItemBase MoveTaskInventoryItem(UUID AgentId, IClientAPI remoteClient, UUID folderId, SceneObjectPart part, UUID itemId,
-            bool silent)
+            bool silent, out string reason)
         {
+            reason = "";
             if (part == null)
+            {
+                reason = "part";
                 return null;
+            }
 
             TaskInventoryItem taskItem = part.Inventory.GetInventoryItem(itemId);
             if (taskItem == null)
+            {
+                reason = "item";
                 return null;
+            }
+
+            // Normally either the taskItem must be copyable (copy operation), or the enclosing object must be modifyable (move operation).
+            // But SL allows *moves* but not *deletes* in this case, and IW has creators depending on this in no-mod boxed deliverables.
+            // See commit f5e488ba572cc0cd2ca22c01068a166bc8dcfabf now reverted.
 
             if (remoteClient == null)
             {
@@ -1692,14 +1705,18 @@ namespace OpenSim.Region.Framework.Scenes
                         "[PRIM INVENTORY]: " +
                         "Avatar {0} cannot be found to add item",
                         AgentId);
+                    reason = "user";
                     return null;
                 }
             }
 
 
-            InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(AgentId, part, itemId);
+            InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(AgentId, part, itemId, out reason);
             if (agentItem == null)
+            {
+                // reason was set by the function call above
                 return null;
+            }
 
             agentItem.Folder = folderId;
             if (remoteClient == null || silent)
@@ -1755,7 +1772,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (remoteClient.AgentId != taskItem.OwnerID)
                 return;
 
-            MoveTaskInventoryItem(remoteClient.AgentId, remoteClient, folderId, part, itemId, false);
+            string reason = "";
+            MoveTaskInventoryItem(remoteClient.AgentId, remoteClient, folderId, part, itemId, false, out reason);
         }
 
         /// <summary>
@@ -1774,7 +1792,8 @@ namespace OpenSim.Region.Framework.Scenes
                 remoteClient = avatar.ControllingClient;
             }
 
-            return MoveTaskInventoryItem(avatarId, remoteClient, folderId, part, itemId, false);
+            string reason = "";
+            return MoveTaskInventoryItem(avatarId, remoteClient, folderId, part, itemId, false, out reason);
         }
 
         /// <summary>
@@ -1882,7 +1901,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public UUID MoveTaskInventoryItems(UUID AgentID, string category, SceneObjectPart host, List<UUID> items)
+        public UUID MoveTaskInventoryItems(UUID AgentID, string category, SceneObjectPart host, List<UUID> items, out string reason)
         {
             ScenePresence avatar;
             IClientAPI remoteClient = null;
@@ -1893,6 +1912,7 @@ namespace OpenSim.Region.Framework.Scenes
                     "[PRIM INVENTORY]: " +
                     "Avatar {0} cannot be found to add items",
                     AgentID);
+                reason = "user";
                 return UUID.Zero;
             }
             if (TryGetAvatar(AgentID, out avatar))
@@ -1907,19 +1927,32 @@ namespace OpenSim.Region.Framework.Scenes
 
             foreach (UUID itemID in items)
             {
-                MoveTaskInventoryItem(AgentID, remoteClient, newFolderID, host, itemID, true);
+                InventoryItemBase newItem = MoveTaskInventoryItem(AgentID, remoteClient, newFolderID, host, itemID, true, out reason);
+                if (newItem == null)
+                {
+                    // reason was set by the function call above
+                    m_log.WarnFormat("[PRIM INVENTORY]: Could not move item {0} to new folder {1} for user {2}: {3}", itemID, newFolderID, AgentID, reason);
+                    return UUID.Zero;
+                }
             }
-
-            InventoryFolderBase fullFolder = profile.GetFolder(newFolderID);
 
             if (remoteClient != null)
             {
+                InventoryFolderBase fullFolder = profile.GetFolder(newFolderID);
+
                 //profile.SendInventoryDecendents(remoteClient, rootFolder.ID, true, false);
                 remoteClient.SendBulkUpdateInventory(fullFolder);
                 profile.SendInventoryDecendents(remoteClient, newFolderID, false, true);
             }
 
+            reason = "";
             return newFolderID;
+        }
+
+        public UUID MoveTaskInventoryItems(UUID AgentID, string category, SceneObjectPart host, List<UUID> items)
+        {
+            string reason;
+            return MoveTaskInventoryItems(AgentID, category, host, items, out reason);
         }
 
         // Limits itemInfo, applying any limits in currentItem

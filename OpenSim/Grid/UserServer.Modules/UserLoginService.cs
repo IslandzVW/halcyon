@@ -376,7 +376,7 @@ namespace OpenSim.Grid.UserServer.Modules
                 if (appearance != null)
                 {
                     loginParams["appearance"] = appearance.ToHashTable();
-                    m_log.DebugFormat("[LOGIN]: Found appearance for {0} {1}", user.FirstName, user.SurName);
+                    m_log.DebugFormat("[LOGIN]: Found appearance version {0} for {1} {2}", appearance.Serial, user.FirstName, user.SurName);
                 }
                 else
                 {
