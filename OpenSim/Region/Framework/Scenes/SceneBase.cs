@@ -170,7 +170,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// will promote it to a root agent during login.
         /// </summary>
         /// <param name="client"></param
-        public abstract void AddNewClient(IClientAPI client);
+        public abstract void AddNewClient(IClientAPI client, bool isBot);
 
         /// <summary>
         /// Remove a client from the scene

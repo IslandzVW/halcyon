@@ -58,6 +58,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         private Dictionary<string, UUID> m_defaultAnimations = new Dictionary<string, UUID>();
         private bool m_frozenUser = false;
         private bool m_closing = false;
+        private static int m_depth = 0;
 
         #endregion
 
@@ -78,6 +79,13 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             TimeCreated = DateTime.Now;
 
             InitDefaultAnimations();
+
+            m_log.Warn("[BOTCLIENT]: Constructor, clients now: " + (++m_depth).ToString());
+        }
+
+        ~BotClient()
+        {
+            m_log.Warn("[BOTCLIENT]: Destructor, clients now: " + (--m_depth).ToString());
         }
 
         #endregion
@@ -911,7 +919,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
         }
 
-        public void SendAppearance(OpenMetaverse.UUID agentID, byte[] visualParams, byte[] textureEntry)
+        public void SendAppearance(AvatarAppearance app)
         {
         }
 

@@ -738,9 +738,8 @@ namespace OpenSim.Region.Framework.Scenes
             return objatt;
         }
 
-        // What makes this method odd and unique is it tries to detach using an UUID....     Yay for standards.
-        // To LocalId or UUID, *THAT* is the question. How now Brown UUID??
-        public void DetachSingleAttachmentToInv(UUID itemID, UUID groupId, IClientAPI remoteClient)
+        // This method uses an *inventory* UUID (because it is coming from the source (in this case an LSL script?) as an inventory ID).
+        private void DetachSingleAttachmentFromItemID(UUID itemID, UUID groupId, IClientAPI remoteClient, bool isBot)
         {
             if (itemID == UUID.Zero) // If this happened, someone made a mistake....
                 return;
@@ -758,7 +757,10 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectGroup group = part.ParentGroup;
                     if (group.OwnerID == remoteClient.AgentId)
                     {
-                        m_parentScene.SaveAndDeleteAttachment(remoteClient, group,
+                        if (isBot)
+                            m_parentScene.DeleteAttachment(group);
+                        else
+                            m_parentScene.SaveAndDeleteAttachment(remoteClient, group,
                                 group.GetFromItemID(), group.OwnerID);
                     }
                 }
@@ -780,7 +782,10 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (group.OwnerID == remoteClient.AgentId)
                             {
-                                m_parentScene.SaveAndDeleteAttachment(remoteClient, group,
+                                if (isBot)
+                                    m_parentScene.DeleteAttachment(group);
+                                else
+                                    m_parentScene.SaveAndDeleteAttachment(remoteClient, group,
                                         group.GetFromItemID(), group.OwnerID);
                                 return;
                             }
@@ -788,6 +793,18 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+        }
+
+        // This method uses an *inventory* UUID (because it is coming from the source (in this case an LSL script?) as an inventory ID).
+        public void DetachSingleBotAttachment(UUID itemID, UUID groupId, IClientAPI remoteClient)
+        {
+            DetachSingleAttachmentFromItemID(itemID, groupId, remoteClient, true);
+        }
+
+        // This method uses an *inventory* UUID (because it is coming from the source (in this case an LSL script?) as an inventory ID).
+        public void DetachSingleAttachmentToInv(UUID itemID, UUID groupId, IClientAPI remoteClient)
+        {
+            DetachSingleAttachmentFromItemID(itemID, groupId, remoteClient, false);
         }
 
         // This one tries to detach using an attachment point.
@@ -910,7 +927,7 @@ namespace OpenSim.Region.Framework.Scenes
             //fact that a bunch of methods are called when the attachment rezzes
             group.HasGroupChanged = isTainted;
             if (!silent)
-                group.SendFullUpdateToAllClientsImmediate();
+                group.SendFullUpdateToAllClientsImmediate(false);
 
             if ((flags & AttachFlags.DontFireOnAttach) == 0)
             {
@@ -2262,6 +2279,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (OnObjectDuplicate != null)
                         OnObjectDuplicate(original, copy);
+
+                    // Signal a new object in the scene 
+                    m_parentScene.EventManager.TriggerObjectAddedToScene(copy);
 
                     return copy;
                 }

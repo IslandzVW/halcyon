@@ -2930,7 +2930,12 @@ namespace OpenSim.Region.Framework.Scenes
                 newObject.RootPart.ParentGroup.CreateScriptInstances(null, ScriptStartFlags.FromCrossing, DefaultScriptEngine, (int)ScriptStateSource.PrimData, null);
 
                 //there are avatars coming over, they need an immediate update
-                newObject.SendFullUpdateToAllClientsImmediate();
+                foreach (var userId in avatars)
+                {
+                    ScenePresence sp = GetScenePresence(userId);
+                    if (sp != null)
+                        newObject.SendFullUpdateToClientImmediate(sp.ControllingClient, true);
+                }
             }
             else
             {
@@ -3103,7 +3108,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Add/Remove Avatar Methods
 
-        public override void AddNewClient(IClientAPI client)
+        public override void AddNewClient(IClientAPI client, bool isBot)
         {
             SubscribeToClientEvents(client);
             ScenePresence presence;
@@ -3138,7 +3143,8 @@ namespace OpenSim.Region.Framework.Scenes
                     "[SCENE]: Adding new child agent for {0} in {1}",
                     client.Name, RegionInfo.RegionName);
 
-                CommsManager.UserService.CacheUser(client.AgentId);
+                if (!isBot)
+                    CommsManager.UserService.CacheUser(client.AgentId);
 
                 CreateAndAddScenePresence(client);
             }

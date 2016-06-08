@@ -879,10 +879,11 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-#endregion
+        #endregion
 
-#region Constructor(s)
+        #region Constructor(s)
 
+        private static int m_depth = 0;
         private ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo)
         {
             m_regionHandle = reginfo.RegionHandle;
@@ -903,6 +904,8 @@ namespace OpenSim.Region.Framework.Scenes
                 m_grouptitle = gm.GetGroupTitle(m_uuid);
 
             m_scriptEngines = m_scene.RequestModuleInterfaces<IScriptModule>();
+
+            m_log.Warn("[PRESENCE]: Constructor, clients now: " + (++m_depth).ToString());
 
             ISceneViewModule sceneViewModule = m_scene.RequestModuleInterface<ISceneViewModule>();
             if (sceneViewModule != null)
@@ -931,6 +934,11 @@ namespace OpenSim.Region.Framework.Scenes
             : this(client, world, reginfo)
         {
             m_appearance = appearance;
+        }
+
+        ~ScenePresence()
+        {
+            m_log.Warn("[PRESENCE]: Destructor, clients now: " + (--m_depth).ToString());
         }
 
         public void RegisterToEvents()
@@ -1048,7 +1056,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public uint GenerateClientFlags(UUID ObjectID)
         {
-            return m_scene.Permissions.GenerateClientFlags(m_uuid, ObjectID);
+            return m_scene.Permissions.GenerateClientFlags(m_uuid, ObjectID, false);
         }
 
 #region Status Methods
@@ -1480,7 +1488,8 @@ namespace OpenSim.Region.Framework.Scenes
             // the inventory arrives
             // m_scene.GetAvatarAppearance(m_controllingClient, out m_appearance);
 
-            SendAvatarData(ControllingClient, true);
+            if (!IsBot)
+                SendAvatarData(ControllingClient, true);
             SceneView.SendInitialFullUpdateToAllClients();
             SendAnimPack();
         }
@@ -3313,7 +3322,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SendWearables()
         {   
-            ControllingClient.SendWearables(m_appearance.GetWearables().ToArray(), m_appearance.Serial++);
+            ControllingClient.SendWearables(m_appearance.GetWearables().ToArray(), m_appearance.Serial);
         }
 
         /// <summary>
@@ -3343,8 +3352,7 @@ namespace OpenSim.Region.Framework.Scenes
             //m_log.WarnFormat("[SP]: Sending avatar appearance for {0} to {1}. Face[0]: {2}, Owner: {3}", this.Name, avatar.Name,
             //    m_appearance.Texture.FaceTextures[0] != null ? m_appearance.Texture.FaceTextures[0].TextureID.ToString() : "null", m_appearance.Owner);
 
-            avatar.ControllingClient.SendAppearance(
-                m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes());
+            avatar.ControllingClient.SendAppearance(m_appearance);
         }
 
         private void InitialAttachmentRez()
@@ -3381,7 +3389,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="texture"></param>
         /// <param name="visualParam"></param>
-        public void SetAppearance(byte[] texture, List<byte> visualParam, WearableCache[] cachedItems)
+        public void SetAppearance(byte[] texture, List<byte> visualParam, WearableCache[] cachedItems, uint serial)
         {
             Primitive.TextureEntry textureEnt = new Primitive.TextureEntry(texture, 0, texture.Length);
             m_appearance.SetAppearance(textureEnt, visualParam.ToArray());
@@ -3398,6 +3406,9 @@ namespace OpenSim.Region.Framework.Scenes
                 if(m_appearance.Texture != null && m_appearance.Texture.FaceTextures[index] != null)
                     bakedTextures.Add(cache.CacheID, m_appearance.Texture.FaceTextures[index].TextureID);
             }
+
+            // Cof version number.
+            m_appearance.Serial = (int)serial;
 
             if (!this.IsInTransit)
             {
@@ -3438,7 +3449,8 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            SendAvatarData(m_controllingClient, false);
+            if (!IsBot)
+                SendAvatarData(m_controllingClient, false);
         }
 
         /// <summary>
@@ -3514,7 +3526,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
             }
 
-            if (m_sceneView != null && m_sceneView.UseCulling)
+            if (m_sceneView != null && m_sceneView.UseCulling && !IsBot)
             {
                 //Check to see if the agent has moved enough to warrent another culling check
                 if (Util.GetDistanceTo(pos, posLastCullCheck) > m_sceneView.DistanceBeforeCullingRequired)
@@ -3544,8 +3556,9 @@ namespace OpenSim.Region.Framework.Scenes
             sLLVector3 tempCameraCenter = new sLLVector3(new Vector3(m_CameraCenter.X, m_CameraCenter.Y, m_CameraCenter.Z));
             cadu.cameraPosition = tempCameraCenter;
             cadu.drawdistance = m_DrawDistance;
-            if (m_scene.Permissions.IsGod(new UUID(cadu.AgentID)))
-                cadu.godlevel = m_godlevel;
+            if (!this.IsBot)    // bots don't need IsGod checks
+                if (m_scene.Permissions.IsGod(new UUID(cadu.AgentID)))
+                    cadu.godlevel = m_godlevel;
             cadu.GroupAccess = 0;
             cadu.Position = new sLLVector3(pos);
             cadu.regionHandle = m_scene.RegionInfo.RegionHandle;
@@ -4405,6 +4418,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_closed = true;
 
             ClearSceneView();
+            SceneView.ClearAllTracking();
         }
 
         /// <summary>

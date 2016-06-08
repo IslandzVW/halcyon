@@ -87,7 +87,7 @@ namespace OpenSim.Framework
 
     public delegate void NetworkStats(int inPackets, int outPackets, int unAckedBytes);
 
-    public delegate void SetAppearance(byte[] texture, List<byte> visualParamList, WearableCache[] wearables);
+    public delegate void SetAppearance(byte[] texture, List<byte> visualParamList, WearableCache[] wearables, uint serial);
 
     public delegate void StartAnim(IClientAPI remoteClient, UUID animID);
 
@@ -944,7 +944,7 @@ namespace OpenSim.Framework
         /// <param name="agentID">The id of the agent associated with the appearance</param>
         /// <param name="visualParams"></param>
         /// <param name="textureEntry"></param>        
-        void SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry);
+        void SendAppearance(AvatarAppearance app);
 
         void SendStartPingCheck(byte seq);
 

@@ -190,6 +190,9 @@ namespace OpenSim.Client.Linden
                 agent.Appearance = new AvatarAppearance(agent.AgentID);
             }
 
+            // Tell the client what the Cof Version is. If it matches the client can use cached appearance
+            response.CofVersion = agent.Appearance.Serial.ToString();
+
             if (m_regionsConnector.RegionLoginsEnabled)
             {
                 string reason;
