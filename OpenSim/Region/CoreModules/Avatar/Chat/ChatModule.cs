@@ -112,22 +112,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             client.OnChatFromClient += OnChatFromClient;
         }
 
-        protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)
-        {
-            if (c.SenderUUID == UUID.Zero)
-            {
-                //this is from a dialog, dont adjust the pos
-                return c;
-            }
-
-            ScenePresence avatar;
-            Scene scene = (Scene)c.Scene;
-            if ((avatar = scene.GetScenePresence(c.Sender.AgentId)) != null)
-                c.Position = avatar.AbsolutePosition;
-
-            return c;
-        }
-
         private bool PrefilterChat(Object sender, OSChatMessage c)
         {
             if (c.Type != ChatTypeEnum.Say)
@@ -154,8 +138,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
         public virtual void OnChatFromClient(Object sender, OSChatMessage c)
         {
-            c = FixPositionOfChatMessage(c);
-
             if (PrefilterChat(sender, c))
                 return;
 
@@ -167,7 +149,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             if (c.Channel != 0 && c.Channel != DEBUG_CHANNEL) return;
 
             // sanity check:
-            if (c.Sender == null)
+            if (c.SenderUUID == UUID.Zero)
             {
                 m_log.ErrorFormat("[CHAT] OnChatFromClient from {0} has empty Sender field!", sender);
                 return;
@@ -204,16 +186,25 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                     if (!(scene is Scene))
                     {
                         m_log.WarnFormat("[CHAT]: scene {0} is not a Scene object, cannot obtain scene presence for {1}",
-                            scene.RegionInfo.RegionName, c.Sender.AgentId);
+                            scene.RegionInfo.RegionName, c.SenderUUID);
                         return;
                     }
-                    ScenePresence avatar = (scene as Scene).GetScenePresence(c.Sender.AgentId);
-                    fromPos = avatar.AbsolutePosition;
-                    fromName = avatar.Name;
-                    fromID = c.Sender.AgentId;
-                    ownerID = c.Sender.AgentId;
+                    ScenePresence avatar;
+                    if((scene as Scene).TryGetAvatar(c.SenderUUID, out avatar))
+                    {
+                        fromPos = avatar.AbsolutePosition;
+                        fromName = avatar.Name;
+                        fromID = c.SenderUUID;
+                        ownerID = c.SenderUUID;
+                    }
+                    else
+                    {
+                        m_log.WarnFormat("[CHAT]: cannot obtain scene presence for {0}",
+                            c.SenderUUID);
+                        return;
+                    }
 
-                break;
+                    break;
 
                 case ChatSourceType.Object:
                     fromID = c.SenderUUID;
@@ -264,12 +255,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             UUID fromID = UUID.Zero;
             UUID ownerID = c.GeneratingAvatarID;
             ChatSourceType sourceType = ChatSourceType.Object;
-            if (null != c.Sender)
+            ScenePresence avatar;
+            if ((c.Scene as Scene).TryGetAvatar(c.SenderUUID, out avatar))
             {
-                ScenePresence avatar = (c.Scene as Scene).GetScenePresence(c.Sender.AgentId);
-                fromID = c.Sender.AgentId;
+                fromID = c.SenderUUID;
                 fromName = avatar.Name;
-                ownerID = c.Sender.AgentId;
+                ownerID = c.SenderUUID;
                 sourceType = ChatSourceType.Agent;
             } 
             else if (c.SenderUUID != UUID.Zero)
@@ -672,7 +663,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                     break;
 
                 default:
-                    c.Sender.SendAlertMessage("Region chat command was not recognized.");
+                    client.SendAlertMessage("Region chat command was not recognized.");
                     break;
             }
         }

@@ -38,8 +38,9 @@ using System.Timers;
 using System.Xml;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.Packets;
 using OpenMetaverse.Imaging;
+using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Communications;
@@ -997,14 +998,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// Given float seconds, this will restart the region.
         /// </summary>
         /// <param name="seconds">float indicating duration before restart.</param>
-        public virtual void Restart(float seconds)
+        public virtual void Restart(int seconds)
         {
-            // notifications are done in 15 second increments
-            // so ..   if the number of seconds is less then 15 seconds, it's not really a restart request
-            // It's a 'Cancel restart' request.
-
             // RestartNow() does immediate restarting.
-            if (seconds < 15)
+            if (seconds == -1)
             {
                 m_restartTimer.Stop();
                 m_dialogModule.SendGeneralAlert("Restart Aborted");
@@ -1013,14 +1010,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Now we figure out what to set the timer to that does the notifications and calls, RestartNow()
                 m_restartTimer.Interval = 15000;
-                m_incrementsof15seconds = (int)seconds / 15;
+                m_incrementsof15seconds = seconds / 15;
                 m_RestartTimerCounter = 0;
                 m_restartTimer.AutoReset = true;
                 m_restartTimer.Elapsed += new ElapsedEventHandler(RestartTimer_Elapsed);
                 m_log.Info("[REGION]: Restarting Region in " + (seconds / 60) + " minutes");
                 m_restartTimer.Start();
-                m_dialogModule.SendNotificationToUsersInRegion(
-                    UUID.Random(), String.Empty, RegionInfo.RegionName + ": Restarting in " + (seconds / 60) + " minutes");
+                SendRestartAlert(seconds);
             }
         }
 
@@ -1034,10 +1030,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_RestartTimerCounter <= m_incrementsof15seconds)
             {
                 if (m_RestartTimerCounter == 4 || m_RestartTimerCounter == 6 || m_RestartTimerCounter == 7)
-                    m_dialogModule.SendNotificationToUsersInRegion(
-                        UUID.Random(),
-                        String.Empty,
-                        RegionInfo.RegionName + ": Restarting in " + ((8 - m_RestartTimerCounter) * 15) + " seconds");
+                {
+                    SendRestartAlert((8 - m_RestartTimerCounter) * 15);
+                }
             }
             else
             {
@@ -1045,6 +1040,13 @@ namespace OpenSim.Region.Framework.Scenes
                 m_restartTimer.AutoReset = false;
                 RestartNow();
             }
+        }
+
+        private void SendRestartAlert(int seconds)
+        {
+            string message = String.Format("The region you are in now ({0}) is about to restart. If you stay in this region, you will be logged out", RegionInfo.RegionName);
+            OSD paramMap = new OSDMap{ { "SECONDS", OSD.FromInteger(seconds) } }; // *TODO: Make this work with RegionRestartMinutes notice as well?
+            m_dialogModule.SendGeneralAlert(message, "RegionRestartSeconds", paramMap);
         }
 
         // This causes the region to restart immediatley.
@@ -3532,8 +3534,8 @@ namespace OpenSim.Region.Framework.Scenes
                 UserProfile.HomeLookAt = lookAt;
                 CommsManager.UserService.UpdateUserProfile(UserProfile);
 
-                // FUBAR ALERT: this needs to be "Home position set." so the viewer saves a home-screenshot.
-                m_dialogModule.SendAlertToUser(remoteClient, "Home position set.");
+                m_dialogModule.SendAlertToUser(remoteClient, "Home position set.", "HomePositionSet", new OSD());
+
             }
             else
             {
@@ -4738,13 +4740,19 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (!set && (parcel.OwnerID != avatar.UUID) && (fromParcel.GlobalID != parcel.GlobalID))
                 {   // Changing parcels and not the owner.
-                    if ((parcel.LandingType == LandingType.LandingPoint) && (parcel.UserLocation != Vector3.Zero))
-                    {   // Parcel in landing point mode with a location specified.
-                        if (!(IsGodUser(avatar.UUID) || IsEstateManager(avatar.UUID) || IsEstateOwnerPartner(avatar.UUID)))
-                        {
+                    if (!(IsGodUser(avatar.UUID) || IsEstateManager(avatar.UUID) || IsEstateOwnerPartner(avatar.UUID)))
+                    {
+                        if ((parcel.LandingType == LandingType.LandingPoint) && (parcel.UserLocation != Vector3.Zero))
+                        {   // Parcel in landing point mode with a location specified.
                             // Force the user to the landing point.
                             position = parcel.UserLocation;
                             lookAt = parcel.UserLookAt;
+                        }
+                        else
+                        if ((parcel.LandingType == LandingType.Blocked))
+                        {
+                            avatar.ControllingClient.SendTeleportFailed("Teleport routing at destination parcel is blocked.");
+                            return;
                         }
                     }
                 }

@@ -41,6 +41,7 @@ using System.Xml;
 using OpenSim.Region.Framework.Interfaces;
 using log4net;
 using System.Reflection;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Region.CoreModules.Agent.BotManager
 {
@@ -261,9 +262,13 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             chatFromClient.Message = message;
             chatFromClient.Position = StartPos;
             chatFromClient.Scene = m_scene;
-            chatFromClient.Sender = this;
             chatFromClient.SenderUUID = AgentId;
             chatFromClient.Type = sourceType;
+
+            // Force avatar position to be server-known avatar position. (Former contents of FixPositionOfChatMessage.)
+            ScenePresence avatar;
+            if (m_scene.TryGetAvatar(m_UUID, out avatar))
+                chatFromClient.Position = avatar.AbsolutePosition;
 
             OnChatFromClient(this, chatFromClient);
         }
@@ -1128,6 +1133,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public void SendAlertMessage(string message)
         {
+        }
+
+        public void SendAlertMessage(string message, string infoMessage, OSD extraParams)
+        {
+            /* no op */
         }
 
         public void SendAgentAlertMessage(string message, bool modal)

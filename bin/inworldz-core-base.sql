@@ -355,8 +355,8 @@ CREATE TABLE `economy_transaction` (
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50003 TRIGGER `inworldz`.`upd_total_on_new_trans`
-AFTER INSERT ON `inworldz`.`economy_transaction`
+/*!50003 CREATE*/ /*!50003 TRIGGER `upd_total_on_new_trans`
+AFTER INSERT ON `economy_transaction`
 FOR EACH ROW
 BEGIN
   IF (SELECT COUNT(*) FROM economy_totals WHERE user_id = NEW.destAvatarId) = 0 THEN
@@ -1502,7 +1502,7 @@ CREATE TABLE `users_bak` (
   `homeRegionID` char(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
   `userFlags` int(11) NOT NULL DEFAULT '0',
   `godLevel` int(11) NOT NULL DEFAULT '0',
-  `iz_level` int(1) unsigned NOT NULL DEFAULT '0',
+  `iz_level` int(1) unsigned NOT NULL,
   `customType` varchar(32) NOT NULL DEFAULT '',
   `partner` char(36) NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
   `email` varchar(250) DEFAULT NULL,

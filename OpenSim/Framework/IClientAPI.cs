@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Net;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
 using System.Threading.Tasks;
 using TransactionInfoBlock = OpenMetaverse.Packets.MoneyBalanceReplyPacket.TransactionInfoBlock;
 
@@ -1066,7 +1067,9 @@ namespace OpenSim.Framework
         void SendAttachedSoundGainChange(UUID objectID, float gain);
 
         void SendNameReply(UUID profileId, string firstname, string lastname);
+
         void SendAlertMessage(string message);
+        void SendAlertMessage(string message, string infoMessage, OSD extraParams);
 
         void SendAgentAlertMessage(string message, bool modal);
         void SendLoadURL(string objectname, UUID objectID, UUID ownerID, bool groupOwned, string message, string url);

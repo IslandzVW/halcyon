@@ -1002,8 +1002,7 @@ namespace InWorldz.Phlox.Engine
             if (text.Length > 1023)
                 text = text.Substring(0, 1023);
 
-            world.SimChat(Utils.StringToBytes(text),
-                          type, channelID, part.AbsolutePosition, part.Name, part.UUID, false, destID, part.OwnerID);
+            world.SimChat(text, type, channelID, part, destID);
 
             IWorldComm wComm = world.RequestModuleInterface<IWorldComm>();
             wComm.DeliverMessage(type, channelID, part.Name, part.UUID, text, destID);
@@ -7883,15 +7882,15 @@ namespace InWorldz.Phlox.Engine
             return m_ScriptEngine.GetUsedMemory(m_itemID);
         }
 
-        public int LIMIT_64K = 64 * 1024;
+        public int LIMIT_128K = 128 * 1024;
         public int llGetMemoryLimit()
         {
-            return LIMIT_64K;
+			return LIMIT_128K;
         }
 
         public int llSetMemoryLimit(int limit)
         {
-            if (limit == LIMIT_64K)
+			if (limit == LIMIT_128K)
                 return 1;
 
             return 0;
@@ -8700,8 +8699,29 @@ namespace InWorldz.Phlox.Engine
             m_host.ScriptAccessPin = pin;
         }
 
-        public void llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param)
+		//Functions same as llRemoteLoadScriptPin, but returns an integer flag to indicate success,
+		//  instead of calling ScriptShoutError
+		public int iwRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param) {
+			return RemoteLoadScriptPin(target, name, pin, running, start_param, false);
+		}
+
+		public void llRemoteLoadScriptPin(string target, string name, int pin, int running, int start_param) {
+			RemoteLoadScriptPin (target, name, pin, running, start_param, true);
+		}
+
+		//A proxy for llRemoteLoadScriptPin and iwRemoteLoadScriptPin
+		//Uses integer constants as return codes to indicate success or failure
+		//  IW_REMOTELOAD_SUCCESS =  1	Function succeeded
+		//  IW_REMOTELOAD_FAILURE =  0	Function failed, for various reasons
+		//  IW_REMOTELOAD_BAD_PIN = -1	The pin did not match the target's pin
+		//  IW_REMOTELOAD_NO_PIN  = -2	The target did not have a pin set
+		public int RemoteLoadScriptPin(string target, string name, int pin, int running, int start_param, bool doShout)
         {
+			if (pin == 0) {
+				ScriptShoutError ("llRemoteLoadScriptPin: PIN cannot be zero.");
+				ScriptSleep(3000);
+				return 0;
+			}
             
             bool found = false;
             UUID destId = UUID.Zero;
@@ -8709,26 +8729,26 @@ namespace InWorldz.Phlox.Engine
 
             if (!UUID.TryParse(target, out destId))
             {
-                llSay(0, "Could not parse key " + target);
-                return;
+				llSay(0, "Could not parse key " + target);
+                return 0;
             }
 
             // Target must be a different prim than the one containing the script, owned by the same user.
             SceneObjectPart part = m_host.ParentGroup.Scene.GetSceneObjectPart(destId);
             if (part == null)
             {
-                ScriptShoutError("llRemoteLoadScriptPin: Target prim ["+destId.ToString()+"] not found.");
-                return;
+				ScriptShoutError("llRemoteLoadScriptPin: Target prim ["+destId.ToString()+"] not found.");
+                return 0;
             }
             if (m_host.OwnerID != part.OwnerID)
             {
-                ScriptShoutError("llRemoteLoadScriptPin: Target prim ownership does not match.");
-                return;
+				ScriptShoutError("llRemoteLoadScriptPin: Target prim ownership does not match.");
+                return 0;
             }
             if (m_host.UUID == destId)
             {
-                ScriptShoutError("llRemoteLoadScriptPin: Target prim cannot be the source prim.");
-                return;
+				ScriptShoutError("llRemoteLoadScriptPin: Target prim cannot be the source prim.");
+                return 0;
             }
 
             // copy the first script found with this inventory name
@@ -8751,22 +8771,32 @@ namespace InWorldz.Phlox.Engine
 
             if (!found)
             {
-                llSay(0, "Could not find script " + name);
-                return;
+				llSay(0, "Could not find script " + name);
+                return 0;
             }
 
             // the rest of the permission checks are done in RezScript, so check the pin there as well
             string result = World.RezScript(srcId, m_host, destId, pin, running, start_param);
+			int ret = 1;
             if (!String.IsNullOrEmpty(result))
             {
                 // validation error updating script
-                if (result == "PIN")    // special case for public error (let's not match the silly SL "illegal" text)
-                    ShoutError("llRemoteLoadScriptPin: Script update denied - PIN mismatch.");
-                else
-                    ScriptShoutError("llRemoteLoadScriptPin: " + result);
+				if (result == "PIN") {    // special case for public error (let's not match the silly SL "illegal" text)
+					if (doShout)
+						ShoutError ("llRemoteLoadScriptPin: Script update denied - PIN mismatch.");
+					ret = -1;
+				} else if (result == "NO PIN") {
+					if(doShout)
+						ShoutError ("llRemoteLoadScriptPin: Script update denied - PIN not set.");
+					ret = -2;
+				} else {
+					ScriptShoutError ("llRemoteLoadScriptPin: " + result);
+					ret = 0;
+				}
             }
             // this will cause the delay even if the script pin or permissions were wrong - seems ok
             ScriptSleep(3000);
+			return ret;
         }
 
         public void llOpenRemoteDataChannel()
@@ -11964,9 +11994,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llOwnerSay(string msg)
         {
-            World.SimChatBroadcast(Utils.StringToBytes(msg), ChatTypeEnum.Owner, 0,
-                                   m_host.AbsolutePosition, m_host.Name, m_host.UUID, false,
-                                   m_host.OwnerID);
+            World.SimChat(msg, ChatTypeEnum.Owner, 0, m_host, UUID.Zero, true);
 
             ScriptSleep(15);
         }
@@ -12689,6 +12717,14 @@ namespace InWorldz.Phlox.Engine
             // ScriptSleep(20000);
         }
 
+        //Returns true if the URL's format is valid.
+        public int iwValidateURL(string url)
+        {
+            Uri uriResult;
+            bool ret = Uri.TryCreate(url, UriKind.Absolute, out uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+            return Convert.ToInt32(ret);
+        }
+
         public string llEscapeURL(string url)
         {
             try
@@ -13068,7 +13104,7 @@ namespace InWorldz.Phlox.Engine
             httpHeaders["X-SecondLife-Owner-Key"] = m_host.ObjectOwner.ToString();
             string userAgent = config.Configs["Network"].GetString("user_agent", null);
             if (userAgent == null)
-                userAgent = "LSL Script (Mozilla Compatible)";
+                userAgent = "InWorldz LSL/"+ VersionInfo.Version+ " (Mozilla Compatible)";
 
             httpHeaders["User-Agent"] = userAgent;
 
@@ -14657,6 +14693,9 @@ namespace InWorldz.Phlox.Engine
 
             try
             {
+                if (trimmed == String.Empty)
+                    return null;
+
                 if (IsJsonFramed(trimmed, '[', ']'))
                     return LitJson.JsonMapper.ToObject(trimmed);
 
@@ -14798,7 +14837,7 @@ namespace InWorldz.Phlox.Engine
                 else
                     o= OSDParser.DeserializeJson(str);
                 JsonSetSpecific(null, o, specifiers, 0, value);
-                return OSDParser.SerializeJsonString(o);
+                return OSDToJsonStringValue(o);
             }
             catch (Exception)
             {
@@ -15240,11 +15279,16 @@ namespace InWorldz.Phlox.Engine
             //Returns true if a codec is available for conversions
             public static bool HasCodec(string codec)
             {
-                if (codec == "base16") return true;
-                if (codec == "uuid") return true;
-                if (codec == "base64") return true;
-                if (codec == "base64-safe") return true;
-                if (codec == "base4096" || codec == "base4k") return true;
+                switch (codec.ToLower())
+                {
+                    case "base16":
+                    case "uuid":
+                    case "base64":
+                    case "base64-safe":
+                    case "base4096":
+                    case "base4k":
+                        return true;
+                }
                 return false;
             }
 
@@ -15285,7 +15329,7 @@ namespace InWorldz.Phlox.Engine
             //
             public static string Encode(byte[] bytes, string codec)
             {
-                switch (codec)
+                switch (codec.ToLower())
                 {
                     case "base16":
                         return EncodeBase16(bytes);
@@ -15326,7 +15370,7 @@ namespace InWorldz.Phlox.Engine
             //
             public static byte[] Decode(string str, string codec)
             {
-                switch (codec)
+                switch (codec.ToLower())
                 {
                     case "base16":
                         return DecodeBase16(str);
@@ -15367,7 +15411,7 @@ namespace InWorldz.Phlox.Engine
             //
             public static int Validate(string str, string codec)
             {
-                switch (codec)
+                switch (codec.ToLower())
                 {
                     case "base16":
                         return ValidateBase16(str);
@@ -15924,11 +15968,17 @@ namespace InWorldz.Phlox.Engine
                     break;
                 case "md5":
                 case "sha1":
+                case "sha-1":
                 case "sha128":
+                case "sha-128":
                 case "sha2":
+                case "sha-2":
                 case "sha256":
+                case "sha-256":
                 case "sha384":
+                case "sha-384":
                 case "sha512":
+                case "sha-512":
                     string outCodec = "base16";
                     string nonce = String.Empty;
                     if (extraParams.Length >= 0 && extraParams.Length % 2 == 0)
