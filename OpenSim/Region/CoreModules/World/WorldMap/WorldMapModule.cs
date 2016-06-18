@@ -78,15 +78,30 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         private Dictionary<UUID, IWorkItemResult> _currentRequests = new Dictionary<UUID, IWorkItemResult>();
 
+        /// <summary>
+        /// The path to where the generated region tile will be saved and the start of the file name.  Comes from Halcyon.ini, section WorldMap, entry RegionMapTileExportFilename.
+        /// </summary>
+        private string regionTileExportFilename;
+
+        private struct MapTileDataForExport {
+            public string filename;
+            public byte[] jpegData;
+        }
 
         //private int CacheRegionsDistance = 256;
 
         #region INonSharedRegionModule Members
         public virtual void Initialize(IConfigSource config)
         {
-            IConfig startupConfig = config.Configs["Startup"];
-            if (startupConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap")
+            IConfig startupConfig = config.Configs["Startup"]; // Location supported for legacy INI files.
+            IConfig worldmapConfig = config.Configs["WorldMap"];
+            if (worldmapConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap"
+                || startupConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap") // LEGACY
+            {
                 m_Enabled = true;
+            }
+
+            regionTileExportFilename = worldmapConfig.GetString("RegionMapTileExportFilename", "");
 
             STPStartInfo reqPoolStartInfo = new STPStartInfo();
             reqPoolStartInfo.MaxWorkerThreads = 2;
@@ -781,7 +796,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 MemoryStream imgstream = new MemoryStream();
                 Bitmap mapTexture = new Bitmap(1,1);
                 ManagedImage managedImage;
-                Image image = (Image)mapTexture;
+                Image image = mapTexture;
 
                 try
                 {
@@ -1047,6 +1062,48 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
             catch (AssetServerException)
             {
+            }
+
+            if (regionTileExportFilename.Length > 0)
+            {
+                MapTileDataForExport exportData;
+
+                exportData.filename = regionTileExportFilename
+                    .Replace("{X}", String.Format("{0:D}", m_scene.RegionInfo.RegionLocX))
+                    .Replace("{Y}", String.Format("{0:D}", m_scene.RegionInfo.RegionLocY));
+
+                exportData.jpegData = data;
+
+                Util.FireAndForget(ExportMapTileToDisk, exportData); // Just have the disk IO go off and do its thing on its own.
+            }
+        }
+
+        private static readonly object ExportMapTileToDiskLock = new object();
+        private static void ExportMapTileToDisk(object o)
+        {
+            var exportData = (MapTileDataForExport)o;
+
+            // Attempt to get a lock, but if that fails, just abort - another request to update the file will come soon enough.
+            if (Monitor.TryEnter(ExportMapTileToDiskLock))
+            {
+                try
+                {
+                    ManagedImage managedImage;
+                    Image image;
+
+                    if (OpenJPEG.DecodeToImage(exportData.jpegData, out managedImage, out image))
+                    {
+                        image.Save(exportData.filename, ImageFormat.Jpeg);
+                    }
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("[WORLD MAP]: Failed to export map tile to path '{0}': {1}", exportData.filename, e);
+                }
+                finally
+                {
+                    Monitor.Exit(ExportMapTileToDiskLock);
+                }
             }
         }
 
