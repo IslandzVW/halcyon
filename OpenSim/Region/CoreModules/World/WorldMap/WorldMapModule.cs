@@ -34,6 +34,7 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading;
+using System.Timers;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
@@ -88,6 +89,27 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             public byte[] jpegData;
         }
 
+        /// <summary>
+        /// Whether or not the map has been tainted and the map tile file needs to be updated.
+        /// </summary>
+        private bool isMapTainted = true;
+        private bool readyToDrawMap = false;
+        /// <summary>
+        /// The minimum amount of time required to pass before the next automatic write of a map tile file to the server.  Keeps the file from being constantly written to in busy situations.
+        /// </summary>
+        private TimeSpan minimumMapPushTime = new TimeSpan(1, 0, 0);
+        /// <summary>
+        /// The last time the map tile file was pushed to the map server.
+        /// </summary>
+        private DateTime lastMapPushTime = new DateTime(0);
+        /// <summary>
+        /// Used to make sure the map tile file gets updated after a maximum amount of time if it has been tainted.
+        /// </summary>
+        private System.Timers.Timer mapTileUpdateTimer;
+
+        private bool terrainTextureCanTaintMapTile = false;
+        private bool primsCanTaintMapTile = false;
+
         //private int CacheRegionsDistance = 256;
 
         #region INonSharedRegionModule Members
@@ -102,6 +124,23 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
 
             regionTileExportFilename = worldmapConfig.GetString("RegionMapTileExportFilename", "");
+
+            int pushTimeSeconds = Math.Max(0, worldmapConfig.GetInt("MinimumTaintedMapTileWaitTime", (int) minimumMapPushTime.TotalSeconds));
+            minimumMapPushTime = new TimeSpan(0, 0, pushTimeSeconds);
+            m_log.DebugFormat("[WORLD MAP] Got min wait time of {0} seconds which resulted in a span of {1}", pushTimeSeconds, minimumMapPushTime);
+
+            double timerSeconds = (double) Math.Max(0, worldmapConfig.GetInt("MaximumTaintedMapTileWaitTime", 0));
+            m_log.DebugFormat("[WORLD MAP] Got max wait time of {0} seconds", timerSeconds);
+            if (timerSeconds > 0d && regionTileExportFilename.Length > 0)
+            {
+                mapTileUpdateTimer = new System.Timers.Timer(timerSeconds * 1000.0d);
+                mapTileUpdateTimer.Elapsed += HandleTaintedMapTimer;
+                mapTileUpdateTimer.AutoReset = true;
+                mapTileUpdateTimer.Enabled = false;
+            }
+
+            terrainTextureCanTaintMapTile = worldmapConfig.GetBoolean("TextureOnMapTile", terrainTextureCanTaintMapTile);
+            primsCanTaintMapTile = worldmapConfig.GetBoolean("DrawPrimOnMapTile", primsCanTaintMapTile);
 
             STPStartInfo reqPoolStartInfo = new STPStartInfo();
             reqPoolStartInfo.MaxWorkerThreads = 2;
@@ -137,12 +176,22 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                 AddHandlers();
             }
+
+            if (mapTileUpdateTimer != null)
+            {
+                mapTileUpdateTimer.Enabled = true;
+            }
         }
 
         public virtual void RemoveRegion (Scene scene)
         {
             if (!m_Enabled)
                 return;
+
+            if (mapTileUpdateTimer != null)
+            {
+                mapTileUpdateTimer.Enabled = false;
+            }
 
             lock (m_scene)
             {
@@ -1049,8 +1098,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             AssetBase asset = new AssetBase();
             asset.FullID = m_scene.RegionInfo.RegionSettings.TerrainImageID;
             asset.Data = data;
-            asset.Name
-                = "terrainImage_" + m_scene.RegionInfo.RegionID.ToString() + "_" + lastMapRefresh.ToString();
+            asset.Name = "terrainImage_" + m_scene.RegionInfo.RegionID.ToString() + "_" + lastMapRefresh.ToString();
             asset.Description = m_scene.RegionInfo.RegionName;
 
             asset.Type = 0;
@@ -1064,7 +1112,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             {
             }
 
-            if (regionTileExportFilename.Length > 0)
+            readyToDrawMap = true; // This seems to be the most guaranteed place to detect that the region's got all its peices loaded up and is ready to render a map tile.
+
+            var lastpush = lastMapPushTime; // Thread safety copy of pointer.
+
+            if (regionTileExportFilename.Length > 0 && isMapTainted && (lastpush.Ticks <= 0 || lastpush + minimumMapPushTime < DateTime.Now))
             {
                 MapTileDataForExport exportData;
 
@@ -1078,8 +1130,67 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
         }
 
-        private static readonly object ExportMapTileToDiskLock = new object();
-        private static void ExportMapTileToDisk(object o)
+        /// <summary>
+        /// Marks the world map as tainted and updates the map tile if enough time has passed.
+        /// </summary>
+        /// <param name="reason">What is the source of the taint?</param>
+        public void MarkMapTileTainted(WorldMapTaintReason reason)
+        {
+            if (
+                !(terrainTextureCanTaintMapTile && reason == WorldMapTaintReason.TerrainTextureChange)
+                || !(primsCanTaintMapTile && reason == WorldMapTaintReason.PrimChange)
+                // Elevation can always taint the map.
+            )
+            {
+                return; // These are not set up in the ini file to be able to show, and therefore taint the map.
+            }
+
+            isMapTainted = true;
+
+            m_log.Info("[WORLD MAP] Map tile tainted.");
+
+            var lastpush = lastMapPushTime; // Thread safety copy of pointer.
+
+            // Skip if the region isn't ready - aka hasn't finished loading initial objects.  Should solve the "map tile too early" rendering.
+            if (readyToDrawMap && (lastpush.Ticks <= 0 || lastpush + minimumMapPushTime < DateTime.Now))
+            {
+                // BUG: This can get hit multiple time before the F&F gets done.
+
+                // Delay/reset the timer as the map's getting updated now.
+                if (mapTileUpdateTimer != null)
+                {
+                    mapTileUpdateTimer.Stop();
+                    mapTileUpdateTimer.Start();
+                }
+
+                m_log.Info("[WORLD MAP] Rebuilding map tile on taint as the minimum wait time has passed.");
+
+                // Update the map tile.
+                m_scene.CreateTerrainTexture(false);
+
+                // Simple hack to make sure that this gets hit only once on startup. Note that the underlying object could have been swapped out since the copy above but since the point is to make sure that the "first run" clause isn't hit more than once this should't be an issue.
+                lastMapPushTime = lastMapPushTime.AddTicks(1);
+            }
+        }
+
+        /// <summary>
+        /// Fired if the Halcyon.ini entry MaximumTaintedMapTileWaitTime is greater than zero
+        /// </summary>
+        private void HandleTaintedMapTimer(object source, ElapsedEventArgs e)
+        {
+            var lastpush = lastMapPushTime; // Thread safety copy of pointer.
+
+            if (m_Enabled && isMapTainted && (lastpush.Ticks <= 0 || lastpush + minimumMapPushTime < DateTime.Now))
+            {
+                m_log.Info("[WORLD MAP] Rebuilding map tile; map was tainted and the maximum wait time has expired.");
+
+                // Update the map tile.
+                m_scene.CreateTerrainTexture(false);
+            }
+        }
+
+        private readonly object ExportMapTileToDiskLock = new object();
+        private void ExportMapTileToDisk(object o)
         {
             var exportData = (MapTileDataForExport)o;
 
@@ -1094,6 +1205,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     if (OpenJPEG.DecodeToImage(exportData.jpegData, out managedImage, out image))
                     {
                         image.Save(exportData.filename, ImageFormat.Jpeg);
+
+                        isMapTainted = false;
+                        lastMapPushTime = DateTime.Now;
                     }
                 }
                 catch (Exception e)

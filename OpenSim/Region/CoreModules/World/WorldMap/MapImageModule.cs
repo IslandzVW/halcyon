@@ -79,9 +79,17 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             try
             {
-                IConfig startupConfig = m_config.Configs["Startup"];
-                drawPrimVolume = startupConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
-                textureTerrain = startupConfig.GetBoolean("TextureOnMapTile", textureTerrain);
+                IConfig startupConfig = m_config.Configs["Startup"]; // Location supported for legacy INI files.
+                IConfig worldmapConfig = m_config.Configs["WorldMap"];
+
+                // Go find the parameters in the new location and if not found go looking in the old.
+                drawPrimVolume = worldmapConfig.Contains("DrawPrimOnMapTile") ?
+                    worldmapConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume) :
+                    startupConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
+
+                textureTerrain = worldmapConfig.Contains("TextureOnMapTile") ?
+                    worldmapConfig.GetBoolean("TextureOnMapTile", textureTerrain) :
+                    startupConfig.GetBoolean("TextureOnMapTile", textureTerrain);
             }
             catch
             {
@@ -229,6 +237,10 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             if (part == null)
                                 continue;
 
+                            // Make sure the object isn't temp or phys
+                            if ((part.Flags & (PrimFlags.Physics | PrimFlags.Temporary | PrimFlags.TemporaryOnRez)) != 0)
+                                continue;
+
                             // Draw if the object is at least 1 meter wide in any direction
                             if (part.Scale.X > 1f || part.Scale.Y > 1f || part.Scale.Z > 1f)
                             {
@@ -287,7 +299,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                                 Vector3 pos = part.GetWorldPosition();
 
-                                // skip prim outside of retion
+                                // skip prim outside of region
                                 if (pos.X < 0.0f || pos.X >= 256.0f || pos.Y < 0.0f || pos.Y >= 256.0f)
                                     continue;
 

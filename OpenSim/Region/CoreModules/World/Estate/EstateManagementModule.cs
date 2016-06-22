@@ -167,6 +167,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     break;
             }
             m_scene.RegionInfo.RegionSettings.Save();
+            m_scene.MarkMapTileTainted(WorldMapTaintReason.TerrainTextureChange);
         }
 
         public void setEstateTerrainTextureHeights(IClientAPI client, int corner, float lowValue, float highValue)
@@ -191,6 +192,7 @@ namespace OpenSim.Region.CoreModules.World.Estate
                     break;
             }
             m_scene.RegionInfo.RegionSettings.Save();
+            m_scene.MarkMapTileTainted(WorldMapTaintReason.TerrainTextureChange);
         }
 
         private void handleCommitEstateTerrainTextureRequest(IClientAPI remoteClient)
