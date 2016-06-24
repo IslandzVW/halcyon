@@ -82,7 +82,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         /// <summary>
         /// The path to where the generated region tile will be saved and the start of the file name.  Comes from Halcyon.ini, section WorldMap, entry RegionMapTileExportFilename.
         /// </summary>
-        private string regionTileExportFilename;
+        private string regionTileExportFilename = "";
 
         private struct MapTileDataForExport {
             public string filename;
@@ -117,30 +117,36 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         {
             IConfig startupConfig = config.Configs["Startup"]; // Location supported for legacy INI files.
             IConfig worldmapConfig = config.Configs["WorldMap"];
-            if (worldmapConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap"
-                || startupConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap") // LEGACY
+            if (
+                (worldmapConfig != null && worldmapConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap")
+                ||
+                (startupConfig != null && startupConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap") // LEGACY
+            )
             {
                 m_Enabled = true;
             }
 
-            regionTileExportFilename = worldmapConfig.GetString("RegionMapTileExportFilename", "");
-
-            int pushTimeSeconds = Math.Max(0, worldmapConfig.GetInt("MinimumTaintedMapTileWaitTime", (int) minimumMapPushTime.TotalSeconds));
-            minimumMapPushTime = new TimeSpan(0, 0, pushTimeSeconds);
-            m_log.DebugFormat("[WORLD MAP] Got min wait time of {0} seconds which resulted in a span of {1}", pushTimeSeconds, minimumMapPushTime);
-
-            double timerSeconds = (double) Math.Max(0, worldmapConfig.GetInt("MaximumTaintedMapTileWaitTime", 0));
-            m_log.DebugFormat("[WORLD MAP] Got max wait time of {0} seconds", timerSeconds);
-            if (timerSeconds > 0d && regionTileExportFilename.Length > 0)
+            if (worldmapConfig != null)
             {
-                mapTileUpdateTimer = new System.Timers.Timer(timerSeconds * 1000.0d);
-                mapTileUpdateTimer.Elapsed += HandleTaintedMapTimer;
-                mapTileUpdateTimer.AutoReset = true;
-                mapTileUpdateTimer.Enabled = false;
-            }
+                regionTileExportFilename = worldmapConfig.GetString("RegionMapTileExportFilename", regionTileExportFilename);
 
-            terrainTextureCanTaintMapTile = worldmapConfig.GetBoolean("TextureOnMapTile", terrainTextureCanTaintMapTile);
-            primsCanTaintMapTile = worldmapConfig.GetBoolean("DrawPrimOnMapTile", primsCanTaintMapTile);
+                int pushTimeSeconds = Math.Max(0, worldmapConfig.GetInt("MinimumTaintedMapTileWaitTime", (int) minimumMapPushTime.TotalSeconds));
+                minimumMapPushTime = new TimeSpan(0, 0, pushTimeSeconds);
+                m_log.DebugFormat("[WORLD MAP] Got min wait time of {0} seconds which resulted in a span of {1}", pushTimeSeconds, minimumMapPushTime);
+
+                double timerSeconds = (double) Math.Max(0, worldmapConfig.GetInt("MaximumTaintedMapTileWaitTime", 0));
+                m_log.DebugFormat("[WORLD MAP] Got max wait time of {0} seconds", timerSeconds);
+                if (timerSeconds > 0d && regionTileExportFilename.Length > 0)
+                {
+                    mapTileUpdateTimer = new System.Timers.Timer(timerSeconds * 1000.0d);
+                    mapTileUpdateTimer.Elapsed += HandleTaintedMapTimer;
+                    mapTileUpdateTimer.AutoReset = true;
+                    mapTileUpdateTimer.Enabled = false;
+                }
+
+                terrainTextureCanTaintMapTile = worldmapConfig.GetBoolean("TextureOnMapTile", terrainTextureCanTaintMapTile);
+                primsCanTaintMapTile = worldmapConfig.GetBoolean("DrawPrimOnMapTile", primsCanTaintMapTile);
+            }
 
             STPStartInfo reqPoolStartInfo = new STPStartInfo();
             reqPoolStartInfo.MaxWorkerThreads = 2;

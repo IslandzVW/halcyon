@@ -83,11 +83,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 IConfig worldmapConfig = m_config.Configs["WorldMap"];
 
                 // Go find the parameters in the new location and if not found go looking in the old.
-                drawPrimVolume = worldmapConfig.Contains("DrawPrimOnMapTile") ?
+                drawPrimVolume = (worldmapConfig != null && worldmapConfig.Contains("DrawPrimOnMapTile")) ?
                     worldmapConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume) :
                     startupConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
 
-                textureTerrain = worldmapConfig.Contains("TextureOnMapTile") ?
+                textureTerrain = (worldmapConfig != null && worldmapConfig.Contains("TextureOnMapTile")) ?
                     worldmapConfig.GetBoolean("TextureOnMapTile", textureTerrain) :
                     startupConfig.GetBoolean("TextureOnMapTile", textureTerrain);
             }
