@@ -101,14 +101,14 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         /// <summary>
         /// The last time the map tile file was pushed to the map server.
         /// </summary>
-        private DateTime lastMapPushTime = new DateTime(0);
+        private DateTime lastMapPushTime = new DateTime(0); // Set to 0 initally to make sure the map tile gets drawn asap.
         /// <summary>
         /// Used to make sure the map tile file gets updated after a maximum amount of time if it has been tainted.
         /// </summary>
         private System.Timers.Timer mapTileUpdateTimer;
 
         private bool terrainTextureCanTaintMapTile = false;
-        private bool primsCanTaintMapTile = false;
+        private bool primsCanTaintMapTile = true;
 
         //private int CacheRegionsDistance = 256;
 
@@ -1114,10 +1114,10 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             readyToDrawMap = true; // This seems to be the most guaranteed place to detect that the region's got all its peices loaded up and is ready to render a map tile.
 
-            var lastpush = lastMapPushTime; // Thread safety copy of pointer.
-
-            if (regionTileExportFilename.Length > 0 && isMapTainted && (lastpush.Ticks <= 0 || lastpush + minimumMapPushTime < DateTime.Now))
+            if (regionTileExportFilename.Length > 0 && isMapTainted && lastMapPushTime + minimumMapPushTime < DateTime.Now)
             {
+                lastMapPushTime = DateTime.Now;
+
                 MapTileDataForExport exportData;
 
                 exportData.filename = regionTileExportFilename
@@ -1136,9 +1136,13 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         /// <param name="reason">What is the source of the taint?</param>
         public void MarkMapTileTainted(WorldMapTaintReason reason)
         {
+            if (regionTileExportFilename.Length <= 0) // If the map tile export path isn't active, don't even worry about doing the work.
+                return;
+
             if (
-                !(terrainTextureCanTaintMapTile && reason == WorldMapTaintReason.TerrainTextureChange)
-                || !(primsCanTaintMapTile && reason == WorldMapTaintReason.PrimChange)
+                (reason == WorldMapTaintReason.TerrainTextureChange && !terrainTextureCanTaintMapTile)
+                ||
+                (reason == WorldMapTaintReason.PrimChange && !primsCanTaintMapTile)
                 // Elevation can always taint the map.
             )
             {
@@ -1147,15 +1151,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             isMapTainted = true;
 
-            m_log.Info("[WORLD MAP] Map tile tainted.");
+            //m_log.Debug("[WORLD MAP] Map tile tainted."); // Can happen A LOT.
 
-            var lastpush = lastMapPushTime; // Thread safety copy of pointer.
-
-            // Skip if the region isn't ready - aka hasn't finished loading initial objects.  Should solve the "map tile too early" rendering.
-            if (readyToDrawMap && (lastpush.Ticks <= 0 || lastpush + minimumMapPushTime < DateTime.Now))
+            // Skip if the region isn't ready - aka hasn't finished loading initial objects, or if not enough time has passed since the last push to disk.
+            if (readyToDrawMap && lastMapPushTime + minimumMapPushTime < DateTime.Now)
             {
-                // BUG: This can get hit multiple time before the F&F gets done.
-
                 // Delay/reset the timer as the map's getting updated now.
                 if (mapTileUpdateTimer != null)
                 {
@@ -1167,9 +1167,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                 // Update the map tile.
                 m_scene.CreateTerrainTexture(false);
-
-                // Simple hack to make sure that this gets hit only once on startup. Note that the underlying object could have been swapped out since the copy above but since the point is to make sure that the "first run" clause isn't hit more than once this should't be an issue.
-                lastMapPushTime = lastMapPushTime.AddTicks(1);
             }
         }
 
@@ -1178,9 +1175,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         /// </summary>
         private void HandleTaintedMapTimer(object source, ElapsedEventArgs e)
         {
-            var lastpush = lastMapPushTime; // Thread safety copy of pointer.
-
-            if (m_Enabled && isMapTainted && (lastpush.Ticks <= 0 || lastpush + minimumMapPushTime < DateTime.Now))
+            if (m_Enabled && isMapTainted && lastMapPushTime + minimumMapPushTime < DateTime.Now)
             {
                 m_log.Info("[WORLD MAP] Rebuilding map tile; map was tainted and the maximum wait time has expired.");
 
@@ -1207,7 +1202,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         image.Save(exportData.filename, ImageFormat.Jpeg);
 
                         isMapTainted = false;
-                        lastMapPushTime = DateTime.Now;
                     }
                 }
                 catch (Exception e)

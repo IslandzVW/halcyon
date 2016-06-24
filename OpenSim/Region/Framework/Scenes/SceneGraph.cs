@@ -453,6 +453,8 @@ namespace OpenSim.Region.Framework.Scenes
                     m_updateList[part.LocalId] = new UpdateInfo { Group = group, Part = part, UpdateLevel = level, UpdateFlags = updateFlags | oldInfo.UpdateFlags };
                 }
             }
+
+            m_parentScene.MarkMapTileTainted(OpenSim.Region.Framework.Interfaces.WorldMapTaintReason.PrimChange);
         }
 
         protected internal void RemoveFromUpdateList(SceneObjectGroup obj)
