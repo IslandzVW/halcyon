@@ -14641,6 +14641,10 @@ namespace InWorldz.Phlox.Engine
             {
                 return new LSL_List(node.AsString());
             }
+            else if (node.Type == OSDType.Unknown)
+            {
+                return new LSL_List(ScriptBaseClass.JSON_NULL);
+            }
             else if (node.Type == OSDType.Array)
             {
                 // JSON arrays are stored in LSL lists as strings
@@ -14698,6 +14702,13 @@ namespace InWorldz.Phlox.Engine
                     return "\""+node.AsString()+"\"";
                 else
                     return node.AsString();
+            }
+            else if (node.Type == OSDType.Unknown)
+            {
+                if (nested)
+                    return "null";
+                else
+                    return ScriptBaseClass.JSON_NULL;
             }
             else if (node.Type == OSDType.Array)
             {
