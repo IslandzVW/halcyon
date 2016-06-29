@@ -51,7 +51,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         public void TerrainToBitmap(Bitmap mapbmp)
         {
             int tc = Environment.TickCount;
-            m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
+            m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain (Shaded)");
 
             double[,] hm = m_scene.Heightmap.GetDoubles();
             bool ShadowDebugContinue = true;
