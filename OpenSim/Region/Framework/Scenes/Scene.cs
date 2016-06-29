@@ -1914,7 +1914,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (terrain == null)
                 return;
 
-            byte[] data = terrain.WriteJpeg2000Image("defaultstripe.png");
+            byte[] data = terrain.WriteJpeg2000Image();
             if (data != null)
             {
                 IWorldMapModule mapModule = RequestModuleInterface<IWorldMapModule>();

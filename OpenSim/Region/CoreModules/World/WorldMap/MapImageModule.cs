@@ -68,52 +68,26 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private IConfigSource m_config;
         private IMapTileTerrainRenderer terrainRenderer;
 
+        private bool drawPrimVolume = true;
+        private bool textureTerrain = false;
+
+        private byte[] imageData = null;
+
+        private Bitmap mapbmp = new Bitmap(256, 256);
+
         #region IMapImageGenerator Members
 
-        public byte[] WriteJpeg2000Image(string gradientmap)
+        public byte[] WriteJpeg2000Image()
         {
-            byte[] imageData = null;
-
-            bool drawPrimVolume = true;
-            bool textureTerrain = false;
-
-            try
+            if (terrainRenderer != null)
             {
-                IConfig startupConfig = m_config.Configs["Startup"]; // Location supported for legacy INI files.
-                IConfig worldmapConfig = m_config.Configs["WorldMap"];
-
-                // Go find the parameters in the new location and if not found go looking in the old.
-                drawPrimVolume = (worldmapConfig != null && worldmapConfig.Contains("DrawPrimOnMapTile")) ?
-                    worldmapConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume) :
-                    startupConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
-
-                textureTerrain = (worldmapConfig != null && worldmapConfig.Contains("TextureOnMapTile")) ?
-                    worldmapConfig.GetBoolean("TextureOnMapTile", textureTerrain) :
-                    startupConfig.GetBoolean("TextureOnMapTile", textureTerrain);
-            }
-            catch
-            {
-                m_log.Warn("[MAPTILE]: Failed to load StartupConfig");
-            }
-
-            if (textureTerrain)
-            {
-                terrainRenderer = new TexturedMapTileRenderer();
-            }
-            else
-            {
-                terrainRenderer = new ShadedMapTileRenderer();
-            }
-            terrainRenderer.Initialize(m_scene, m_config);
-
-            Bitmap mapbmp = new Bitmap(256, 256);
             //long t = System.Environment.TickCount;
             //for (int i = 0; i < 10; ++i) {
                 terrainRenderer.TerrainToBitmap(mapbmp);
             //}
             //t = System.Environment.TickCount - t;
             //m_log.InfoFormat("[MAPTILE] generation of 10 maptiles needed {0} ms", t);
-
+            }
 
             if (drawPrimVolume)
             {
@@ -141,10 +115,38 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             m_scene = scene;
             m_config = source;
 
-            IConfig startupConfig = m_config.Configs["Startup"];
-            if (startupConfig.GetString("MapImageModule", "MapImageModule") !=
+            try
+            {
+                IConfig startupConfig = m_config.Configs["Startup"]; // Location supported for legacy INI files.
+                IConfig worldmapConfig = m_config.Configs["WorldMap"];
+
+                if (startupConfig.GetString("MapImageModule", "MapImageModule") !=
                     "MapImageModule")
-                return;
+                    return;
+                
+                // Go find the parameters in the new location and if not found go looking in the old.
+                drawPrimVolume = (worldmapConfig != null && worldmapConfig.Contains("DrawPrimOnMapTile")) ?
+                    worldmapConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume) :
+                    startupConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
+
+                textureTerrain = (worldmapConfig != null && worldmapConfig.Contains("TextureOnMapTile")) ?
+                    worldmapConfig.GetBoolean("TextureOnMapTile", textureTerrain) :
+                    startupConfig.GetBoolean("TextureOnMapTile", textureTerrain);
+            }
+            catch
+            {
+                m_log.Warn("[MAPTILE]: Failed to load StartupConfig");
+            }
+
+            if (textureTerrain)
+            {
+                terrainRenderer = new TexturedMapTileRenderer();
+            }
+            else
+            {
+                terrainRenderer = new ShadedMapTileRenderer();
+            }
+            terrainRenderer.Initialize(m_scene, m_config);
 
             m_scene.RegisterModuleInterface<IMapImageGenerator>(this);
         }
