@@ -311,12 +311,21 @@ namespace OpenSim.Framework.Servers
         /// </summary>      
         public virtual void Shutdown()
         {
+            Shutdown(0);
+        }
+
+        /// <summary>
+        /// Shutdown the server with the specified exit code.
+        /// </summary>
+        /// <param name="exitCode">The exit code to be returned once shutdown has completed.</param>
+        public void Shutdown(int exitCode)
+        {
             ShutdownSpecific();
-            
+
             m_log.Info("[SHUTDOWN]: Shutdown processing on main thread complete.  Exiting...");
             RemovePIDFile();
-            
-            Environment.Exit(0);
+
+            Environment.Exit(exitCode);
         }
 
         private void HandleQuit(string module, string[] args)

@@ -777,7 +777,9 @@ namespace OpenSim
                     break;
 
                 case "restart":
-                    m_sceneManager.RestartCurrentScene();
+                    // Let's issue a full server shutdown and let the management tools take care of the restart.
+                    // Use a status of 100 to indicate that this "error" is an explicit restart not a real error.
+                    Shutdown(100);
                     break;
 
                 case "predecode-j2k":

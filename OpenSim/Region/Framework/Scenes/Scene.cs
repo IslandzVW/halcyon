@@ -1052,9 +1052,9 @@ namespace OpenSim.Region.Framework.Scenes
         // This causes the region to restart immediatley.
         public void RestartNow()
         {
-            // Let's issue a full server shutdown and let ZooKeeper take care of the restart.
-            m_log.Error("[REGION]: Firing Region Shutdown Command");
-            MainConsole.Instance.RunCommand("shutdown");
+            // Let's issue a full server restart request.
+            m_log.Error("[REGION]: Firing Region Restart Command");
+            MainConsole.Instance.RunCommand("restart");
         }
 
         public void SetSceneCoreDebug(bool ScriptEngine, bool CollisionEvents, bool PhysicsEngine)
