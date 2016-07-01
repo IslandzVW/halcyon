@@ -159,7 +159,7 @@ namespace OpenSim.Grid.MessagingServer
                     System.Threading.Thread.Sleep(delay * 1000);
 
                 // Do this on a new thread so the actual shutdown call returns successfully.
-                Task.Factory.StartNew(() => Shutdown());
+                Task.Factory.StartNew(Shutdown);
             }
             catch (Exception e)
             {

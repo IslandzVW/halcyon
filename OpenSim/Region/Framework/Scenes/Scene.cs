@@ -998,7 +998,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Given float seconds, this will restart the region.
         /// </summary>
         /// <param name="seconds">float indicating duration before restart.</param>
-        public virtual void Restart(int seconds)
+        public override void Restart(int seconds)
         {
             // RestartNow() does immediate restarting.
             if (seconds == -1)
@@ -1059,16 +1059,17 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void SetSceneCoreDebug(bool ScriptEngine, bool CollisionEvents, bool PhysicsEngine)
         {
-            if (m_scripts_enabled != !ScriptEngine)
+            if (m_scripts_enabled == ScriptEngine)
             {
                 if (ScriptEngine)
                 {
                     m_log.Info("Stopping all Scripts in Scene");
                     foreach (EntityBase ent in Entities)
                     {
-                        if (ent is SceneObjectGroup)
+                        var sceneObjectGroup = ent as SceneObjectGroup;
+                        if (sceneObjectGroup != null)
                         {
-                            ((SceneObjectGroup) ent).RemoveScriptInstances();
+                            sceneObjectGroup.RemoveScriptInstances();
                         }
                     }
                 }
