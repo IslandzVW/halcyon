@@ -5082,8 +5082,11 @@ namespace InWorldz.Phlox.Engine
                                 if (engine.GetScriptState(inv.Value.ItemID))
                                     total++;
                                 break;
-                            case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:  // total mem possible (64K)
+                            case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:  // total mem possible (128K)
                                 total += engine.GetMaxMemory();
+                                break;
+                            case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
+                                total += m_ScriptEngine.GetUsedMemory(inv.Value.ItemID);
                                 break;
                         }
                     }
@@ -5152,6 +5155,7 @@ namespace InWorldz.Phlox.Engine
                     case ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:
+                    case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
                         total += GetObjectScriptTotal(group, which);
                         break;
                 }
@@ -5233,13 +5237,16 @@ namespace InWorldz.Phlox.Engine
             return rc;
         }
 
-        private int _GiveInventory(SceneObjectPart part, string destination, string inventory)
+        // deliveries to objects do not get a delay, deliveries to avatars get a delay (also errors)
+        private int _GiveInventory(SceneObjectPart part, string destination, string inventory, out bool needsDelay)
         {
             bool found = false;
             UUID destId = UUID.Zero;
             UUID objId = UUID.Zero;
             byte assetType = 0;
             string objName = String.Empty;
+
+            needsDelay = true;
 
             if (!UUID.TryParse(destination, out destId))
             {
@@ -5315,6 +5322,7 @@ namespace InWorldz.Phlox.Engine
             }
             else
             {
+                needsDelay = false;
                 // destination is an object
                 World.MoveTaskInventoryItem(destId, part, objId);
                 // we don't support delivery return codes to objects (yet)
@@ -5324,13 +5332,14 @@ namespace InWorldz.Phlox.Engine
 
         private void GiveLinkInventory(int linknumber, string destination, string inventory, int delay, bool includeRC)
         {
+            bool needsDelay = true;
             int rc = ScriptBaseClass.IW_DELIVER_PRIM;   // part not found
             try
             {
                 var parts = GetLinkParts(linknumber);
                 foreach (SceneObjectPart part in parts)
                 {
-                    rc = _GiveInventory(part, destination, inventory);
+                    rc = _GiveInventory(part, destination, inventory, out needsDelay);
                     if (rc != ScriptBaseClass.IW_DELIVER_NONE)
                         return; // give results from the first matching prim only
                 }
@@ -5340,6 +5349,7 @@ namespace InWorldz.Phlox.Engine
                 // C# cannot handle: includeRC ? rc : null
                 object result = null;
                 if (includeRC) result = rc;
+                if (!needsDelay) delay = 0;
                 m_ScriptEngine.SysReturn(m_itemID, result, delay);
             }
         }
@@ -8314,8 +8324,10 @@ namespace InWorldz.Phlox.Engine
             return UUID.Zero;
         }
 
-        private int _GiveLinkInventoryList(SceneObjectPart part, string destination, string category, LSL_List inventory, bool includeRC)
+        private int _GiveLinkInventoryList(SceneObjectPart part, string destination, string category, LSL_List inventory, bool includeRC, out bool needsDelay)
         {
+            needsDelay = true;
+
             UUID destID;
             if (!UUID.TryParse(destination, out destID))
             {
@@ -8352,6 +8364,7 @@ namespace InWorldz.Phlox.Engine
 
             if (destPart != null)
             {   // Items were given to another prim above.
+                needsDelay = false;
                 return ScriptBaseClass.IW_DELIVER_OK;
             }
 
@@ -8385,13 +8398,14 @@ namespace InWorldz.Phlox.Engine
 
         private void GiveInventoryList(int linknumber, string destination, string category, LSL_List inventory, int delay, bool includeRC)
         {
+            bool needsDelay = true;
             int rc = ScriptBaseClass.IW_DELIVER_PRIM;   // part not found
             try
             {
                 var parts = GetLinkParts(linknumber);
                 foreach (SceneObjectPart part in parts)
                 {
-                    rc = _GiveLinkInventoryList(part, destination, category, inventory, includeRC);
+                    rc = _GiveLinkInventoryList(part, destination, category, inventory, includeRC, out needsDelay);
                     if (rc != ScriptBaseClass.IW_DELIVER_NONE)
                         return; // give results from the first matching prim only
                 }
@@ -8401,6 +8415,7 @@ namespace InWorldz.Phlox.Engine
                 // C# cannot handle: includeRC ? rc : null
                 object result = null;
                 if (includeRC) result = rc;
+                if (!needsDelay) delay = 0;
                 m_ScriptEngine.SysReturn(m_itemID, result, delay);
             }
         }
@@ -13476,6 +13491,7 @@ namespace InWorldz.Phlox.Engine
                     case ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:
+                    case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
                         ret.Add(GetAgentTotals(av, param));
                         break;
                     case ScriptBaseClass.OBJECT_SCRIPT_TIME:
@@ -13609,6 +13625,7 @@ namespace InWorldz.Phlox.Engine
                             case ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT:
                             case ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT:
                             case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:
+                            case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
                                 ret.Add(GetObjectScriptTotal(part.ParentGroup, param));
                                 break;
                             case ScriptBaseClass.OBJECT_SCRIPT_TIME:
