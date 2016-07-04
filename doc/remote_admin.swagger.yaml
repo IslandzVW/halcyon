@@ -239,7 +239,7 @@ paths:
                 properties:
                   methodName:
                     type: string
-                    pattern: "[a-zA-Z0-9.:/]+"
+                    pattern: '[a-zA-Z0-9:/]+\.[a-zA-Z0-9.:/]+'
                   params:
                     type: array
                     items:
