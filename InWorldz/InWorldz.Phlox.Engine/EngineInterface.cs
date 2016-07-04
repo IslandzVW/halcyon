@@ -488,7 +488,7 @@ namespace InWorldz.Phlox.Engine
         {
             return new VM.DetectVariables
             {
-                Grab = new Vector3(),
+                Grab = parm.OffsetPos,
                 Key = parm.Key.ToString(),
                 BotID = parm.BotID.ToString(),
                 Group = parm.Group.ToString(),

@@ -5629,27 +5629,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
 
-            group.SetOwnerId(newOwner.AgentId);
-            group.SetRootPartOwner(part, newOwner.AgentId,
-                    newOwner.ActiveGroupId);
-
-            var partList = group.GetParts();
-
-            if (Permissions.PropagatePermissions())
-            {
-                foreach (SceneObjectPart child in partList)
-                {
-                    child.Inventory.ChangeInventoryOwner(newOwner.AgentId);
-                    child.ApplyNextOwnerPermissions();
-                }
-            }
-
-            group.Rationalize(newOwner.AgentId, false);
-            group.HasGroupChanged = true;
-            group.RezzedFromFolderId = UUID.Zero;
-            InspectForAutoReturn(group);
-            part.GetProperties(newOwner);
-            part.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
+            group.ChangeOwner(newOwner);
             return true;
         }
 

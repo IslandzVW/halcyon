@@ -546,9 +546,10 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
             CachedUserInfo profile = m_scene.CommsManager.UserService.GetUserDetails(clientView.AgentId);
             if (profile != null)
             {
-                // we need to clean out the existing textures
                 AvatarAppearance appearance = avatar.Appearance;
-                avatar.Appearance.ResetAppearance();
+
+                // we need to clean out the existing textures
+                appearance.Texture = AvatarAppearance.GetDefaultTexture();
 
                 List<AvatarWearable> wearables = new List<AvatarWearable>();
                 lock (_currentlyWaitingCOFBuilds)
@@ -656,6 +657,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
         {
             lock (_pendingUpdates)
             {
+                // m_log.InfoFormat("[LLCV]: Avatar database update ({0}) queued for user {1}", appearance.Serial, user);
                 if (_pendingUpdates.ContainsKey(user))
                 {
                     _pendingUpdates.Remove(user);
@@ -730,6 +732,7 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
                 {
                     if (upd.CallBack != null) 
                         upd.CallBack();
+                    m_log.InfoFormat("[LLCV]: Avatar database update ({0}) committing for user {1}", upd.Appearance.Serial, upd.UserId);
                     m_scene.CommsManager.AvatarService.UpdateUserAppearance(upd.UserId, upd.Appearance);
                     if (upd.BakedTextures != null && upd.BakedTextures.Count > 0)
                         m_scene.CommsManager.AvatarService.SetCachedBakedTextures(upd.BakedTextures);

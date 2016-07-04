@@ -383,7 +383,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         continue;//No copy objects cannot be attached
                     }
 
-                    SceneObjectGroup grp = m_scene.RezObject(sp.ControllingClient, sp.ControllingClient.ActiveGroupId,
+                    // sp.ControllingClient can go null on botRemoveBot from another script
+                    IClientAPI remoteClient = sp.ControllingClient; // take a reference and use
+                    if (remoteClient == null)
+                        return;
+
+                    SceneObjectGroup grp = m_scene.RezObject(remoteClient, remoteClient.ActiveGroupId,
                         origItemID, Vector3.Zero, Vector3.Zero, UUID.Zero, (byte)1, true,
                         false, false, sp.UUID, true, (uint)attachment.AttachPoint, 0, null, item, false);
 
@@ -395,7 +400,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         if (attachment.AttachPoint != 0 && attachment.AttachPoint != grp.GetBestAttachmentPoint())
                             tainted = true;
 
-                        m_scene.SceneGraph.AttachObject(sp.ControllingClient, grp.LocalId, (uint)attachment.AttachPoint, true, false, AttachFlags.None);
+                        m_scene.SceneGraph.AttachObject(remoteClient, grp.LocalId, (uint)attachment.AttachPoint, true, false, AttachFlags.None);
 
                         if (tainted)
                             grp.HasGroupChanged = true;
@@ -450,11 +455,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool RemoveBot(UUID botID, UUID attemptingUser)
         {
-            if (GetBotWithPermission(botID, attemptingUser) == null)
-                return false;
-
             lock (m_bots)
+            {
+                if (GetBotWithPermission(botID, attemptingUser) == null)
+                    return false;
                 m_bots.Remove(botID);
+            }
 
             m_scene.IncomingCloseAgent(botID);
             m_scene.CommsManager.UserService.RemoveTemporaryUserProfile(botID);

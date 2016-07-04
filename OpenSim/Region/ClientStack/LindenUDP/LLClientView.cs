@@ -94,6 +94,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private bool _receivedCompleteAgentMovement = false;
 
+        private Vector3 m_grabStartPos = Vector3.Zero;
+
         private class AvatarUpdateComparer : IEqualityComparer<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>
         {
             #region IEqualityComparer<ObjectDataBlock> Members
@@ -730,6 +732,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 //we have to do the actual close work in another thread because otherwise
                 //this one will stay on the active jobs list and deadlock the closure
                 Util.FireAndForget(this.CloseWorker);
+                m_clientInterfaces.Clear();
             }
         }
 
@@ -7498,6 +7501,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
+            m_grabStartPos = Vector3.Zero;  // grab no longer active
+
             DeGrabObject handlerDeGrabObject = OnDeGrabObject;
             if (handlerDeGrabObject != null)
             {
@@ -8051,6 +8056,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
 
                     uint serial = appear.AgentData.SerialNum;
+
+                    m_log.InfoFormat("[LLCV]: Avatar appearance update ({0}) for user {1}", serial, this.Name);
 
                     handlerSetAppearance(appear.ObjectData.TextureEntry, visualparams, items, serial);
                 }
@@ -9097,6 +9104,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         arg.STCoord = surfaceInfo.STCoord;
                         arg.UVCoord = surfaceInfo.UVCoord;
                         touchArgs.Add(arg);
+
+                        // Store the start of grab position for relative offsets from future updates (llDetectedGrab).
+                        this.m_grabStartPos = surfaceInfo.Position;
                     }
                 }
                 handlerGrabObject(grab.ObjectData.LocalID, grab.ObjectData.GrabOffset, this, touchArgs);
@@ -9138,49 +9148,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         touchArgs.Add(arg);
                     }
                 }
-                handlerGrabUpdate(grabUpdate.ObjectData.ObjectID, grabUpdate.ObjectData.GrabOffsetInitial,
+                handlerGrabUpdate(grabUpdate.ObjectData.ObjectID, m_grabStartPos,
                                   grabUpdate.ObjectData.GrabPosition, this, touchArgs);
             }
             return true;
         }
-
-        /*
-        private bool HandleObjectDeGrab(IClientAPI sender, Packet Pack)
-        {
-            ObjectDeGrabPacket deGrab = (ObjectDeGrabPacket)Pack;
-
-            #region Packet Session and User Check
-            if (m_checkPackets)
-            {
-                if (deGrab.AgentData.SessionID != SessionId ||
-                    deGrab.AgentData.AgentID != AgentId)
-                    return true;
-            }
-            #endregion
-
-            DeGrabObject handlerDeGrabObject = OnDeGrabObject;
-            if (handlerDeGrabObject != null)
-            {
-                List<SurfaceTouchEventArgs> touchArgs = new List<SurfaceTouchEventArgs>();
-                if ((deGrab.SurfaceInfo != null) && (deGrab.SurfaceInfo.Length > 0))
-                {
-                    foreach (ObjectDeGrabPacket.SurfaceInfoBlock surfaceInfo in deGrab.SurfaceInfo)
-                    {
-                        SurfaceTouchEventArgs arg = new SurfaceTouchEventArgs();
-                        arg.Binormal = surfaceInfo.Binormal;
-                        arg.FaceIndex = surfaceInfo.FaceIndex;
-                        arg.Normal = surfaceInfo.Normal;
-                        arg.Position = surfaceInfo.Position;
-                        arg.STCoord = surfaceInfo.STCoord;
-                        arg.UVCoord = surfaceInfo.UVCoord;
-                        touchArgs.Add(arg);
-                    }
-                }
-                handlerDeGrabObject(deGrab.ObjectData.LocalID, this, touchArgs);
-           }
-            return true;
-        }
-        */
 
         private bool HandleObjectSpinStart(IClientAPI sender, Packet Pack)
         {

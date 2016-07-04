@@ -5082,8 +5082,11 @@ namespace InWorldz.Phlox.Engine
                                 if (engine.GetScriptState(inv.Value.ItemID))
                                     total++;
                                 break;
-                            case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:  // total mem possible (64K)
+                            case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:  // total mem possible (128K)
                                 total += engine.GetMaxMemory();
+                                break;
+                            case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
+                                total += m_ScriptEngine.GetUsedMemory(inv.Value.ItemID);
                                 break;
                         }
                     }
@@ -5152,6 +5155,7 @@ namespace InWorldz.Phlox.Engine
                     case ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:
+                    case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
                         total += GetObjectScriptTotal(group, which);
                         break;
                 }
@@ -5200,7 +5204,41 @@ namespace InWorldz.Phlox.Engine
             return prefix + Util.EscapeUriDataStringRfc3986(region) + "/" + x.ToString() + "/" + y.ToString() + "/" + z.ToString();
         }
 
-        public void GiveLinkInventory(SceneObjectPart part, string destination, string inventory)
+        int DeliverReasonToResult(string reason)
+        {
+            int rc = -1;
+            switch (reason)
+            {
+                case "":
+                    rc = ScriptBaseClass.IW_DELIVER_OK;
+                    break;
+                case "uuid":
+                    rc = ScriptBaseClass.IW_DELIVER_BADKEY;
+                    break;
+                case "muted":
+                    rc = ScriptBaseClass.IW_DELIVER_MUTED;
+                    break;
+                case "item":
+                    rc = ScriptBaseClass.IW_DELIVER_ITEM;
+                    break;
+                case "prim":
+                    rc = ScriptBaseClass.IW_DELIVER_PRIM;
+                    break;
+                case "user":
+                    rc = ScriptBaseClass.IW_DELIVER_USER;
+                    break;
+                case "perm":
+                    rc = ScriptBaseClass.IW_DELIVER_PERM;
+                    break;
+                default:
+                    m_log.ErrorFormat("[LSL]: Unknown delivery failure reason: {0}", reason);   // for testing and safety
+                    break;
+            }
+            return rc;
+        }
+
+        // deliveries to objects do not get a delay, deliveries to avatars get a delay (also errors)
+        private int _GiveInventory(SceneObjectPart part, string destination, string inventory, out bool needsDelay)
         {
             bool found = false;
             UUID destId = UUID.Zero;
@@ -5208,98 +5246,124 @@ namespace InWorldz.Phlox.Engine
             byte assetType = 0;
             string objName = String.Empty;
 
-            int delay = 0;
+            needsDelay = true;
 
+            if (!UUID.TryParse(destination, out destId))
+            {
+                llSay(0, "Could not parse key " + destination);
+                return ScriptBaseClass.IW_DELIVER_BADKEY;
+            }
+
+            if (IsScriptMuted(destId))
+            {
+                m_log.InfoFormat("[LSL]: Not offering inventory from muted {0} to {1}", m_host.ParentGroup.UUID, destId);
+                return ScriptBaseClass.IW_DELIVER_MUTED; // recipient has sender muted
+            }
+
+            // move the first object found with this inventory name
+            lock (part.TaskInventory)
+            {
+                foreach (KeyValuePair<UUID, TaskInventoryItem> inv in part.TaskInventory)
+                {
+                    if (inv.Value.Name == inventory)
+                    {
+                        found = true;
+                        objId = inv.Key;
+                        assetType = (byte)inv.Value.Type;
+                        objName = inv.Value.Name;
+                        break;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                ScriptShoutError(String.Format("Could not find item '{0}'", inventory));
+                return ScriptBaseClass.IW_DELIVER_NONE;
+            }
+
+            // check if destination is a part (much faster than checking if it's an avatar)
+            SceneObjectPart destPart = m_host.ParentGroup.Scene.GetSceneObjectPart(destId);
+            if (destPart == null)
+            {
+                // destination must be an avatar
+                string reason = "";
+                Scene scene = m_host.ParentGroup.Scene;
+                ScenePresence avatar;
+                IClientAPI remoteClient = null;
+                if (scene.TryGetAvatar(destId, out avatar))
+                {
+                    remoteClient = avatar.ControllingClient;
+                }
+
+                InventoryItemBase agentItem =
+                        World.MoveTaskInventoryItem(destId, remoteClient, UUID.Zero, part, objId, false, out reason);
+
+                if (agentItem == null)
+                    return DeliverReasonToResult(reason);
+
+                byte dialog = (byte)InstantMessageDialog.TaskInventoryOffered;
+                byte[] bucket = new byte[1];
+                bucket[0] = assetType;
+                SceneObjectPart rootPart = part.ParentGroup.RootPart;
+                Vector3 pos = rootPart.AbsolutePosition;
+                string URL = EncodeURL(true, World.RegionInfo.RegionName, pos.X, pos.Y, pos.Z);
+
+                GridInstantMessage msg = new GridInstantMessage(World,
+                        rootPart.OwnerID, rootPart.Name, destId,
+                            dialog, false, "'"+objName+"'  ( "+URL+" )",
+                        agentItem.ID, true, rootPart.AbsolutePosition,
+                        bucket);
+
+                if (m_TransferModule != null)
+                {
+                        m_TransferModule.SendInstantMessage(msg, delegate(bool success) { });
+                }
+            }
+            else
+            {
+                needsDelay = false;
+                // destination is an object
+                World.MoveTaskInventoryItem(destId, part, objId);
+                // we don't support delivery return codes to objects (yet)
+            }
+            return ScriptBaseClass.IW_DELIVER_OK;
+        }
+
+        private void GiveLinkInventory(int linknumber, string destination, string inventory, int delay, bool includeRC)
+        {
+            bool needsDelay = true;
+            int rc = ScriptBaseClass.IW_DELIVER_PRIM;   // part not found
             try
             {
-                if (!UUID.TryParse(destination, out destId))
+                var parts = GetLinkParts(linknumber);
+                foreach (SceneObjectPart part in parts)
                 {
-                    llSay(0, "Could not parse key " + destination);
-                    return;
-                }
-
-                if (IsScriptMuted(destId))
-                {
-                    m_log.InfoFormat("[LSL]: Not offering inventory from muted {0} to {1}", m_host.ParentGroup.UUID, destId);
-                    return; // recipient has sender muted
-                }
-
-                // move the first object found with this inventory name
-                lock (part.TaskInventory)
-                {
-                    foreach (KeyValuePair<UUID, TaskInventoryItem> inv in part.TaskInventory)
-                    {
-                        if (inv.Value.Name == inventory)
-                        {
-                            found = true;
-                            objId = inv.Key;
-                            assetType = (byte)inv.Value.Type;
-                            objName = inv.Value.Name;
-                            break;
-                        }
-                    }
-                }
-
-                if (!found)
-                {
-                    ScriptShoutError(String.Format("Could not find object '{0}'", inventory));
-                    return;
-                }
-
-                // check if destination is a part (much faster than checking if it's an avatar)
-                SceneObjectPart destPart = m_host.ParentGroup.Scene.GetSceneObjectPart(destId);
-                if (destPart == null)
-                {
-                    // destination must be an avatar
-                    InventoryItemBase agentItem =
-                            World.MoveTaskInventoryItem(destId, UUID.Zero, part, objId);
-
-                    if (agentItem == null)
-                        return;
-
-                    byte dialog = (byte)InstantMessageDialog.TaskInventoryOffered;
-                    byte[] bucket = new byte[1];
-                    bucket[0] = assetType;
-                    SceneObjectPart rootPart = part.ParentGroup.RootPart;
-                    Vector3 pos = rootPart.AbsolutePosition;
-                    string URL = EncodeURL(true, World.RegionInfo.RegionName, pos.X, pos.Y, pos.Z);
-
-                    GridInstantMessage msg = new GridInstantMessage(World,
-                            rootPart.OwnerID, rootPart.Name, destId,
-                            dialog, false, "'"+objName+"'  ( "+URL+" )",
-                            agentItem.ID, true, rootPart.AbsolutePosition,
-                            bucket);
-
-                    if (m_TransferModule != null)
-                    {
-                        m_TransferModule.SendInstantMessage(msg, delegate(bool success) { });
-                    }
-
-                    delay = 2000;
-                }
-                else
-                {
-                    // destination is an object
-                    World.MoveTaskInventoryItem(destId, part, objId);
+                    rc = _GiveInventory(part, destination, inventory, out needsDelay);
+                    if (rc != ScriptBaseClass.IW_DELIVER_NONE)
+                        return; // give results from the first matching prim only
                 }
             }
             finally
             {
-                m_ScriptEngine.SysReturn(m_itemID, null, delay);
+                // C# cannot handle: includeRC ? rc : null
+                object result = null;
+                if (includeRC) result = rc;
+                if (!needsDelay) delay = 0;
+                m_ScriptEngine.SysReturn(m_itemID, result, delay);
             }
         }
         public void llGiveInventory(string destination, string inventory)
         {
-            GiveLinkInventory(m_host, destination, inventory);
+            GiveLinkInventory(ScriptBaseClass.LINK_THIS, destination, inventory, 2000, false);
         }
         public void iwGiveLinkInventory(int linknumber, string destination, string inventory)
         {
-            var parts = GetLinkParts(linknumber);
-            foreach (SceneObjectPart part in parts)
-            {
-                GiveLinkInventory(part, destination, inventory);
-                break;  // stop on the first match
-            }
+            GiveLinkInventory(linknumber, destination, inventory, 2000, false);
+        }
+        public void iwDeliverInventory(int linknumber, string destination, string inventory)
+        {
+            GiveLinkInventory(linknumber, destination, inventory, 100, true);
         }
 
         private void RemoveLinkInventory(SceneObjectPart part, string name)
@@ -8260,93 +8324,112 @@ namespace InWorldz.Phlox.Engine
             return UUID.Zero;
         }
 
-        public void GiveLinkInventoryList(SceneObjectPart part, string destination, string category, LSL_List inventory)
+        private int _GiveLinkInventoryList(SceneObjectPart part, string destination, string category, LSL_List inventory, bool includeRC, out bool needsDelay)
         {
-            int delay = 3000;
+            needsDelay = true;
 
+            UUID destID;
+            if (!UUID.TryParse(destination, out destID))
+            {
+                return ScriptBaseClass.IW_DELIVER_BADKEY;
+            }
+
+            if (IsScriptMuted(destID))
+            {
+                m_log.InfoFormat("[LSL]: Not offering inventory list from muted {0} to {1}", m_host.ParentGroup.UUID, destID);
+                return ScriptBaseClass.IW_DELIVER_MUTED; // recipient has sender muted
+            }
+
+            List<UUID> itemList = null;
+            // check if destination is a part (much faster than checking if it's an avatar)
+            SceneObjectPart destPart = m_host.ParentGroup.Scene.GetSceneObjectPart(destID);
+            if (destPart == null)
+                itemList = new List<UUID>();
+            foreach (Object item in inventory.Data)
+            {
+                UUID itemID = UUID.Zero;
+                if (!UUID.TryParse(item.ToString(), out itemID))
+                    itemID = GetTaskInventoryItem(part, item.ToString());
+
+                // If being called from iwDeliver...(), we need to 
+                // abort any delivery with missing items and return error code.
+                if (includeRC && (itemID == UUID.Zero))
+                    return ScriptBaseClass.IW_DELIVER_ITEM; // item is missing
+
+                if (destPart != null)   // give to another prim
+                    World.MoveTaskInventoryItem(destID, part, itemID);
+                else   // give to a user inventory
+                    itemList.Add(itemID);
+            }
+
+            if (destPart != null)
+            {   // Items were given to another prim above.
+                needsDelay = false;
+                return ScriptBaseClass.IW_DELIVER_OK;
+            }
+
+            if (itemList.Count == 0)
+            {   // Nothing to give.
+                return ScriptBaseClass.IW_DELIVER_NONE;
+            }
+
+            string reason;
+            UUID folderID = m_ScriptEngine.World.MoveTaskInventoryItems(destID, category, part, itemList, out reason);
+            if (folderID == UUID.Zero)
+                return DeliverReasonToResult(reason);
+
+            byte dialog = (byte)InstantMessageDialog.TaskInventoryOffered;
+            byte[] bucket = new byte[1];
+            bucket[0] = (byte)AssetType.Folder;
+            SceneObjectPart rootPart = part.ParentGroup.RootPart;
+            Vector3 pos = rootPart.AbsolutePosition;
+            string URL = EncodeURL(true, World.RegionInfo.RegionName, pos.X, pos.Y, pos.Z);
+
+            GridInstantMessage msg = new GridInstantMessage(World,
+                    rootPart.OwnerID, rootPart.Name, destID,
+                    dialog, false, "'"+category+"'  ( "+URL+" )",
+                    folderID, true, rootPart.AbsolutePosition,
+                    bucket);
+
+            if (m_TransferModule != null)
+                m_TransferModule.SendInstantMessage(msg, delegate(bool success) { });
+            return ScriptBaseClass.IW_DELIVER_OK;
+        }
+
+        private void GiveInventoryList(int linknumber, string destination, string category, LSL_List inventory, int delay, bool includeRC)
+        {
+            bool needsDelay = true;
+            int rc = ScriptBaseClass.IW_DELIVER_PRIM;   // part not found
             try
             {
-                UUID destID;
-                if (!UUID.TryParse(destination, out destID))
+                var parts = GetLinkParts(linknumber);
+                foreach (SceneObjectPart part in parts)
                 {
-                    return;
+                    rc = _GiveLinkInventoryList(part, destination, category, inventory, includeRC, out needsDelay);
+                    if (rc != ScriptBaseClass.IW_DELIVER_NONE)
+                        return; // give results from the first matching prim only
                 }
-
-                if (IsScriptMuted(destID))
-                {
-                    m_log.InfoFormat("[LSL]: Not offering inventory list from muted {0} to {1}", m_host.ParentGroup.UUID, destID);
-                    return; // recipient has sender muted
-                }
-
-                List<UUID> itemList = null;
-                // check if destination is a part (much faster than checking if it's an avatar)
-                SceneObjectPart destPart = m_host.ParentGroup.Scene.GetSceneObjectPart(destID);
-                if (destPart == null)
-                    itemList = new List<UUID>();
-                foreach (Object item in inventory.Data)
-                {
-                    UUID itemID = UUID.Zero;
-                    if (!UUID.TryParse(item.ToString(), out itemID))
-                        itemID = GetTaskInventoryItem(part, item.ToString());
-
-                    if (itemID != UUID.Zero)
-                    {
-                        if (destPart != null)   // give to another prim
-                            World.MoveTaskInventoryItem(destID, part, itemID);
-                        else   // give to a user inventory
-                            itemList.Add(itemID);
-                    }
-                }
-
-                if (destPart != null)
-                {   // Items were given to another prim above.
-                    return;
-                }
-
-                if (itemList.Count == 0)
-                {   // Nothing to give.
-                    return;
-                }
-
-                UUID folderID = m_ScriptEngine.World.MoveTaskInventoryItems(destID, category, part, itemList);
-                if (folderID == UUID.Zero)
-                {
-                    return;
-                }
-
-                byte dialog = (byte)InstantMessageDialog.TaskInventoryOffered;
-                byte[] bucket = new byte[1];
-                bucket[0] = (byte)AssetType.Folder;
-                SceneObjectPart rootPart = part.ParentGroup.RootPart;
-                Vector3 pos = rootPart.AbsolutePosition;
-                string URL = EncodeURL(true, World.RegionInfo.RegionName, pos.X, pos.Y, pos.Z);
-
-                GridInstantMessage msg = new GridInstantMessage(World,
-                        rootPart.OwnerID, rootPart.Name, destID,
-                        dialog, false, "'"+category+"'  ( "+URL+" )",
-                        folderID, true, rootPart.AbsolutePosition,
-                        bucket);
-
-                if (m_TransferModule != null)
-                    m_TransferModule.SendInstantMessage(msg, delegate(bool success) { });
             }
             finally
             {
-                m_ScriptEngine.SysReturn(m_itemID, null, delay);
+                // C# cannot handle: includeRC ? rc : null
+                object result = null;
+                if (includeRC) result = rc;
+                if (!needsDelay) delay = 0;
+                m_ScriptEngine.SysReturn(m_itemID, result, delay);
             }
         }
         public void llGiveInventoryList(string destination, string category, LSL_List inventory)
         {
-            GiveLinkInventoryList(m_host, destination, category, inventory);
+            GiveInventoryList(ScriptBaseClass.LINK_THIS, destination, category, inventory, 3000, false);
         }
         public void iwGiveLinkInventoryList(int linknumber, string destination, string category, LSL_List inventory)
         {
-            var parts = GetLinkParts(linknumber);
-            foreach (SceneObjectPart part in parts)
-            {
-                GiveLinkInventoryList(part, destination, category, inventory);
-                return; // give the first match only
-            }
+            GiveInventoryList(linknumber, destination, category, inventory, 3000, false);
+        }
+        public void iwDeliverInventoryList(int linknumber, string destination, string category, LSL_List inventory)
+        {
+            GiveInventoryList(linknumber, destination, category, inventory, 100, true);
         }
 
         public void llSetVehicleType(int type)
@@ -13408,6 +13491,7 @@ namespace InWorldz.Phlox.Engine
                     case ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT:
                     case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:
+                    case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
                         ret.Add(GetAgentTotals(av, param));
                         break;
                     case ScriptBaseClass.OBJECT_SCRIPT_TIME:
@@ -13541,6 +13625,7 @@ namespace InWorldz.Phlox.Engine
                             case ScriptBaseClass.OBJECT_RUNNING_SCRIPT_COUNT:
                             case ScriptBaseClass.OBJECT_TOTAL_SCRIPT_COUNT:
                             case ScriptBaseClass.OBJECT_SCRIPT_MEMORY:
+                            case ScriptBaseClass.IW_OBJECT_SCRIPT_MEMORY_USED:
                                 ret.Add(GetObjectScriptTotal(part.ParentGroup, param));
                                 break;
                             case ScriptBaseClass.OBJECT_SCRIPT_TIME:
@@ -14556,6 +14641,10 @@ namespace InWorldz.Phlox.Engine
             {
                 return new LSL_List(node.AsString());
             }
+            else if (node.Type == OSDType.Unknown)
+            {
+                return new LSL_List(ScriptBaseClass.JSON_NULL);
+            }
             else if (node.Type == OSDType.Array)
             {
                 // JSON arrays are stored in LSL lists as strings
@@ -14613,6 +14702,13 @@ namespace InWorldz.Phlox.Engine
                     return "\""+node.AsString()+"\"";
                 else
                     return node.AsString();
+            }
+            else if (node.Type == OSDType.Unknown)
+            {
+                if (nested)
+                    return "null";
+                else
+                    return ScriptBaseClass.JSON_NULL;
             }
             else if (node.Type == OSDType.Array)
             {

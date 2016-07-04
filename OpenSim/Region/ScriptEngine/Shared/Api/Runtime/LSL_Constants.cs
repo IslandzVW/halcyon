@@ -544,6 +544,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int OBJECT_BODY_SHAPE_TYPE = 26;
         public const int OBJECT_LAST_OWNER_ID = 27;
         public const int OBJECT_CLICK_ACTION = 28;
+        public const int IW_OBJECT_SCRIPT_MEMORY_USED = 10001;
 
         // Values for llGetObjectDetails(OBJECT_PATHFINDING_TYPE) above
         public const int OPT_OTHER = -1;            // Attachments, Linden trees & grass
@@ -772,5 +773,15 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int BOT_EMAIL = 2;
         public const int BOT_IMAGE_UUID = 3;
         public const int BOT_PROFILE_URL = 4;
+
+        // Return codes for iwDeliverInventory and iwDeliverInventoryList
+        public const int IW_DELIVER_OK = 0;
+        public const int IW_DELIVER_BADKEY = 1;
+        public const int IW_DELIVER_MUTED = 2;
+        public const int IW_DELIVER_ITEM = 3;
+        public const int IW_DELIVER_PRIM = 4;
+        public const int IW_DELIVER_USER = 5;
+        public const int IW_DELIVER_PERM = 6;
+        public const int IW_DELIVER_NONE = 7;
     }
 }
