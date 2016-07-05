@@ -260,3 +260,23 @@ paths:
           description: Reponse from handler.
           schema:
             $ref: "#/definitions/MethodResponseType"
+
+### Methods common to all Halcyon related servers
+# * session.login_with_password(string username, string password)
+# * session.logout(string sessionID)
+# * Console.Command(string sessionID, string command)
+### Region methods
+# * Region.SendAlert(string sessionID, string regionName, string message)
+# * Region.Restart(string sessionID, string regionUUID) - restarts in 30 seconds.
+# * Region.Shutdown(string sessionid, string regionUUID, int delayInSeconds)
+# * Region.Backup(string sessionid, string regionName, string fileName, boolean storeAssets)
+# * Region.Restore(string sessionid, string regionName, string fileName, boolean allowUserReassignment, boolean skipErrorGroups)
+# * Region.SaveOAR(string sessionid, string regionName, string fileName, boolean storeAssets)
+# * Region.LoadOAR(string sessionid, string regionName, string fileName, boolean allowUserReassignment, boolean skipErrorGroups)
+# * Region.ChangeParcelFlags(string sessionid, string regionName, string enable["","enable"], int mask)
+### Grid server methods
+# * GridService.Shutdown(string sessionid, int delayInSeconds)
+### Messaging server methods
+# * MessagingService.Shutdown(string sessionid, int delayInSeconds)
+### User server methods
+# * UserService.Shutdown(string sessionid, int delayInSeconds)
