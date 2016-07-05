@@ -1,0 +1,175 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Halcyon Remote Admin",
+		"_postman_id": "4ca94b62-98c2-60e4-ecfd-0d8628b376e7",
+		"description": "Remote console access is only enabled if in the Halcyon.ini [Startup]::console is \"rest\" and either [Startup]::gui is false or [Startup]::background is true.\n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Grid Info",
+			"request": {
+				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/get_grid_info",
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "XMLRPC Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": "var jsonObject = {};\n\ntry {\n    jsonObject = xml2Json(responseBody);\n    \n    if (jsonObject.hasOwnProperty(\"methodResponse\") && jsonObject.methodResponse.hasOwnProperty(\"params\")) {\n        postman.setEnvironmentVariable(\"rpc_login_key\", jsonObject.methodResponse.params.param.value.struct.member[0].value.string);\n    }\n}\ncatch(e) {\n    tests[\"parserr: \" + JSON.stringify(e)] = false;\n    tests[\"data: \" + JSON.stringify(jsonObject)] = false;\n}\n\ntests[\"rpc_login_key: \" + environment.rpc_login_key] = environment.rpc_login_key !== null && environment.rpc_login_key.length > 0;"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": "postman.clearEnvironmentVariable(\"rpc_login_key\");"
+					}
+				}
+			],
+			"request": {
+				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/xml",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_password</methodName>\n    <params>\n        <param>\n            <value><string>user</string></value>\n        </param>\n        <param>\n            <value><string>pass</string></value>\n        </param>\n    </params>\n</methodCall>"
+				},
+				"description": "XMLRPC access point for remote administration.\n"
+			},
+			"response": [
+				{
+					"name": "ExampleLogin",
+					"originalRequest": {
+						"url": "http://localhost:9991/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/xml",
+								"enabled": true,
+								"description": "The mime type of this content"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_password</methodName>\n    <params>\n        <param>\n            <value><string>user</string></value>\n        </param>\n        <param>\n            <value><string>pass</string></value>\n        </param>\n    </params>\n</methodCall>"
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "xml",
+					"_postman_previewtype": "html",
+					"header": [
+						{
+							"name": "Content-Encoding",
+							"key": "Content-Encoding",
+							"value": "gzip",
+							"description": "The type of encoding used on the data."
+						},
+						{
+							"name": "Content-Length",
+							"key": "Content-Length",
+							"value": "196",
+							"description": "The length of the response body in octets (8-bit bytes)"
+						},
+						{
+							"name": "Content-Type",
+							"key": "Content-Type",
+							"value": "text/xml; charset=utf-8",
+							"description": "The mime type of this content"
+						},
+						{
+							"name": "Date",
+							"key": "Date",
+							"value": "Tue, 05 Jul 2016 05:41:19 GMT",
+							"description": "The date and time that the message was sent"
+						},
+						{
+							"name": "Keep-Alive",
+							"key": "Keep-Alive",
+							"value": "timeout=15,max=100",
+							"description": "Custom header"
+						},
+						{
+							"name": "Server",
+							"key": "Server",
+							"value": "Mono-HTTPAPI/1.0",
+							"description": "A name for the server"
+						}
+					],
+					"cookie": [],
+					"responseTime": 36,
+					"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?><methodResponse><params><param><value><struct><member><name>Value</name><value><string>ef4b81ff-0838-4979-b286-a2f8084c4ff9</string></value></member><member><name>Status</name><value><string>Success</string></value></member></struct></value></param></params></methodResponse>"
+				}
+			]
+		},
+		{
+			"name": "XMLRPC Logout",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": "postman.clearEnvironmentVariable(\"rpc_login_key\");"
+					}
+				}
+			],
+			"request": {
+				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/xml",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.logout</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n    </params>\n</methodCall>"
+				},
+				"description": "XMLRPC access point for remote administration.\n"
+			},
+			"response": []
+		},
+		{
+			"name": "XMLRPC Arbitrary Command",
+			"request": {
+				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/xml",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Console.Command</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param>\n            <value><string>alert general This is a ping from remote!</string></value>\n        </param>\n    </params>\n</methodCall>"
+				},
+				"description": "XMLRPC access point for remote administration.\n"
+			},
+			"response": []
+		}
+	]
+}
