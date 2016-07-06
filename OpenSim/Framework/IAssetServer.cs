@@ -39,7 +39,7 @@ namespace OpenSim.Framework
         public ulong nGet;
         public ulong nGetInit;
         public ulong nGetHit;
-        public ulong nGetComplete;
+        public ulong nGetFetches;
         public ulong nGetNotFound;
         // Writes/Stores
         public ulong nPut;
@@ -54,8 +54,6 @@ namespace OpenSim.Framework
         // Update stats (ignored by CacheAssetIfAppropriate)
         public ulong nBigAsset;  // 
         public ulong nBigStream;
-        public ulong nDupUpdate;
-
 
         public float[] allGets;
         public float[] allPuts;

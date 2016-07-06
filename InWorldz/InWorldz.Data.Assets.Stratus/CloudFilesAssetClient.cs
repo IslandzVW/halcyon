@@ -268,7 +268,7 @@ namespace InWorldz.Data.Assets.Stratus
         public Dictionary<string, string> RequestAssetMetadataSync(OpenMetaverse.UUID assetID)
         {
             ManualResetEventSlim syncEvent = new ManualResetEventSlim();
-            Dictionary<string,string> meta = null;
+            Dictionary<string, string> meta = null;
             Exception thrown = null;
 
             _threadPool.QueueWorkItem(() =>
@@ -341,7 +341,7 @@ namespace InWorldz.Data.Assets.Stratus
         private uint statGet = 0;
         private uint statGetInit = 0;
         private uint statGetHit = 0;
-        private uint statGetComplete = 0;
+        private uint statGetFetches = 0;
         private uint statGetNotFound = 0;
         // Writes/Stores
         private uint statPut = 0;
@@ -356,7 +356,6 @@ namespace InWorldz.Data.Assets.Stratus
         // Cache updates (ignored by CacheAssetIfAppropriate)
         private uint statBigAsset = 0;  // 
         private uint statBigStream = 0;
-        private uint statDupUpdate = 0;
 
         private FixedSizeMRU<float> statGets = new FixedSizeMRU<float>(1000);
         private FixedSizeMRU<float> statPuts = new FixedSizeMRU<float>(1000);
@@ -399,7 +398,7 @@ namespace InWorldz.Data.Assets.Stratus
             else
             {
                 StratusAsset diskAsset = null;
-                if (! Config.Settings.Instance.DisableWritebackCache) diskAsset = _diskWriteBack.GetAsset(assetID.Guid);
+                if (!Config.Settings.Instance.DisableWritebackCache) diskAsset = _diskWriteBack.GetAsset(assetID.Guid);
 
                 if (diskAsset != null)
                 {
@@ -428,7 +427,7 @@ namespace InWorldz.Data.Assets.Stratus
 
                             using (System.IO.MemoryStream stream = worker.GetAsset(assetID))
                             {
-                                statGetComplete++;
+                                statGetFetches++;
                                 stream.Position = 0;
                                 rawAsset = DeserializeAssetFromStream(assetID, stream);
 
@@ -477,7 +476,7 @@ namespace InWorldz.Data.Assets.Stratus
         private bool CacheAssetIfAppropriate(OpenMetaverse.UUID assetId, System.IO.MemoryStream stream, StratusAsset asset)
         {
             if (!Config.Settings.Instance.CFUseCache) return false;
-            if (stream.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE)
+            if ((stream != null) && (stream.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE))
             {
                 statBigStream++;
                 return false;
@@ -490,26 +489,21 @@ namespace InWorldz.Data.Assets.Stratus
 
             lock (_assetCache)
             {
-                if (!_assetCache.HasAsset(assetId))
+                //we do not yet have this asset. we need to make a determination if caching the stream
+                //or caching the asset would be more beneficial
+                if ((stream==null) || (stream.Length > Config.Constants.MAX_STREAM_CACHE_SIZE))
                 {
-                    //we do not yet have this asset. we need to make a determination if caching the stream
-                    //or caching the asset would be more beneficial
-                    if (stream.Length > Config.Constants.MAX_STREAM_CACHE_SIZE)
-                    {
-                        //asset is too big for caching the stream to have any theoretical benefit.
-                        //instead we cache the asset itself
-                        _assetCache.CacheAssetData(assetId, asset);
-                    }
-                    else
-                    {
-                        //caching the stream should make for faster retrival and collection
-                        _assetCache.CacheAssetData(assetId, stream);
-                    }
-                    return true;    // now cached, in one form or the other
+                    //asset is too big for caching the stream to have any theoretical benefit.
+                    //instead we cache the asset itself
+                    _assetCache.CacheAssetData(assetId, asset);
                 }
+                else
+                {
+                    //caching the stream should make for faster retrival and collection
+                    _assetCache.CacheAssetData(assetId, stream);
+                }
+                return true;    // now cached, in one form or the other
             }
-            statDupUpdate++;
-            return false;
         }
 
         private Dictionary<string, string> GetAssetMetadata(OpenMetaverse.UUID assetId, CloudFilesAssetWorker worker)
@@ -560,12 +554,20 @@ namespace InWorldz.Data.Assets.Stratus
                         throw new System.Net.WebException("Timeout for unit testing", System.Net.WebExceptionStatus.Timeout);
                     }
 
+                    //attempt to cache the full (wire) asset in case the StoreAsset call takes a while or throws (or both)
+                    bool isCached = false;
+                    if (this.CacheAssetIfAppropriate(asset.FullID, null, wireAsset))
+                    {
+                        statPutCached++;
+                        isCached = true;
+                    }
                     using (assetStream = worker.StoreAsset(wireAsset))
                     {
                         //cache the stored asset to eliminate roudtripping when
                         //someone performs an upload
-                        if (this.CacheAssetIfAppropriate(asset.FullID, assetStream, wireAsset))
-                            statPutCached++;
+                        if (!isCached)  // full asset didn't fit, try to cache the stream
+                            if (this.CacheAssetIfAppropriate(asset.FullID, assetStream, wireAsset))
+                                statPutCached++;
                     }
                 }
                 catch (AssetAlreadyExistsException)
@@ -698,7 +700,7 @@ namespace InWorldz.Data.Assets.Stratus
             result.nGet = statGet;
             result.nGetInit = statGetInit;
             result.nGetHit = statGetHit;
-            result.nGetComplete = statGetComplete;
+            result.nGetFetches = statGetFetches;
             result.nGetNotFound = statGetNotFound;
             // Writes/Stores
             result.nPut = statPut;
@@ -714,7 +716,6 @@ namespace InWorldz.Data.Assets.Stratus
             // Update stats (ignored by CacheAssetIfAppropriate)
             result.nBigAsset = statBigAsset;
             result.nBigStream = statBigStream;
-            result.nDupUpdate = statDupUpdate;
 
             result.allGets = statGets.ToArray();
             result.allPuts = statPuts.ToArray();
