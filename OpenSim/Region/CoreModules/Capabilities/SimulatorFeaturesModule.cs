@@ -200,6 +200,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
         }
 
         public bool MeshEnabled { get { return m_MeshEnabled; } }
+        public bool PhysicsMaterialsEnabled { get { return m_PhysicsMaterialsEnabled; } }
 
         public void AddFeature(string name, OSD value)
         {
