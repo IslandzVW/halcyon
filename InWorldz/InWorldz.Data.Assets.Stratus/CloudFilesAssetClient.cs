@@ -346,16 +346,20 @@ namespace InWorldz.Data.Assets.Stratus
         // Writes/Stores
         private uint statPut = 0;
         private uint statPutInit = 0;
-        private uint statPutHit = 0;
+        private uint statPutCached = 0;
         private uint statPutExists = 0;
         private uint statPutTO = 0;     // timeout
         private uint statPutNTO = 0;    // .NET conn timeout
         private uint statPutExceptWeb = 0;
         private uint statPutExceptIO = 0;
         private uint statPutExcept = 0; // other exceptions
+        // Cache updates (ignored by CacheAssetIfAppropriate)
+        private uint statBigAsset = 0;  // 
+        private uint statBigStream = 0;
+        private uint statDupUpdate = 0;
 
-        private FixedSizeMRU<float> statGets = new FixedSizeMRU<float>(100);
-        private FixedSizeMRU<float> statPuts = new FixedSizeMRU<float>(100);
+        private FixedSizeMRU<float> statGets = new FixedSizeMRU<float>(1000);
+        private FixedSizeMRU<float> statPuts = new FixedSizeMRU<float>(1000);
 
         private AssetBase GetAssetInternal(OpenMetaverse.UUID assetID)
         {
@@ -449,7 +453,7 @@ namespace InWorldz.Data.Assets.Stratus
                     });
                 }
             }
-            
+
             //nothing?
             if (rawAsset == null) return null;
 
@@ -469,11 +473,20 @@ namespace InWorldz.Data.Assets.Stratus
             return rawAsset;
         }
 
+        // Returns true if it added it to the cache
         private bool CacheAssetIfAppropriate(OpenMetaverse.UUID assetId, System.IO.MemoryStream stream, StratusAsset asset)
         {
             if (!Config.Settings.Instance.CFUseCache) return false;
-            if (stream.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE) return false;
-            if (asset.Data.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE) return false;
+            if (stream.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE)
+            {
+                statBigStream++;
+                return false;
+            }
+            if (asset.Data.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE)
+            {
+                statBigAsset++;
+                return false;
+            }
 
             lock (_assetCache)
             {
@@ -495,6 +508,7 @@ namespace InWorldz.Data.Assets.Stratus
                     return true;    // now cached, in one form or the other
                 }
             }
+            statDupUpdate++;
             return false;
         }
 
@@ -551,7 +565,7 @@ namespace InWorldz.Data.Assets.Stratus
                         //cache the stored asset to eliminate roudtripping when
                         //someone performs an upload
                         if (this.CacheAssetIfAppropriate(asset.FullID, assetStream, wireAsset))
-                            statPutHit++;
+                            statPutCached++;
                     }
                 }
                 catch (AssetAlreadyExistsException)
@@ -689,13 +703,18 @@ namespace InWorldz.Data.Assets.Stratus
             // Writes/Stores
             result.nPut = statPut;
             result.nPutInit = statPutInit;
-            result.nPutHit = statPutHit;
+            result.nPutCached = statPutCached;
             result.nPutExists = statPutExists;
             result.nPutTO = statPutTO;     // timeout
             result.nPutNTO = statPutNTO;    // .NET conn timeout
             result.nPutExceptWeb = statPutExceptWeb;
             result.nPutExceptIO = statPutExceptIO;
             result.nPutExcept = statPutExcept; // other exceptions
+
+            // Update stats (ignored by CacheAssetIfAppropriate)
+            result.nBigAsset = statBigAsset;
+            result.nBigStream = statBigStream;
+            result.nDupUpdate = statDupUpdate;
 
             result.allGets = statGets.ToArray();
             result.allPuts = statPuts.ToArray();

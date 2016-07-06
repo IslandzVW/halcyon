@@ -44,13 +44,18 @@ namespace OpenSim.Framework
         // Writes/Stores
         public ulong nPut;
         public ulong nPutInit;
-        public ulong nPutHit;
+        public ulong nPutCached;
         public ulong nPutExists;
         public ulong nPutTO;     // timeout
         public ulong nPutNTO;    // .NET conn timeout
         public ulong nPutExceptWeb;
         public ulong nPutExceptIO;
         public ulong nPutExcept; // other exceptions
+        // Update stats (ignored by CacheAssetIfAppropriate)
+        public ulong nBigAsset;  // 
+        public ulong nBigStream;
+        public ulong nDupUpdate;
+
 
         public float[] allGets;
         public float[] allPuts;
