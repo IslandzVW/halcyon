@@ -39,7 +39,7 @@ namespace OpenSim.Framework
         public ulong nGet;
         public ulong nGetInit;
         public ulong nGetHit;
-        public ulong nGetComplete;
+        public ulong nGetFetches;
         public ulong nGetNotFound;
         // Writes/Stores
         public ulong nPut;

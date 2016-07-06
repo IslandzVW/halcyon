@@ -149,19 +149,18 @@ namespace OpenSim.Framework.Communications.Cache
         {
             AssetStats stats = m_assetServer.GetStats();
             float RHits = (stats.nGet > 0) ? ((float)stats.nGetHit / (float)stats.nGet) : 1.0f;
-            m_log.InfoFormat("[ASSET_STATS]: reads={0} complete={1}, hits={2} ({3}%), {4}",
-                stats.nGet, stats.nGetComplete, stats.nGetHit, (int)(RHits*100),
+            m_log.InfoFormat("[ASSET_STATS]: reads={0} hits/fetched/missing={1}/{2}/{3} ({4}%), {5}",
+                stats.nGet, stats.nGetHit, stats.nGetFetches, stats.nGetNotFound, (int)(RHits*100),
                 GetMinAvgMax(stats.allGets, "min/avg/max={0}/{1}/{2}")
                 );
             float WHits = (stats.nPut > 0) ? ((float)stats.nPutCached / (float)stats.nPut) : 1.0f;
-            m_log.InfoFormat("[ASSET_STATS]: writes={0}, cached={1} ({2}%), {3}",
+            m_log.InfoFormat("[ASSET_STATS]: writes={0}, cached={1} ({2}%), uncached size/stream/dupe={3}/{4}/{5} {6}",
                 stats.nPut, stats.nPutCached, (int)(WHits*100),
+                stats.nBigAsset, stats.nBigStream, stats.nDupUpdate,
                 GetMinAvgMax(stats.allPuts, "min/avg/max={0}/{1}/{2}")
                 );
-            m_log.InfoFormat("[ASSET_STATS]: assetSize={0} streamSize={1}, dupeUpdate={2}",
-                stats.nBigAsset, stats.nBigStream, stats.nDupUpdate);
-            m_log.InfoFormat("[ASSET_STATS]: Total={0}, readErr init/missing={1}/{2}, writeErr exist/TO/NTO/ex/web/io={3}/{4}/{5}/{6}/{7}/{8}", 
-                stats.nTotal, stats.nGetInit, stats.nGetNotFound, 
+            m_log.InfoFormat("[ASSET_STATS]: Total={0}, readErr init={1}, writeErr exist/TO/NTO/ex/web/io={2}/{3}/{4}/{5}/{6}/{7}", 
+                stats.nTotal, stats.nGetInit,
                 stats.nPutExists, stats.nPutTO, stats.nPutNTO, stats.nPutExcept, stats.nPutExceptWeb, stats.nPutExceptIO);
         }
 

@@ -341,7 +341,7 @@ namespace InWorldz.Data.Assets.Stratus
         private uint statGet = 0;
         private uint statGetInit = 0;
         private uint statGetHit = 0;
-        private uint statGetComplete = 0;
+        private uint statGetFetches = 0;
         private uint statGetNotFound = 0;
         // Writes/Stores
         private uint statPut = 0;
@@ -427,7 +427,7 @@ namespace InWorldz.Data.Assets.Stratus
 
                             using (System.IO.MemoryStream stream = worker.GetAsset(assetID))
                             {
-                                statGetComplete++;
+                                statGetFetches++;
                                 stream.Position = 0;
                                 rawAsset = DeserializeAssetFromStream(assetID, stream);
 
@@ -697,7 +697,7 @@ namespace InWorldz.Data.Assets.Stratus
             result.nGet = statGet;
             result.nGetInit = statGetInit;
             result.nGetHit = statGetHit;
-            result.nGetComplete = statGetComplete;
+            result.nGetFetches = statGetFetches;
             result.nGetNotFound = statGetNotFound;
             // Writes/Stores
             result.nPut = statPut;
