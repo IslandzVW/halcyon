@@ -187,7 +187,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 opensimFeatures["shout-range"] = m_shoutdistance;
                 m_features["OpenSimExtras"] = opensimFeatures;
 
-                m_log.InfoFormat("[SimulatorFeatures]: mesh={0} exp={1} map='{2}' search='{3}'", m_MeshEnabled, m_ExportSupported, m_MapImageServerURL, m_SearchURL);
+                m_log.InfoFormat("[SimulatorFeatures]: mesh={0} physMat={1} exp={2} map='{3}' search='{4}'", m_MeshEnabled, m_PhysicsMaterialsEnabled, m_ExportSupported, m_MapImageServerURL, m_SearchURL);
             }
         }
 
