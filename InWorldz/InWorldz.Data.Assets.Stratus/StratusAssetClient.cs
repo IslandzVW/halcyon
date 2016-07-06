@@ -312,10 +312,10 @@ namespace InWorldz.Data.Assets.Stratus
             }
         }
 
-        public AssetStats GetStats()
+        public AssetStats GetStats(bool resetStats)
         {
             // This only supports CF stats (otherwise we could return _whipAssetClient.GetStats() instead)
-            return _cfAssetClient.GetStats();
+            return _cfAssetClient.GetStats(resetStats);
         }
     }
 }

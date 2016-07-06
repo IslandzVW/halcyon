@@ -364,7 +364,7 @@ namespace InWorldz.Whip.Client
             this.StoreAsset(asset);
         }
 
-        public AssetStats GetStats()
+        public AssetStats GetStats(bool resetStats)
         {
             return new AssetStats("WHIP");
         }

@@ -687,8 +687,17 @@ namespace InWorldz.Data.Assets.Stratus
             if (thrown != null) throw new AssetServerException(thrown.Message, thrown);
         }
 
-        public AssetStats GetStats()
+        public AssetStats GetStats(bool resetStats)
         {
+            if (resetStats)
+            {
+                statTotal = statGet = statGetInit = statGetHit = statGetFetches = statGetNotFound = 0;
+                statPut = statPutInit = statPutCached = statPutExists = statPutTO = statPutNTO = 0;
+                statPutExceptWeb = statPutExceptIO = statPutExcept = statBigAsset = statBigStream = statDupUpdate = 0;
+                statGets.Clear();
+                statPuts.Clear();
+            }
+
             AssetStats result = new AssetStats("CF");
 
             // Asset FetchStore counters

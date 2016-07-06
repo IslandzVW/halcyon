@@ -145,9 +145,12 @@ namespace OpenSim.Framework.Communications.Cache
             return String.Format(format, data.Min(), data.Average(), data.Max());
         }
 
-        public void ShowState()
+        public void ShowState(bool resetStats)
         {
-            AssetStats stats = m_assetServer.GetStats();
+            AssetStats stats = m_assetServer.GetStats(resetStats);
+            if (resetStats)
+                return;
+
             float RHits = (stats.nGet > 0) ? ((float)stats.nGetHit / (float)stats.nGet) : 1.0f;
             m_log.InfoFormat("[ASSET_STATS]: reads={0} hits/fetched/missing={1}/{2}/{3} ({4}%), {5}",
                 stats.nGet, stats.nGetHit, stats.nGetFetches, stats.nGetNotFound, (int)(RHits*100),

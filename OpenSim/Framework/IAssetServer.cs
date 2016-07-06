@@ -102,7 +102,7 @@ namespace OpenSim.Framework
         void StoreAsset(AssetBase asset);
         void UpdateAsset(AssetBase asset);
 
-        AssetStats GetStats();
+        AssetStats GetStats(bool resetStats);
     }
 
     public class AssetClientPluginInitializer : PluginInitializerBase
