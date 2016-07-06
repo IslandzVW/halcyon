@@ -414,7 +414,6 @@ namespace InWorldz.Data.Assets.Stratus
                         {
                             try
                             {
-                                start = Util.GetLongTickCount();    // update this with a new start time
                                 //nothing on the local disk, request from CF
                                 worker = _asyncAssetWorkers.LeaseObject();
                             }
