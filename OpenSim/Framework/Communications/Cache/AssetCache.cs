@@ -154,14 +154,14 @@ namespace OpenSim.Framework.Communications.Cache
                 GetMinAvgMax(stats.allGets, "min/avg/max={0}/{1}/{2}")
                 );
             float WHits = (stats.nPut > 0) ? ((float)stats.nPutCached / (float)stats.nPut) : 1.0f;
-            m_log.InfoFormat("[ASSET_STATS]: writes={0}, cached={1} ({2}%), uncached size/stream/dupe={3}/{4}/{5} {6}",
+            m_log.InfoFormat("[ASSET_STATS]: writes={0}, cached={1} ({2}%), uncached exists/size/stream/dupe={3}/{4}/{5}/{6} {7}",
                 stats.nPut, stats.nPutCached, (int)(WHits*100),
-                stats.nBigAsset, stats.nBigStream, stats.nDupUpdate,
+                stats.nPutExists, stats.nBigAsset, stats.nBigStream, stats.nDupUpdate,
                 GetMinAvgMax(stats.allPuts, "min/avg/max={0}/{1}/{2}")
                 );
-            m_log.InfoFormat("[ASSET_STATS]: Total={0}, readErr init={1}, writeErr exist/TO/NTO/ex/web/io={2}/{3}/{4}/{5}/{6}/{7}", 
+            m_log.InfoFormat("[ASSET_STATS]: Total={0}, readErr init={1}, writeErr TO/NTO/ex/web/io={2}/{3}/{4}/{5}/{6}", 
                 stats.nTotal, stats.nGetInit,
-                stats.nPutExists, stats.nPutTO, stats.nPutNTO, stats.nPutExcept, stats.nPutExceptWeb, stats.nPutExceptIO);
+                stats.nPutTO, stats.nPutNTO, stats.nPutExcept, stats.nPutExceptWeb, stats.nPutExceptIO);
         }
 
         // Shortcut test to see if we can return null for the asset without fetching.
