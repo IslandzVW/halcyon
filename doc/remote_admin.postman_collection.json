@@ -35,7 +35,7 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/xml",
+								"value": "text/xml",
 								"description": ""
 							}
 						],
@@ -129,7 +129,7 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/xml",
+								"value": "text/xml",
 								"description": ""
 							}
 						],
@@ -149,7 +149,7 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/xml",
+								"value": "text/xml",
 								"description": ""
 							}
 						],
@@ -189,7 +189,7 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/xml",
+								"value": "text/xml",
 								"description": ""
 							}
 						],
@@ -215,7 +215,7 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/xml",
+								"value": "text/xml",
 								"description": ""
 							}
 						],
@@ -232,7 +232,168 @@
 		{
 			"name": "Region Server",
 			"description": "",
-			"item": []
+			"item": [
+				{
+					"name": "XMLRPC Region Server Restart (specified region, default timeout)",
+					"request": {
+						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.Restart</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param><!-- UUID of region on server. -->\n            <value><string>1337886a-bdd6-4b2e-bede-d3d3bb1184a9</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Region Server Shutdown (specified region, 10 sec)",
+					"request": {
+						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.Shutdown</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param><!-- UUID of region on server. -->\n            <value><string>1337886a-bdd6-4b2e-bede-d3d3bb1184a9</string></value>\n        </param>\n        <param><!-- Time to wait until shut down, alerting users every minute. -->\n            <value><int>10</int><!-- seconds --></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Region Server Send Alert",
+					"request": {
+						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.SendAlert</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param><!-- Region name on server. -->\n            <value><string>CronsTest</string></value>\n        </param>\n        <param><!-- Message to send to all users. -->\n            <value><string>This is a test of the region alert system.  This was only a test.</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Region Server Backup To File",
+					"request": {
+						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.Backup</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param><!-- Region name on server. -->\n            <value><string>CronsTest</string></value>\n        </param>\n        <param><!-- File name to write backup to. -->\n            <value><string>backup_file_name</string></value>\n        </param>\n        <param><!-- Store assets in backup? -->\n            <value><boolean>1</boolean></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Region Server Restore From File",
+					"request": {
+						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.Restore</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param><!-- Region name on server -->\n            <value><string>CronsTest</string></value>\n        </param>\n        <param><!-- File name to read backup from. -->\n            <value><string>backup_file_name</string></value>\n        </param>\n        <param><!-- Allow user reassignment? -->\n            <value><boolean>0</boolean></value>\n        </param>\n        <param><!-- Skip error groups? -->\n            <value><boolean>0</boolean></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Region Server Save OAR File",
+					"request": {
+						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.SaveOAR</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param><!-- Region name on server. -->\n            <value><string>CronsTest</string></value>\n        </param>\n        <param><!-- File name to write OAR file to. -->\n            <value><string>backup_file_name.oar</string></value>\n        </param>\n        <param><!-- Store assets in backup? -->\n            <value><boolean>1</boolean></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Region Server Load OAR File",
+					"request": {
+						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.LoadOAR</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param><!-- Region name on server -->\n            <value><string>CronsTest</string></value>\n        </param>\n        <param><!-- File name to read OAR from. -->\n            <value><string>backup_file_name.oar</string></value>\n        </param>\n        <param><!-- Allow user reassignment? -->\n            <value><boolean>0</boolean></value>\n        </param>\n        <param><!-- Skip error groups? -->\n            <value><boolean>0</boolean></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Region Server Change Parcel Flags",
+					"request": {
+						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.ChangeParcelFlags</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param><!-- Region name on server -->\n            <value><string>CronsTest</string></value>\n        </param>\n        <param><!-- Designated flags are to be set active or cleared?  Only valid values: \"enable\" or nothing at all. -->\n            <value><string></string></value>\n        </param>\n        <param><!-- Bit mask encoded as a signed 32 bit integer. -->\n            <value><int>0</int></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
 		},
 		{
 			"name": "User Server",
@@ -246,7 +407,7 @@
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/xml",
+								"value": "text/xml",
 								"description": ""
 							}
 						],
