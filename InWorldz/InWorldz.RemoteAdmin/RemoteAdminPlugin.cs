@@ -114,31 +114,44 @@ namespace InWorldz.RemoteAdmin
 
         #region RemoteAdmin Region Handlers
 
+        private ulong countdownTimeNow;
+        private ulong countdownTimeEnd;
+        private Scene rebootedScene;
+        private Timer shutdownCounter;
         private object RegionRestartHandler(IList args, IPEndPoint remoteClient)
         {
             m_admin.CheckSessionValid(new UUID((string)args[0]));
 
-            UUID regionID = new UUID((string)args[1]);
-            Scene rebootedScene;
+            if (countdownTimeEnd > 0)
+            {
+                throw new Exception("remote shutdown already in progress");
+            }
+
+            var regionID = new UUID(Convert.ToString(args[1]));
 
             if (!m_app.SceneManager.TryGetScene(regionID, out rebootedScene))
                 throw new Exception("region not found");
 
+            countdownTimeEnd = 1; // Mark a shutdown in progress.
             rebootedScene.Restart(30);
-            return (true);
+            return true;
         }
 
         public object RegionShutdownHandler(IList args, IPEndPoint remoteClient)
         {
             m_admin.CheckSessionValid(new UUID((string)args[0]));
 
+            if (countdownTimeEnd > 0)
+            {
+                throw new Exception("remote shutdown already in progress");
+            }
+
             try
             {
-                Scene rebootedScene;
                 string message;
 
-                UUID regionID = new UUID(Convert.ToString(args[1]));
-                int delay = Convert.ToInt32(args[2]);
+                var regionID = new UUID(Convert.ToString(args[1]));
+                int delay = Math.Max(0, Convert.ToInt32(args[2]));
 
                 if (!m_app.SceneManager.TryGetScene(regionID, out rebootedScene))
                     throw new Exception("Region not found");
@@ -151,41 +164,13 @@ namespace InWorldz.RemoteAdmin
                 if (dialogModule != null)
                     dialogModule.SendGeneralAlert(message);
 
-                ulong tcNow = Util.GetLongTickCount();
-                ulong endTime = tcNow + (ulong)(delay * 1000);
-                ulong nextReport = tcNow + (ulong)(60 * 1000);
-
-                // Perform shutdown
-                if (delay > 0)
-                {
-                    while (true)
-                    {
-                        System.Threading.Thread.Sleep(1000);
-
-                        tcNow = Util.GetLongTickCount();
-                        if (tcNow >= endTime)
-                        {
-                            break;
-                        }
-
-                        if (tcNow >= nextReport)
-                        {
-                            delay -= 60;
-
-                            if (delay >= 0)
-                            {
-                                GenerateShutdownMessage(delay);
-                                nextReport = tcNow + (ulong)(60 * 1000);
-                            }
-                        }
-                    }
-                }
-
-                // Do this on a new thread so the actual shutdown call returns successfully.
-                Task.Factory.StartNew(() => 
-                {
-                   m_app.Shutdown();
-                });
+                // Do the countdown in a timer so the actual shutdown call returns successfully and immediately.
+                countdownTimeNow = Util.GetLongTickCount();
+                countdownTimeEnd = countdownTimeNow + (ulong)delay * 1000UL;
+                shutdownCounter = new Timer(800); // Fine enough resolution to always hit a 1 second window.
+                shutdownCounter.AutoReset = true;
+                shutdownCounter.Elapsed += OnTimedShutdown;
+                shutdownCounter.Start();
             }
             catch (Exception e)
             {
@@ -196,6 +181,30 @@ namespace InWorldz.RemoteAdmin
 
             m_log.Info("[RADMIN]: Shutdown Administrator Request complete");
             return true;
+        }
+
+        private void OnTimedShutdown(Object source, ElapsedEventArgs e)
+        {
+            countdownTimeNow = Util.GetLongTickCount();
+
+            if (countdownTimeNow >= countdownTimeEnd)
+            {
+                shutdownCounter.Stop();
+                m_app.Shutdown();
+                countdownTimeEnd = 0;
+                return;
+            }
+
+            ulong countdownRemaining = countdownTimeEnd - countdownTimeNow;
+            if (countdownRemaining % (60UL * 1000UL) < 1000UL) // Within a second of every minute from 0.
+            {
+                string message = GenerateShutdownMessage((int)(countdownRemaining / 1000UL));
+                m_log.DebugFormat("[RADMIN] Shutdown: {0}", message);
+
+                IDialogModule dialogModule = rebootedScene.RequestModuleInterface<IDialogModule>();
+                if (dialogModule != null)
+                    dialogModule.SendGeneralAlert(message);
+            }
         }
 
         private static string GenerateShutdownMessage(int delay)
