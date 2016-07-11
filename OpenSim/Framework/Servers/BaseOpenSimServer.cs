@@ -311,7 +311,8 @@ namespace OpenSim.Framework.Servers
         /// </summary>      
         public virtual void Shutdown()
         {
-            Shutdown(0);
+            // Use a status of 64 (0b01000000) to indicate that this "error" is an explicit shutdown and not a real error.
+            Shutdown(64);
         }
 
         /// <summary>
