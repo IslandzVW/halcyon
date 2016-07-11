@@ -41,7 +41,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_password</methodName>\n    <params>\n        <param>\n            <value><string>user</string></value>\n        </param>\n        <param>\n            <value><string>pass</string></value>\n        </param>\n    </params>\n</methodCall>"
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_password</methodName>\n    <params>\n        <param>\n            <value><string>{{USER}}</string></value>\n        </param>\n        <param>\n            <value><string>{{PASS}}</string></value>\n        </param>\n    </params>\n</methodCall>"
 						},
 						"description": "XMLRPC access point for remote administration.\n"
 					},
