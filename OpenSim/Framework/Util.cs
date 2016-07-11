@@ -615,6 +615,23 @@ namespace OpenSim.Framework
             return SHA1.ComputeHash(src);
         }
 
+        /// <summary>
+        /// Return an SHA256 hash of the given string
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static string SHA256Hash(string data)
+        {
+            byte[] hash = ComputeSHA256Hash(data);
+            return BitConverter.ToString(hash).Replace("-", String.Empty);
+        }
+
+        private static byte[] ComputeSHA256Hash(string src)
+        {
+            var SHA256 = new SHA256CryptoServiceProvider();
+            return SHA256.ComputeHash(Encoding.Default.GetBytes(src));
+        }
+
         public static int fast_distance2d(int x, int y)
         {
             x = Math.Abs(x);
