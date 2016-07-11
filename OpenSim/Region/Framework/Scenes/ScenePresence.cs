@@ -1880,12 +1880,11 @@ namespace OpenSim.Region.Framework.Scenes
                                 // Theoretically we might need a more complex PID approach here if other 
                                 // unknown forces are acting on the avatar and we need to adaptively respond
                                 // to such forces, but the following simple approach seems to works fine.
-                                Vector3 LocalVectorToTarget3D =
+                                Vector3 LocalVectorToTarget =
                                     (m_moveToPositionTarget - AbsolutePosition) // vector from cur. pos to target in global coords
                                     * Matrix4.CreateFromQuaternion(Quaternion.Inverse(bodyRotation)); // change to avatar coords
-                                Vector3 LocalVectorToTarget2D = new Vector3((float)(LocalVectorToTarget3D.X), (float)(LocalVectorToTarget3D.Y), (float)(LocalVectorToTarget3D.Z));
-                                LocalVectorToTarget2D.Normalize();
-                                agent_control_v3 += LocalVectorToTarget2D;
+                                LocalVectorToTarget.Normalize();
+                                agent_control_v3 += LocalVectorToTarget;
 
                                 // update avatar movement flags. the avatar coordinate system is as follows:
                                 //
@@ -1908,34 +1907,34 @@ namespace OpenSim.Region.Framework.Scenes
 
                                 // based on the above avatar coordinate system, classify the movement into 
                                 // one of left/right/back/forward.
-                                if (LocalVectorToTarget2D.Y > 0)//MoveLeft
+                                if (LocalVectorToTarget.Y > 0)//MoveLeft
                                 {
                                     m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_LEFT;
                                     update_movementflag = true;
                                 }
-                                else if (LocalVectorToTarget2D.Y < 0) //MoveRight
+                                else if (LocalVectorToTarget.Y < 0) //MoveRight
                                 {
                                     m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_RIGHT;
                                     update_movementflag = true;
                                 }
-                                if (LocalVectorToTarget2D.X < 0) //MoveBack
+                                if (LocalVectorToTarget.X < 0) //MoveBack
                                 {
                                     m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_BACK;
                                     update_movementflag = true;
                                 }
-                                else if (LocalVectorToTarget2D.X > 0) //Move Forward
+                                else if (LocalVectorToTarget.X > 0) //Move Forward
                                 {
                                     m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD;
                                     update_movementflag = true;
                                 }
-                                if (LocalVectorToTarget2D.Z > 0) //Up
+                                if (LocalVectorToTarget.Z > 0) //Up
                                 {
                                     // Don't set these flags for up - doing so will make the avatar
                                     // keep trying to jump even if walking along level ground.
                                     // m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_UP;
                                     update_movementflag = true;
                                 }
-                                else if (LocalVectorToTarget2D.Z < 0) //Down
+                                else if (LocalVectorToTarget.Z < 0) //Down
                                 {
                                     // Don't set these flags for down - doing so will make the avatar crouch.
                                     // m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_DOWN;
