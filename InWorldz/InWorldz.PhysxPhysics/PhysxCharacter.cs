@@ -811,7 +811,7 @@ namespace InWorldz.PhysxPhysics
             cforces.Z = 0;
 
             OpenMetaverse.Vector3 vCombined = ApplyAirBrakes(_vGravity + _vForces + cforces + this.VTargetWithRunAndRamp) * secondsSinceLastSync;
-            //m_log.DebugFormat("[CHAR]: vGrav: {0}, vForces: {1}, vTarget {2}", _vGravity, _vForces, this.VTargetWithRun);
+            //m_log.DebugFormat("[CHAR]: vGrav: {0}, vForces: {1}, cForces: {2}, vTarget {3}", _vGravity, _vForces, cforces, this.VTargetWithRunAndRamp);
 
             if (vCombined == OpenMetaverse.Vector3.Zero) 
             {
