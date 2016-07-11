@@ -1885,6 +1885,8 @@ namespace OpenSim.Region.Framework.Scenes
                                     * Matrix4.CreateFromQuaternion(Quaternion.Inverse(bodyRotation)); // change to avatar coords
                                 LocalVectorToTarget.Normalize();
                                 agent_control_v3 += LocalVectorToTarget;
+                                physActor.AddForce(LocalVectorToTarget, ForceType.LocalLinearImpulse);
+
 
                                 // update avatar movement flags. the avatar coordinate system is as follows:
                                 //
