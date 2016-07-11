@@ -90,7 +90,12 @@ namespace InWorldz.RemoteAdmin
         public void Initialize(OpenSimBase openSim)
         {
             m_app = openSim;
-            m_admin = new RemoteAdmin();
+
+            IConfig netConfig = openSim.ConfigSource.Source.Configs["Network"];
+            if (netConfig == null)
+                m_admin = new RemoteAdmin("", "");
+            else
+                m_admin = new RemoteAdmin(netConfig.GetString("RemoteAccessHash", String.Empty), netConfig.GetString("RemoteAccessSalt", String.Empty));
         }
 
         public void PostInitialize()
@@ -104,7 +109,7 @@ namespace InWorldz.RemoteAdmin
             m_admin.AddCommand("Region", "SaveOAR", SaveOARHandler);
             m_admin.AddCommand("Region", "ChangeParcelFlags", RegionChangeParcelFlagsHandler);
 
-            m_admin.AddHandler(MainServer.Instance);    
+            m_admin.AddHandler(MainServer.Instance);
         }
 
         public void Dispose()

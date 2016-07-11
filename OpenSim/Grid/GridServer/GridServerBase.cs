@@ -87,7 +87,7 @@ namespace OpenSim.Grid.GridServer
 
             m_httpServer.Start();
 
-            m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin();
+            m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin(m_config.RemoteAccessHash, m_config.RemoteAccessSalt);
             m_radmin.AddCommand("GridService", "Shutdown", GridServerShutdownHandler);
             m_radmin.AddHandler(m_httpServer);
 

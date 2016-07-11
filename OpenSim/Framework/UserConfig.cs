@@ -92,6 +92,22 @@ namespace OpenSim.Framework
 
         public bool EnableHGLogin = true;
 
+        private string m_remoteAccessHash = String.Empty;
+        public string RemoteAccessHash
+        {
+            get {
+                return m_remoteAccessHash;
+            }
+        }
+
+        private string m_remoteAccessSalt = String.Empty;
+        public string RemoteAccessSalt
+        {
+            get {
+                return m_remoteAccessSalt;
+            }
+        }
+
         public UserConfig()
         {
             // weird, but UserManagerBase needs this.
@@ -151,6 +167,11 @@ namespace OpenSim.Framework
 
             m_configMember.addConfigurationOption("default_loginLevel", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Minimum Level a user should have to login [0 default]", "0", false);
+
+            m_configMember.addConfigurationOption("remote_access_salt", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "The salt for the hash of the remote access code.", "", true);
+            m_configMember.addConfigurationOption("remote_access_hash", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "The salted SHA-256 hash of the remote access code. SHA256(rremote_access_salt + passcode)", "", true);
         }
 
         public bool handleIncomingConfiguration(string configuration_key, object configuration_result)
@@ -207,6 +228,12 @@ namespace OpenSim.Framework
                     break;
                 case "profile_server_uri":
                     ProfileServerURI = (string)configuration_result;
+                    break;
+                case "remote_access_salt":
+                    m_remoteAccessSalt = (string)configuration_result;
+                    break;
+                case "remote_access_hash":
+                    m_remoteAccessHash = (string)configuration_result;
                     break;
             }
 

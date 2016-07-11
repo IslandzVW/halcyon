@@ -176,6 +176,11 @@ namespace OpenSim.Framework
         }
 
 
+        public static string CreateSaltedPasscodeHash(string salt, string passcode)
+        {
+            return SHA256Hash(salt + passcode);
+        }
+
         /// <summary
         /// Authenticate a username/password pair against the user we are running under.
         /// </summary>
@@ -187,8 +192,7 @@ namespace OpenSim.Framework
         public static bool AuthenticateAsSystemUser(string username, string password)
         {
             #if __MonoCS__
-                // TODO: find a way to check the user info cross platform.  In the mean time better security by NOT allowing remote admin.
-                return false;
+                return false; // If a hashed passcode wasn't set up, then there's no other option.  Crossplatform checks of system users has no way to exist: not all systems even use passwords, some use more advanced tech.
             #else
                 // Is the username the same as the logged in user and do they have the password correct?
                 PrincipalContext pc = new PrincipalContext(ContextType.Machine);

@@ -62,6 +62,8 @@ namespace OpenSim.Framework.Console
         private long m_LineNumber;
         private Dictionary<UUID, ConsoleConnection> m_Connections;
         private string m_AllowedOrigin;
+        private string m_remoteAccessHash = ""; // Empty string never matches any hashed value so is quite a safe default hash!
+        private string m_remoteAccessSalt = "";
 
         public RemoteConsole(string defaultPrompt) : base(defaultPrompt)
         {
@@ -84,6 +86,8 @@ namespace OpenSim.Framework.Console
                 return;
 
             m_AllowedOrigin = netConfig.GetString("ConsoleAllowedOrigin", String.Empty);
+            m_remoteAccessSalt = netConfig.GetString("RemoteAccessSalt", String.Empty);
+            m_remoteAccessHash = netConfig.GetString("RemoteAccessHash", String.Empty);
         }
 
         public void SetServer(IHttpServer server)
@@ -240,6 +244,19 @@ namespace OpenSim.Framework.Console
             }
         }
 
+        private string CreateRemoteAccessHash(string passcode)
+        {
+            return Util.CreateSaltedPasscodeHash(m_remoteAccessSalt, passcode);
+        }
+
+        private bool CheckRemoteAccessCode(string username, string password)
+        {
+            StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+
+            // If a remote passcode was not set up then check with the system - however that only works on Windows under .NET.
+            return m_remoteAccessHash.Length > 0 ? 0 == comparer.Compare(CreateRemoteAccessHash(password), m_remoteAccessHash) : Util.AuthenticateAsSystemUser(username, password);
+        }
+
         private Hashtable HandleHttpStartSession(Hashtable request)
         {
             DoExpire();
@@ -255,7 +272,8 @@ namespace OpenSim.Framework.Console
             string password = post["PASS"].ToString();
             
             // Validate the username/password pair
-            if (Util.AuthenticateAsSystemUser(username, password) == false)
+
+            if (CheckRemoteAccessCode(username, password) == false)
                 return reply;
 
             ConsoleConnection c = new ConsoleConnection();

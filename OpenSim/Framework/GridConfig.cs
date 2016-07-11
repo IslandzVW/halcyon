@@ -46,6 +46,22 @@ namespace OpenSim.Framework
         public string UserRecvKey = String.Empty;
         public string UserSendKey = String.Empty;
 
+        private string m_remoteAccessHash = String.Empty;
+        public string RemoteAccessHash
+        {
+            get {
+                return m_remoteAccessHash;
+            }
+        }
+
+        private string m_remoteAccessSalt = String.Empty;
+        public string RemoteAccessSalt
+        {
+            get {
+                return m_remoteAccessSalt;
+            }
+        }
+
         public GridConfig(string description, string filename)
         {
             m_configMember =
@@ -88,13 +104,18 @@ namespace OpenSim.Framework
 
             m_configMember.addConfigurationOption("allow_forceful_banlines",
                                                 ConfigurationOption.ConfigurationTypes.TYPE_STRING,
-                                                "Allow Forceful Banlines", "TRUE", true);   
+                                                "Allow Forceful Banlines", "TRUE", true);
             
             m_configMember.addConfigurationOption("allow_region_registration", 
                                                 ConfigurationOption.ConfigurationTypes.TYPE_BOOLEAN,
                                                 "Allow regions to register immediately upon grid server startup? true/false", 
                                                 "True", 
-                                                false);            
+                                                false);
+
+            m_configMember.addConfigurationOption("remote_access_salt", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "The salt for the hash of the remote access code.", "", true);
+            m_configMember.addConfigurationOption("remote_access_hash", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "The salted SHA-256 hash of the remote access code. SHA256(remote_access_salt + passcode)", "", true);
         }
 
         public bool handleIncomingConfiguration(string configuration_key, object configuration_result)
@@ -139,7 +160,13 @@ namespace OpenSim.Framework
                     break;
                 case "allow_region_registration":
                     AllowRegionRegistration = (bool)configuration_result;
-                    break;                
+                    break;
+                case "remote_access_salt":
+                    m_remoteAccessSalt = (string)configuration_result;
+                    break;
+                case "remote_access_hash":
+                    m_remoteAccessHash = (string)configuration_result;
+                    break;
             }
 
             return true;

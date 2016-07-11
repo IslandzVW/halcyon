@@ -64,9 +64,12 @@ namespace InWorldz.RemoteAdmin
         private Dictionary<string, Dictionary<string, XmlMethodHandler>> m_commands = 
             new Dictionary<string, Dictionary<string, XmlMethodHandler>>();
 
+        private string m_remoteAccessHash = ""; // Empty string never matches any hashed value so is quite a safe default hash!
+        private string m_remoteAccessSalt = "";
+
         public delegate object XmlMethodHandler(IList args, IPEndPoint client);
 
-        public RemoteAdmin()
+        public RemoteAdmin(string access_hash, string access_salt)
         {
             AddCommand("session", "login_with_password", SessionLoginWithPassword);
             AddCommand("session", "logout", SessionLogout);
@@ -78,6 +81,9 @@ namespace InWorldz.RemoteAdmin
             sessionTimer = new Timer(60000); // 60 seconds
             sessionTimer.Elapsed += sessionTimer_Elapsed;
             sessionTimer.Enabled = true;
+
+            m_remoteAccessHash = access_hash;
+            m_remoteAccessSalt = access_salt;
         }
 
         /// <summary>
@@ -189,14 +195,27 @@ namespace InWorldz.RemoteAdmin
             }
         }
 
+        private string CreateRemoteAccessHash(string passcode)
+        {
+            return Util.CreateSaltedPasscodeHash(m_remoteAccessSalt, passcode);
+        }
+
+        private bool CheckRemoteAccessCode(string username, string password)
+        {
+            StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+
+            // If a remote passcode was not set up then check with the system - however that only works on Windows under .NET.
+            return m_remoteAccessHash.Length > 0 ? 0 == comparer.Compare(CreateRemoteAccessHash(password), m_remoteAccessHash) : Util.AuthenticateAsSystemUser(username, password);
+        }
+
         private object SessionLoginWithPassword(IList args, IPEndPoint remoteClient)
         {
             UUID sessionId;
             string username = (string)args[0];
             string password = (string)args[1];
 
-            // Is the username the same as the logged in user and do they have the password correct?
-            if ( Util.AuthenticateAsSystemUser(username, password))
+            // Does the user have the correct auth info?
+            if (CheckRemoteAccessCode(username, password))
             {
                 lock (m_activeSessions)
                 {

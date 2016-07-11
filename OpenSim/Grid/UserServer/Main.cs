@@ -249,7 +249,7 @@ namespace OpenSim.Grid.UserServer
             m_messagesService.RegisterHandlers(m_httpServer);
             m_gridInfoService.RegisterHandlers(m_httpServer);
 
-            m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin();
+            m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin(Cfg.RemoteAccessHash, Cfg.RemoteAccessSalt);
             m_radmin.AddCommand("UserService", "Shutdown", UserServerShutdownHandler);
             m_radmin.AddHandler(m_httpServer);
         }
