@@ -165,12 +165,15 @@ namespace InWorldz.RemoteAdmin
             return response;
         }
 
-        public void CheckSessionValid(UUID sessionid)
+        public void CheckSessionValid(UUID sessionid, string remoteClientIPAndPort = "REMOTE ADDRESS NOT SET")
         {
             lock (m_activeSessions)
             {
                 if (!m_activeSessions.ContainsKey(sessionid))
+                {
+                    m_log.WarnFormat("[RADMIN]: Attempted access with invalid session ID from {0}", remoteClientIPAndPort);
                     throw new Exception("SESSION_INVALID");
+                }
                 m_activeSessions[sessionid] = DateTime.Now;
             }
         }
@@ -225,6 +228,7 @@ namespace InWorldz.RemoteAdmin
             }
             else
             {
+                m_log.WarnFormat("[RADMIN]: Attempted access with invalid username or password from {0}", remoteClient);
                 throw new Exception("Invalid Username or Password");
             }
 
@@ -240,18 +244,19 @@ namespace InWorldz.RemoteAdmin
                 if (m_activeSessions.ContainsKey(sessionId))
                 {
                     m_activeSessions.Remove(sessionId);
-                    return (true);
+                    return true;
                 }
                 else
                 {
-                    return (false);
+                    m_log.WarnFormat("[RADMIN]: Attempted logout with invalid session ID from {0}", remoteClient);
+                    return false;
                 }
             }
         }
 
         private object ConsoleCommandHandler(IList args, IPEndPoint client)
         {
-            CheckSessionValid(new UUID((string)args[0]));
+            CheckSessionValid(new UUID((string)args[0]), client.ToString());
 
             string command = (string)args[1];
             MainConsole.Instance.RunCommand(command);

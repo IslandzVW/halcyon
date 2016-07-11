@@ -54,6 +54,8 @@ namespace OpenSim.Framework.Console
     //
     public class RemoteConsole : CommandConsole
     {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private IHttpServer m_Server;
         private IConfigSource m_Config;
         private List<string> m_Scrollback;
@@ -274,7 +276,12 @@ namespace OpenSim.Framework.Console
             // Validate the username/password pair
 
             if (CheckRemoteAccessCode(username, password) == false)
+            {
+                var headers = request["headers"] as Hashtable;
+
+                m_log.WarnFormat("[RCONSOLE]: Attempted access with invalid username or password from {0} with UA: {1}", headers["remote_addr"], headers["User-Agent"]);
                 return reply;
+            }
 
             ConsoleConnection c = new ConsoleConnection();
             c.last = System.Environment.TickCount;
@@ -351,6 +358,11 @@ namespace OpenSim.Framework.Console
                         req.SendResponse(ProcessEvents(req));
                     }
                 }
+                else
+                {
+                    var headers = request["headers"] as Hashtable;
+                    m_log.WarnFormat("[RCONSOLE]: Attempted logout with invalid session ID from {0} with UA: {1}", headers["remote_addr"], headers["User-Agent"]);
+                }
             }
 
             XmlDocument xmldoc = new XmlDocument();
@@ -395,7 +407,11 @@ namespace OpenSim.Framework.Console
             lock (m_Connections)
             {
                 if (!m_Connections.ContainsKey(id))
+                {
+                    var headers = request["headers"] as Hashtable;
+                    m_log.WarnFormat("[RCONSOLE]: Attempted command with invalid session ID from {0} with UA: {1}", headers["remote_addr"], headers["User-Agent"]);
                     return reply;
+                }
             }
 
             if (post["COMMAND"] == null)
@@ -486,7 +502,7 @@ namespace OpenSim.Framework.Console
                 ConsoleConnection connection = null;
                 m_Connections.TryGetValue(sessionID, out connection);
                 if (connection == null)
-                    return;
+                    return; // This should never execute due to how this handler is set up.
 
                 currentRequest = connection.request;
                 connection.request = newRequest;

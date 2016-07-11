@@ -256,7 +256,7 @@ namespace OpenSim.Grid.UserServer
 
         public object UserServerShutdownHandler(IList args, IPEndPoint remoteClient)
         {
-            m_radmin.CheckSessionValid(new UUID((string)args[0]));
+            m_radmin.CheckSessionValid(new UUID((string)args[0]), remoteClient.ToString());
 
             try
             {
