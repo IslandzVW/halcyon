@@ -1875,7 +1875,7 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             try
                             {
-                                // move avatar in 2D at one meter/second towards target, in avatar coordinate frame.
+                                // move avatar in 3D at one meter/second towards target, in avatar coordinate frame.
                                 // This movement vector gets added to the velocity through AddNewMovement().
                                 // Theoretically we might need a more complex PID approach here if other 
                                 // unknown forces are acting on the avatar and we need to adaptively respond
@@ -1883,8 +1883,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 Vector3 LocalVectorToTarget3D =
                                     (m_moveToPositionTarget - AbsolutePosition) // vector from cur. pos to target in global coords
                                     * Matrix4.CreateFromQuaternion(Quaternion.Inverse(bodyRotation)); // change to avatar coords
-                                // Ignore z component of vector
-                                Vector3 LocalVectorToTarget2D = new Vector3((float)(LocalVectorToTarget3D.X), (float)(LocalVectorToTarget3D.Y), 0f);
+                                Vector3 LocalVectorToTarget2D = new Vector3((float)(LocalVectorToTarget3D.X), (float)(LocalVectorToTarget3D.Y), (float)(LocalVectorToTarget3D.Z));
                                 LocalVectorToTarget2D.Normalize();
                                 agent_control_v3 += LocalVectorToTarget2D;
 
@@ -1927,6 +1926,19 @@ namespace OpenSim.Region.Framework.Scenes
                                 else if (LocalVectorToTarget2D.X > 0) //Move Forward
                                 {
                                     m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD;
+                                    update_movementflag = true;
+                                }
+                                if (LocalVectorToTarget2D.Z > 0) //Up
+                                {
+                                    // Don't set these flags for up - doing so will make the avatar
+                                    // keep trying to jump even if walking along level ground.
+                                    // m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_UP;
+                                    update_movementflag = true;
+                                }
+                                else if (LocalVectorToTarget2D.Z < 0) //Down
+                                {
+                                    // Don't set these flags for down - doing so will make the avatar crouch.
+                                    // m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_DOWN;
                                     update_movementflag = true;
                                 }
                             }
