@@ -1951,7 +1951,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
 
                     // Determine whether the user has said to stop and the agent is not sitting.
-                    physActor.SetAirBrakes = (m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_STOP) != 0 && !IsInTransitOnPrim;
+                    physActor.SetAirBrakes = (m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_STOP) != 0 && !IsInTransitOnPrim && !m_moveToPositionInProgress;
+
                 }
                 
                 // Cause the avatar to stop flying if it's colliding
