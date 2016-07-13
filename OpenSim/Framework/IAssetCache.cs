@@ -53,7 +53,7 @@ namespace OpenSim.Framework
         /// <summary>
         /// Report statistical data to the log.
         /// </summary>        
-        void ShowState();
+        void ShowState(bool resetStats);
         
         /// <summary>
         /// Asynchronously retrieve an asset.

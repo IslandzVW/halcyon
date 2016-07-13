@@ -36,6 +36,7 @@ using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenSim.Framework.Statistics;
 using System.Text;
+using System.Linq;
 using OpenSim.Framework;
 using Amib.Threading;
 
@@ -136,9 +137,34 @@ namespace OpenSim.Framework.Communications.Cache
             ProviderRegistry.Instance.RegisterInterface<IAssetCache>(this);
         }        
 
-        public void ShowState()
+        private string GetMinAvgMax(float[] data, string format)
         {
-            
+            if (data.Length == 0)
+                return String.Format(format, 0.0f, 0.0f, 0.0f);
+
+            return String.Format(format, data.Min(), data.Average(), data.Max());
+        }
+
+        public void ShowState(bool resetStats)
+        {
+            AssetStats stats = m_assetServer.GetStats(resetStats);
+            if (resetStats)
+                return;
+
+            float RHits = (stats.nGet > 0) ? ((float)stats.nGetHit / (float)stats.nGet) : 1.0f;
+            m_log.InfoFormat("[ASSET_STATS]: reads={0} hits/fetched/missing={1}/{2}/{3} ({4}%), {5}",
+                stats.nGet, stats.nGetHit, stats.nGetFetches, stats.nGetNotFound, (int)(RHits*100),
+                GetMinAvgMax(stats.allGets, "min/avg/max={0}/{1}/{2}")
+                );
+            float WHits = (stats.nPut > 0) ? ((float)stats.nPutCached / (float)stats.nPut) : 1.0f;
+            m_log.InfoFormat("[ASSET_STATS]: writes={0}, cached={1} ({2}%), uncached exists/size/stream/dupe={3}/{4}/{5}/{6} {7}",
+                stats.nPut, stats.nPutCached, (int)(WHits*100),
+                stats.nPutExists, stats.nBigAsset, stats.nBigStream, stats.nDupUpdate,
+                GetMinAvgMax(stats.allPuts, "min/avg/max={0}/{1}/{2}")
+                );
+            m_log.InfoFormat("[ASSET_STATS]: Total={0}, readErr init={1}, writeErr TO/NTO/ex/web/io={2}/{3}/{4}/{5}/{6}", 
+                stats.nTotal, stats.nGetInit,
+                stats.nPutTO, stats.nPutNTO, stats.nPutExcept, stats.nPutExceptWeb, stats.nPutExceptIO);
         }
 
         // Shortcut test to see if we can return null for the asset without fetching.

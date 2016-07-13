@@ -941,7 +941,8 @@ namespace OpenSim
             switch (showParams[0])
             {
                 case "assets":
-                    m_assetCache.ShowState();
+                    bool resetStats = (showParams.Length > 1) && (showParams[1] == "reset");
+                    m_assetCache.ShowState(resetStats);
                     break;
 
                 case "users":
