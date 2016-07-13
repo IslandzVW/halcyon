@@ -117,6 +117,13 @@ namespace OpenSim.Data
         void PurgeFolder(InventoryFolderBase folder);
 
         /// <summary>
+        /// Removes (deletes) a folder that is KNOWN to be empty.
+        /// Caller must ensure it is already empty: no items or subfolders.
+        /// </summary>
+        /// <param name="folder">The folder to purge</param>
+        void PurgeEmptyFolder(InventoryFolderBase folder);
+
+        /// <summary>
         /// Purges all subfolders and items from the specified folders and then removes the folders
         /// </summary>
         /// <param name="folder">The folder to purge</param>
