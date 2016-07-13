@@ -4605,7 +4605,7 @@ namespace InWorldz.Phlox.Engine
         {
             
 
-            if (m_host.ParentGroup.PrimCount > 1)
+            if (m_host.ParentGroup.PartCount > 1)
             {
                 return m_host.LinkNum;
             }
@@ -5765,7 +5765,7 @@ namespace InWorldz.Phlox.Engine
                     {
                         partItemID = item.ItemID;
                         int linkNumber = m_host.LinkNum;
-                        if (m_host.ParentGroup.PrimCount == 1)
+                        if (m_host.ParentGroup.LinkCount == 1)  // if there are seated avatars, single-prim becomes multi, else 0
                             linkNumber = 0;
 
                         object[] resobj = new object[] { linkNumber, num, msg, id };
@@ -10338,22 +10338,7 @@ namespace InWorldz.Phlox.Engine
 
         public int llGetNumberOfPrims()
         {
-            List<ScenePresence> presences = World.GetScenePresences();
-
-            int avatarCount = 0;
-            foreach (ScenePresence presence in presences)
-            {
-                ScenePresence.PositionInfo info = presence.GetPosInfo();
-                if (!presence.IsChildAgent && info.Parent != null)
-                {
-                    if (m_host.ParentGroup.HasChildPrim(info.Parent.UUID))
-                    {
-                        avatarCount++;
-                    }
-                }
-            }
-
-            return m_host.ParentGroup.PrimCount + avatarCount;
+            return m_host.ParentGroup.LinkCount;
         }
 
         public LSL_List GetBoundingBox(string obj, bool isRelative)
@@ -13384,7 +13369,7 @@ namespace InWorldz.Phlox.Engine
             {
                 SceneObjectPart part = World.GetSceneObjectPart(object_uuid);
                 if (part != null)
-                    return part.ParentGroup.PrimCount;
+                    return part.ParentGroup.PartCount;
             }
 
             return 0;
@@ -17473,7 +17458,7 @@ namespace InWorldz.Phlox.Engine
                         {
                             partItemID = item.ItemID;
                             int linkNumber = m_host.LinkNum;
-                            if (m_host.ParentGroup.PrimCount == 1)
+                            if (m_host.ParentGroup.LinkCount == 1)
                                 linkNumber = 0;
 
                             object[] resobj = new object[] { linkNumber, num, msg, id };
