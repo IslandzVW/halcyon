@@ -1,0 +1,282 @@
+swagger: '2.0'
+
+info:
+  version: "0.0.0"
+  title: Halcyon Remote Admin
+  description: |
+    Remote console access is only enabled if in the Halcyon.ini [Startup]::console is "rest" and either [Startup]::gui is false or [Startup]::background is true.
+definitions:
+  MethodResponseType:
+    type: object
+    discriminator: responseType
+    required:
+    - responseType
+    properties:
+      responseType:
+        type: string
+  MethodParams:
+    description: The response of a good XMLRPC call.
+    allOf:
+    - $ref: "#/definitions/MethodResponseType"
+    - type: object
+      required:
+      - methodReponse
+      properties:
+        methodReponse:
+          type: object
+          required:
+          - params
+          properties:
+            params:
+              type: object
+              required:
+              - param
+              properties:
+                param:
+                  type: object
+                  required:
+                  - value
+                  properties:
+                    value:
+                      $ref: "#/definitions/ValueType"
+  MethodFault:
+    description: The response of a faulty XMLRPC call.
+    allOf:
+    - $ref: "#/definitions/MethodResponseType"
+    - type: object
+      required:
+      - methodReponse
+      properties:
+        methodReponse:
+          type: object
+          required:
+          - fault
+          properties:
+            fault:
+              type: object
+              required:
+              - value
+              properties:
+                value:
+                  type: object
+                  required:
+                  - struct
+                  properties:
+                    struct:
+                      type: object
+                      required:
+                      - member1
+                      - member2
+                      properties:
+                        member1:
+                          type: object
+                          required:
+                          - name
+                          - value
+                          properties:
+                            name:
+                              type: string
+                              pattern: "^faultCode$"
+                            value:
+                              type: object
+                              required:
+                              - int
+                              properties:
+                                int:
+                                  type: integer
+                          xml:
+                            name: member
+                        member2:
+                          type: object
+                          required:
+                          - name
+                          - value
+                          properties:
+                            name:
+                              type: string
+                              pattern: "^faultString$"
+                            value:
+                              type: object
+                              required:
+                              - string
+                              properties:
+                                string:
+                                  type: string
+                          xml:
+                            name: member
+                  
+  ValueType:
+    type: object
+    discriminator: vtype
+    required:
+    - vtype
+    properties:
+      vtype:
+        type: string
+  int:
+    description: four-byte signed integer
+    allOf:
+    - $ref: "#/definitions/ValueType"
+    - type: object
+      properties:
+        int:
+          type: integer
+  i4:
+    description: four-byte signed integer
+    allOf:
+    - $ref: "#/definitions/ValueType"
+    - type: object
+      properties:
+        i4:
+          type: integer
+  boolean:
+    description: 0 (false) or 1 (true)
+    allOf:
+    - $ref: "#/definitions/ValueType"
+    - type: object
+      properties:
+        boolean:
+          type: boolean
+  string:
+    description: string
+    allOf:
+    - $ref: "#/definitions/ValueType"
+    - type: object
+      properties:
+        string:
+          type: string
+  none: #used when no type element is used.  XMLRPC spec says in that case it is assumed to be a string.
+    description: string
+    allOf:
+    - $ref: "#/definitions/ValueType"
+    - type: string
+  double:
+    description: string
+    allOf:
+    - $ref: "#/definitions/ValueType"
+    - type: object
+      properties:
+        double:
+          type: number
+          format: double
+  dateTime.iso8601:
+    description: date/time
+    allOf:
+    - $ref: "#/definitions/ValueType"
+    - type: object
+      properties:
+        dateTime.iso8601:
+          type: string
+          format: date-time
+  base64:
+    description: base64-encoded binary
+    allOf:
+    - $ref: "#/definitions/ValueType"
+    - type: object
+      properties:
+        base64:
+          type: string
+          format: byte
+  struct:
+    description: A composite of multiple named types treated as a unit.
+    allOf:
+    - $ref: "#/definitions/ValueType"
+    - type: object
+      properties:
+        struct:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              value:
+                $ref: "#/definitions/ValueType"
+            xml:
+              name: member
+          xml:
+            wrapped: true
+  array:
+    description: A composite of multiple sequential values treated as a unit.
+    allOf:
+    - $ref: "#/definitions/ValueType"
+    - type: object
+      properties:
+        array:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  value:
+                    $ref: "#/definitions/ValueType"
+                xml:
+                  name: value
+              xml:
+                wrapped: true
+paths:
+  /xmlrpc/RemoteAdmin:
+    post:
+      description: |
+        XMLRPC access point for remote administration.
+      consumes:
+        - text/xml
+      parameters:
+        - name: content
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - methodCall
+            properties:
+              methodCall:
+                type: object
+                required:
+                - methodName
+                properties:
+                  methodName:
+                    type: string
+                    pattern: '[a-zA-Z0-9:/]+\.[a-zA-Z0-9.:/]+'
+                  params:
+                    type: array
+                    items:
+                      type: object
+                      xml:
+                        name: param
+                      required:
+                      - value
+                      properties:
+                        value:
+                          type: object
+                    xml:
+                      wrapped: true
+      produces:
+        - text/xml
+      responses:
+        200:
+          description: Reponse from handler.
+          schema:
+            $ref: "#/definitions/MethodResponseType"
+
+### Common methods
+# * session.login_with_password(string username, string password)
+# * session.logout(string sessionID)
+# * Console.Command(string sessionID, string command)
+### Region methods:
+# * Region.SendAlert(string sessionID, string regionName, string message)
+# * Region.Restart(string sessionID, string regionUUID) - restarts in 30 seconds.
+# * Region.Shutdown(string sessionid, string regionUUID, int delayInSeconds)
+# * Region.Backup(string sessionid, string regionName, string fileName, boolean storeAssets)
+# * Region.Restore(string sessionid, string regionName, string fileName, boolean allowUserReassignment, boolean skipErrorGroups)
+# * Region.SaveOAR(string sessionid, string regionName, string fileName, boolean storeAssets)
+# * Region.LoadOAR(string sessionid, string regionName, string fileName, boolean allowUserReassignment, boolean skipErrorGroups)
+# * Region.ChangeParcelFlags(string sessionid, string regionName, string enable["","enable"], int mask)
+### Grid server methods
+# * GridService.Shutdown(string sessionid, int delayInSeconds)
+### Messaging server methods
+# * MessagingService.Shutdown(string sessionid, int delayInSeconds)
+### User server methods
+# * UserService.Shutdown(string sessionid, int delayInSeconds)

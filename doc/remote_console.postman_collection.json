@@ -1,0 +1,125 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Halcyon Remote Console",
+		"_postman_id": "69440ce8-1eda-63a2-6644-4c9c800e50e6",
+		"description": "Remote console access is only enabled if in the Halcyon.ini [Startup]::console is \"rest\" and either [Startup]::gui is false or [Startup]::background is true.\n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "StartSession",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": "var jsonObject = {};\n\ntry {\n    jsonObject = xml2Json(responseBody);\n    \n    if (jsonObject.hasOwnProperty(\"ConsoleSession\") && jsonObject.ConsoleSession.hasOwnProperty(\"SessionID\")) {\n        postman.setEnvironmentVariable(\"restconsole_login_key\", jsonObject.ConsoleSession.SessionID);\n    }\n}\ncatch(e) {\n    tests[\"parserr: \" + JSON.stringify(e)] = false;\n    tests[\"data: \" + JSON.stringify(jsonObject)] = false;\n}\n\ntests[\"restconsole_login_key: \" + environment.restconsole_login_key] = environment.restconsole_login_key !== null && environment.restconsole_login_key.length > 0;"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": "postman.clearEnvironmentVariable(\"restconsole_login_key\");"
+					}
+				}
+			],
+			"request": {
+				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/StartSession/",
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "USER",
+							"value": "{{USER}}",
+							"type": "text",
+							"enabled": true
+						},
+						{
+							"key": "PASS",
+							"value": "{{PASS}}",
+							"type": "text",
+							"enabled": true
+						}
+					]
+				},
+				"description": "Logs the user into the API. See RemoteConsole::HandleHttpStartSession()\n"
+			},
+			"response": []
+		},
+		{
+			"name": "CloseSession",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": "postman.clearEnvironmentVariable(\"restconsole_login_key\");"
+					}
+				}
+			],
+			"request": {
+				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/CloseSession/",
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "ID",
+							"value": "{{restconsole_login_key}}",
+							"type": "text",
+							"enabled": true
+						}
+					]
+				},
+				"description": "Disconnects the user and logs them out of the remote console.\n"
+			},
+			"response": []
+		},
+		{
+			"name": "SessionCommand",
+			"request": {
+				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/SessionCommand/",
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "ID",
+							"value": "{{restconsole_login_key}}",
+							"type": "text",
+							"enabled": true
+						},
+						{
+							"key": "COMMAND",
+							"value": "shutdown",
+							"type": "text",
+							"enabled": true
+						}
+					]
+				},
+				"description": "Sends a command to the remote console.\n"
+			},
+			"response": []
+		},
+		{
+			"name": "ReadResponses",
+			"request": {
+				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/ReadResponses/{{restconsole_login_key}}/",
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
+				"description": "Reads out any reponses to input. See RemoteConsole::AsyncReadResponses()\n"
+			},
+			"response": []
+		}
+	]
+}

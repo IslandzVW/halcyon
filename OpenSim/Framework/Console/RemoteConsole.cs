@@ -474,7 +474,7 @@ namespace OpenSim.Framework.Console
                 connection.request = newRequest;
             }
 
-            // If there was a request already posted signal it
+            // If there was a request already posted, signal it.
             if (currentRequest != null)
             {
                 currentRequest.SendResponse(ProcessEvents(currentRequest));
