@@ -993,7 +993,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             Scene targetScene = this.FindSceneByName(regionName);
 
-            if (targetScene == null) throw new Exception(String.Format("Region {0} was not found", regionName));
+            if (targetScene == null)
+            {
+                targetScene = CurrentOrFirstScene;
+                m_log.ErrorFormat("Region '{0}' was not found for OAR save - assuming '{1}'.", regionName, targetScene.RegionInfo.RegionName);
+            }
 
             if (!HasScriptEngine(targetScene))
                 m_log.Warn("[SCENE]: Warning: Script engine disabled. No script states will be saved in OAR file.");
@@ -1037,16 +1041,8 @@ namespace OpenSim.Region.Framework.Scenes
         public Scene FindSceneByName(string name)
         {
             Scene targetScene = null;
-            this.ForEachScene(
-                delegate(Scene scene)
-                {
-                    if (scene.RegionInfo.RegionName == name)
-                    {
-                        targetScene = scene;
-                    }
-                }
-            );
-
+            if (!TryGetScene(name, out targetScene))
+                return null;
             return targetScene;
         }
     }
