@@ -224,7 +224,7 @@ namespace OpenSim.Grid.UserServer
         protected virtual void StartupLoginService()
         {
             m_loginService = new UserLoginService(
-                m_userDataBaseService, new LibraryRootFolder(Cfg.LibraryXmlfile), Cfg.MapServerURI, Cfg.ProfileServerURI, Cfg, Cfg.DefaultStartupMsg, new RegionProfileServiceProxy());
+                m_userDataBaseService, new LibraryRootFolder(Cfg.LibraryXmlfile, Cfg.LibraryName), Cfg.MapServerURI, Cfg.ProfileServerURI, Cfg, Cfg.DefaultStartupMsg, new RegionProfileServiceProxy());
         }
 
         protected virtual void PostInitializeModules()

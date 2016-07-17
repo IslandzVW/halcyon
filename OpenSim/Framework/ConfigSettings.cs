@@ -180,6 +180,11 @@ namespace OpenSim.Framework
             set { m_estateConnectionString = value; }
         }
 
+        public string LibraryName
+        {
+            get;
+            set;
+        }
         protected string m_librariesXMLFile;
         public string LibrariesXMLFile
         {
