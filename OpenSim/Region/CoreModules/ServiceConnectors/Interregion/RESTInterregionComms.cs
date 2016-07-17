@@ -91,7 +91,7 @@ namespace OpenSim.Region.CoreModules.ServiceConnectors.Interregion
 
 
                 IConfig startupConfig = config.Configs["Communications"];
-                if ((startupConfig == null) || (startupConfig.GetString("InterregionComms", "RESTComms") == "RESTComms"))
+                if (startupConfig != null && startupConfig.GetString("InterregionComms", "RESTComms") == "RESTComms")
                 {
                     m_log.Info("[REST COMMS]: Enabling InterregionComms RESTComms module");
                     m_enabled = true;
