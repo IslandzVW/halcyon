@@ -730,7 +730,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 MapBlockData block = new MapBlockData();
                 block.X = (ushort)minX;
                 block.Y = (ushort)minY;
-                block.Access = 254; // == not there
+                block.Name = "(NONE)"; // The viewer insists that the region name never be empty.
+                block.Access = 255; // == not there (254 is "region down", 255 is "region non-existent")
                 response.Add(block);
             }
             //(flag & 0x10000) != 0 is sent by v2 viewers, and it expects flag 2 back

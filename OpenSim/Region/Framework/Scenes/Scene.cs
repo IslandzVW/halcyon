@@ -38,8 +38,9 @@ using System.Timers;
 using System.Xml;
 using Nini.Config;
 using OpenMetaverse;
-using OpenMetaverse.Packets;
 using OpenMetaverse.Imaging;
+using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Services.Interfaces;
 using OpenSim.Framework.Communications;
@@ -893,6 +894,15 @@ namespace OpenSim.Region.Framework.Scenes
                 case "simulator_hostname":
                     ret = RegionInfo.ExternalHostName;
                     break;
+                case "region_size_x":
+                    ret = Constants.RegionSize.ToString();
+                    break;
+                case "region_size_y":
+                    ret = Constants.RegionSize.ToString();
+                    break;
+                case "region_size_z":
+                    ret = ((int)Constants.REGION_MAXIMUM_Z).ToString();
+                    break;
                 case "agent_limit":
                     ret = m_regInfo.RegionSettings.AgentLimit.ToString();
                     break;
@@ -997,14 +1007,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// Given float seconds, this will restart the region.
         /// </summary>
         /// <param name="seconds">float indicating duration before restart.</param>
-        public virtual void Restart(float seconds)
+        public virtual void Restart(int seconds)
         {
-            // notifications are done in 15 second increments
-            // so ..   if the number of seconds is less then 15 seconds, it's not really a restart request
-            // It's a 'Cancel restart' request.
-
             // RestartNow() does immediate restarting.
-            if (seconds < 15)
+            if (seconds == -1)
             {
                 m_restartTimer.Stop();
                 m_dialogModule.SendGeneralAlert("Restart Aborted");
@@ -1013,14 +1019,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Now we figure out what to set the timer to that does the notifications and calls, RestartNow()
                 m_restartTimer.Interval = 15000;
-                m_incrementsof15seconds = (int)seconds / 15;
+                m_incrementsof15seconds = seconds / 15;
                 m_RestartTimerCounter = 0;
                 m_restartTimer.AutoReset = true;
                 m_restartTimer.Elapsed += new ElapsedEventHandler(RestartTimer_Elapsed);
                 m_log.Info("[REGION]: Restarting Region in " + (seconds / 60) + " minutes");
                 m_restartTimer.Start();
-                m_dialogModule.SendNotificationToUsersInRegion(
-                    UUID.Random(), String.Empty, RegionInfo.RegionName + ": Restarting in " + (seconds / 60) + " minutes");
+                SendRestartAlert(seconds);
             }
         }
 
@@ -1034,10 +1039,9 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_RestartTimerCounter <= m_incrementsof15seconds)
             {
                 if (m_RestartTimerCounter == 4 || m_RestartTimerCounter == 6 || m_RestartTimerCounter == 7)
-                    m_dialogModule.SendNotificationToUsersInRegion(
-                        UUID.Random(),
-                        String.Empty,
-                        RegionInfo.RegionName + ": Restarting in " + ((8 - m_RestartTimerCounter) * 15) + " seconds");
+                {
+                    SendRestartAlert((8 - m_RestartTimerCounter) * 15);
+                }
             }
             else
             {
@@ -1045,6 +1049,13 @@ namespace OpenSim.Region.Framework.Scenes
                 m_restartTimer.AutoReset = false;
                 RestartNow();
             }
+        }
+
+        private void SendRestartAlert(int seconds)
+        {
+            string message = String.Format("The region you are in now ({0}) is about to restart. If you stay in this region, you will be logged out", RegionInfo.RegionName);
+            OSD paramMap = new OSDMap{ { "SECONDS", OSD.FromInteger(seconds) } }; // *TODO: Make this work with RegionRestartMinutes notice as well?
+            m_dialogModule.SendGeneralAlert(message, "RegionRestartSeconds", paramMap);
         }
 
         // This causes the region to restart immediatley.
@@ -1563,7 +1574,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //Mark objects as clean, including inventories
                 foreach (SceneObjectGroup group in groupsNeedingBackup)
                 {
-                    SceneObjectPart[] parts = group.GetParts();
+                    var parts = group.GetParts();
                     lock (_taintedGroups)
                     {
                         if (!_taintedGroups.Contains(group))
@@ -2101,7 +2112,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (group.RootPart == null)
                 {
                     m_log.ErrorFormat("[SCENE] Found a SceneObjectGroup with m_rootPart == null and {0} children",
-                                      group.Children == null ? 0 : group.Children.Count);
+                                      group.GetParts().Count);
                 }
 
                 if (IsBadUserLoad(group) || IsBlacklistedLoad(group))
@@ -2122,7 +2133,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 AddRestoredSceneObject(group, true, true);
                 SceneObjectPart rootPart = group.GetChildPart(group.UUID);
-                rootPart.ObjectFlags &= ~(uint)PrimFlags.Scripted;
+                group.RecalcScriptedStatus();
                 rootPart.TrimPermissions();
 
                 // Check if it rezzed off-world...
@@ -2335,7 +2346,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Pass 0 for landImpact here so that it can be tested separately.
             if (Permissions.CanRezObject(0, ownerID, UUID.Zero, pos, false))
             {
-                reason = ". Cannot determine land parcel.";
+                reason = ". Cannot determine land parcel at "+(int)pos.X+","+(int)pos.Y;
                 ILandObject parcel = LandChannel.GetLandObject(pos.X, pos.Y);
                 if (parcel != null)
                 {
@@ -2489,7 +2500,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="silent">True when the database should be updated.</param>
         public void DeleteSceneObject(SceneObjectGroup group, bool silent, bool fromCrossing, bool persist)
         {
-            foreach (SceneObjectPart part in group.Children.Values)
+            foreach (SceneObjectPart part in group.GetParts())
             {
                 if (!group.IsAttachment)    // Optimization, can't sit on something you're wearing
                 {
@@ -2726,7 +2737,7 @@ namespace OpenSim.Region.Framework.Scenes
                     Vector3 safepos = NearestLegalPos(oldGroupPosition);
                     grp.OffsetForNewRegion(safepos);// no effect during transit
                 }
-                grp.ScheduleGroupForFullUpdate();
+                grp.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 return false;
             }
 
@@ -2930,7 +2941,12 @@ namespace OpenSim.Region.Framework.Scenes
                 newObject.RootPart.ParentGroup.CreateScriptInstances(null, ScriptStartFlags.FromCrossing, DefaultScriptEngine, (int)ScriptStateSource.PrimData, null);
 
                 //there are avatars coming over, they need an immediate update
-                newObject.SendFullUpdateToAllClientsImmediate();
+                foreach (var userId in avatars)
+                {
+                    ScenePresence sp = GetScenePresence(userId);
+                    if (sp != null)
+                        newObject.SendFullUpdateToClientImmediate(sp.ControllingClient, true);
+                }
             }
             else
             {
@@ -3014,7 +3030,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Force allocation of new LocalId
             //
-            foreach (SceneObjectPart p in sceneObject.Children.Values)
+            foreach (SceneObjectPart p in sceneObject.GetParts())
             {
                 p.LocalId = 0;
             }
@@ -3103,7 +3119,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Add/Remove Avatar Methods
 
-        public override void AddNewClient(IClientAPI client)
+        public override void AddNewClient(IClientAPI client, bool isBot)
         {
             SubscribeToClientEvents(client);
             ScenePresence presence;
@@ -3138,7 +3154,8 @@ namespace OpenSim.Region.Framework.Scenes
                     "[SCENE]: Adding new child agent for {0} in {1}",
                     client.Name, RegionInfo.RegionName);
 
-                CommsManager.UserService.CacheUser(client.AgentId);
+                if (!isBot)
+                    CommsManager.UserService.CacheUser(client.AgentId);
 
                 CreateAndAddScenePresence(client);
             }
@@ -3171,6 +3188,7 @@ namespace OpenSim.Region.Framework.Scenes
             client.OnSpinUpdate += m_sceneGraph.SpinObject;
             client.OnDeRezObjects += DeRezObjects;
             client.OnRezObject += RezObject;
+            client.OnRestoreObject += RestoreObject;
             client.OnRezSingleAttachmentFromInv += RezSingleAttachment;
             client.OnRezMultipleAttachmentsFromInv += RezMultipleAttachments;
             client.OnDetachAttachmentIntoInv += DetachSingleAttachmentToInv;
@@ -3525,8 +3543,8 @@ namespace OpenSim.Region.Framework.Scenes
                 UserProfile.HomeLookAt = lookAt;
                 CommsManager.UserService.UpdateUserProfile(UserProfile);
 
-                // FUBAR ALERT: this needs to be "Home position set." so the viewer saves a home-screenshot.
-                m_dialogModule.SendAlertToUser(remoteClient, "Home position set.");
+                m_dialogModule.SendAlertToUser(remoteClient, "Home position set.", "HomePositionSet", new OSD());
+
             }
             else
             {
@@ -3599,12 +3617,11 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if ((avatar != null) && (!avatar.IsBot))
                 {
-                    CommsManager.UserService.UnmakeLocalUser(agentID);
-
                     if (!avatar.IsChildAgent)
                     {
                         m_sceneGridService.LogOffUser(agentID, RegionInfo.RegionID, RegionInfo.RegionHandle, avatar.AbsolutePosition, avatar.Lookat);
                     }
+                    CommsManager.UserService.UnmakeLocalUser(agentID);
                 }
 
                 m_eventManager.TriggerClientClosed(agentID, this);
@@ -4156,6 +4173,18 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
 
+            if (SceneGraph.GetRootAgentCount() + 1 > RegionInfo.RegionSettings.AgentLimit)
+            {
+                if (RegionInfo.EstateSettings.HasAccess(agentId) == false)
+                {
+                    m_log.WarnFormat(
+                        "[SCENE]: User {0} ({1}) was denied access to the region because agent limit was reached",
+                        agentId, userName);
+                    reason = "Region is full";
+                    return false;
+                }
+            }
+
             if (IsBlacklistedUser(agentId))
             {
                 m_log.WarnFormat("[SCENE]: Denied access to: {0} ({1}) at {2} because the user is blacklisted",
@@ -4677,29 +4706,41 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            SimpleRegionInfo reg = regionHandle == fromRegionHandle ? RegionInfo : RequestNeighbouringRegionInfo(regionHandle);
-            if (reg == null)
-            {
-                //no real neighbor information about that region, consult the grid server
-                reg = m_sceneGridService.RequestNeighbouringRegionInfo(regionHandle);
+            SimpleRegionInfo sreg;
+            string destRegionName;
 
-                if (reg == null)
+            if (regionHandle == fromRegionHandle)
+            {
+                sreg = RegionInfo;
+                destRegionName = "this region";
+            } else {
+                sreg = RequestNeighbouringRegionInfo(regionHandle);
+                if (sreg == null)
                 {
-                    avatar.ControllingClient.SendTeleportFailed("Destination region could not be found.");
-                    return;
+                    //no real neighbor information about that region, consult the grid server
+                    RegionInfo reg = m_sceneGridService.RequestNeighbouringRegionInfo(regionHandle);
+                    if (reg == null)
+                    {
+                        avatar.ControllingClient.SendTeleportFailed("Destination region could not be found.");
+                        return;
+                    }
+                    sreg = reg;
+                    destRegionName = reg.RegionName;
                 }
+                else
+                    destRegionName = String.Format("neighbor at ({0},{1})", sreg.RegionLocX, sreg.RegionLocY);
             }
 
             // Check for landing point or telehub override.
             if ((teleportFlags & (TeleportFlags.ViaLandmark | TeleportFlags.ViaLocation)) != 0)
             {
                 bool set = false;
-                EstateSettings neighborEstateSettings = StorageManager.EstateDataStore.LoadEstateSettings(reg.RegionID);
+                EstateSettings neighborEstateSettings = StorageManager.EstateDataStore.LoadEstateSettings(sreg.RegionID);
                 //Telehubs only work if allow direct teleport is disabled, and it only works on non estate owners/managers
                 if (neighborEstateSettings != null && !neighborEstateSettings.AllowDirectTeleport && !neighborEstateSettings.IsEstateManager(avatar.UUID))
                 {
                     //If no spawn points are set, just use the telehub's position
-                    Telehub telehub = StorageManager.EstateDataStore.FindTelehub(reg.RegionID);
+                    Telehub telehub = StorageManager.EstateDataStore.FindTelehub(sreg.RegionID);
 
                     if (telehub != null)
                     {
@@ -4720,20 +4761,27 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (!set && (parcel.OwnerID != avatar.UUID) && (fromParcel.GlobalID != parcel.GlobalID))
                 {   // Changing parcels and not the owner.
-                    if ((parcel.LandingType == LandingType.LandingPoint) && (parcel.UserLocation != Vector3.Zero))
-                    {   // Parcel in landing point mode with a location specified.
-                        if (!(IsGodUser(avatar.UUID) || IsEstateManager(avatar.UUID) || IsEstateOwnerPartner(avatar.UUID)))
-                        {
+                    if (!(IsGodUser(avatar.UUID) || IsEstateManager(avatar.UUID) || IsEstateOwnerPartner(avatar.UUID)))
+                    {
+                        if ((parcel.LandingType == LandingType.LandingPoint) && (parcel.UserLocation != Vector3.Zero))
+                        {   // Parcel in landing point mode with a location specified.
                             // Force the user to the landing point.
                             position = parcel.UserLocation;
                             lookAt = parcel.UserLookAt;
+                        }
+                        else
+                        if ((parcel.LandingType == LandingType.Blocked))
+                        {
+                            avatar.ControllingClient.SendTeleportFailed("Teleport routing at destination parcel is blocked.");
+                            return;
                         }
                     }
                 }
             }
 
             // Preserve flying status to viewer; must be set before SendLocalTeleport.
-            if ((avatar.PhysicsActor != null) && avatar.PhysicsActor.Flying)
+            PhysicsActor pa = avatar.PhysicsActor;
+            if (pa != null && pa.Flying)
                 teleportFlags |= TeleportFlags.IsFlying;
             else
                 teleportFlags &= ~TeleportFlags.IsFlying;
@@ -4743,7 +4791,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // Teleport within the same region
                 m_log.DebugFormat(
                     "[SCENE COMMUNICATION SERVICE]: RequestTeleportToLocation {0} within {1}",
-                    position, RegionInfo.RegionName);
+                    position, destRegionName);
 
                 if (!Util.IsValidRegionXYZ(position))
                 {
@@ -4775,13 +4823,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_log.DebugFormat(
                     "[SCENE COMMUNICATION SERVICE]: RequestTeleportToLocation to {0} in {1}",
-                    position, RegionInfo.RegionName);
+                    position, destRegionName);
 
                 avatar.StandUp(null, false, true);
 
                 AvatarTransit.TransitArguments args = new AvatarTransit.TransitArguments
                 {
-                    DestinationRegion = reg,
+                    DestinationRegion = sreg,
                     LocationInDestination = position,
                     TeleportFlags = teleportFlags,
                     Type = AvatarTransit.TransitType.OutboundTeleport,
@@ -4924,7 +4972,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (ent is SceneObjectGroup)
                 {
-                    ((SceneObjectGroup)ent).ScheduleGroupForFullUpdate();
+                    ((SceneObjectGroup)ent).ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
             }
         }
@@ -5590,27 +5638,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
 
-            group.SetOwnerId(newOwner.AgentId);
-            group.SetRootPartOwner(part, newOwner.AgentId,
-                    newOwner.ActiveGroupId);
-
-            List<SceneObjectPart> partList = new List<SceneObjectPart>(group.Children.Values);
-
-            if (Permissions.PropagatePermissions())
-            {
-                foreach (SceneObjectPart child in partList)
-                {
-                    child.Inventory.ChangeInventoryOwner(newOwner.AgentId);
-                    child.ApplyNextOwnerPermissions();
-                }
-            }
-
-            group.Rationalize(newOwner.AgentId, false);
-            group.HasGroupChanged = true;
-            group.RezzedFromFolderId = UUID.Zero;
-            InspectForAutoReturn(group);
-            part.GetProperties(newOwner);
-            part.ScheduleFullUpdate();
+            group.ChangeOwner(newOwner);
             return true;
         }
 

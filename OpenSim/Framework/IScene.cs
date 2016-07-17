@@ -68,7 +68,7 @@ namespace OpenSim.Framework
 
         event restart OnRestart;
 
-        void AddNewClient(IClientAPI client);
+        void AddNewClient(IClientAPI client, bool isBot);
         void RemoveClient(UUID agentID);
 
         void Restart(int seconds);

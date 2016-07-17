@@ -31,6 +31,7 @@ using System.Reflection;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -72,16 +73,23 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
         
         public void SendAlertToUser(UUID agentID, string message)
         {
-            SendAlertToUser(agentID, message, false);
+            SendAlertToUser(agentID, message, String.Empty, new OSD());
         }          
         
-        public void SendAlertToUser(UUID agentID, string message, bool modal)
+        public void SendAlertToUser(UUID agentID, string message, string infoMessage, OSD extraParams)
         {
             ScenePresence sp = m_scene.GetScenePresence(agentID);
             
             if (sp != null)
-                sp.ControllingClient.SendAgentAlertMessage(message, modal);
-        }           
+            {
+                sp.ControllingClient.SendAlertMessage(message, infoMessage, extraParams);
+            }
+        }
+
+        public void SendAlertToUser(IClientAPI client, string message, string infoMessage, OSD extraParams)
+        {
+            client.SendAlertMessage(message, infoMessage, extraParams);
+        }
         
         public void SendAlertToUser(string firstName, string lastName, string message, bool modal)
         {
@@ -95,18 +103,23 @@ namespace OpenSim.Region.CoreModules.Avatar.Dialog
                     break;
                 }
             }
-        }     
-        
+        }
+
         public void SendGeneralAlert(string message)
+        {
+            SendGeneralAlert(message, String.Empty, new OSD());
+        }
+        
+        public void SendGeneralAlert(string message, string infoMessage, OSD extraParams)
         {
             List<ScenePresence> presenceList = m_scene.GetScenePresences();
 
             foreach (ScenePresence presence in presenceList)
             {
                 if (!(presence.IsChildAgent||presence.IsDeleted||presence.IsInTransit))
-                    presence.ControllingClient.SendAlertMessage(message);
+                    presence.ControllingClient.SendAlertMessage(message, infoMessage, extraParams);
             }
-        }    
+        }
         
         public void SendDialogToUser(
             UUID avatarID, string objectName, UUID objectID, UUID ownerID, 

@@ -520,22 +520,16 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
         #region Object Permissions
 
-        public bool FriendHasEditPermission(UUID owner, UUID friend)
+        public bool FriendHasEditPermission(UUID objectOwner, UUID requestingFriend, bool fastCheck)
         {
-            //the friend in this case will always be the active user in the scene
-            CachedUserInfo user = m_scene.CommsManager.UserService.GetUserDetails(friend);
-            if (user != null)
-            {
-                if (user.HasPermissionFromFriend(owner, (uint)OpenMetaverse.FriendRights.CanModifyObjects))
-                {
-                    return true;
-                }
-            }
+            // There's one easy optimization we should ensure isn't the case before proceeding further.
+            if (requestingFriend == objectOwner)
+                return true;
 
-            return false;
+            return m_scene.CommsManager.UserService.UserHasFriendPerms(requestingFriend, objectOwner, (uint)FriendRights.CanModifyObjects, fastCheck);
         }
 
-        public uint GenerateClientFlags(UUID user, UUID objID)
+        public uint GenerateClientFlags(UUID user, UUID objID, bool fastCheck)
         {
             // Here's the way this works,
             // ObjectFlags and Permission flags are two different enumerations
@@ -596,13 +590,15 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             }
 
             ScenePresence sp = m_scene.GetScenePresence(user);
-
-            if (sp != null &&
-                (m_bypassPermissions     || // no perms checks
-                sp.GodLevel >= 200   || // Admin should be able to edit anything else in the sim (including admin objects)
-                FriendHasEditPermission(objectOwner, user))) // friend with permissions
+            // bots don't have friends let alone friend edit perms, skip the costly checks.
+            if (sp != null && !sp.IsBot)
             {
-                return RestrictClientFlags(task, objflags);    // minimal perms checks, act like owner
+                if (m_bypassPermissions || // no perms checks
+                    sp.GodLevel >= 200 || // Admin should be able to edit anything else in the sim (including admin objects)
+                    FriendHasEditPermission(objectOwner, user, fastCheck)) // friend with permissions
+                {
+                    return RestrictClientFlags(task, objflags);    // minimal perms checks, act like owner
+                }
             }
 
             /////////////////////////////////////////////////////////////
@@ -916,7 +912,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 };
             }
 
-            if (FriendHasEditPermission(objectOwner, currentUser))
+            if (FriendHasEditPermission(objectOwner, currentUser, false))
             {
                 return new GenericPermissionResult
                 {
@@ -998,6 +994,9 @@ namespace OpenSim.Region.CoreModules.World.Permissions
     
         protected bool GenericParcelOwnerPermission(UUID user, ILandObject parcel, ulong groupPowers)
         {
+            if (parcel == null)
+                return false;
+
             // First the simple check, calling context matches the land owner.
             // This also includes group-deeded objects on group-deeded land.
             if (parcel.landData.OwnerID == user)
@@ -1568,6 +1567,10 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             if ((parcel.landData.Flags & ((int)ParcelFlags.CreateObjects)) == (uint)ParcelFlags.CreateObjects)
                 return true;    // we're done here, no need to check more
 
+            ulong roleNeeded = (ulong)GroupPowers.AllowRez;
+            if ((parcel.landData.Flags & (uint)ParcelFlags.CreateGroupObjects) == (uint)ParcelFlags.CreateGroupObjects)
+                roleNeeded = (ulong)GroupPowers.None; // if group rezzing is enabled, we just need to be a member, no specific role ability
+
             // Is an object rezzing the other object?
             if (objectID != UUID.Zero)
             {   // A scripted object is doing the rezzing...
@@ -1607,18 +1610,16 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 }
 
                 // Create role enabled for this group member on group land?
-                if (GenericParcelPermission(group.OwnerID, parcel, (ulong)GroupPowers.AllowRez))
+                if (GenericParcelPermission(group.OwnerID, parcel, roleNeeded))
                     return true;    // we're done here, no need to check more
 
                 return false;
             }
 
             // An agent/avatar is doing the rezzing...
-            if ((parcel.landData.Flags & (uint)ParcelFlags.CreateGroupObjects) == (uint)ParcelFlags.CreateGroupObjects)
-                if (GenericParcelPermission(owner, parcel, 0))
-                    return true;    // we're done here, no need to check more
-            // Create role enabled for this group member on group land?
-            if (GenericParcelPermission(owner, parcel, (ulong)GroupPowers.AllowRez))
+
+            // Create role enabled for this group member on group land, or parcel is group-enabled?
+            if (GenericParcelPermission(owner, parcel, roleNeeded))
                 return true;    // we're done here, no need to check more
 
             // Owner doesn't match the land parcel, check partner perms.
@@ -1700,7 +1701,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
 
             //generic object permission will return TRUE for someone who has friend edit permissions,
             //but we do not want them to take
-            if (part.OwnerID != stealer && this.FriendHasEditPermission(part.OwnerID, stealer))
+            if (part.OwnerID != stealer && this.FriendHasEditPermission(part.OwnerID, stealer, false))
             {
                 return false;
             }

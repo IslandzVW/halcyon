@@ -32,6 +32,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 
 using log4net;
 using Nini.Config;
@@ -801,26 +802,28 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 }
 
                 Vector3 rootPos = positions[0];
-                SceneObjectPart[] parts = grp.GetParts();
-
                 // Fix first link number
-                if (parts.Length > 1)
+                if (mesh_list.Count > 1)
                 {
-                    grp.RootPart.LinkNum++;
-
                     Quaternion rootRotConj = Quaternion.Conjugate(rotations[0]);
                     Quaternion tmprot;
                     Vector3 offset;
 
                     // Fix child rotations and positions
-                    for (int i = 1; i < rotations.Count; i++)
+                    foreach (SceneObjectPart part in grp.GetParts())
                     {
+                        // The part values are likely to come out of order from the collection,
+                        // but the positions and rotations arrays are ordered by link number.
+                        int i = part.LinkNum;
+                        if (i > 0) i--; // need to convert to 0-based except for single-prim
+                        if (i == 0)
+                            continue;   // the root prim does not need an adjustment
                         tmprot = rotations[i];
                         tmprot = rootRotConj * tmprot;
-                        parts[i].RotationOffset = tmprot;
+                        part.RotationOffset = tmprot;
                         offset = positions[i] - rootPos;
                         offset *= rootRotConj;
-                        parts[i].OffsetPosition = offset;
+                        part.OffsetPosition = offset;
                     }
 
                     grp.AbsolutePosition = rootPos;
@@ -1055,7 +1058,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                                 {
                                     m_log.ErrorFormat(
                                         "[CAPS/INVENTORY] Failed to resolve link to item {0} for {1}: {2}",
-                                        item.AssetID, m_Caps.AgentID, e);
+                                        item.AssetID, m_Caps.AgentID, e.Message);
                                 }
                             }
                         } 

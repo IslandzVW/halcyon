@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Inworldz-Prebuild</id>
+    <version>1.3.2</version>
+    <authors>mdickson</authors>
+    <owners>mdickson</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Prebuild is a solution builder for .NET</description>
+    <releaseNotes>Built using vs2015 and packaged with NuGet.</releaseNotes>
+    <copyright>Copyright 2016</copyright>
+    <tags>Prebuild</tags>
+  </metadata>
+  <files>
+    <file src="bin\prebuild.exe" target="tools" /> 
+  </files>
+</package>

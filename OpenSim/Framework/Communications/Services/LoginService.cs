@@ -256,11 +256,11 @@ namespace OpenSim.Framework.Communications.Services
 
                     if (this.IsViewerBlacklisted(clientVersion))
                     {
-                        m_log.DebugFormat("[LOGIN]: Denying login, Client {0} is blacklisted", clientVersion);
+                        m_log.WarnFormat("[LOGIN]: Denying login, Client {0} is blacklisted", clientVersion);
                         return logResponse.CreateViewerNotAllowedResponse();
                     }
 
-                    m_log.DebugFormat(
+                    m_log.InfoFormat(
                         "[LOGIN]: XMLRPC Client is {0} {1} on {2} {3}, start location is {4}",
                             clientChannel, clientVersion, clientPlatform, clientPlatformVer, startLocationRequest);
 
@@ -1039,145 +1039,6 @@ namespace OpenSim.Framework.Communications.Services
             response.StartLocation = "safe";
 
             return PrepareLoginToRegion(regionInfo, theUser, response, clientVersion);
-        }
-
-        protected const string COF_NAME = "Current Outfit";
-        protected bool FixCurrentOutFitFolder(UUID user, ref AvatarAppearance avappearance)
-        {
-            IInventoryProviderSelector inventorySelect = ProviderRegistry.Instance.Get<IInventoryProviderSelector>();
-            IInventoryStorage inventoryService = inventorySelect.GetProvider(user);
-            InventoryFolderBase CurrentOutfitFolder = null;
-            bool changed = false;
-
-            try
-            {
-                CurrentOutfitFolder = inventoryService.FindFolderForType(user, AssetType.CurrentOutfitFolder);
-            }
-            catch (InventoryStorageException)
-            {
-                // could not find it by type. load root and try to find it by name.
-                InventorySubFolderBase foundFolder = null;
-                InventoryFolderBase rootFolder = inventoryService.FindFolderForType(user, AssetType.RootFolder);
-                foreach (var subfolder in rootFolder.SubFolders)
-                {
-                    if (subfolder.Name == COF_NAME)
-                    {
-                        foundFolder = subfolder;
-                        break;
-                    }
-                }
-                if (foundFolder != null)
-                {
-                    CurrentOutfitFolder = inventoryService.GetFolder(foundFolder.ID);
-                    if (CurrentOutfitFolder != null)
-                    {
-                        CurrentOutfitFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
-                        inventoryService.SaveFolder(CurrentOutfitFolder);
-                    }
-                }
-            }
-            if (CurrentOutfitFolder == null) return false;
-            List<InventoryItemBase> ic = inventoryService.GetFolder(CurrentOutfitFolder.ID).Items;
-            List<InventoryItemBase> brokenLinks = new List<InventoryItemBase>();
-            List<UUID> OtherStuff = new List<UUID>();
-            List<AvatarWearable> wearables = avappearance.GetWearables();
-            foreach (var i in ic)
-            {
-                InventoryItemBase linkedItem = null;
-                try {
-                    linkedItem = inventoryService.GetItem(i.AssetID, UUID.Zero);
-                } catch (InventoryStorageException) {
-                    linkedItem = null;
-                }
-                if (linkedItem == null)
-                    brokenLinks.Add(i);
-                else if (linkedItem.ID == AvatarWearable.DEFAULT_EYES_ITEM ||
-                         linkedItem.ID == AvatarWearable.DEFAULT_BODY_ITEM ||
-                         linkedItem.ID == AvatarWearable.DEFAULT_HAIR_ITEM ||
-                         linkedItem.ID == AvatarWearable.DEFAULT_PANTS_ITEM ||
-                         linkedItem.ID == AvatarWearable.DEFAULT_SHIRT_ITEM ||
-                         linkedItem.ID == AvatarWearable.DEFAULT_SKIN_ITEM)
-                    brokenLinks.Add(i); //Default item link, needs removed
-                else if (wearables.Find((w)=>w.ItemID == i.AssetID) == null)
-                    brokenLinks.Add(i);
-                else if (!OtherStuff.Contains(i.AssetID))
-                    OtherStuff.Add(i.AssetID);
-                else
-                    brokenLinks.Add(i);
-            }
-
-            foreach (AvatarWearable wearable in wearables)
-            {
-                if (wearable.ItemID == UUID.Zero) continue;
-                if (!OtherStuff.Contains(wearable.ItemID))
-                {
-                    InventoryItemBase linkedItem = null;
-                    try
-                    {
-                        linkedItem = inventoryService.GetItem(wearable.ItemID, UUID.Zero);
-                    }
-                    catch (InventoryStorageException)
-                    {
-                        linkedItem = null;
-                    }
-                    if (linkedItem != null)
-                    {
-                        InventoryItemBase linkedItem3 = (InventoryItemBase)linkedItem.Clone();
-                        linkedItem3.AssetID = linkedItem.ID;
-                        linkedItem3.AssetType = (int)AssetType.Link;
-                        linkedItem3.ID = UUID.Random();
-                        linkedItem3.CurrentPermissions = linkedItem.NextPermissions;
-                        linkedItem3.EveryOnePermissions = linkedItem.NextPermissions;
-                        linkedItem3.Folder = CurrentOutfitFolder.ID;
-                        inventoryService.CreateItem(linkedItem3);
-                        changed = true;
-                    }
-                }
-            }
-
-            List<UUID> items2UnAttach = new List<UUID>();
-            foreach (int ap in avappearance.GetAttachedPoints())
-            {
-                foreach (AvatarAttachment attachment in avappearance.GetAttachmentsAtPoint(ap))
-                {
-                    if (attachment.ItemID == UUID.Zero) continue;
-                    if (!OtherStuff.Contains(attachment.ItemID))
-                    {
-                        changed = true;
-                        InventoryItemBase linkedItem = null;
-                        try
-                        {
-                            linkedItem = inventoryService.GetItem(attachment.ItemID, UUID.Zero);
-                        }
-                        catch (InventoryStorageException)
-                        {
-                            linkedItem = null;
-                        }
-                        if(linkedItem != null)
-                        {
-                            InventoryItemBase linkedItem3 = (InventoryItemBase)linkedItem.Clone();
-                            linkedItem3.AssetID = linkedItem.ID;
-                            linkedItem3.AssetType = (int)AssetType.Link;
-                            linkedItem3.ID = UUID.Random();
-                            linkedItem3.CurrentPermissions = linkedItem.NextPermissions;
-                            linkedItem3.EveryOnePermissions = linkedItem.NextPermissions;
-                            linkedItem3.Folder = CurrentOutfitFolder.ID;
-                            inventoryService.CreateItem(linkedItem3);
-                        }
-                        else
-                            items2UnAttach.Add(attachment.ItemID);
-                    }
-                }
-            }
-
-            foreach (UUID uuid in items2UnAttach)
-            {
-                avappearance.DetachAttachment(uuid);
-            }
-
-            if (brokenLinks.Count != 0)
-                inventoryService.PurgeItems(brokenLinks);
-            return changed || brokenLinks.Count > 0;
         }
 
         protected abstract RegionInfo RequestClosestRegion(string region);

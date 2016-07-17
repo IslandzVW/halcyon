@@ -215,13 +215,17 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             {
                 // replacing ChatModule: need to redistribute
                 // ChatFromClient to interested subscribers
-                c = FixPositionOfChatMessage(c);
 
                 Scene scene = (Scene)c.Scene;
                 scene.EventManager.TriggerOnChatFromClient(sender, c);
 
                 if (m_conciergedScenes.Contains(c.Scene))
                 {
+                    // Force avatar position to be server-known avatar position. (Former contents of FixPositionOfChatMessage.)
+                    ScenePresence avatar;
+                    if (scene.TryGetAvatar(c.SenderUUID, out avatar))
+                        c.Position = avatar.AbsolutePosition;
+
                     // when we are replacing ChatModule, we treat
                     // OnChatFromClient like OnChatBroadcast for
                     // concierged regions, effectively extending the
@@ -573,7 +577,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             c.Channel = 0;
             c.Position = PosOfGod;
             c.From = m_whoami;
-            c.Sender = null;
             c.SenderUUID = UUID.Zero;
             c.Scene = scene;
 
@@ -589,7 +592,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.Concierge
             c.Channel = 0;
             c.Position = PosOfGod;
             c.From = m_whoami;
-            c.Sender = null;
             c.SenderUUID = UUID.Zero;
             c.Scene = agent.Scene;
 

@@ -84,6 +84,7 @@ namespace OpenSim.Region.Framework.Scenes
             public SceneObjectGroup Group;
             public SceneObjectPart Part;
             public SceneObjectPart.UpdateLevel UpdateLevel;
+            public PrimUpdateFlags UpdateFlags;
         }
 
         private Dictionary<uint, UpdateInfo> m_updateList = new Dictionary<uint, UpdateInfo>();
@@ -254,7 +255,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Prime (cache) the owner's group list.
             m_parentScene.UserGroupsGet(sceneObject.OwnerID);
 
-            foreach (SceneObjectPart part in sceneObject.Children.Values)
+            foreach (SceneObjectPart part in sceneObject.GetParts())
             {
                 Vector3 scale = part.Shape.Scale;
                 if (scale.X < SceneObjectPart.MIN_PART_SCALE)
@@ -321,7 +322,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (!Entities.ContainsKey(sceneObject.LocalId))
                     {
                         Entities.Add(sceneObject);
-                        foreach (SceneObjectPart part in sceneObject.Children.Values)
+                        foreach (SceneObjectPart part in sceneObject.GetParts())
                         {
                             SceneObjectPartsByFullID[part.UUID] = part;
                             SceneObjectPartsByLocalID[part.LocalId] = part;
@@ -333,7 +334,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (entityAdded)
                 {
-                    m_numPrim += sceneObject.Children.Count;
+                    m_numPrim += sceneObject.PrimCount;
                     m_parentScene.EventManager.TriggerParcelPrimCountTainted();
 
                     if (attachToBackup)
@@ -390,7 +391,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (!resultOfObjectLinked)
                     {
-                        m_numPrim -= group.Children.Count;
+                        m_numPrim -= group.PrimCount;
 
                         if ((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                         {
@@ -403,7 +404,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (!resultOfObjectLinked)
                     {
-                        foreach (SceneObjectPart part in group.Children.Values)
+                        foreach (SceneObjectPart part in group.GetParts())
                         {
                             if (!SceneObjectPartsByLocalID.Remove(part.LocalId))
                             {
@@ -431,14 +432,19 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="obj">
         /// A <see cref="EntityBase"/>
         /// </param>
-        protected internal void AddToUpdateList(SceneObjectGroup group, SceneObjectPart part, SceneObjectPart.UpdateLevel level)
+        protected internal void AddToUpdateList(SceneObjectGroup group, SceneObjectPart part, SceneObjectPart.UpdateLevel level, PrimUpdateFlags updateFlags)
         {
             lock (m_updateList)
             {
                 UpdateInfo updInfo;
-                if (m_updateList.TryGetValue(part.LocalId, out updInfo) == false || updInfo.UpdateLevel < level || updInfo.Group != group)
+                if (!m_updateList.TryGetValue(part.LocalId, out updInfo))
                 {
-                    m_updateList[part.LocalId] = new UpdateInfo { Group = group, Part = part, UpdateLevel = level };
+                    m_updateList[part.LocalId] = new UpdateInfo { Group = group, Part = part, UpdateLevel = level, UpdateFlags = updateFlags };
+                }
+                else if(updInfo.UpdateLevel <= level || updInfo.Group != group)
+                {
+                    UpdateInfo oldInfo = m_updateList[part.LocalId];
+                    m_updateList[part.LocalId] = new UpdateInfo { Group = group, Part = part, UpdateLevel = level, UpdateFlags = updateFlags | oldInfo.UpdateFlags };
                 }
             }
         }
@@ -446,7 +452,7 @@ namespace OpenSim.Region.Framework.Scenes
         protected internal void RemoveFromUpdateList(SceneObjectGroup obj)
         {
             //done here so that it happens outside the lock
-            SceneObjectPart[] objParts = obj.GetParts();
+            var objParts = obj.GetParts();
 
             lock (m_updateList)
             {
@@ -560,7 +566,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 try
                 {
-                    update.Part.SendScheduledUpdates(update.UpdateLevel);
+                    update.Part.SendScheduledUpdates(update.UpdateLevel, update.UpdateFlags);
                 }
                 catch (Exception e)
                 {
@@ -720,7 +726,7 @@ namespace OpenSim.Region.Framework.Scenes
                 AttachObject(remoteClient, objatt.LocalId, AttachmentPt, appendMode, false, AttachFlags.None);
 
                 //Send the attachment immediately, so that it goes out before other prims that may be in the sending queue
-                objatt.SendGroupFullUpdate();
+                objatt.SendGroupFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 //objatt.ScheduleGroupForFullUpdate();
                 if (tainted)
                     objatt.HasGroupChanged = true;
@@ -732,9 +738,8 @@ namespace OpenSim.Region.Framework.Scenes
             return objatt;
         }
 
-        // What makes this method odd and unique is it tries to detach using an UUID....     Yay for standards.
-        // To LocalId or UUID, *THAT* is the question. How now Brown UUID??
-        public void DetachSingleAttachmentToInv(UUID itemID, UUID groupId, IClientAPI remoteClient)
+        // This method uses an *inventory* UUID (because it is coming from the source (in this case an LSL script?) as an inventory ID).
+        private void DetachSingleAttachmentFromItemID(UUID itemID, UUID groupId, IClientAPI remoteClient, bool isBot)
         {
             if (itemID == UUID.Zero) // If this happened, someone made a mistake....
                 return;
@@ -752,7 +757,10 @@ namespace OpenSim.Region.Framework.Scenes
                     SceneObjectGroup group = part.ParentGroup;
                     if (group.OwnerID == remoteClient.AgentId)
                     {
-                        m_parentScene.SaveAndDeleteAttachment(remoteClient, group,
+                        if (isBot)
+                            m_parentScene.DeleteAttachment(group);
+                        else
+                            m_parentScene.SaveAndDeleteAttachment(remoteClient, group,
                                 group.GetFromItemID(), group.OwnerID);
                     }
                 }
@@ -774,7 +782,10 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             if (group.OwnerID == remoteClient.AgentId)
                             {
-                                m_parentScene.SaveAndDeleteAttachment(remoteClient, group,
+                                if (isBot)
+                                    m_parentScene.DeleteAttachment(group);
+                                else
+                                    m_parentScene.SaveAndDeleteAttachment(remoteClient, group,
                                         group.GetFromItemID(), group.OwnerID);
                                 return;
                             }
@@ -782,6 +793,18 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+        }
+
+        // This method uses an *inventory* UUID (because it is coming from the source (in this case an LSL script?) as an inventory ID).
+        public void DetachSingleBotAttachment(UUID itemID, UUID groupId, IClientAPI remoteClient)
+        {
+            DetachSingleAttachmentFromItemID(itemID, groupId, remoteClient, true);
+        }
+
+        // This method uses an *inventory* UUID (because it is coming from the source (in this case an LSL script?) as an inventory ID).
+        public void DetachSingleAttachmentToInv(UUID itemID, UUID groupId, IClientAPI remoteClient)
+        {
+            DetachSingleAttachmentFromItemID(itemID, groupId, remoteClient, false);
         }
 
         // This one tries to detach using an attachment point.
@@ -904,7 +927,7 @@ namespace OpenSim.Region.Framework.Scenes
             //fact that a bunch of methods are called when the attachment rezzes
             group.HasGroupChanged = isTainted;
             if (!silent)
-                group.SendFullUpdateToAllClientsImmediate();
+                group.SendFullUpdateToAllClientsImmediate(false);
 
             if ((flags & AttachFlags.DontFireOnAttach) == 0)
             {
@@ -1277,7 +1300,7 @@ namespace OpenSim.Region.Framework.Scenes
                         SceneObjectGroup sog = (SceneObjectGroup)ent;
                         lock (m_dictionary_lock)
                         {
-                            foreach (SceneObjectPart part in sog.Children.Values)
+                            foreach (SceneObjectPart part in sog.GetParts())
                             {
                                 SceneObjectPartsByFullID[part.UUID] = part;
                                 SceneObjectPartsByLocalID[part.LocalId] = part;
@@ -2000,7 +2023,7 @@ namespace OpenSim.Region.Framework.Scenes
                 parentGroup.RootPart.AddFlag(PrimFlags.CreateSelected);
                 parentGroup.TriggerScriptChangedEvent(Changed.LINK);
                 parentGroup.HasGroupChanged = true;
-                parentGroup.ScheduleGroupForFullUpdate();
+                parentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
             }
         }
 
@@ -2073,8 +2096,8 @@ namespace OpenSim.Region.Framework.Scenes
                     // However, editing linked parts and unlinking may be different
                     //
                     SceneObjectGroup group = root.ParentGroup;
-                    List<SceneObjectPart> newSet = new List<SceneObjectPart>(group.Children.Values);
-                    int numChildren = group.Children.Count;
+                    List<SceneObjectPart> newSet = new List<SceneObjectPart>(group.GetParts());
+                    int numChildren = newSet.Count;
 
                     // If there are prims left in a link set, but the root is
                     // slated for unlink, we need to do this
@@ -2134,7 +2157,7 @@ namespace OpenSim.Region.Framework.Scenes
                 foreach (SceneObjectGroup g in affectedGroups)
                 {
                     g.TriggerScriptChangedEvent(Changed.LINK);
-                    g.ScheduleGroupForFullUpdate();
+                    g.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
 
                 //m_log.DebugFormat("Delink finished for {0} prims", primIds.Count);
@@ -2152,12 +2175,12 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (ent is SceneObjectGroup)
                 {
-                    foreach (KeyValuePair<UUID, SceneObjectPart> subent in ((SceneObjectGroup)ent).Children)
+                    foreach (SceneObjectPart subent in ((SceneObjectGroup)ent).GetParts())
                     {
-                        if (subent.Value.LocalId == localID)
+                        if (subent.LocalId == localID)
                         {
-                            objid = subent.Key;
-                            obj = subent.Value;
+                            objid = subent.UUID;
+                            obj = subent;
                         }
                     }
                 }
@@ -2217,9 +2240,19 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup original = GetGroupByPrim(originalPrimID);
             if (original != null)
             {
-                if (m_parentScene.Permissions.CanDuplicateObject(original.Children.Count, original.UUID, AgentID, original.AbsolutePosition))
+                if (m_parentScene.Permissions.CanDuplicateObject(original.PrimCount, original.UUID, AgentID, original.AbsolutePosition))
                 {
-                    SceneObjectGroup copy = original.Copy(AgentID, GroupID, true);
+                    ScenePresence sp;
+                    if (!TryGetAvatar(AgentID, out sp)) sp = null;
+                    UUID ActiveGroupID = UUID.Zero;
+                    IClientAPI remoteClient = null;
+                    if (sp != null)
+                        remoteClient = sp.ControllingClient;
+                    if (remoteClient  != null)
+                        ActiveGroupID = remoteClient.ActiveGroupId;
+
+                    // Clone it but don't change owner yet (if required).
+                    SceneObjectGroup copy = original.Copy(original.OwnerID, original.GroupID, true);
                     copy.AbsolutePosition = copy.AbsolutePosition + offset;
                     copy.ResetInstance(true, true, UUID.Zero);
 
@@ -2229,7 +2262,7 @@ namespace OpenSim.Region.Framework.Scenes
                     lock (m_dictionary_lock)
                     {
                         Entities.Add(copy);
-                        foreach (SceneObjectPart part in copy.Children.Values)
+                        foreach (SceneObjectPart part in copy.GetParts())
                         {
                             SceneObjectPartsByFullID[part.UUID] = part;
                             SceneObjectPartsByLocalID[part.LocalId] = part;
@@ -2243,7 +2276,10 @@ namespace OpenSim.Region.Framework.Scenes
                     // think it's selected, so it will never send a deselect...
                     copy.SetUnselectedForCopy();
 
-                    m_numPrim += copy.Children.Count;
+                    m_numPrim += copy.PrimCount;
+
+                    if (copy.OwnerID != AgentID)
+                        copy.ChangeOwner(AgentID, GroupID);
 
                     if (rot != Quaternion.Identity)
                     {
@@ -2252,10 +2288,15 @@ namespace OpenSim.Region.Framework.Scenes
 
                     copy.CreateScriptInstances(0, ScriptStartFlags.None, m_parentScene.DefaultScriptEngine, 0, null);
                     copy.HasGroupChanged = true;
-                    copy.ScheduleGroupForFullUpdate();
+                    if (remoteClient != null)
+                        copy.GetProperties(remoteClient);
+                    copy.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
                     if (OnObjectDuplicate != null)
                         OnObjectDuplicate(original, copy);
+
+                    // Signal a new object in the scene 
+                    m_parentScene.EventManager.TriggerObjectAddedToScene(copy);
 
                     return copy;
                 }

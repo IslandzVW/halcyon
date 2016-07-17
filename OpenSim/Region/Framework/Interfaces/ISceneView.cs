@@ -88,19 +88,22 @@ namespace OpenSim.Region.Framework.Interfaces
         /// THIS METHOD SHOULD ONLY BE CALLED FROM WITHIN THE SCENE LOOP!!
         /// </summary>
         /// <param name="part"></param>
-        void QueuePartForUpdate(SceneObjectPart sceneObjectPart);
+        /// <param name="updateFlags"></param>
+        void QueuePartForUpdate(SceneObjectPart sceneObjectPart, PrimUpdateFlags updateFlags);
 
         /// <summary>
         /// Sends a full part update to this client
         /// </summary>
         /// <param name="part"></param>
-        void SendPartUpdate(SceneObjectPart part);
+        /// <param name="updateFlags"></param>
+        void SendPartUpdate(SceneObjectPart part, PrimUpdateFlags updateFlags);
 
         /// <summary>
         /// Sends a full group update to this client
         /// </summary>
         /// <param name="sceneObjectGroup"></param>
-        void SendGroupUpdate(SceneObjectGroup sceneObjectGroup);
+        /// <param name="updateFlags"></param>
+        void SendGroupUpdate(SceneObjectGroup sceneObjectGroup, PrimUpdateFlags updateFlags);
 
         /// <summary>
         /// Informs the SceneView that the given patch has been modified and must be resent
@@ -154,6 +157,11 @@ namespace OpenSim.Region.Framework.Interfaces
         /// Clears all presences from the currently seen list
         /// </summary>
         void ClearScene();
+
+        /// <summary>
+        /// Clears all presence and tracking information for this scene view
+        /// </summary>
+        void ClearAllTracking();
 
         /// <summary>
         /// Send a terse update for an avatar if they are within draw distance

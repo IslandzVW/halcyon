@@ -364,6 +364,11 @@ namespace InWorldz.Whip.Client
             this.StoreAsset(asset);
         }
 
+        public AssetStats GetStats(bool resetStats)
+        {
+            return new AssetStats("WHIP");
+        }
+
         #endregion
 
         #region IPlugin Members

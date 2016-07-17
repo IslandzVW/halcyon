@@ -7,7 +7,7 @@ Halcyon was originally based on the OpenSimulator project but was forked in 2010
 [wiki]: https://github.com/InWorldz/halcyon/wiki
 [physxnet]: https://github.com/InWorldz/PhysX.net
 
-For building and installation instructions, please see the [Halcyon wiki][wiki]. (coming soon)
+For building and installation instructions, please see the [Halcyon wiki][wiki].
 
 # Tested operating systems
 At this time, only the following 64 bit operating systems are being tested against:

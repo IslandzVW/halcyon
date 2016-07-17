@@ -504,7 +504,7 @@ namespace InWorldz.PhysxPhysics
         private void ClearForcesAndSendUpdate()
         {
             ClearForces();
-            RequestPhysicsterseUpdate();
+            RequestPhysicsTerseUpdate();
         }
 
         private void IndexAndConfigurePrimaryShapes()
@@ -1197,6 +1197,17 @@ namespace InWorldz.PhysxPhysics
             }
         }
 
+        public override bool SetAirBrakes
+        {
+            get
+            {
+                return false;
+            }
+            set
+            {
+            }
+        }
+
         public override bool SetAlwaysRun
         {
             get
@@ -1418,7 +1429,7 @@ namespace InWorldz.PhysxPhysics
                 if (velChanged != VelocityStatus.NoChange)
                 {
                     //Console.Out.WriteLine("Pos {0}, Rot {1}, Vel {2}", posChanged, rotChanged, velChanged);
-                    RequestPhysicsterseUpdate();
+                    RequestPhysicsTerseUpdate();
                 }
 
                 if (timeStep > 0.0f)
@@ -1802,7 +1813,7 @@ namespace InWorldz.PhysxPhysics
                 }
             }
 
-            RequestPhysicsterseUpdate();
+            RequestPhysicsTerseUpdate();
         }
 
         /// <summary>
@@ -3197,7 +3208,7 @@ namespace InWorldz.PhysxPhysics
                         _vehicleDynamics.OnPhysicsResumed();
                     }
 
-                    RequestPhysicsterseUpdate();
+                    RequestPhysicsTerseUpdate();
                 }
             }
         }

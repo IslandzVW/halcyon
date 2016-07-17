@@ -252,6 +252,7 @@ CREATE TABLE `primshapes` (
   `Texture` longblob,
   `ExtraParams` longblob,
   `Media` longblob,
+  `Materials` longblob,
   `UUID` char(36) NOT NULL DEFAULT '',
   `PhysicsData` blob,
   `PreferredPhysicsShape` tinyint(4) NOT NULL DEFAULT '0',

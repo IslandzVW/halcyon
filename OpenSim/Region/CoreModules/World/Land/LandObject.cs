@@ -567,7 +567,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
 
             ILandObject parcel = m_scene.LandChannel.GetLandObject(pos.X, pos.Y);
-            if (parcel.DenyParcelAccess(sp.UUID, out reason2))
+            if ((parcel != null) && parcel.DenyParcelAccess(sp.UUID, out reason2))
             {
                 float minZ = LandChannel.BAN_LINE_SAFETY_HEIGHT + AVATAR_BOUNCE;
                 if (pos.Z < minZ)
@@ -682,13 +682,13 @@ namespace OpenSim.Region.CoreModules.World.Land
         public void sendAccessList(uint flags, IClientAPI remote_client)
         {
 
-            if (flags == (uint) AccessList.Access || flags == (uint) AccessList.Both)
+            if ((flags & (uint) AccessList.Access) == (uint)AccessList.Access)
             {
                 List<UUID> avatars = createAccessListArrayByFlag(AccessList.Access);
                 remote_client.SendLandAccessListData(avatars,(uint) AccessList.Access,landData.LocalID);
             }
 
-            if (flags == (uint) AccessList.Ban || flags == (uint) AccessList.Both)
+            if ((flags & (uint)AccessList.Ban) == (uint)AccessList.Ban)
             {
                 List<UUID> avatars = createAccessListArrayByFlag(AccessList.Ban);
                 remote_client.SendLandAccessListData(avatars, (uint)AccessList.Ban, landData.LocalID);
@@ -1138,7 +1138,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                     if (scriptedOnly)
                     {
                         bool containsScripts = false;
-                        foreach (SceneObjectPart part in obj.Children.Values)
+                        foreach (SceneObjectPart part in obj.GetParts())
                         {
                             if (part.Inventory.ContainsScripts())
                             {

@@ -75,6 +75,15 @@ namespace OpenSim.Framework.Communications.Cache
         public bool HasReceivedInventory { get { return true; } }
 
         /// <summary>
+        /// This is a list of all of the inventory items that are of type "CallingCard" in the
+        ///   "Calling Card"/Friends/All folder to work around a bug with the viewer creating
+        ///   multiple copies of the same calling card
+        /// </summary>
+        private List<string> _namesOfCallingCardsInCallingCardsFriendsAllFolder = null;
+        private object _namesOfCallingCardsInCallingCardsFriendsAllFolderLock = new object();
+        private System.Threading.AutoResetEvent _namesOfCallingCardsInCallingCardsFriendsAllFolderWaitLock = null;
+
+        /// <summary>
         /// Holds the most appropriate folders for the given type.
         /// Note:  Thus far in the code, this folder doesn't have to be kept up to date as it will 
         /// only be used to retrieve an ID.  If this ever changes, this collection will have to be kept up to date
@@ -132,16 +141,16 @@ namespace OpenSim.Framework.Communications.Cache
                 {
                     if ((permsGiven & permissionMask) != 0)
                     {
-                        return true;
+                        return true;    // friend has permission
                     }
                     else
                     {
-                        return false;
+                        return false;   // friend does not have permission
                     }
                 }
                 else
                 {
-                    return false;
+                    return false;       // not a friend
                 }
             }
         }
@@ -168,6 +177,125 @@ namespace OpenSim.Framework.Communications.Cache
             lock (_permissionsGivenByFriends)
             {
                 _permissionsGivenByFriends[friendId] = newPermissions;
+            }
+        }
+
+        public void RemoveFromFriendsCache(UUID friendId)
+        {
+            lock (_permissionsGivenByFriends)
+            {
+                if (_permissionsGivenByFriends.ContainsKey(friendId))
+                    _permissionsGivenByFriends.Remove(friendId);
+            }
+        }
+
+        /// <summary>
+        /// Check if a calling card already exists in the given folder with the name given
+        /// </summary>
+        /// <param name="folderId">Folder to check for calling cards in</param>
+        /// <param name="name">Name of user whose name may be on one of the calling cards</param>
+        /// <returns></returns>
+        public bool CheckIfCallingCardAlreadyExistsForUser(UUID folderId, string name)
+        {
+            //On 2015-12-15, a problem with calling cards occurred such that all calling cards
+            // would be duplicated by the viewer when logging in, which caused users to not
+            // display themselves and in extreme cases, would block them from doing anything
+            // along with generating 65000 calling cards for one user
+            //To address this issue, we make sure that the viewer cannot add calling cards
+            // that already exist for that user in the "Calling Cards"/Friends/All folder. 
+            // We will ignore the requests.
+            PopulateCallingCardCache(folderId);
+            lock (_namesOfCallingCardsInCallingCardsFriendsAllFolderLock)
+            {
+                if (_namesOfCallingCardsInCallingCardsFriendsAllFolder != null)
+                {
+                    return _namesOfCallingCardsInCallingCardsFriendsAllFolder.Contains(name);
+                }
+                //Something went wrong and we weren't able to populate the calling card cache
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Populates the calling card cache for the user for the given folder
+        /// </summary>
+        /// <param name="folderId"></param>
+        private void PopulateCallingCardCache(UUID folderId)
+        {
+            bool mustWait = true;
+            //Make sure that multiple threads are not trying to populate the cache at the same time
+            // as the inventory operations are heavy
+            lock (_namesOfCallingCardsInCallingCardsFriendsAllFolderLock)
+            {
+                if (_namesOfCallingCardsInCallingCardsFriendsAllFolder != null)
+                {
+                    //The cache exists, we don't need to populate it
+                    return;
+                }
+
+                if (_namesOfCallingCardsInCallingCardsFriendsAllFolderWaitLock == null)
+                {
+                    //We were the first one here, we get to create the lock and have the other threads wait
+                    // as we don't want all threads that might come in here requesting all of the folder contents multiple times
+                    mustWait = false;
+                    _namesOfCallingCardsInCallingCardsFriendsAllFolderWaitLock = new System.Threading.AutoResetEvent(false);
+                }
+            }
+
+            if (mustWait)
+            {
+                //Wait for another thread to finish populating the cache, but dDo not block indefinitely - wait a max of 10 seconds
+                // before proceeding on even though the other thread hasn't finished... this might allow some duplicate calling
+                // cards, but if something is going so wrong that after 10 seconds it hasn't gotten the folders, we should just
+                // give up and try to move on
+                _namesOfCallingCardsInCallingCardsFriendsAllFolderWaitLock.WaitOne(10000);
+                return;
+            }
+
+            List<string> callingCardItemNames = null;
+            try
+            {
+                InventoryFolderBase potentialCallingCardsFolder = FindTopLevelFolderFor(folderId);
+                if (potentialCallingCardsFolder == null || //This can happen if MySQL is used for inventory
+                    potentialCallingCardsFolder.Type == (short)InventoryType.CallingCard)
+                {
+                    InventoryFolderBase newCallingCardFolder = GetFolder(folderId);
+                    //We only check in the All folder as the bug with calling card duplication
+                    // only occurs in "Calling Cards"/Friends/All - not other folders
+                    if (newCallingCardFolder.Name == "All")
+                    {
+                        callingCardItemNames = new List<string>();
+                        foreach (InventoryItemBase itm in newCallingCardFolder.Items)
+                        {
+                            if (itm.AssetType == (int)AssetType.CallingCard)
+                            {
+                                //Add the item name to the list - as the user cannot edit this in the viewer
+                                // as it is disabled, it is safe to check just based on the name
+                                callingCardItemNames.Add(itm.Name);
+                            }
+                        }
+
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                m_log.ErrorFormat("[INVENTORY] An exception occurred finding calling cards in folderID {0}: {1}", folderId, e);
+            }
+            finally
+            {
+                //Now under the lock, set the list of calling cards and then pulse the wait lock to inform other threads
+                // that they can run now too
+                lock (_namesOfCallingCardsInCallingCardsFriendsAllFolderLock)
+                {
+                    _namesOfCallingCardsInCallingCardsFriendsAllFolder = callingCardItemNames;
+                    _namesOfCallingCardsInCallingCardsFriendsAllFolderWaitLock.Set();
+                    if (callingCardItemNames == null)
+                    {
+                        //It failed, so clear the wait lock and let someone else try later
+                        _namesOfCallingCardsInCallingCardsFriendsAllFolderWaitLock = null;
+                    }
+                }
             }
         }
 
@@ -429,7 +557,7 @@ namespace OpenSim.Framework.Communications.Cache
         /// If the inventory service has not yet delievered the inventory
         /// for this user then the request will be queued.
         /// </summary>
-        /// <param name="itemID"></param>
+        /// <param name="item"></param>
         /// <returns>
         /// true on a successful delete or a if the request is queued.
         /// Returns false on an immediate failure

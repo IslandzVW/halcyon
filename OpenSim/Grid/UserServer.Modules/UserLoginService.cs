@@ -376,13 +376,17 @@ namespace OpenSim.Grid.UserServer.Modules
                 if (appearance != null)
                 {
                     loginParams["appearance"] = appearance.ToHashTable();
-                    m_log.DebugFormat("[LOGIN]: Found appearance for {0} {1}", user.FirstName, user.SurName);
+                    m_log.DebugFormat("[LOGIN]: Found appearance version {0} for {1} {2}", appearance.Serial, user.FirstName, user.SurName);
                 }
                 else
                 {
                     m_log.DebugFormat("[LOGIN]: Appearance not for {0} {1}. Creating default.", user.FirstName, user.SurName);
                     appearance = new AvatarAppearance(user.ID);
-                } 
+                }
+
+                // Tell the client the COF version so it can use cached appearance if it matches.
+                response.CofVersion = appearance.Serial.ToString();
+                loginParams["cof_version"] = response.CofVersion;
 
                 ArrayList SendParams = new ArrayList();
                 SendParams.Add(loginParams);

@@ -99,11 +99,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
             try
             {
-                UserProfileData userCheckData = m_scene.CommsManager.UserService.GetUserProfile(firstName, lastName);
-                if (userCheckData != null)
+                // do simple limit/string tests first before profile lookups
+                if ((firstName.Trim() == String.Empty) || (lastName.Trim() == String.Empty))
                 {
-                    reason = "Invalid name: This name has already been taken.";
-                    return UUID.Zero;//You cannot use the same name as another user.
+                    reason = "Invalid name: Bots require both first and last name.";
+                    return UUID.Zero;
                 }
                 if (lastName.ToLower().Contains("inworldz") || firstName.ToLower().Contains("inworldz"))
                 {
@@ -125,6 +125,13 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         return UUID.Zero;
                     }
                 }
+
+                UserProfileData userCheckData = m_scene.CommsManager.UserService.GetUserProfile(firstName, lastName);
+                if (userCheckData != null)
+                {
+                    reason = "Invalid name: This name has already been taken.";
+                    return UUID.Zero;//You cannot use the same name as another user.
+                }
                 if (!m_scene.Permissions.CanRezObject(0, owner, UUID.Zero, startPos, false))
                 {
                     //Cannot create bot on a parcel that does not allow for rezzing an object
@@ -133,6 +140,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 }
 
                 ILandObject parcel = m_scene.LandChannel.GetLandObject(startPos.X, startPos.Y);
+                if (parcel == null)
+                {
+                    reason = "Land parcel could not be found at "+ ((int)startPos.X).ToString() + "," + ((int)startPos.Y).ToString();
+                    return UUID.Zero;
+                }
+
                 ParcelPropertiesStatus status;
                 if (parcel.DenyParcelAccess(owner, out status))
                 {
@@ -192,14 +205,17 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     }
                 }
 
-                if (!CheckAttachmentCount(appearance, parcel, appearance.Owner, out reason))
+                BotClient client = new BotClient(firstName, lastName, m_scene, startPos, owner);
+
+                // Replace all wearables and attachments item IDs with new ones so that they cannot be found in the
+                // owner's avatar appearance in case the user is in the same region, wearing some of the same items.
+                RemapWornItems(client.AgentID, appearance);
+
+                if (!CheckAttachmentCount(client.AgentID, appearance, parcel, appearance.Owner, out reason))
                 {
                     //Too many objects already on this parcel/region
                     return UUID.Zero;
                 }
-
-
-                BotClient client = new BotClient(firstName, lastName, m_scene, startPos, owner);
 
                 originalOwner = appearance.Owner;
                 appearance.Owner = client.AgentID;
@@ -222,8 +238,19 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     startpos = startPos
                 };
 
+                // Now that we're ready to add this bot, one last name check inside the lock.
+                lock (m_bots)
+                {
+                    if (GetBot(firstName, lastName) != null)
+                    {
+                        reason = "Invalid name: A bot with this name already exists.";
+                        return UUID.Zero;//You cannot use the same name as another bot.
+                    }
+                    m_bots.Add(client.AgentId, client);
+                }
+
                 m_scene.ConnectionManager.NewConnection(data, Region.Framework.Connection.EstablishedBy.Login);
-                m_scene.AddNewClient(client);
+                m_scene.AddNewClient(client, true);
                 m_scene.ConnectionManager.TryAttachUdpCircuit(client);
 
                 ScenePresence sp;
@@ -255,8 +282,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         InitialAttachmentRez(sp, appearance.GetAttachments(), originalOwner, isSavedOutfit);
                     }).Start();
 
-                    lock (m_bots)
-                        m_bots.Add(client.AgentId, client);
                     BotRegisterForPathUpdateEvents(client.AgentID, itemID, owner);
 
                     reason = null;
@@ -271,17 +296,44 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             return UUID.Zero;
         }
 
-        public bool CheckAttachmentCount(AvatarAppearance appearance, ILandObject parcel, UUID originalOwner, out string reason)
+        private void RemapWornItems(UUID botID, AvatarAppearance appearance)
+        {
+            // save before Clear calls
+            List<AvatarWearable> wearables = appearance.GetWearables();
+            List<AvatarAttachment> attachments = appearance.GetAttachments();
+            appearance.ClearWearables();
+            appearance.ClearAttachments();
+
+            // Remap bot outfit with new item IDs
+            foreach (AvatarWearable w in wearables)
+            {
+                AvatarWearable newWearable = new AvatarWearable(w);
+                // store a reversible back-link to the original inventory item ID.
+                newWearable.ItemID = w.ItemID ^ botID;
+                appearance.SetWearable(newWearable);
+            }
+
+            foreach (AvatarAttachment a in attachments)
+            {
+                // store a reversible back-link to the original inventory item ID.
+                UUID itemID = a.ItemID ^ botID;
+                appearance.SetAttachment(a.AttachPoint, true, itemID, a.AssetID);
+            }
+        }
+
+        public bool CheckAttachmentCount(UUID botID, AvatarAppearance appearance, ILandObject parcel, UUID originalOwner, out string reason)
         {
             int landImpact = 0;
             foreach (AvatarAttachment attachment in appearance.GetAttachments())
             {
-                if (attachment.ItemID == UUID.Zero)
+                // get original itemID
+                UUID origItemID = attachment.ItemID ^ botID;
+                if (origItemID == UUID.Zero)
                     continue;
 
                 IInventoryProviderSelector inventorySelect = ProviderRegistry.Instance.Get<IInventoryProviderSelector>();
                 var provider = inventorySelect.GetProvider(originalOwner);
-                InventoryItemBase item = provider.GetItem(attachment.ItemID, UUID.Zero);
+                InventoryItemBase item = provider.GetItem(origItemID, UUID.Zero);
 
                 SceneObjectGroup grp = m_scene.GetObjectFromItem(item);
                 if (grp != null)
@@ -312,15 +364,16 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
             foreach (AvatarAttachment attachment in attachments)
             {
-                if (attachment.ItemID == UUID.Zero)
+                UUID origItemID = attachment.ItemID ^ sp.UUID;
+                if (origItemID == UUID.Zero)
                     continue;
 
                 // Are we already attached?
-                if (sp.Appearance.GetAttachmentForItem(attachment.ItemID) == null)
+                if (sp.Appearance.GetAttachmentForItem(origItemID) == null)
                 {
                     IInventoryProviderSelector inventorySelect = ProviderRegistry.Instance.Get<IInventoryProviderSelector>();
                     var provider = inventorySelect.GetProvider(originalOwner);
-                    InventoryItemBase item = provider.GetItem(attachment.ItemID, UUID.Zero);
+                    InventoryItemBase item = provider.GetItem(origItemID, UUID.Zero);
                     if ((item.CurrentPermissions & (uint)PermissionMask.Copy) != (uint)PermissionMask.Copy)
                     {
                         if (ownerSP == null)
@@ -330,8 +383,13 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         continue;//No copy objects cannot be attached
                     }
 
-                    SceneObjectGroup grp = m_scene.RezObject(sp.ControllingClient, sp.ControllingClient.ActiveGroupId,
-                        attachment.ItemID, Vector3.Zero, Vector3.Zero, UUID.Zero, (byte)1, true,
+                    // sp.ControllingClient can go null on botRemoveBot from another script
+                    IClientAPI remoteClient = sp.ControllingClient; // take a reference and use
+                    if (remoteClient == null)
+                        return;
+
+                    SceneObjectGroup grp = m_scene.RezObject(remoteClient, remoteClient.ActiveGroupId,
+                        origItemID, Vector3.Zero, Vector3.Zero, UUID.Zero, (byte)1, true,
                         false, false, sp.UUID, true, (uint)attachment.AttachPoint, 0, null, item, false);
 
                     if (grp != null)
@@ -342,7 +400,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         if (attachment.AttachPoint != 0 && attachment.AttachPoint != grp.GetBestAttachmentPoint())
                             tainted = true;
 
-                        m_scene.SceneGraph.AttachObject(sp.ControllingClient, grp.LocalId, (uint)attachment.AttachPoint, true, false, AttachFlags.None);
+                        m_scene.SceneGraph.AttachObject(remoteClient, grp.LocalId, (uint)attachment.AttachPoint, true, false, AttachFlags.None);
 
                         if (tainted)
                             grp.HasGroupChanged = true;
@@ -355,7 +413,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                         UUID assetId = grp.UUID;
                         sp.Appearance.SetAttachment((int)attachment.AttachPoint, true, attachment.ItemID, assetId);
                         grp.DisableUpdates = false;
-                        grp.ScheduleGroupForFullUpdate();
+                        grp.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                     }
                 }
             }
@@ -372,6 +430,21 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             }
         }
 
+        public IBot GetBot(string first, string last)
+        {
+            string testName = String.Format("{0} {1}", first, last).ToLower();
+            List<UUID> ownedBots = new List<UUID>();
+            lock (m_bots)
+            {
+                foreach (IBot bot in m_bots.Values)
+                {
+                    if (bot.Name.ToLower() == testName)
+                        return bot;
+                }
+            }
+            return null;
+        }
+
         private IBot GetBotWithPermission(UUID botID, UUID attemptingUser)
         {
             IBot bot;
@@ -382,11 +455,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool RemoveBot(UUID botID, UUID attemptingUser)
         {
-            if (GetBotWithPermission(botID, attemptingUser) == null)
-                return false;
-
             lock (m_bots)
+            {
+                if (GetBotWithPermission(botID, attemptingUser) == null)
+                    return false;
                 m_bots.Remove(botID);
+            }
 
             m_scene.IncomingCloseAgent(botID);
             m_scene.CommsManager.UserService.RemoveTemporaryUserProfile(botID);
@@ -566,13 +640,19 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                     }
                 }
 
-                ILandObject parcel = m_scene.LandChannel.GetLandObject(sp.AbsolutePosition.X, sp.AbsolutePosition.Y);
+                Vector3 pos = sp.AbsolutePosition;
+                ILandObject parcel = m_scene.LandChannel.GetLandObject(pos.X, pos.Y);
                 if (parcel == null)
                 {
-                    reason = "Land parcel could not be found.";
+                    reason = "Land parcel could not be found at " + ((int)pos.X).ToString() + "," + ((int)pos.Y).ToString();
                     return false;
                 }
-                if (!CheckAttachmentCount(appearance, parcel, appearance.Owner, out reason))
+
+                // Replace all wearables and attachments item IDs with new ones so that they cannot be found in the
+                // owner's avatar appearance in case the user is in the same region, wearing some of the same items.
+                RemapWornItems(bot.AgentID, appearance);     // allocate temp IDs for the new outfit.
+
+                if (!CheckAttachmentCount(bot.AgentID, appearance, parcel, appearance.Owner, out reason))
                 {
                     //Too many objects already on this parcel/region
                     return false;
@@ -583,14 +663,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 appearance.Owner = bot.AgentID;
                 appearance.IsBotAppearance = true;
 
-
                 sp.Appearance = appearance;
                 if (appearance.AvatarHeight > 0)
                     sp.SetHeight(appearance.AvatarHeight);
                 sp.SendInitialData();
 
                 List<AvatarAttachment> attachments = sp.Appearance.GetAttachments();
-
                 foreach (SceneObjectGroup group in sp.GetAttachments())
                 {
                     sp.Appearance.DetachAttachment(group.GetFromItemID());
@@ -624,6 +702,9 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             IBot bot;
             if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
                 return BotMovementResult.BotNotFound;
+
+            if (m_scene.GetScenePresence(avatarID) == null)
+                return BotMovementResult.UserNotFound;
 
             bot.MovementController.StartFollowingAvatar(avatarID, options);
             return BotMovementResult.Success;
@@ -699,7 +780,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public Vector3 GetBotPosition(UUID botID, UUID attemptingUser)
         {
-            if (GetBotWithPermission(botID, attemptingUser) == null)
+            if (GetBot(botID) == null)
                 return Vector3.Zero;
 
             ScenePresence sp = m_scene.GetScenePresence(botID);

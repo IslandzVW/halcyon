@@ -35,7 +35,7 @@ using OpenSim.Region.Framework.Interfaces;
 namespace OpenSim.Region.Framework.Scenes
 {
     #region Delegates
-    public delegate uint GenerateClientFlagsHandler(UUID userID, UUID objectIDID);
+    public delegate uint GenerateClientFlagsHandler(UUID userID, UUID objectIDID, bool fastCheck);
     public delegate void SetBypassPermissionsHandler(bool value);
     public delegate bool BypassPermissionsHandler();
     public delegate bool PropagatePermissionsHandler();
@@ -148,7 +148,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Object Permission Checks
 
-        public uint GenerateClientFlags(UUID userID, UUID objectID)
+        public uint GenerateClientFlags(UUID userID, UUID objectID, bool fastCheck)
         {
             SceneObjectPart part=m_scene.GetSceneObjectPart(objectID);
 
@@ -177,7 +177,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Delegate[] list = handlerGenerateClientFlags.GetInvocationList();
                 foreach (GenerateClientFlagsHandler check in list)
                 {
-                    perms &= check(userID, objectID);
+                    perms &= check(userID, objectID, fastCheck);
                 }
             }
             return perms;

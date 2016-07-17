@@ -37,78 +37,93 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public partial class Scene
     {
-        protected void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                               UUID fromID, bool fromAgent, bool broadcast, UUID destID, UUID generatingAvatarID)
+        /// <summary>
+        /// Sends a chat message to clients in the region
+        /// </summary>
+        /// <param name="message">The message to send to users</param>
+        /// <param name="type">The type of message (say, shout, whisper, owner say, etc)</param>
+        /// <param name="channel">The channel to speak the message on</param>
+        /// <param name="part">The SceneObjectPart that is sending this chat message</param>
+        public void SimChat(string message, ChatTypeEnum type, int channel, SceneObjectPart part)
         {
-            OSChatMessage args = new OSChatMessage();
+            SimChat(message, type, channel, part.AbsolutePosition, part.Name, part.UUID, UUID.Zero, part.OwnerID, false);
+        }
 
-            args.Message = Utils.BytesToString(message);
-            args.Channel = channel;
-            args.Type = type;
-            args.Position = fromPos;
-            args.SenderUUID = fromID;
-            args.DestinationUUID = destID;
-            args.Scene = this;
+        /// <summary>
+        /// Sends a chat message to clients in the region
+        /// </summary>
+        /// <param name="message">The message to send to users</param>
+        /// <param name="type">The type of message (say, shout, whisper, owner say, etc)</param>
+        /// <param name="channel">The channel to speak the message on</param>
+        /// <param name="part">The SceneObjectPart that is sending this chat message</param>
+        /// <param name="destID">The user or object that is being spoken to (UUID.Zero specifies all users will get the message)</param>
+        /// <param name="broadcast">Whether the message will be sent regardless of distance from the sender</param>
+        public void SimChat(string message, ChatTypeEnum type, int channel, SceneObjectPart part,
+            UUID destID, bool broadcast = false)
+        {
+            SimChat(message, type, channel, part.AbsolutePosition, part.Name, part.UUID, destID, part.OwnerID, broadcast);
+        }
 
-            if (fromAgent)
+        /// <summary>
+        /// Sends a chat message to clients in the region
+        /// </summary>
+        /// <param name="message">The message to send to users</param>
+        /// <param name="type">The type of message (say, shout, whisper, owner say, etc)</param>
+        /// <param name="channel">The channel to speak the message on</param>
+        /// <param name="presence">The ScenePresence that is sending this chat message</param>
+        public void SimChat(string message, ChatTypeEnum type, int channel, ScenePresence presence)
+        {
+            SimChat(message, type, channel, presence.AbsolutePosition, presence.Name, presence.UUID, UUID.Zero, presence.UUID, false);
+        }
+
+        /// <summary>
+        /// Sends a chat message to clients in the region
+        /// </summary>
+        /// <param name="message">The message to send to users</param>
+        /// <param name="type">The type of message (say, shout, whisper, owner say, etc)</param>
+        /// <param name="channel">The channel to speak the message on</param>
+        /// <param name="presence">The ScenePresence that is sending this chat message</param>
+        /// <param name="destID">The user or object that is being spoken to (UUID.Zero specifies all users will get the message)</param>
+        /// <param name="broadcast">Whether the message will be sent regardless of distance from the sender</param>
+        public void SimChat(string message, ChatTypeEnum type, int channel, ScenePresence presence,
+            UUID destID, bool broadcast = false)
+        {
+            SimChat(message, type, channel, presence.AbsolutePosition, presence.Name, presence.UUID, destID, presence.UUID, broadcast);
+        }
+
+        /// <summary>
+        /// Sends a chat message to clients in the region
+        /// </summary>
+        /// <param name="message">The message to send to users</param>
+        /// <param name="type">The type of message (say, shout, whisper, owner say, etc)</param>
+        /// <param name="channel">The channel to speak the message on</param>
+        /// <param name="fromPos">The position of the speaker (the SceneObjectPart or ScenePresence)</param>
+        /// <param name="fromName">The name of the speaker (the SceneObjectPart or ScenePresence)</param>
+        /// <param name="fromID">The UUID of the speaker (the SceneObjectPart or ScenePresence)</param>
+        /// <param name="destID">The user or object that is being spoken to (UUID.Zero specifies all users will get the message)</param>
+        /// <param name="generatingAvatarID">The avatar ID that has generated this message regardless of
+        /// if it is a script owned by this avatar, or the avatar itself</param>
+        /// <param name="broadcast">Whether the message will be sent regardless of distance from the sender</param>
+        public void SimChat(string message, ChatTypeEnum type, int channel, Vector3 fromPos,
+            string fromName, UUID fromID, UUID destID, UUID generatingAvatarID, bool broadcast)
+        {
+            OSChatMessage args = new OSChatMessage()
             {
-                ScenePresence user = GetScenePresence(fromID);
-                if (user != null)
-                    args.Sender = user.ControllingClient;
-            }
-
-            args.From = fromName;
-            args.GeneratingAvatarID = generatingAvatarID;
+                Channel = channel,
+                DestinationUUID = destID,
+                From = fromName,
+                GeneratingAvatarID = generatingAvatarID,
+                Message = message,
+                Position = fromPos,
+                Scene = this,
+                SenderUUID = fromID,
+                Type = type
+            };
 
             if (broadcast)
                 EventManager.TriggerOnChatBroadcast(this, args);
             else
                 EventManager.TriggerOnChatFromWorld(this, args);
-        }
-        
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="type"></param>
-        /// <param name="fromPos"></param>
-        /// <param name="fromName"></param>
-        /// <param name="fromAgentID"></param>
-        public void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                            UUID fromID, bool fromAgent, UUID destID, UUID generatingAvatarID)
-        {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, destID, generatingAvatarID);
-        }
-
-        public void SimChat(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                            UUID fromID, bool fromAgent, UUID generatingAvatarID)
-        {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, false, UUID.Zero, generatingAvatarID);
-        }
-
-        public void SimChat(string message, ChatTypeEnum type, Vector3 fromPos, string fromName, UUID fromID, 
-            bool fromAgent, UUID generatingAvatarID)
-        {
-            SimChat(Utils.StringToBytes(message), type, 0, fromPos, fromName, fromID, fromAgent, generatingAvatarID);
-        }
-
-        public void SimChat(string message, string fromName, UUID generatingAvatarID)
-        {
-            SimChat(message, ChatTypeEnum.Broadcast, Vector3.Zero, fromName, UUID.Zero, false, generatingAvatarID);
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="type"></param>
-        /// <param name="fromPos"></param>
-        /// <param name="fromName"></param>
-        /// <param name="fromAgentID"></param>
-        public void SimChatBroadcast(byte[] message, ChatTypeEnum type, int channel, Vector3 fromPos, string fromName,
-                                     UUID fromID, bool fromAgent, UUID generatingAvatarID)
-        {
-            SimChat(message, type, channel, fromPos, fromName, fromID, fromAgent, true, UUID.Zero, generatingAvatarID);
         }
 
         /// <summary>
@@ -122,7 +137,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (obj != null)
             {
-                obj.SendFullUpdateToClient(remoteClient);
+                //The viewer didn't have the cached prim like we thought - force a full update 
+                // so that they will get the full prim
+                obj.SendFullUpdateToClient(remoteClient, PrimUpdateFlags.ForcedFullUpdate);
             }
 
             return;
@@ -190,7 +207,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (part.ParentGroup.IsAttachment)
                 isAttachment = true;
             // Regardless of if it is an attachment or not, we need to resend the position in case it moved or changed.
-            part.ParentGroup.ScheduleGroupForFullUpdate();
+            part.ParentGroup.ScheduleGroupForFullUpdate(PrimUpdateFlags.FindBest);
 
             // If it's not an attachment, and we are allowed to move it,
             // then we might have done so. If we moved across a parcel
@@ -748,7 +765,7 @@ namespace OpenSim.Region.Framework.Scenes
             return CheckFolderHeirarchyIsAppropriateForPurge(parent, userProfile);
         }
 
-        protected void GrabUpdate(UUID objectID, Vector3 offset, Vector3 pos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
+        protected void GrabUpdate(UUID objectID, Vector3 startPos, Vector3 pos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
         {
             SceneObjectGroup group = m_sceneGraph.GetGroupByPrim(objectID);
             if (group != null)
@@ -758,24 +775,31 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part != null)
                 {
                     SurfaceTouchEventArgs surfaceArg = null;
+                    Vector3 grabOffset = Vector3.Zero;
                     if (surfaceArgs != null && surfaceArgs.Count > 0)
+                    {
                         surfaceArg = surfaceArgs[0];
+                        if (surfaceArg.FaceIndex >= 0)
+                            grabOffset = surfaceArg.Position - startPos;
+                        else
+                            grabOffset = pos - startPos;
+                    }
 
                     // If the touched prim handles touches, deliver it
                     // If not, deliver to root prim,if the root prim doesnt
                     // handle it, deliver a grab to the scene graph
                     if ((part.ScriptEvents & ScriptEvents.touch) != 0)
                     {
-                        EventManager.TriggerObjectGrabUpdate(part.LocalId, 0, part.OffsetPosition, remoteClient, surfaceArg);
+                        EventManager.TriggerObjectGrabUpdate(part.LocalId, 0, grabOffset, remoteClient, surfaceArg);
                     }
                     else if ((group.RootPart.ScriptEvents & ScriptEvents.touch) != 0)
                     {
-                        EventManager.TriggerObjectGrabUpdate(group.RootPart.LocalId, part.LocalId, part.OffsetPosition, remoteClient, surfaceArg);
+                        EventManager.TriggerObjectGrabUpdate(group.RootPart.LocalId, part.LocalId, grabOffset, remoteClient, surfaceArg);
                     }
                     else
                     {
                         //no one can handle it, send a grab
-                        m_sceneGraph.MoveObject(objectID, offset, pos, remoteClient, surfaceArgs);
+                        m_sceneGraph.MoveObject(objectID, startPos, pos, remoteClient, surfaceArgs);
                     }
                 }
                 

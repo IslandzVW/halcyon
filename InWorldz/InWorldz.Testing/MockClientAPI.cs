@@ -34,6 +34,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OpenSim.Framework;
+using OpenMetaverse.StructuredData;
 
 namespace InWorldz.Testing
 {
@@ -134,6 +135,7 @@ namespace InWorldz.Testing
         public event TextureRequest OnRequestTexture;
 
         public event RezObject OnRezObject;
+        public event RestoreObject OnRestoreObject;
 
         public event ModifyTerrain OnModifyTerrain;
 
@@ -599,7 +601,7 @@ namespace InWorldz.Testing
             
         }
 
-        public void SendAppearance(OpenMetaverse.UUID agentID, byte[] visualParams, byte[] textureEntry)
+        public void SendAppearance(AvatarAppearance app)
         {
             
         }
@@ -747,7 +749,7 @@ namespace InWorldz.Testing
             
         }
 
-        public void SendPrimitiveToClient(object sop, uint clientFlags, OpenMetaverse.Vector3 lpos)
+        public void SendPrimitiveToClient(object sop, uint clientFlags, OpenMetaverse.Vector3 lpos, PrimUpdateFlags updateFlags)
         {
             
         }
@@ -854,6 +856,11 @@ namespace InWorldz.Testing
         public void SendAlertMessage(string message)
         {
             
+        }
+
+        public void SendAlertMessage(string message, string infoMessage, OSD extraParams)
+        {
+            /* no op */
         }
 
         public void SendAgentAlertMessage(string message, bool modal)

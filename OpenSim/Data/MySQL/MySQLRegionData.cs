@@ -245,7 +245,7 @@ namespace OpenSim.Data.MySQL
                     {
                         foreach (SceneObjectGroup group in groups)
                         {
-                            foreach (SceneObjectPart prim in group.Children.Values)
+                            foreach (SceneObjectPart prim in group.GetParts())
                             {
                                 currentPrimQuery.Append(this.GeneratePrimValuesBlock(i));
                                 this.FillPrimCommandNumbered(primCommand, prim, group.UUID, group.RegionUUID, i);

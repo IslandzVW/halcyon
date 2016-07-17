@@ -153,6 +153,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         #endregion
 
         #region Constructor
+        private static int m_depth = 0;
 
         public SceneView(ScenePresence presence, bool useCulling)
         {
@@ -163,8 +164,15 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
 
             //Update every 1/4th a draw distance
             DistanceBeforeCullingRequired = _MINIMUM_DRAW_DISTANCE / 8;
+
+            m_log.Warn("[SCENEVIEW]: Constructor, depth now: " + (++m_depth).ToString());
         }
 
+        ~SceneView()
+        {
+            //m_updateTimes
+            m_log.Warn("[SCENEVIEW]: Destructor, depth now: " + (--m_depth).ToString());
+        }
         #endregion
 
         #region Culler Methods
@@ -175,6 +183,10 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         public void CheckForDistantEntitiesToShow()
         {
             if (UseCulling == false)
+                return;
+
+            //Bots don't get to check for updates
+            if (m_presence.IsBot)
                 return;
 
             //With 25K objects, this method takes around 10ms if the client has seen none of the objects in the sim
@@ -256,7 +268,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             foreach (SceneObjectGroup grp in presence.GetAttachments())
             {
                 if (CheckWhetherAttachmentShouldBeSent(grp))
-                    SendGroupUpdate(grp);
+                    SendGroupUpdate(grp, PrimUpdateFlags.ForcedFullUpdate);
             }
         }
 
@@ -303,12 +315,11 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             m_perfMonMS = Environment.TickCount;
             scenePresence.RecalcVisualPosition(out vPos, out vRot, out vParentID);    // vParentID is not used in terse updates.  o.O
             PhysicsActor physActor = scenePresence.PhysicsActor;
-            Vector3 vel = scenePresence.Velocity;
             Vector3 accel = (physActor != null) ? physActor.Acceleration : Vector3.Zero;
 
             // m_log.InfoFormat("[SCENE PRESENCE]: SendTerseUpdateToClient sit at {0} vel {1} rot {2} ", pos.ToString(),vel.ToString(), rot.ToString()); 
             m_presence.ControllingClient.SendAvatarTerseUpdate(scenePresence.Scene.RegionInfo.RegionHandle, (ushort)(scenePresence.Scene.TimeDilation * ushort.MaxValue), scenePresence.LocalId, vPos,
-                                                vel, accel, vRot, scenePresence.UUID, physActor != null ? physActor.CollisionPlane : Vector4.UnitW);
+                scenePresence.Velocity, accel, vRot, scenePresence.UUID, physActor != null ? physActor.CollisionPlane : Vector4.UnitW);
             m_presence.Scene.StatsReporter.AddAgentTime(Environment.TickCount - m_perfMonMS);
             m_presence.Scene.StatsReporter.AddAgentUpdates(1);
         }
@@ -323,6 +334,8 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                 return;//Never send data from a child client
             // 2 stage check is needed.
             if (otherClient == null)
+                return;
+            if (otherClient.IsBot)
                 return;
             if (otherClient.ControllingClient == null)
                 return;
@@ -464,7 +477,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                 if ((e).IsAttachedHUD && (e).OwnerID != m_presence.UUID)
                     continue;//Don't ever send HUD attachments to non-owners
 
-                SceneObjectPart[] sogParts = null;
+                IReadOnlyCollection<SceneObjectPart> sogParts = null;
                 bool needsParts = false;
                 lock (m_updateTimes)
                 {
@@ -527,14 +540,14 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                     return;
                 }
 
-                SendGroupUpdate(kvp.Value);
+                SendGroupUpdate(kvp.Value, PrimUpdateFlags.FindBest);
             }
         }
 
         private bool CheckWhetherAttachmentShouldBeSent(SceneObjectGroup e)
         {
             bool hasBeenUpdated = false;
-            SceneObjectPart[] attParts = e.GetParts();
+            var attParts = e.GetParts();
 
             lock (m_updateTimes)
             {
@@ -703,6 +716,10 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                 return;
             }
 
+            //Bots don't get to check for updates
+            if (m_presence.IsBot)
+                return;
+
             if (m_presence.IsInTransit)
                 return; // disable prim updates during a crossing, but leave them queued for after transition
             if (!m_presence.IsChildAgent && !m_presence.IsFullyInRegion) 
@@ -741,7 +758,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
 
             SceneObjectGroup lastSog = null;
             bool condition1 = false;
-            SceneObjectPart[] lastParentGroupParts = null;
+            IReadOnlyCollection<SceneObjectPart> lastParentGroupParts = null;
 
             while (m_partsUpdateQueue.Count > 0 && HasFinishedInitialUpdate)
             {
@@ -751,10 +768,12 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                     return;
                 }
 
-                SceneObjectPart part = m_partsUpdateQueue.Dequeue();
+                KeyValuePair<SceneObjectPart, PrimUpdateFlags>? kvp = m_partsUpdateQueue.Dequeue();
 
-                if (part.ParentGroup == null || part.ParentGroup.IsDeleted)
+                if (!kvp.HasValue || kvp.Value.Key.ParentGroup == null || kvp.Value.Key.ParentGroup.IsDeleted)
                     continue;
+
+                SceneObjectPart part = kvp.Value.Key;
 
                 double distance;
 
@@ -785,7 +804,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                     condition1 = false;
                 }
 
-                SceneObjectPart[] parentGroupParts = null;
+                IReadOnlyCollection<SceneObjectPart> parentGroupParts = null;
                 bool needsParentGroupParts = false;
                 lock (m_updateTimes)
                 {
@@ -858,14 +877,14 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
 
                     if (hasBeenUpdated)
                     {
-                        SendGroupUpdate(part.ParentGroup);
+                        SendGroupUpdate(part.ParentGroup, kvp.Value.Value);
                         lastSog = part.ParentGroup;
                         continue;
                     }
                 }
 
                 lastSog = part.ParentGroup;
-                SendPartUpdate(part);
+                SendPartUpdate(part, kvp.Value.Value);
             }
 
             /*if (queueCount > 0)
@@ -878,17 +897,21 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             m_presence.Scene.StatsReporter.AddAgentTime(Environment.TickCount - m_perfMonMS);
         }
 
-        public void SendGroupUpdate(SceneObjectGroup sceneObjectGroup)
+        public void SendGroupUpdate(SceneObjectGroup sceneObjectGroup, PrimUpdateFlags updateFlags)
         {
-            SendPartUpdate(sceneObjectGroup.RootPart);
+            //Bots don't get to send updates
+            if (m_presence.IsBot)
+                return;
+
+            SendPartUpdate(sceneObjectGroup.RootPart, updateFlags);
             foreach (SceneObjectPart part in sceneObjectGroup.GetParts())
             {
                 if (!part.IsRootPart())
-                    SendPartUpdate(part);
+                    SendPartUpdate(part, updateFlags);
             }
         }
 
-        public void SendPartUpdate(SceneObjectPart part)
+        public void SendPartUpdate(SceneObjectPart part, PrimUpdateFlags updateFlags)
         {
             ScenePartUpdate update = null;
 
@@ -941,7 +964,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             }
             if (sendFullUpdate)
             {
-                part.SendFullUpdate(m_presence.ControllingClient, m_presence.GenerateClientFlags(part.UUID));
+                part.SendFullUpdate(m_presence.ControllingClient, m_presence.GenerateClientFlags(part.UUID), updateFlags);
             }
             else if (sendTerseUpdate)
             {
@@ -956,11 +979,11 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                     if (part != part.ParentGroup.RootPart)
                         return;
 
-                    part.ParentGroup.SendFullUpdateToClient(m_presence.ControllingClient);
+                    part.ParentGroup.SendFullUpdateToClient(m_presence.ControllingClient, PrimUpdateFlags.FullUpdate);
                     return;
                 }
 
-                part.SendFullUpdate(m_presence.ControllingClient, m_presence.GenerateClientFlags(part.UUID));
+                part.SendFullUpdate(m_presence.ControllingClient, m_presence.GenerateClientFlags(part.UUID), PrimUpdateFlags.FullUpdate);
             }
         }
 
@@ -970,12 +993,12 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// THIS METHOD SHOULD ONLY BE CALLED FROM WITHIN THE SCENE LOOP!!
         /// </summary>
         /// <param name="part"></param>
-        public void QueuePartForUpdate(SceneObjectPart part)
+        public void QueuePartForUpdate(SceneObjectPart part, PrimUpdateFlags updateFlags)
         {
             if (m_presence.IsBot) return;
 
             // m_log.WarnFormat("[ScenePresence]: {0} Queuing update for {1} {2} {3}", part.ParentGroup.Scene.RegionInfo.RegionName, part.UUID.ToString(), part.LocalId.ToString(), part.ParentGroup.Name);
-            m_partsUpdateQueue.Enqueue(part);
+            m_partsUpdateQueue.Enqueue(part, updateFlags);
         }
 
         /// <summary>
@@ -983,7 +1006,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// 
         /// SHOULD ONLY BE CALLED FROM CHILDREN OF THE SCENE LOOP!!
         /// </summary>
-        private void ClearAllTracking()
+        public void ClearAllTracking()
         {
             if (m_partsUpdateQueue.Count > 0)
                 m_partsUpdateQueue.Clear();
@@ -1004,6 +1027,10 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// <param name="localIds"></param>
         public void SendKillObjects(SceneObjectGroup grp, List<uint> localIds)
         {
+            //Bots don't get to check for updates
+            if (m_presence.IsBot)
+                return;
+
             //Only send the kill object packet if we have seen this object
             lock (m_updateTimes)
             {
@@ -1024,6 +1051,10 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// <param name="y"></param>
         public void TerrainPatchUpdated(float[] serialized, int x, int y)
         {
+            //Bots don't get to check for updates
+            if (m_presence.IsBot)
+                return;
+
             //Check to make sure that we only send it if we can see it or culling is disabled
             if ((UseCulling == false) || ShowTerrainPatchToClient(x, y))
                 m_presence.ControllingClient.SendLayerData(x, y, serialized);

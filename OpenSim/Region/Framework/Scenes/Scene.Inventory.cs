@@ -171,8 +171,6 @@ namespace OpenSim.Region.Framework.Scenes
                             remoteClient.SendAgentAlertMessage("Insufficient permissions to edit notecard", false);
                             return new UpdateItemResponse();
                         }
-
-                        remoteClient.SendAgentAlertMessage("Notecard saved", false);
                     }
                     else if ((InventoryType)item.InvType == InventoryType.LSL)
                     {
@@ -1157,6 +1155,60 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (userInfo != null)
             {
+                if(assetType == AssetType.CallingCard && invType == (int)OpenMetaverse.InventoryType.CallingCard)
+                {
+                    //On 2015-12-15, a problem with calling cards occurred such that all calling cards
+                    // would be duplicated by the viewer when logging in, which caused users to not
+                    // display themselves and in extreme cases, would block them from doing anything
+                    // along with generating 65000 calling cards for one user
+                    //To address this issue, we make sure that the viewer cannot add calling cards
+                    // that already exist for that user in the "Calling Cards"/Friends/All folder. 
+                    // We will ignore the requests.
+                    //We will cache the calling card folder in the CachedUserInfo as we don't want to 
+                    // call the inventory database repeatedly to get the data.
+                    if (userInfo.CheckIfCallingCardAlreadyExistsForUser(folderID, name))
+                    {
+                        m_log.WarnFormat(
+                            "[AGENT INVENTORY]: User requested to generate duplicate calling card for client {0} uuid {1} in CreateNewInventoryItem!",
+                                remoteClient.Name, remoteClient.AgentId);
+                        return;
+                    }
+                }
+
+                // Make sure that if this is an outfit link that the old outfit link is gone.
+                // However there may be more than one if this is is an old DB, so make sure all are gone.
+                if (assetType == AssetType.LinkFolder)
+                {
+                    // Verify this user actually owns the item, AND that the current operation is in the COF - otherwise there's no reason to clean the COF!
+                    InventoryFolderBase currentOutfitFolder = GetCurrentOutfitFolder(userInfo);
+                    if (currentOutfitFolder != null && currentOutfitFolder.ID == folderID)
+                    {
+                        uint count = 0;
+
+                        try
+                        {
+                            // Get rid of all folder links in the COF: there should only ever be one, and that's the one we are about to create.
+                            foreach (InventoryItemBase cofItem in currentOutfitFolder.Items)
+                            {
+                                if (cofItem.AssetType == (int)AssetType.LinkFolder)
+                                {
+                                    userInfo.DeleteItem(cofItem);
+                                    ++count;
+                                }
+                            }
+                        }
+                        catch (InventoryStorageException ise)
+                        {
+                            m_log.WarnFormat("[AGENT INVENTORY] Had InventoryStorageException while removing out of date folder links from the COF for avatar {0}: {1}", userInfo.UserProfile.ID, ise);
+                        }
+
+                        if (count > 1) // Only report if more than one was removed.
+                            m_log.InfoFormat("[AGENT INVENTORY] Removed {0} out of date folder links from the COF for avatar {1}.", count, userInfo.UserProfile.ID);
+
+                        userInfo.UpdateFolder(currentOutfitFolder);
+                    }
+                }
+
                 InventoryItemBase item = new InventoryItemBase();
                 item.Owner = remoteClient.AgentId;
                 item.CreatorId = creatorID;
@@ -1194,6 +1246,44 @@ namespace OpenSim.Region.Framework.Scenes
                     "No user details associated with client {0} uuid {1} in CreateNewInventoryItem!",
                      remoteClient.Name, remoteClient.AgentId);
             }
+        }
+
+        protected const string COF_NAME = "Current Outfit";
+        // Clone of AvatarFactoryModule::BuildCOF::GetCurrentOutfitFolder
+        private static InventoryFolderBase GetCurrentOutfitFolder(CachedUserInfo userInfo)
+        {
+            InventoryFolderBase currentOutfitFolder = null;
+
+            try
+            {
+                currentOutfitFolder = userInfo.FindFolderForType((int)AssetType.CurrentOutfitFolder);
+            }
+            catch (InventoryStorageException)
+            {
+                // could not find it by type. load root and try to find it by name.
+                InventorySubFolderBase foundFolder = null;
+                InventoryFolderBase rootFolder = userInfo.FindFolderForType((int)AssetType.RootFolder);
+                foreach (var subfolder in rootFolder.SubFolders)
+                {
+                    if (subfolder.Name == COF_NAME)
+                    {
+                        foundFolder = subfolder;
+                        break;
+                    }
+                }
+                if (foundFolder != null)
+                {
+                    currentOutfitFolder = userInfo.GetFolder(foundFolder.ID);
+                    if (currentOutfitFolder != null)
+                    {
+                        currentOutfitFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
+                        userInfo.UpdateFolder(currentOutfitFolder);
+                    }
+                }
+            }
+            if(currentOutfitFolder != null)
+                currentOutfitFolder = userInfo.GetFolder(currentOutfitFolder.ID);
+            return currentOutfitFolder;
         }
 
         /// <summary>
@@ -1536,7 +1626,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        private InventoryItemBase CreateAgentInventoryItemFromTask(UUID destAgent, SceneObjectPart part, UUID itemId)
+        private InventoryItemBase CreateAgentInventoryItemFromTask(UUID destAgent, SceneObjectPart part, UUID itemId, out string reason)
         {
             TaskInventoryItem taskItem = part.Inventory.GetInventoryItem(itemId);
 
@@ -1547,12 +1637,13 @@ namespace OpenSim.Region.Framework.Scenes
                         + " inventory item from a prim's inventory item "
                         + " but the required item does not exist in the prim's inventory",
                     itemId, part.Name, part.UUID);
-
+                reason = "item";
                 return null;
             }
 
             if ((destAgent != taskItem.OwnerID) && ((taskItem.CurrentPermissions & (uint)PermissionMask.Transfer) == 0))
             {
+                reason = "perm";
                 return null;
             }
 
@@ -1570,6 +1661,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             CalcItemPermsFromTaskItem(agentItem, taskItem, (part.OwnerID != destAgent));
 
+            reason = "";
             return agentItem;
         }
 
@@ -1582,14 +1674,25 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="part"></param>
         /// <param name="itemID"></param>
         public InventoryItemBase MoveTaskInventoryItem(UUID AgentId, IClientAPI remoteClient, UUID folderId, SceneObjectPart part, UUID itemId,
-            bool silent)
+            bool silent, out string reason)
         {
+            reason = "";
             if (part == null)
+            {
+                reason = "part";
                 return null;
+            }
 
             TaskInventoryItem taskItem = part.Inventory.GetInventoryItem(itemId);
             if (taskItem == null)
+            {
+                reason = "item";
                 return null;
+            }
+
+            // Normally either the taskItem must be copyable (copy operation), or the enclosing object must be modifyable (move operation).
+            // But SL allows *moves* but not *deletes* in this case, and IW has creators depending on this in no-mod boxed deliverables.
+            // See commit f5e488ba572cc0cd2ca22c01068a166bc8dcfabf now reverted.
 
             if (remoteClient == null)
             {
@@ -1600,14 +1703,18 @@ namespace OpenSim.Region.Framework.Scenes
                         "[PRIM INVENTORY]: " +
                         "Avatar {0} cannot be found to add item",
                         AgentId);
+                    reason = "user";
                     return null;
                 }
             }
 
 
-            InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(AgentId, part, itemId);
+            InventoryItemBase agentItem = CreateAgentInventoryItemFromTask(AgentId, part, itemId, out reason);
             if (agentItem == null)
+            {
+                // reason was set by the function call above
                 return null;
+            }
 
             agentItem.Folder = folderId;
             if (remoteClient == null || silent)
@@ -1663,7 +1770,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (remoteClient.AgentId != taskItem.OwnerID)
                 return;
 
-            MoveTaskInventoryItem(remoteClient.AgentId, remoteClient, folderId, part, itemId, false);
+            string reason = "";
+            MoveTaskInventoryItem(remoteClient.AgentId, remoteClient, folderId, part, itemId, false, out reason);
         }
 
         /// <summary>
@@ -1682,7 +1790,8 @@ namespace OpenSim.Region.Framework.Scenes
                 remoteClient = avatar.ControllingClient;
             }
 
-            return MoveTaskInventoryItem(avatarId, remoteClient, folderId, part, itemId, false);
+            string reason = "";
+            return MoveTaskInventoryItem(avatarId, remoteClient, folderId, part, itemId, false, out reason);
         }
 
         /// <summary>
@@ -1790,7 +1899,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public UUID MoveTaskInventoryItems(UUID AgentID, string category, SceneObjectPart host, List<UUID> items)
+        public UUID MoveTaskInventoryItems(UUID AgentID, string category, SceneObjectPart host, List<UUID> items, out string reason)
         {
             ScenePresence avatar;
             IClientAPI remoteClient = null;
@@ -1801,6 +1910,7 @@ namespace OpenSim.Region.Framework.Scenes
                     "[PRIM INVENTORY]: " +
                     "Avatar {0} cannot be found to add items",
                     AgentID);
+                reason = "user";
                 return UUID.Zero;
             }
             if (TryGetAvatar(AgentID, out avatar))
@@ -1815,19 +1925,32 @@ namespace OpenSim.Region.Framework.Scenes
 
             foreach (UUID itemID in items)
             {
-                MoveTaskInventoryItem(AgentID, remoteClient, newFolderID, host, itemID, true);
+                InventoryItemBase newItem = MoveTaskInventoryItem(AgentID, remoteClient, newFolderID, host, itemID, true, out reason);
+                if (newItem == null)
+                {
+                    // reason was set by the function call above
+                    m_log.WarnFormat("[PRIM INVENTORY]: Could not move item {0} to new folder {1} for user {2}: {3}", itemID, newFolderID, AgentID, reason);
+                    return UUID.Zero;
+                }
             }
-
-            InventoryFolderBase fullFolder = profile.GetFolder(newFolderID);
 
             if (remoteClient != null)
             {
+                InventoryFolderBase fullFolder = profile.GetFolder(newFolderID);
+
                 //profile.SendInventoryDecendents(remoteClient, rootFolder.ID, true, false);
                 remoteClient.SendBulkUpdateInventory(fullFolder);
                 profile.SendInventoryDecendents(remoteClient, newFolderID, false, true);
             }
 
+            reason = "";
             return newFolderID;
+        }
+
+        public UUID MoveTaskInventoryItems(UUID AgentID, string category, SceneObjectPart host, List<UUID> items)
+        {
+            string reason;
+            return MoveTaskInventoryItems(AgentID, category, host, items, out reason);
         }
 
         // Limits itemInfo, applying any limits in currentItem
@@ -2124,6 +2247,9 @@ namespace OpenSim.Region.Framework.Scenes
                         "[PRIM INVENTORY]: " +
                         "Script in object {0} : {1}, attempted to load script {2} : {3} into object {4} : {5} with invalid pin {6}",
                         srcPart.Name, srcId, srcTaskItem.Name, srcTaskItem.ItemID, destPart.Name, destId, pin);
+				if (destPart.ScriptAccessPin == 0) {
+					return "NO PIN";
+				}
                 return "PIN";   // signal a different response to the caller
             }
 
@@ -2992,27 +3118,37 @@ namespace OpenSim.Region.Framework.Scenes
 
         private Dictionary<UUID, KnownAssetUpdateRequest> _pendingAssetUpdates = new Dictionary<UUID, KnownAssetUpdateRequest>();
 
+        public void DeleteAttachment(SceneObjectGroup grp)
+        {
+            if (grp != null)
+            {
+                grp.DetachToInventoryPrep();
+                DeleteSceneObject(grp, false);
+                return;
+            }
+        }
+
         public void SaveAndDeleteAttachment(IClientAPI remoteClient, SceneObjectGroup grp, UUID assetID, UUID agentID)
         {
             if (grp != null)
             {
                 m_log.DebugFormat("[DETACH]: Saving attachpoint {0}: [{1}] {2}", grp.GetCurrentAttachmentPoint(), grp.UUID, grp.Name);
 
-                grp.DetachToInventoryPrep();
-
                 if (!grp.HasGroupChanged && grp.GroupScriptEvents == 0)
                 {
                     m_log.InfoFormat("[ATTACHMENT]: Save request for {0} which is unchanged", grp.UUID);
-                    DeleteSceneObject(grp, false);
+                    DeleteAttachment(grp);
                     return;
                 }
 
                 if (grp.IsTempAttachment)
                 {
                     m_log.InfoFormat("[ATTACHMENT]: Ignored save request for {0} which is temporary", grp.UUID);
-                    DeleteSceneObject(grp, false);
+                    DeleteAttachment(grp);
                     return;
                 }
+
+                grp.DetachToInventoryPrep();
 
                 KnownAssetUpdateRequest updateReq = new KnownAssetUpdateRequest
                 {
@@ -3345,7 +3481,7 @@ namespace OpenSim.Region.Framework.Scenes
                 if (RezSelected)
                 {
                     //also tell the client there is a new object being rezzed
-                    foreach (SceneObjectPart part in group.Children.Values)
+                    foreach (SceneObjectPart part in group.GetParts())
                     {
                         part.AddFlag(PrimFlags.CreateSelected);
                     }
@@ -3367,7 +3503,7 @@ namespace OpenSim.Region.Framework.Scenes
             rootPart.Name = name;
             rootPart.Description = description;
 
-            List<SceneObjectPart> partList = new List<SceneObjectPart>(group.Children.Values);
+            var partList = group.GetParts();
 
             foreach (SceneObjectPart part in partList)
             {
@@ -3437,7 +3573,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // Fire on_rez
                     group.CreateScriptInstances(startParam, ScriptStartFlags.PostOnRez, DefaultScriptEngine, (int)ScriptStateSource.PrimData, null);
 
-                    rootPart.ScheduleFullUpdate();
+                    rootPart.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
                 }
 
             } 
@@ -3500,6 +3636,23 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
+        public virtual void RestoreObject(IClientAPI remoteClient, UUID groupID, UUID itemID)
+        {
+            // Rez object
+            CachedUserInfo userInfo = CommsManager.UserService.GetUserDetails(remoteClient.AgentId);
+            if (userInfo != null)
+            {
+                InventoryItemBase item = userInfo.FindItem(itemID);
+
+                if (item != null)
+                {
+                    RestoreObject(remoteClient, userInfo, itemID, item, null, groupID);
+                }
+            }
+            else
+                m_log.WarnFormat("[AGENT INVENTORY]: User profile not found during restore object: {0}", RegionInfo.RegionName);
+        }
+
         public virtual SceneObjectGroup GetObjectFromItem(InventoryItemBase item)
         {
             AssetBase rezAsset = CommsManager.AssetCache.GetAsset(item.AssetID, AssetRequestInfo.InternalRequest());
@@ -3523,8 +3676,11 @@ namespace OpenSim.Region.Framework.Scenes
                     //
                     itemId = item.ID;
                 }
+                return this.DoDeserializeGroup(item.ID, rezAsset.Data);
             }
-            return this.DoDeserializeGroup(item.ID, rezAsset.Data);
+
+            // else asset could not be loaded
+            return null;
         }
 
         public virtual SceneObjectGroup RezObject(IClientAPI remoteClient, UUID groupID, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
@@ -3682,6 +3838,127 @@ namespace OpenSim.Region.Framework.Scenes
             return null;
         }
 
+        // unpackedGroup is null for an actual user Inventory item. non-null for group from a coalesced inventory item.
+        public virtual bool RestoreObject(IClientAPI remoteClient, CachedUserInfo userInfo, UUID itemID, InventoryItemBase item, SceneObjectGroup unpackedGroup, UUID groupID)
+        {
+            Vector3 scale = new Vector3(0.5f, 0.5f, 0.5f);
+
+            AssetBase rezAsset = CommsManager.AssetCache.GetAsset(item.AssetID, AssetRequestInfo.InternalRequest());
+            if (rezAsset == null)
+                return false;
+
+            UUID itemId = UUID.Zero;
+            bool success = false;
+
+            // If we have permission to copy then link the rezzed object back to the user inventory
+            // item that it came from.  This allows us to enable 'save object to inventory'
+            if (!Permissions.BypassPermissions())
+            {
+                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == (uint)PermissionMask.Copy)
+                {
+                    itemId = item.ID;
+                }
+            }
+            else
+            {
+                // Brave new fullperm world
+                //
+                itemId = item.ID;
+            }
+
+            if ((unpackedGroup==null) && item.ContainsMultipleItems)
+            {
+                CoalescedObject obj = this.DoDeserializeCoalesced(itemId, rezAsset.Data);
+                //restore (rez) coalesced object
+                success = this.RestoreCoalescedObject(remoteClient, userInfo, obj, itemID, item, groupID);
+            }
+            else
+            {
+                //rez single group
+                SceneObjectGroup group = (unpackedGroup == null) ? this.DoDeserializeGroup(itemId, rezAsset.Data) : unpackedGroup;
+                Vector3 pos = group.RootPart.GroupPositionNoUpdate;
+                bool attachment = group.IsAttachment;
+                uint attachPoint = group.AttachmentPoint;
+                group.DisableUpdates = false;
+
+                bool shouldTaint = false;
+
+                if (attachment)
+                {
+                    remoteClient.SendAlertMessage("Inventory item is an attachment, use Wear or Add instead.");
+                    return false;
+                }
+
+                // Save the previous attachment params if they've never been saved or default.
+                if (group.RootPart.SavedAttachmentPos == Vector3.Zero)
+                    group.RootPart.SavedAttachmentPos = group.RootPart.RawGroupPosition;
+                if (group.RootPart.SavedAttachmentRot == Quaternion.Identity)
+                    group.RootPart.SavedAttachmentRot = group.RootPart.RotationOffset;
+
+                //after this, the group is no longer an attachment as it is being rezzed as a normal group.
+                //this prevents an issue where the BB calculation tries to get the worldpos for the
+                //attachment that is not yet attached and creates a null reference exception
+                //when trying to access the scene to look up the wearer
+                group.SetAttachmentPoint(0);
+
+                Box bbox = group.BoundingBox();
+                scale = bbox.Size; ; // update the 0.5 cube with the actual size
+                pos = group.AbsolutePosition;
+                float zCorrection = group.RootPart.GroupPosition.Z - bbox.Center.Z;
+                pos.Z += zCorrection;
+
+                SceneObjectGroup rezGroup =
+                    this.RezSingleObjectToWorld(remoteClient, itemID,
+                            group, pos, Vector3.Zero, UUID.Zero, 1, 1, false,
+                            attachment, pos, group.Name, group.RootPart.Description,
+                            item, ItemPermissionBlock.FromOther(item), 0, groupID, null);
+
+                if (rezGroup != null)
+                {
+                    success = true;
+
+                    if (shouldTaint)
+                    {
+                        rezGroup.HasGroupChanged = true;
+                        rezGroup.TaintedAttachment = true;
+                    }
+                }
+            }
+
+            if (success && !Permissions.BypassPermissions())
+            {
+                //we check the inventory item permissions here instead of the prim permissions
+                //if the group or item is no copy, it should be removed
+                if ((item.CurrentPermissions & (uint)PermissionMask.Copy) == 0)
+                {
+                    // Not an attachment, so remove inventory copy, if no-copy.
+                    if (userInfo != null)
+                        userInfo.DeleteItem(item);
+                }
+            }
+
+            return success;
+        }
+
+        private bool RestoreCoalescedObject(IClientAPI remoteClient, CachedUserInfo userInfo, CoalescedObject obj, UUID itemID, InventoryItemBase item, UUID groupId)
+        {
+            //determine the bounding box of the entire set
+            Box coBoundingBox = obj.GetBoundingBox();
+            Vector3 rezAtRootOffset = Vector3.Zero;
+
+            Vector3 newPos = coBoundingBox.Center;
+
+            //rez each group
+            bool success = true;
+            foreach (SceneObjectGroup group in obj.Groups)
+            {
+                group.ResetInstance(true, false, UUID.Zero);
+                success &= RestoreObject(remoteClient, userInfo, itemID, item, group, groupId);
+            }
+
+            return success;
+        }
+
         private SceneObjectGroup DoDeserializeGroup(UUID itemId, byte[] bytes)
         {
             SceneObjectGroup grp;
@@ -3728,7 +4005,7 @@ namespace OpenSim.Region.Framework.Scenes
         private static void ResetGroupAfterDeserialization(UUID itemId, SceneObjectGroup grp)
         {
             grp.ResetInstance(true, false, UUID.Zero);
-            foreach (var part in grp.Children.Values)
+            foreach (var part in grp.GetParts())
             {
                 part.DoPostDeserializationCleanups(itemId);
                 part.TrimPermissions();
@@ -4028,7 +4305,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             group.CreateScriptInstances(param, ScriptStartFlags.PostOnRez, DefaultScriptEngine, (int)ScriptStateSource.PrimData, null);
-            rootPart.ScheduleFullUpdate();
+            rootPart.ScheduleFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
             reason = "success";
             return rootPart.ParentGroup;
@@ -4263,16 +4540,26 @@ namespace OpenSim.Region.Framework.Scenes
         {
             UUID groupId = UUID.Zero;
             ScenePresence presence;
+            bool isBot = false;
+
             if (TryGetAvatar(remoteClient.AgentId, out presence))
             {
+                isBot = presence.IsBot;
+                if (isBot)
+                    itemID ^= presence.UUID;    // use original itemID from owner's inventory
                 groupId = presence.Appearance.DetachAttachment(itemID);
                 IAvatarFactory ava = RequestModuleInterface<IAvatarFactory>();
                 if (ava != null)
-                    ava.UpdateDatabase(remoteClient.AgentId, presence.Appearance, null, null);
-
+                {
+                    if (!isBot)
+                        ava.UpdateDatabase(remoteClient.AgentId, presence.Appearance, null, null);
+                }
             }
 
-            m_sceneGraph.DetachSingleAttachmentToInv(itemID, groupId, remoteClient);
+            if (isBot)
+                m_sceneGraph.DetachSingleBotAttachment(itemID, groupId, remoteClient);
+            else
+                m_sceneGraph.DetachSingleAttachmentToInv(itemID, groupId, remoteClient);
         }
 
         public void GetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID)
@@ -4307,7 +4594,7 @@ namespace OpenSim.Region.Framework.Scenes
                     sog.SetOwnerId(ownerID);
                     sog.SetGroup(groupID, remoteClient);
 
-                    foreach (SceneObjectPart child in sog.Children.Values)
+                    foreach (SceneObjectPart child in sog.GetParts())
                         child.Inventory.ChangeInventoryOwner(ownerID);
                 }
                 else
@@ -4319,7 +4606,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if (sog.GroupID != groupID)
                         continue;   // Must deed to the *current* object's group.
 
-                    foreach (SceneObjectPart child in sog.Children.Values)
+                    foreach (SceneObjectPart child in sog.GetParts())
                     {
                         child.LastOwnerID = child.OwnerID;
                         child.Inventory.ChangeInventoryOwner(groupID);

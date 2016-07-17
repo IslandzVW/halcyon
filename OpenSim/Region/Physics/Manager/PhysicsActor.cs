@@ -205,7 +205,7 @@ namespace OpenSim.Region.Physics.Manager
             }
         }
 
-        public virtual void RequestPhysicsterseUpdate()
+        public virtual void RequestPhysicsTerseUpdate()
         {
             // Make a temporary copy of the event to avoid possibility of
             // a race condition if the last subscriber unsubscribes
@@ -321,6 +321,7 @@ namespace OpenSim.Region.Physics.Manager
         public abstract ActorType PhysicsActorType { get; }
         public abstract bool IsPhysical { get; }
         public abstract bool Flying { get; set; }
+        public abstract bool SetAirBrakes { get; set; }
         public abstract bool SetAlwaysRun { get; set; }
         public abstract bool ThrottleUpdates { get; set; }
         public abstract bool IsColliding { get; set; }

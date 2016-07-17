@@ -28,40 +28,80 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+using log4net;
+using Nini.Config;
+using OpenMetaverse;
+using OpenSim.Framework;
+using OpenSim.Region.Physics.Manager;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using OpenMetaverse;
+using System.Threading;
+using System.Reflection;
 
-namespace OpenSim.Region.CoreModules.World.Permissions
+namespace OpenSim.Region.Physics.BasicPhysicsPlugin
 {
-    /// <summary>
-    /// Stores information about permissions for a specific avatar
-    /// </summary>
-    class Avatar
+
+    public class Material : IMaterial
     {
-        private Dictionary<UUID, int> _friendPermissions
-            = new Dictionary<UUID,int>();
+        private OpenMetaverse.Material _material;
 
-        public Avatar(UUID myId)
+        public Material(OpenMetaverse.Material mat)
         {
+            _material = mat;
         }
 
-        public void AddPermission(UUID friendId, int permsMask)
-        {
-            _friendPermissions.Add(friendId, permsMask);
-        }
+        #region IMaterial implementation
 
-        public bool FriendHasEditPermission(UUID friendId)
+        public int MaterialPreset
         {
-            if (!_friendPermissions.ContainsKey(friendId))
+            get
             {
-                return false;
-            }
-            else 
-            {
-                return (_friendPermissions[friendId] & 4) != 0;
+                return (int)_material;
             }
         }
+
+        public float Density
+        {
+            get
+            {
+                return 1000.0f;
+            }
+        }
+
+        public float StaticFriction
+        {
+            get
+            {
+                return 0.6f;
+            }
+        }
+
+        public float DynamicFriction
+        {
+            get
+            {
+                return 0.55f;
+            }
+        }
+
+        public float Restitution
+        {
+            get
+            {
+                return 0.5f;
+            }
+        }
+
+        public float GravityMultiplier
+        {
+            get
+            {
+                return 1.0f;
+            }
+        }
+
+        #endregion
+
     }
 }

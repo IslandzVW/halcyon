@@ -30,11 +30,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using OpenSim.Framework;
-using net.openstack.Providers.Rackspace;
-using net.openstack.Core.Domain;
 using Amib.Threading;
 using System.Threading;
 using log4net;
@@ -66,6 +62,16 @@ namespace InWorldz.Data.Assets.Stratus
         /// </summary>
         const int ASSET_WAIT_TIMEOUT = 45 * 1000;
 
+        /// <summary>
+        /// The amount of time between cache maintenance checks
+        /// </summary>
+        const int MAINTENANCE_INTERVAL = 5 * 60 * 1000;
+
+        /// <summary>
+        /// The maximum age of an idle cache entry before it will be purged
+        /// </summary>
+        const int MAX_IDLE_CACHE_ENTRY_AGE = MAINTENANCE_INTERVAL * 2;
+
 
 
         /// <summary>
@@ -96,14 +102,10 @@ namespace InWorldz.Data.Assets.Stratus
         private int _readTimeout = CloudFilesAssetWorker.DEFAULT_READ_TIMEOUT;
         private int _writeTimeout = CloudFilesAssetWorker.DEFAULT_WRITE_TIMEOUT;
 
+        private Timer _maintTimer;
+
         public CloudFilesAssetClient()
         {
-        }
-
-        public CloudFilesAssetClient(int readTimeout, int writeTimeout)
-        {
-            _readTimeout = readTimeout;
-            _writeTimeout = writeTimeout;
         }
 
         /// <summary>
@@ -142,13 +144,38 @@ namespace InWorldz.Data.Assets.Stratus
             Func<CloudFilesAssetWorker> ctorFunc = () => { return new CloudFilesAssetWorker(_readTimeout, _writeTimeout); };
             _asyncAssetWorkers = new ObjectPool<CloudFilesAssetWorker>(Config.Settings.Instance.CFWorkerThreads * 2, ctorFunc);
 
-            _assetCache = new Cache.Cache();
+            _assetCache = new Cache.Cache(MAX_IDLE_CACHE_ENTRY_AGE);
 
             if (!Config.Settings.Instance.DisableWritebackCache)
             {
                 _diskWriteBack = new Cache.DiskWriteBackCache();
                 _diskWriteBack.Start();
             }
+
+            //start maintaining the cache
+            _maintTimer = new Timer(this.Maintain, null, MAINTENANCE_INTERVAL, MAINTENANCE_INTERVAL);
+        }
+
+        /// <summary>
+        /// Should be called by the maintenance timer to maintain the cache
+        /// </summary>
+        /// <param name="unused"></param>
+        private void Maintain(object unused)
+        {
+            _maintTimer.Change(MAINTENANCE_INTERVAL, Timeout.Infinite);
+            lock (_assetCache)
+            {
+                try
+                {
+                    _assetCache.Maintain();
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("[InWorldz.Stratus] Error during cache maintenance {0}", e);
+                }
+            }
+
+            _maintTimer.Change(MAINTENANCE_INTERVAL, MAINTENANCE_INTERVAL);
         }
 
         public void Stop()
@@ -157,6 +184,7 @@ namespace InWorldz.Data.Assets.Stratus
             _threadPool.Shutdown();
 
             if (_diskWriteBack != null) _diskWriteBack.Stop();
+            _maintTimer.Dispose();
         }
 
         public void SetReceiver(IAssetReceiver receiver)
@@ -307,8 +335,43 @@ namespace InWorldz.Data.Assets.Stratus
             return meta;
         }
 
+        // Asset FetchStore counters
+        private uint statTotal = 0;
+        // Reads/Fetches
+        private uint statGet = 0;
+        private uint statGetInit = 0;
+        private uint statGetHit = 0;
+        private uint statGetFetches = 0;
+        private uint statGetNotFound = 0;
+        // Writes/Stores
+        private uint statPut = 0;
+        private uint statPutInit = 0;
+        private uint statPutCached = 0;
+        private uint statPutExists = 0;
+        private uint statPutTO = 0;     // timeout
+        private uint statPutNTO = 0;    // .NET conn timeout
+        private uint statPutExceptWeb = 0;
+        private uint statPutExceptIO = 0;
+        private uint statPutExcept = 0; // other exceptions
+        // Cache updates (ignored by CacheAssetIfAppropriate)
+        private uint statBigAsset = 0;  // 
+        private uint statBigStream = 0;
+        private uint statDupUpdate = 0;
+
+        private FixedSizeMRU<float> statGets = new FixedSizeMRU<float>(1000);
+        private FixedSizeMRU<float> statPuts = new FixedSizeMRU<float>(1000);
+
         private AssetBase GetAssetInternal(OpenMetaverse.UUID assetID)
         {
+            // Quick exit for null ID case.
+            statTotal++;
+            statGet++;
+            if (assetID == OpenMetaverse.UUID.Zero)
+            {
+                statGetHit++;
+                return null;
+            }
+
             //cache?
             Cache.CacheEntry cacheObject = null;
             lock (_assetCache)
@@ -319,6 +382,7 @@ namespace InWorldz.Data.Assets.Stratus
             StratusAsset rawAsset = null;
             if (cacheObject != null)
             {
+                statGetHit++;
                 //stream cache or asset cache?
                 if (cacheObject.FullAsset != null)
                 {
@@ -345,6 +409,7 @@ namespace InWorldz.Data.Assets.Stratus
                 {
                     Util.Retry(2, new List<Type> { typeof(UnrecoverableAssetServerException) }, () =>
                     {
+                        ulong start = Util.GetLongTickCount();
                         CloudFilesAssetWorker worker = null;
                         try
                         {
@@ -356,14 +421,15 @@ namespace InWorldz.Data.Assets.Stratus
                             catch (Exception e)
                             {
                                 //exception here is unrecoverable since this is construction
+                                statGetInit++;
                                 throw new UnrecoverableAssetServerException(e.Message, e);
                             }
 
                             using (System.IO.MemoryStream stream = worker.GetAsset(assetID))
                             {
+                                statGetFetches++;
                                 stream.Position = 0;
                                 rawAsset = DeserializeAssetFromStream(assetID, stream);
-                            
 
                                 //if we're using the cache, we need to put the raw data in there now
                                 stream.Position = 0;
@@ -372,17 +438,20 @@ namespace InWorldz.Data.Assets.Stratus
                         }
                         catch (net.openstack.Core.Exceptions.Response.ItemNotFoundException)
                         {
+                            statGetNotFound++;
                             //not an exceptional case. this will happen
                             rawAsset = null;
                         }
                         finally
                         {
+                            ulong elapsed = Util.GetLongTickCount() - start;
+                            statGets.Add(elapsed);
+
                             if (worker != null) _asyncAssetWorkers.ReturnObject(worker);
                         }
                     });
                 }
             }
-            
 
             //nothing?
             if (rawAsset == null) return null;
@@ -403,11 +472,20 @@ namespace InWorldz.Data.Assets.Stratus
             return rawAsset;
         }
 
-        private void CacheAssetIfAppropriate(OpenMetaverse.UUID assetId, System.IO.MemoryStream stream, StratusAsset asset)
+        // Returns true if it added it to the cache
+        private bool CacheAssetIfAppropriate(OpenMetaverse.UUID assetId, System.IO.MemoryStream stream, StratusAsset asset)
         {
-            if (!Config.Settings.Instance.CFUseCache) return;
-            if (stream.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE) return;
-            if (asset.Data.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE) return;
+            if (!Config.Settings.Instance.CFUseCache) return false;
+            if (stream.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE)
+            {
+                statBigStream++;
+                return false;
+            }
+            if (asset.Data.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE)
+            {
+                statBigAsset++;
+                return false;
+            }
 
             lock (_assetCache)
             {
@@ -426,8 +504,11 @@ namespace InWorldz.Data.Assets.Stratus
                         //caching the stream should make for faster retrival and collection
                         _assetCache.CacheAssetData(assetId, stream);
                     }
+                    return true;    // now cached, in one form or the other
                 }
             }
+            statDupUpdate++;
+            return false;
         }
 
         private Dictionary<string, string> GetAssetMetadata(OpenMetaverse.UUID assetId, CloudFilesAssetWorker worker)
@@ -454,15 +535,20 @@ namespace InWorldz.Data.Assets.Stratus
             //for now we're not going to use compression etc, so set to zero
             wireAsset.StorageFlags = 0;
 
+            statTotal++;
+            statPut++;
             Util.Retry(2, new List<Type> { typeof(AssetAlreadyExistsException), typeof(UnrecoverableAssetServerException) }, () =>
             {
                 CloudFilesAssetWorker worker;
+                System.IO.MemoryStream assetStream = null;
+                ulong start = Util.GetLongTickCount();
                 try
                 {
                     worker = _asyncAssetWorkers.LeaseObject();
                 }
                 catch (Exception e)
                 {
+                    statPutInit++;
                     throw new UnrecoverableAssetServerException(e.Message, e);
                 }
 
@@ -473,17 +559,19 @@ namespace InWorldz.Data.Assets.Stratus
                         throw new System.Net.WebException("Timeout for unit testing", System.Net.WebExceptionStatus.Timeout);
                     }
 
-                    using (System.IO.MemoryStream assetStream = worker.StoreAsset(wireAsset))
+                    using (assetStream = worker.StoreAsset(wireAsset))
                     {
                         //cache the stored asset to eliminate roudtripping when
                         //someone performs an upload
-                        this.CacheAssetIfAppropriate(asset.FullID, assetStream, wireAsset);
+                        if (this.CacheAssetIfAppropriate(asset.FullID, assetStream, wireAsset))
+                            statPutCached++;
                     }
                 }
                 catch (AssetAlreadyExistsException)
                 {
                     if (!isRetry) //don't throw if this is a retry. this can happen if a write times out and then succeeds
                     {
+                        statPutExists++;
                         throw;
                     }
                 }
@@ -491,10 +579,12 @@ namespace InWorldz.Data.Assets.Stratus
                 {
                     if (e.Status == System.Net.WebExceptionStatus.Timeout || e.Status == System.Net.WebExceptionStatus.RequestCanceled)
                     {
+                        statPutTO++;
                         DoTimeout(asset, wireAsset, e);
                     }
                     else
                     {
+                        statPutExceptWeb++;
                         ReportThrowStorageError(asset, e);
                     }
                 }
@@ -504,20 +594,25 @@ namespace InWorldz.Data.Assets.Stratus
                     //was forcibly closed by the remote host.
                     if (e.Message.Contains("forcibly closed"))
                     {
+                        statPutNTO++;
                         DoTimeout(asset, wireAsset, e);
                     }
                     else
                     {
+                        statPutExceptIO++;
                         ReportThrowStorageError(asset, e);
                     }
                 }
                 catch (Exception e)
                 {
+                    statPutExcept++;
                     m_log.ErrorFormat("[InWorldz.Stratus]: Unable to store asset {0}: {1}", asset.FullID, e);
                     throw new AssetServerException(String.Format("Unable to store asset {0}: {1}", asset.FullID, e.Message), e);
                 }
                 finally
                 {
+                    ulong elapsed = Util.GetLongTickCount() - start;
+                    statPuts.Add(elapsed);
                     isRetry = true;
                     _asyncAssetWorkers.ReturnObject(worker);
                 }
@@ -590,6 +685,49 @@ namespace InWorldz.Data.Assets.Stratus
             }
 
             if (thrown != null) throw new AssetServerException(thrown.Message, thrown);
+        }
+
+        public AssetStats GetStats(bool resetStats)
+        {
+            if (resetStats)
+            {
+                statTotal = statGet = statGetInit = statGetHit = statGetFetches = statGetNotFound = 0;
+                statPut = statPutInit = statPutCached = statPutExists = statPutTO = statPutNTO = 0;
+                statPutExceptWeb = statPutExceptIO = statPutExcept = statBigAsset = statBigStream = statDupUpdate = 0;
+                statGets.Clear();
+                statPuts.Clear();
+            }
+
+            AssetStats result = new AssetStats("CF");
+
+            // Asset FetchStore counters
+            result.nTotal = statTotal;
+            // Reads/Fetches
+            result.nGet = statGet;
+            result.nGetInit = statGetInit;
+            result.nGetHit = statGetHit;
+            result.nGetFetches = statGetFetches;
+            result.nGetNotFound = statGetNotFound;
+            // Writes/Stores
+            result.nPut = statPut;
+            result.nPutInit = statPutInit;
+            result.nPutCached = statPutCached;
+            result.nPutExists = statPutExists;
+            result.nPutTO = statPutTO;     // timeout
+            result.nPutNTO = statPutNTO;    // .NET conn timeout
+            result.nPutExceptWeb = statPutExceptWeb;
+            result.nPutExceptIO = statPutExceptIO;
+            result.nPutExcept = statPutExcept; // other exceptions
+
+            // Update stats (ignored by CacheAssetIfAppropriate)
+            result.nBigAsset = statBigAsset;
+            result.nBigStream = statBigStream;
+            result.nDupUpdate = statDupUpdate;
+
+            result.allGets = statGets.ToArray();
+            result.allPuts = statPuts.ToArray();
+
+            return result;
         }
 
         public string Version

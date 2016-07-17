@@ -431,8 +431,13 @@ namespace OpenSim.Framework
         {
             lock (Materials)
             {
-                return Materials[id.Guid];
+                if (Materials.ContainsKey(id.Guid))
+                    return Materials[id.Guid];
             }
+
+            // If we get here, there is no material by that ID.
+            // It's a struct (can't return a null), we must return *some* material.
+            return (RenderMaterial)RenderMaterial.DefaultMaterial.Clone();
         }
 
         public List<RenderMaterial> GetMaterials()
@@ -493,6 +498,11 @@ namespace OpenSim.Framework
             }
         }
 
+        public RenderMaterials Copy()
+        {
+            return RenderMaterials.FromBytes(this.ToBytes(), 0);
+        }
+
         public override bool Equals(object obj)
         {
             if (obj == null)
@@ -540,7 +550,7 @@ namespace OpenSim.Framework
                     builder.AppendFormat (" MaterialId : {0}, RenderMaterial : {{ {1} }} ", entry.Key.ToString(), entry.Value.ToString ());
                 builder.Append(" ]");
                 return builder.ToString();
-            };
+            }
         }
     }
 }

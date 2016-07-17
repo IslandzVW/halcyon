@@ -221,5 +221,18 @@ namespace OpenSim.Framework.Tests
             UUID mat2ID = RenderMaterial.GenerateMaterialID(mat2);
             Assert.AreNotEqual(matID, mat2ID);
         }
+
+        [Test]
+        public void RenderMaterials_CopiedMaterialsGeneratesTheSameMaterialID()
+        {
+            RenderMaterial mat = new RenderMaterial();
+            RenderMaterials mats = new RenderMaterials();
+            UUID matID = mats.AddMaterial(mat);
+
+            RenderMaterials matsCopy = mats.Copy();
+
+            Assert.True(mats.ContainsMaterial(matID));
+            Assert.True(matsCopy.ContainsMaterial(matID));
+        }
     }
 }

@@ -517,8 +517,8 @@ namespace Amib.Threading
             _localPCs.SampleWorkItems(_workItemsQueue.Count, _workItemsProcessed);
 
 			int count = Interlocked.Increment(ref _currentWorkItemsCount);
-			//Trace.WriteLine("WorkItemsCount = " + _currentWorkItemsCount.ToString());
-			if (count == 1) 
+            // Trace.WriteLine(this.Name+": WorkItems count++ = " + _currentWorkItemsCount.ToString());
+            if (count == 1) 
 			{
                 IsIdle = false;
                 _isIdleWaitHandle.Reset();
@@ -528,7 +528,7 @@ namespace Amib.Threading
 		private void DecrementWorkItemsCount()
 		{
             int count = Interlocked.Decrement(ref _currentWorkItemsCount);
-            //Trace.WriteLine("WorkItemsCount = " + _currentWorkItemsCount.ToString());
+            // Trace.WriteLine(this.Name+": WorkItems count-- = " + _currentWorkItemsCount.ToString());
             if (count == 0)
             {
                 IsIdle = true;
@@ -769,9 +769,9 @@ namespace Amib.Threading
 						// WorkItemsGroup may enqueue their next work item.
 						workItem.FireWorkItemCompleted();
 
-						// Decrement the number of work items here so the idle 
-						// ManualResetEvent won't fluctuate.
-						DecrementWorkItemsCount();
+                        // Decrement the number of work items here so the idle 
+                        // ManualResetEvent won't fluctuate.
+                        DecrementWorkItemsCount();
 					}
 				}
 			} 

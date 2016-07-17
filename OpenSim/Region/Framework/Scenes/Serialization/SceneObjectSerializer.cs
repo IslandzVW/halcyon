@@ -217,16 +217,13 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             writer.WriteEndElement();
             writer.WriteStartElement(String.Empty, "OtherParts", String.Empty);
 
-            lock (sceneObject.Children)
+            foreach (SceneObjectPart part in sceneObject.GetParts())
             {
-                foreach (SceneObjectPart part in sceneObject.Children.Values)
+                if (part.UUID != sceneObject.RootPart.UUID)
                 {
-                    if (part.UUID != sceneObject.RootPart.UUID)
-                    {
-                        writer.WriteStartElement(String.Empty, "Part", String.Empty);
-                        part.ToXml(writer);
-                        writer.WriteEndElement();
-                    }
+                    writer.WriteStartElement(String.Empty, "Part", String.Empty);
+                    part.ToXml(writer);
+                    writer.WriteEndElement();
                 }
             }
 
@@ -344,9 +341,8 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             writer.WriteStartElement(String.Empty, "SceneObjectGroup", String.Empty);
             sceneObject.RootPart.ToXml(writer);
             writer.WriteStartElement(String.Empty, "OtherParts", String.Empty);
-
-            List<SceneObjectPart> parts = new List<SceneObjectPart>(sceneObject.Children.Values);
-            foreach (SceneObjectPart part in parts)
+            
+            foreach (SceneObjectPart part in sceneObject.GetParts())
             {
                 if (part.UUID != sceneObject.RootPart.UUID)
                 {

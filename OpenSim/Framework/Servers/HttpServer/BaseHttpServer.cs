@@ -1499,8 +1499,10 @@ namespace OpenSim.Framework.Servers.HttpServer
             }
             catch (Exception e)
             {
-                m_log.Error("[BASE HTTP SERVER]: Error - " + e.Message);
-                m_log.Error("[BASE HTTP SERVER]: Tip: Do you have permission to listen on port " + m_port+ "?");
+                m_log.ErrorFormat("[BASE HTTP SERVER]: Error - {0}", e.Message);
+                m_log.ErrorFormat("[BASE HTTP SERVER]: Tip: Do you have permission to listen on port {0} ?", m_port);
+                m_log.ErrorFormat("[BASE HTTP SERVER]: Try:    netssh http add urlacl url={0}://+:{1}/ user={2}", 
+                    Secure ? "https" : "http", m_port, Environment.UserName);
 
                 // We want this exception to halt the entire server since in current configurations we aren't too
                 // useful without inbound HTTP.

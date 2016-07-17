@@ -46,13 +46,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ForceInventoryPersistence()
         {
-            lock (m_parts)
-            {
-                foreach (SceneObjectPart part in m_parts.Values)
-                {
-                    part.Inventory.ForceInventoryPersistence();
-                }
-            }
+            m_children.ForEachPart((SceneObjectPart part) => {
+                part.Inventory.ForceInventoryPersistence();
+            });
         }
 
         /// <summary>
@@ -64,10 +60,9 @@ namespace OpenSim.Region.Framework.Scenes
             // Don't start scripts if they're turned off in the region!
             if (!m_scene.RegionInfo.RegionSettings.DisableScripts)
             {
-                foreach (SceneObjectPart part in m_parts.Values)
-                {
+                m_children.ForEachPart((SceneObjectPart part) => {
                     part.Inventory.CreateScriptInstances(startParam, startFlags, engine, stateSource, listener);
-                }
+                });
             }
         }
 
@@ -76,13 +71,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void RemoveScriptInstances()
         {
-            SceneObjectPart[] parts = this.GetParts();
-
-            foreach (SceneObjectPart part in parts)
-            {
+            m_children.ForEachPart((SceneObjectPart part) => {
                 part.Inventory.RemoveScriptInstances();
-            }
-            
+            });
         }
 
         /// <summary>
@@ -91,13 +82,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void ResetItems(bool isNewInstance, bool isScriptReset, UUID itemId)
         {
-            lock (m_parts)
-            {
-                foreach (SceneObjectPart part in m_parts.Values)
-                {
-                    part.Inventory.ResetItems(isNewInstance, isScriptReset, itemId);
-                }
-            }
+            m_children.ForEachPart((SceneObjectPart part) => {
+                part.Inventory.ResetItems(isNewInstance, isScriptReset, itemId);
+            });
         }
 
         /// <summary>
@@ -302,17 +289,17 @@ namespace OpenSim.Region.Framework.Scenes
             return -1;
         }
 
+        private const uint PERM_MCT = (uint)PermissionMask.Copy | (uint)PermissionMask.Modify | (uint)PermissionMask.Transfer;
         public uint GetEffectivePermissions(bool includeContents)
         {
             uint perms = (uint)(PermissionMask.All | PermissionMask.Export);
             uint ownerMask = ScenePermBits.BASEMASK;
 
-            foreach (SceneObjectPart part in m_parts.Values)
-            {
+            m_children.ForEachPart((SceneObjectPart part) => {
                 ownerMask &= part.OwnerMask;
                 if (includeContents)
                     perms &= part.Inventory.MaskEffectivePermissions();
-            }
+            });
 
             if ((ownerMask & (uint)PermissionMask.Modify) == 0)
                 perms &= ~(uint)PermissionMask.Modify;
@@ -328,10 +315,9 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void ApplyNextOwnerPermissions()
         {
-            foreach (SceneObjectPart part in m_parts.Values)
-            {
+            m_children.ForEachPart((SceneObjectPart part) => {
                 part.ApplyNextOwnerPermissions();
-            }
+            });
         }
 
 
@@ -339,13 +325,12 @@ namespace OpenSim.Region.Framework.Scenes
         {
             uint perms = (uint)(PermissionMask.All | PermissionMask.Export);
             uint nextOwnerMask = ScenePermBits.BASEMASK;
-
-            foreach (SceneObjectPart part in m_parts.Values)
-            {
+            
+            m_children.ForEachPart((SceneObjectPart part) => {
                 nextOwnerMask &= part.NextOwnerMask;
                 if (includeContents)
                     perms &= part.Inventory.MaskEffectiveNextPermissions();
-            }
+            });
 
             if ((nextOwnerMask & (uint)PermissionMask.Modify) == 0)
                 perms &= ~(uint)PermissionMask.Modify;
@@ -353,6 +338,9 @@ namespace OpenSim.Region.Framework.Scenes
                 perms &= ~(uint)PermissionMask.Copy;
             if ((nextOwnerMask & (uint)PermissionMask.Transfer) == 0)
                 perms &= ~(uint)PermissionMask.Transfer;
+
+            if ((perms & PERM_MCT) != PERM_MCT)
+                perms &= ~(uint)PermissionMask.Export;
 
             return perms;
         }
@@ -364,13 +352,12 @@ namespace OpenSim.Region.Framework.Scenes
             Dictionary<UUID, string> states = new Dictionary<UUID, string>();
             StopScriptReason stopScriptReason = fromCrossing ? StopScriptReason.Crossing : StopScriptReason.Derez;
 
-            foreach (SceneObjectPart part in m_parts.Values)
-            {
+            m_children.ForEachPart((SceneObjectPart part) => {
                 foreach (KeyValuePair<UUID, string> s in part.Inventory.GetScriptStates(stopScriptReason))
                 {
                     states[s.Key] = s.Value;
                 }
-            }
+            });
 
             if (states.Count < 1)
                 return String.Empty;

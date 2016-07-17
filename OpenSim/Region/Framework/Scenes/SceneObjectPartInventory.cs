@@ -244,6 +244,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if ((int)InventoryType.LSL == item.InvType)
                     {
+                        m_part.AddFlag(PrimFlags.Scripted);
                         CreateScriptInstance(item, startParam, startFlags, engine, stateSource, listener);
                     }
                 }
@@ -293,8 +294,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (!m_part.ParentGroup.Scene.Permissions.CanRunScript(item.ItemID, m_part.ParentGroup.UUID, item.OwnerID))
                 return;
 
-            m_part.AddFlag(PrimFlags.Scripted);
-
             if (!m_part.ParentGroup.Scene.RegionInfo.RegionSettings.DisableScripts)
             {
                 if (isReload)
@@ -309,7 +308,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 m_part.ParentGroup.AddActiveScriptCount(1);
-                m_part.ScheduleFullUpdate();
+                m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
             }
         }
 
@@ -510,7 +509,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // If called from AddReplaceInventoryItem (above), the script may be running, depending on
             // llRemoteLoadScriptPin params, so tie up the loose ends of adding a new running script.
-            HandleAddRunningScript(item, replaceArgs);
+            HandleChangedScripts(item, replaceArgs);
         }
 
         /// <summary>
@@ -607,7 +606,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
-                    m_part.ScheduleFullUpdate();
+                    m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
                     return true;
                 }
                 else
@@ -645,14 +644,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         item.AssetID = fromItem.AssetID;
                     }
-                    else if ((InventoryType)item.Type == InventoryType.Notecard)
-                    {
-                        ScenePresence presence = m_part.ParentGroup.Scene.GetScenePresence(item.OwnerID);
-                        if (presence != null)
-                        {
-                            presence.ControllingClient.SendAgentAlertMessage("Notecard saved", false);
-                        }
-                    }
 
                     // Check if next owner perms were changed
                     if (item.InvType == (int)InventoryType.Object)
@@ -680,7 +671,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     HasInventoryChanged = true;
                     m_part.ParentGroup.HasGroupChanged = true;
-                    m_part.ScheduleFullUpdate();
+                    m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
                     return true;
                 }
                 else
@@ -725,9 +716,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (scriptUpdate)
             {
-                HandleAddRunningScript(newItem, replaceArgs);
+                HandleChangedScripts(newItem, replaceArgs);
             }
-            m_part.ScheduleFullUpdate();
+            m_part.ScheduleFullUpdate(PrimUpdateFlags.PrimFlags);
         }
 
         /// <summary>
@@ -752,7 +743,7 @@ namespace OpenSim.Region.Framework.Scenes
             return total;
         }
 
-        private void HandleAddRunningScript(TaskInventoryItem newItem, ReplaceItemArgs replaceArgs)
+        private void HandleChangedScripts(TaskInventoryItem newItem, ReplaceItemArgs replaceArgs)
         {
             int scriptcount = 0;
             foreach (TaskInventoryItem item in m_items.Values)
@@ -762,10 +753,11 @@ namespace OpenSim.Region.Framework.Scenes
                     scriptcount++;
                 }
             }
-            if (scriptcount <= 0)
-            {
+
+            if (scriptcount > 0)
+                m_part.AddFlag(PrimFlags.Scripted);
+            else
                 m_part.RemFlag(PrimFlags.Scripted);
-            }
 
             // Update for loss of other events (e.g. money, touch)
             m_part.DoAggregateScriptEvents();
@@ -1057,6 +1049,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        private const uint PERM_MCT = (uint)PermissionMask.Copy | (uint)PermissionMask.Modify | (uint)PermissionMask.Transfer;
         public uint MaskEffectivePermissions()
         {
             uint mask = ScenePermBits.BASEMASK;
@@ -1073,6 +1066,8 @@ namespace OpenSim.Region.Framework.Scenes
                         mask &= ~(uint)PermissionMask.Modify;
                 }
             }
+            if ((mask & PERM_MCT) != PERM_MCT)
+                mask &= ~(uint)PermissionMask.Export;
             return mask;
         }
         public uint MaskEffectiveNextPermissions()
@@ -1091,6 +1086,8 @@ namespace OpenSim.Region.Framework.Scenes
                         mask &= ~(uint)PermissionMask.Modify;
                 }
             }
+            if ((mask & PERM_MCT) != PERM_MCT)
+                mask &= ~(uint)PermissionMask.Export;
             return mask;
         }
 

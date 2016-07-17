@@ -81,83 +81,74 @@ namespace OpenSim.Framework
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        [XmlIgnore]
         public static readonly UUID DEFAULT_TEXTURE_ID = new UUID("89556747-24cb-43ed-920b-47caed15465f");
 
-        [XmlIgnore][NonSerialized]
-        private Primitive.TextureEntry m_textures;
+        #region Properties
 
-        private byte[] m_textureEntryBytes;  // persisted byte version of m_textures
+        // TextureEntries
+        Primitive.TextureEntry m_textures;
 
-        private ushort _pathBegin;
-        private byte _pathCurve;
-        private ushort _pathEnd;
-        private sbyte _pathRadiusOffset;
-        private byte _pathRevolutions;
-        private byte _pathScaleX;
-        private byte _pathScaleY;
-        private byte _pathShearX;
-        private byte _pathShearY;
-        private sbyte _pathSkew;
-        private sbyte _pathTaperX;
-        private sbyte _pathTaperY;
-        private sbyte _pathTwist;
-        private sbyte _pathTwistBegin;
-        private byte _pCode;
-        private ushort _profileBegin;
-        private ushort _profileEnd;
-        private ushort _profileHollow;
-        private Vector3 _scale;
-        private byte _state;
-        private ProfileShape _profileShape;
-        private HollowShape _hollowShape;
+        [XmlIgnore]
+        public Primitive.TextureEntry Textures
+        {
+            get { return m_textures; }
+            set
+            {
+                m_textures = value;
+                m_textureEntryBytes = null;  // parallel data no longer in sync
+            }
+        }
 
-        private PhysicsShapeType _preferredPhysicsShape;
+        // Provided for better documentation/readability to document places where byte array accessors are used
+        byte[] m_textureEntryBytes;  // persisted byte version of m_textures
 
-        // Materials
-        [XmlIgnore][NonSerialized] private RenderMaterials _renderMaterials;
+        [XmlIgnore]
+        public byte[] TextureEntryBytes
+        {
+            get
+            {
+                // Already calculated the bytes
+                if (m_textureEntryBytes != null)
+                    return m_textureEntryBytes;
+                // need to recalc the bytes
+                return m_textures.GetBytes();
+            }
+            set
+            {
+                m_textureEntryBytes = value;
+                // Now initialize m_textures to match the byte[] m_textureEntry
+                if (value == null)
+                    m_textures = new Primitive.TextureEntry(UUID.Zero);
+                else
+                    m_textures = BytesToTextureEntry(value);
+            }
+        }
 
-        // Sculpted
-        [XmlIgnore] private UUID _sculptTexture = UUID.Zero;
-        [XmlIgnore] private byte _sculptType = (byte)0;
-        [XmlIgnore] private byte[] _sculptData = new byte[0];
+        // Called only during during serialization/deserialization/viewer packets
+        // Provided for serialization compatibility, use Textures/TextureEntryBytes instead.
+        public byte[] TextureEntry
+        {
+            get { return TextureEntryBytes; }
+            set { TextureEntryBytes = value; }
+        }
 
-        // Mesh
-        [XmlIgnore] private int _vertex_count = 0;
-        [XmlIgnore] private int _high_lod_bytes = 0;
-        [XmlIgnore] private int _mid_lod_bytes = 0;
-        [XmlIgnore] private int _low_lod_bytes = 0;
-        [XmlIgnore] private int _lowest_lod_bytes = 0;
-
-        // Flexi
-        [XmlIgnore] private int _flexiSoftness = 0;
-        [XmlIgnore] private float _flexiTension = 0f;
-        [XmlIgnore] private float _flexiDrag = 0f;
-        [XmlIgnore] private float _flexiGravity = 0f;
-        [XmlIgnore] private float _flexiWind = 0f;
-        [XmlIgnore] private float _flexiForceX = 0f;
-        [XmlIgnore] private float _flexiForceY = 0f;
-        [XmlIgnore] private float _flexiForceZ = 0f;
-
-        //Bright n sparkly
-        [XmlIgnore] private float _lightColorR = 0f;
-        [XmlIgnore] private float _lightColorG = 0f;
-        [XmlIgnore] private float _lightColorB = 0f;
-        [XmlIgnore] private float _lightColorA = 1f;
-        [XmlIgnore] private float _lightRadius = 0f;
-        [XmlIgnore] private float _lightCutoff = 0f;
-        [XmlIgnore] private float _lightFalloff = 0f;
-        [XmlIgnore] private float _lightIntensity = 1f;
-        [XmlIgnore] private bool _flexiEntry = false;
-        [XmlIgnore] private bool _lightEntry = false;
-        [XmlIgnore] private bool _sculptEntry = false;
-
-        // Light Projection Filter
-        [XmlIgnore] private bool _projectionEntry;
-        [XmlIgnore] private UUID _projectionTextureID;
-        [XmlIgnore] private float _projectionFOV;
-        [XmlIgnore] private float _projectionFocus;
-        [XmlIgnore] private float _projectionAmb;
+        public ushort PathBegin { set; get; }
+        public byte PathCurve { get; set; }
+        public ushort PathEnd { get; set; }
+        public sbyte PathRadiusOffset { get; set; }
+        public byte PathRevolutions { get; set; }
+        public byte PathScaleX { get; set; }
+        public byte PathScaleY { get; set; }
+        public byte PathShearX { get; set; }
+        public byte PathShearY { get; set; }
+        public sbyte PathSkew { get; set; }
+        public sbyte PathTaperX { get; set; }
+        public sbyte PathTaperY { get; set; }
+        public sbyte PathTwist { get; set; }
+        public sbyte PathTwistBegin { get; set; }
+        public byte PCode { get; set; }
+        public ushort ProfileBegin { get; set; }
+        public ushort ProfileEnd { get; set; }
 
         public byte ProfileCurve
         {
@@ -174,11 +165,11 @@ namespace OpenSim.Framework
                         "[SHAPE]: Attempt to set a ProfileCurve with a hollow shape value of {0}, which isn't a valid enum.  Replacing with default shape.",
                         hollowShapeByte);
 
-                    this._hollowShape = HollowShape.Same;
+                    this.HollowShape = HollowShape.Same;
                 }
                 else
                 {
-                    this._hollowShape = (HollowShape)hollowShapeByte;
+                    this.HollowShape = (HollowShape)hollowShapeByte;
                 }
 
                 // Handle profile shape component
@@ -190,13 +181,123 @@ namespace OpenSim.Framework
                         "[SHAPE]: Attempt to set a ProfileCurve with a profile shape value of {0}, which isn't a valid enum.  Replacing with square.",
                         profileShapeByte);
 
-                    this._profileShape = ProfileShape.Square;
+                    this.ProfileShape = ProfileShape.Square;
                 }
                 else
                 {
-                    this._profileShape = (ProfileShape)profileShapeByte;
+                    this.ProfileShape = (ProfileShape)profileShapeByte;
                 }
             }
+        }
+
+        public ushort ProfileHollow { get; set; }
+        public ProfileShape ProfileShape { get; set; }
+        public HollowShape HollowShape { get; set; }
+
+        public Vector3 Scale { get; set; }
+        public byte State { get; set; }
+
+        // Physics
+        public PhysicsShapeType PreferredPhysicsShape { get; set; }
+
+        // Materials
+        [XmlIgnore]
+        public RenderMaterials RenderMaterials { get; set; }
+
+        // Used for XML Serialization
+        public byte[] RenderMaterialsBytes
+        {
+            get { return RenderMaterials.ToBytes(); }
+            set { RenderMaterials = RenderMaterials.FromBytes(value, 0); }
+        }
+
+        // Sculpted
+        public bool SculptEntry { get; set; }
+        public UUID SculptTexture { get; set; }
+        public byte SculptType { get; set; }
+
+        [XmlIgnore]
+        public byte[] SculptData { get; set; }
+
+        // Mesh
+        public int VertexCount { get; set; }
+        public int HighLODBytes { get; set; }
+        public int MidLODBytes { get; set; }
+        public int LowLODBytes { get; set; }
+        public int LowestLODBytes { get; set; }
+
+        // Flexi
+        public bool FlexiEntry { get; set; }
+        public int FlexiSoftness { get; set; }
+        public float FlexiTension { get; set; }
+        public float FlexiDrag { get; set; }
+        public float FlexiGravity { get; set; }
+        public float FlexiWind { get; set; }
+        public float FlexiForceX { get; set; }
+        public float FlexiForceY { get; set; }
+        public float FlexiForceZ { get; set; }
+
+        //Bright n sparkly
+        public bool LightEntry { get; set; }
+        public float LightColorR { get; set; }
+        public float LightColorG { get; set; }
+        public float LightColorB { get; set; }
+
+        float _lightColorA = 1f;
+        public float LightColorA
+        {
+            get { return _lightColorA; }
+            set { _lightColorA = value; }
+        }
+
+        public float LightRadius { get; set; }
+        public float LightCutoff { get; set; }
+        public float LightFalloff { get; set; }
+
+        float _lightIntensity = 1f;
+        public float LightIntensity
+        {
+            get { return _lightIntensity; }
+            set { _lightIntensity = Math.Min(value, 1.0f); }
+        }
+
+        // Light Projection Filter
+        public bool ProjectionEntry { get; set; }
+
+        /// <summary>
+        /// Gets or sets the UUID of the texture the projector emits.
+        /// </summary>
+        /// <value>The projection texture UUID.</value>
+        public UUID ProjectionTextureUUID { get; set; }
+
+        /// <summary>
+        /// Gets or sets the projection Field of View in radians.
+        /// Valid range is from 0.0 to 3.0. Invalid values are clamped to the valid range.
+        /// </summary>
+        /// <value>The projection FOV.</value>
+        float _projectionFOV;
+        public float ProjectionFOV
+        {
+            get { return _projectionFOV; }
+            set { _projectionFOV = Util.Clip(value, 0.0f, 3.0f); }
+        }
+
+        /// <summary>
+        /// Gets or sets the projection focus - aka how far away from the source prim the texture will be sharp.  Beyond this value the texture and its border will gradually get blurry out to the limit of the effective range.
+        /// </summary>
+        /// <value>The projection focus distance in meters.</value>
+        public float ProjectionFocus { get; set; }
+
+        /// <summary>
+        /// Gets or sets the projection ambiance - the brightness of a very blurred edition of the projected texture that is placed on all faces of all objects within the projector's FOV and effective range.
+        /// Valid range is from 0.0 on up. Invalid values are clamped to the valid range.
+        /// </summary>
+        /// <value>The projection ambiance brightness.</value>
+        float _projectionAmb;
+        public float ProjectionAmbiance
+        {
+            get { return _projectionAmb; }
+            set { _projectionAmb = Math.Max(0.0f, value); }
         }
 
         /// <summary>
@@ -206,19 +307,14 @@ namespace OpenSim.Framework
         /// Lock before manipulating.
         public PrimMedia Media { get; set; }
 
+        #endregion
+
+        #region Constructors
+
         public PrimitiveBaseShape()
         {
-            PCode = (byte) PCodeEnum.Primitive;
-            ExtraParams = new byte[1];
-            Textures = new Primitive.TextureEntry(DEFAULT_TEXTURE_ID);
-            RenderMaterials = new RenderMaterials();
-        }
-
-        public PrimitiveBaseShape(bool noShape)
-        {
-            if (noShape)
-                return;
-
+            SculptTexture = UUID.Zero;
+            SculptData = new byte[0];
             PCode = (byte)PCodeEnum.Primitive;
             ExtraParams = new byte[1];
             Textures = new Primitive.TextureEntry(DEFAULT_TEXTURE_ID);
@@ -231,8 +327,7 @@ namespace OpenSim.Framework
         /// <param name="prim"></param>
         public PrimitiveBaseShape(Primitive prim)
         {
-//            m_log.DebugFormat("[PRIMITIVE BASE SHAPE]: Creating from {0}", prim.ID);
-
+            //            m_log.DebugFormat("[PRIMITIVE BASE SHAPE]: Creating from {0}", prim.ID);
             PCode = (byte)prim.PrimData.PCode;
             ExtraParams = new byte[1];
 
@@ -269,63 +364,15 @@ namespace OpenSim.Framework
             else
             {
                 SculptType = (byte)OpenMetaverse.SculptType.None;
+                SculptTexture = UUID.Zero;
+                SculptData = new byte[0];
             }
 
             RenderMaterials = new RenderMaterials();
         }
 
-        [XmlIgnore]
-        public Primitive.TextureEntry Textures
-        {
-            get
-            {
-                return m_textures; 
-            }
+        #endregion
 
-            set {
-                m_textures = value;
-                m_textureEntryBytes = null;  // parallel data no longer in sync
-            }
-        }
-
-        // Provided for better documentation/readability to document places where byte array accessors are used
-        [XmlIgnore]
-        public byte[] TextureEntryBytes
-        {
-            get {
-                // Already calculated the bytes
-                if (m_textureEntryBytes != null)
-                    return m_textureEntryBytes;
-                // need to recalc the bytes
-                return m_textures.GetBytes(); 
-            }
-
-            set
-            {
-                m_textureEntryBytes = value;
-                // Now initialize m_textures to match the byte[] m_textureEntry
-                if (value == null)
-                    m_textures = new Primitive.TextureEntry(UUID.Zero);
-                else
-                    m_textures = BytesToTextureEntry(value);
-            }
-        }
-
-        // Called only during during serialization/deserialization/viewer packets
-        // Provided for serialization compatibility, use Textures/TextureEntryBytes instead.
-        public byte[] TextureEntry
-        {
-            get
-            {
-                return TextureEntryBytes;
-            }
-
-            // Do not call this directly except during serialization/deserialization/viewer packets
-            set
-            {
-                TextureEntryBytes = value;
-            }
-        }
 
         private Primitive.TextureEntry BytesToTextureEntry(byte[] data)
         {
@@ -362,10 +409,10 @@ namespace OpenSim.Framework
         {
             PrimitiveBaseShape shape = Create();
 
-            shape._pathCurve = (byte) Extrusion.Straight;
-            shape._profileShape = ProfileShape.Square;
-            shape._pathScaleX = 100;
-            shape._pathScaleY = 100;
+            shape.PathCurve = (byte) Extrusion.Straight;
+            shape.ProfileShape = ProfileShape.Square;
+            shape.PathScaleX = 100;
+            shape.PathScaleY = 100;
 
             return shape;
         }
@@ -374,10 +421,10 @@ namespace OpenSim.Framework
         {
             PrimitiveBaseShape shape = Create();
 
-            shape._pathCurve = (byte) Extrusion.Curve1;
-            shape._profileShape = ProfileShape.HalfCircle;
-            shape._pathScaleX = 100;
-            shape._pathScaleY = 100;
+            shape.PathCurve = (byte) Extrusion.Curve1;
+            shape.ProfileShape = ProfileShape.HalfCircle;
+            shape.PathScaleX = 100;
+            shape.PathScaleY = 100;
 
             return shape;
         }
@@ -386,51 +433,46 @@ namespace OpenSim.Framework
         {
             PrimitiveBaseShape shape = Create();
 
-            shape._pathCurve = (byte) Extrusion.Curve1;
-            shape._profileShape = ProfileShape.Square;
+            shape.PathCurve = (byte) Extrusion.Curve1;
+            shape.ProfileShape = ProfileShape.Square;
 
-            shape._pathScaleX = 100;
-            shape._pathScaleY = 100;
+            shape.PathScaleX = 100;
+            shape.PathScaleY = 100;
 
             return shape;
         }
 
         public void SetScale(float side)
         {
-            _scale = new Vector3(side, side, side);
+            Scale = new Vector3(side, side, side);
         }
 
-        public void SetHeigth(float heigth)
+        public void SetHeight(float height)
         {
-            _scale.Z = heigth;
+            Scale = new Vector3(Scale.X, Scale.Y, height);
         }
 
         public void SetRadius(float radius)
         {
-            _scale.X = _scale.Y = radius * 2f;
-        }
-
-        // TODO: void returns need to change of course
-        public virtual void GetMesh()
-        {
+            float diameter = radius * 2f;
+            Scale = new Vector3(diameter, diameter, Scale.Z);
         }
 
         public PrimitiveBaseShape Copy()
         {
             PrimitiveBaseShape shape = (PrimitiveBaseShape)MemberwiseClone();
             shape.TextureEntryBytes = (byte[])TextureEntryBytes.Clone();
-            if (shape.Media != null)
-            {
-                shape.Media = new PrimMedia(Media);
-            }
+            shape.Media = new PrimMedia(Media);
+            shape.RenderMaterials = RenderMaterials.Copy();
+
             return shape;
         }
 
-        public static PrimitiveBaseShape CreateCylinder(float radius, float heigth)
+        public static PrimitiveBaseShape CreateCylinder(float radius, float height)
         {
             PrimitiveBaseShape shape = CreateCylinder();
 
-            shape.SetHeigth(heigth);
+            shape.SetHeight(height);
             shape.SetRadius(radius);
 
             return shape;
@@ -438,34 +480,35 @@ namespace OpenSim.Framework
 
         public void SetPathRange(Vector3 pathRange)
         {
-            _pathBegin = Primitive.PackBeginCut(pathRange.X);
-            _pathEnd = Primitive.PackEndCut(pathRange.Y);
+            PathBegin = Primitive.PackBeginCut(pathRange.X);
+            PathEnd = Primitive.PackEndCut(pathRange.Y);
         }
 
         public void SetPathRange(float begin, float end)
         {
-            _pathBegin = Primitive.PackBeginCut(begin);
-            _pathEnd = Primitive.PackEndCut(end);
+            PathBegin = Primitive.PackBeginCut(begin);
+            PathEnd = Primitive.PackEndCut(end);
         }
 
         public void SetSculptProperties(byte sculptType, UUID SculptTextureUUID)
         {
-            _sculptType = sculptType;
-            _sculptTexture = SculptTextureUUID;
+            SculptType = sculptType;
+            SculptTexture = SculptTextureUUID;
         }
 
         public void SetProfileRange(Vector3 profileRange)
         {
-            _profileBegin = Primitive.PackBeginCut(profileRange.X);
-            _profileEnd = Primitive.PackEndCut(profileRange.Y);
+            ProfileBegin = Primitive.PackBeginCut(profileRange.X);
+            ProfileEnd = Primitive.PackEndCut(profileRange.Y);
         }
 
         public void SetProfileRange(float begin, float end)
         {
-            _profileBegin = Primitive.PackBeginCut(begin);
-            _profileEnd = Primitive.PackEndCut(end);
+            ProfileBegin = Primitive.PackBeginCut(begin);
+            ProfileEnd = Primitive.PackEndCut(end);
         }
 
+        [XmlIgnore]
         public byte[] ExtraParams
         {
             get
@@ -478,571 +521,7 @@ namespace OpenSim.Framework
             }
         }
 
-        public ushort PathBegin {
-            get {
-                return _pathBegin;
-            }
-            set {
-                _pathBegin = value;
-            }
-        }
 
-        public byte PathCurve {
-            get {
-                return _pathCurve;
-            }
-            set {
-                _pathCurve = value;
-            }
-        }
-
-        public ushort PathEnd {
-            get {
-                return _pathEnd;
-            }
-            set {
-                _pathEnd = value;
-            }
-        }
-
-        public sbyte PathRadiusOffset {
-            get {
-                return _pathRadiusOffset;
-            }
-            set {
-                _pathRadiusOffset = value;
-            }
-        }
-
-        public byte PathRevolutions {
-            get {
-                return _pathRevolutions;
-            }
-            set {
-                _pathRevolutions = value;
-            }
-        }
-
-        public byte PathScaleX {
-            get {
-                return _pathScaleX;
-            }
-            set {
-                _pathScaleX = value;
-            }
-        }
-
-        public byte PathScaleY {
-            get {
-                return _pathScaleY;
-            }
-            set {
-                _pathScaleY = value;
-            }
-        }
-
-        public byte PathShearX {
-            get {
-                return _pathShearX;
-            }
-            set {
-                _pathShearX = value;
-            }
-        }
-
-        public byte PathShearY {
-            get {
-                return _pathShearY;
-            }
-            set {
-                _pathShearY = value;
-            }
-        }
-
-        public sbyte PathSkew {
-            get {
-                return _pathSkew;
-            }
-            set {
-                _pathSkew = value;
-            }
-        }
-
-        public sbyte PathTaperX {
-            get {
-                return _pathTaperX;
-            }
-            set {
-                _pathTaperX = value;
-            }
-        }
-
-        public sbyte PathTaperY {
-            get {
-                return _pathTaperY;
-            }
-            set {
-                _pathTaperY = value;
-            }
-        }
-
-        public sbyte PathTwist {
-            get {
-                return _pathTwist;
-            }
-            set {
-                _pathTwist = value;
-            }
-        }
-
-        public sbyte PathTwistBegin {
-            get {
-                return _pathTwistBegin;
-            }
-            set {
-                _pathTwistBegin = value;
-            }
-        }
-
-        public byte PCode {
-            get {
-                return _pCode;
-            }
-            set {
-                _pCode = value;
-            }
-        }
-
-        public ushort ProfileBegin {
-            get {
-                return _profileBegin;
-            }
-            set {
-                _profileBegin = value;
-            }
-        }
-
-        public ushort ProfileEnd {
-            get {
-                return _profileEnd;
-            }
-            set {
-                _profileEnd = value;
-            }
-        }
-
-        public ushort ProfileHollow {
-            get {
-                return _profileHollow;
-            }
-            set {
-                _profileHollow = value;
-            }
-        }
-
-        public Vector3 Scale {
-            get {
-                return _scale;
-            }
-            set {
-                _scale = value;
-            }
-        }
-
-        public byte State {
-            get {
-                return _state;
-            }
-            set {
-                _state = value;
-            }
-        }
-
-        public ProfileShape ProfileShape {
-            get {
-                return _profileShape;
-            }
-            set {
-                _profileShape = value;
-            }
-        }
-
-        public HollowShape HollowShape {
-            get {
-                return _hollowShape;
-            }
-            set {
-                _hollowShape = value;
-            }
-        }
-
-        public UUID SculptTexture {
-            get {
-                return _sculptTexture;
-            }
-            set {
-                _sculptTexture = value;
-            }
-        }
-
-        public byte SculptType
-        {
-            get
-            {
-                return _sculptType;
-            }
-            set
-            {
-                _sculptType = value;
-            }
-        }
-
-        [XmlIgnore]
-        public byte[] SculptData
-        {
-            get
-            {
-                return _sculptData;
-            }
-            set
-            {
-//                m_log.DebugFormat("[PRIMITIVE BASE SHAPE]: Setting SculptData to data with length {0}", value.Length);
-                _sculptData = value;
-            }
-        }
-
-
-        // Mesh
-        [XmlIgnore]
-        public int VertexCount
-        {
-            get
-            {
-                return _vertex_count;
-            }
-            set
-            {
-                _vertex_count = value;
-            }
-        }
-
-        [XmlIgnore]
-        public int HighLODBytes
-        {
-            get
-            {
-                return _high_lod_bytes;
-            }
-            set
-            {
-                _high_lod_bytes = value;
-            }
-        }
-        [XmlIgnore]
-        public int MidLODBytes
-        {
-            get
-            {
-                return _mid_lod_bytes;
-            }
-            set
-            {
-                _mid_lod_bytes = value;
-            }
-        }
-
-        [XmlIgnore]
-        public int LowLODBytes
-        {
-            get
-            {
-                return _low_lod_bytes;
-            }
-            set
-            {
-                _low_lod_bytes = value;
-            }
-        }
-
-        [XmlIgnore]
-        public int LowestLODBytes
-        {
-            get
-            {
-                return _lowest_lod_bytes;
-            }
-            set
-            {
-                _lowest_lod_bytes = value;
-            }
-        }
-
-        // Flexi
-        public int FlexiSoftness
-        {
-            get
-            {
-                return _flexiSoftness;
-            }
-            set
-            {
-                _flexiSoftness = value;
-            }
-        }
-
-        public float FlexiTension {
-            get {
-                return _flexiTension;
-            }
-            set {
-                _flexiTension = value;
-            }
-        }
-
-        public float FlexiDrag {
-            get {
-                return _flexiDrag;
-            }
-            set {
-                _flexiDrag = value;
-            }
-        }
-
-        public float FlexiGravity {
-            get {
-                return _flexiGravity;
-            }
-            set {
-                _flexiGravity = value;
-            }
-        }
-
-        public float FlexiWind {
-            get {
-                return _flexiWind;
-            }
-            set {
-                _flexiWind = value;
-            }
-        }
-
-        public float FlexiForceX {
-            get {
-                return _flexiForceX;
-            }
-            set {
-                _flexiForceX = value;
-            }
-        }
-
-        public float FlexiForceY {
-            get {
-                return _flexiForceY;
-            }
-            set {
-                _flexiForceY = value;
-            }
-        }
-
-        public float FlexiForceZ {
-            get {
-                return _flexiForceZ;
-            }
-            set {
-                _flexiForceZ = value;
-            }
-        }
-
-        public float LightColorR {
-            get {
-                return _lightColorR;
-            }
-            set {
-                _lightColorR = value;
-            }
-        }
-
-        public float LightColorG {
-            get {
-                return _lightColorG;
-            }
-            set {
-                _lightColorG = value;
-            }
-        }
-
-        public float LightColorB {
-            get {
-                return _lightColorB;
-            }
-            set {
-                _lightColorB = value;
-            }
-        }
-
-        public float LightColorA {
-            get {
-                return _lightColorA;
-            }
-            set {
-                _lightColorA = value;
-            }
-        }
-
-        public float LightRadius {
-            get {
-                return _lightRadius;
-            }
-            set {
-                _lightRadius = value;
-            }
-        }
-
-        public float LightCutoff {
-            get {
-                return _lightCutoff;
-            }
-            set {
-                _lightCutoff = value;
-            }
-        }
-
-        public float LightFalloff {
-            get {
-                return _lightFalloff;
-            }
-            set {
-                _lightFalloff = value;
-            }
-        }
-
-        public float LightIntensity {
-            get {
-                return _lightIntensity;
-            }
-            set {
-                _lightIntensity = Math.Min(value, 1.0f);
-            }
-        }
-
-        public bool FlexiEntry {
-            get {
-                return _flexiEntry;
-            }
-            set {
-                _flexiEntry = value;
-            }
-        }
-
-        public bool LightEntry {
-            get {
-                return _lightEntry;
-            }
-            set {
-                _lightEntry = value;
-            }
-        }
-
-        public bool SculptEntry {
-            get {
-                return _sculptEntry;
-            }
-            set {
-                _sculptEntry = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether this <see cref="OpenSim.Framework.PrimitiveBaseShape"/>has an active texture projector as part of the lightsource
-        /// </summary>
-        /// <value><c>true</c> if the projector is enabled; otherwise, <c>false</c>.</value>
-        public bool ProjectionEntry {
-            get {
-                return _projectionEntry;
-            }
-            set {
-                _projectionEntry = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the UUID of the texture the projector emits.
-        /// </summary>
-        /// <value>The projection texture UUID.</value>
-        public UUID ProjectionTextureUUID {
-            get {
-                return _projectionTextureID;
-            }
-            set {
-                _projectionTextureID = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the projection Field of View in radians.
-        /// Valid range is from 0.0 to 3.0. Invalid values are clamped to the valid range.
-        /// </summary>
-        /// <value>The projection FOV.</value>
-        public float ProjectionFOV {
-            get {
-                return _projectionFOV;
-            }
-            set {
-                _projectionFOV = Util.Clip(value, 0.0f, 3.0f);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the projection focus - aka how far away from the source prim the texture will be sharp.  Beyond this value the texture and its border will gradually get blurry out to the limit of the effective range.
-        /// </summary>
-        /// <value>The projection focus distance in meters.</value>
-        public float ProjectionFocus {
-            get {
-                return _projectionFocus;
-            }
-            set {
-                _projectionFocus = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the projection ambiance - the brightness of a very blurred edition of the projected texture that is placed on all faces of all objects within the projector's FOV and effective range.
-        /// Valid range is from 0.0 on up. Invalid values are clamped to the valid range.
-        /// </summary>
-        /// <value>The projection ambiance brightness.</value>
-        public float ProjectionAmbiance {
-            get {
-                return _projectionAmb;
-            }
-            set {
-                _projectionAmb = Math.Max(0.0f, value);
-            }
-        }
-
-        public PhysicsShapeType PreferredPhysicsShape
-        {
-            get
-            {
-                return _preferredPhysicsShape;
-            }
-            set
-            {
-                _preferredPhysicsShape = value;
-            }
-        }
-
-        [XmlIgnore]
-        public RenderMaterials RenderMaterials
-        {
-            get
-            {
-                return _renderMaterials;
-            }
-            set
-            {
-                _renderMaterials = value;
-            }
-        }
 
         /// <summary>
         /// Calculate a hash value over fields that can affect the underlying physics shape.
@@ -1129,21 +608,21 @@ namespace OpenSim.Framework
             uint TotalBytesLength = 1; // ExtraParamsNum
 
             uint ExtraParamsNum = 0;
-            if (_flexiEntry)
+            if (FlexiEntry)
             {
                 ExtraParamsNum++;
                 TotalBytesLength += 16;// data
                 TotalBytesLength += 2 + 4; // type
             }
 
-            if (_lightEntry)
+            if (LightEntry)
             {
                 ExtraParamsNum++;
                 TotalBytesLength += 16;// data
                 TotalBytesLength += 2 + 4; // type
             }
 
-            if (_sculptEntry)
+            if (SculptEntry)
             {
                 hasSculptEntry = true;
                 ExtraParamsNum++;
@@ -1151,7 +630,7 @@ namespace OpenSim.Framework
                 TotalBytesLength += 2 + 4; // type
             }
 
-            if (_projectionEntry)
+            if (ProjectionEntry)
             {
                 ExtraParamsNum++;
                 TotalBytesLength += 28;// data
@@ -1165,7 +644,7 @@ namespace OpenSim.Framework
             // Stick in the number of parameters
             returnbytes[i++] = (byte)ExtraParamsNum;
 
-            if (_flexiEntry)
+            if (FlexiEntry)
             {
                 byte[] FlexiData = GetFlexiBytes();
 
@@ -1180,7 +659,7 @@ namespace OpenSim.Framework
                 i += FlexiData.Length;
             }
 
-            if (_lightEntry)
+            if (LightEntry)
             {
                 byte[] LightData = GetLightBytes();
 
@@ -1210,7 +689,7 @@ namespace OpenSim.Framework
                 i += SculptData.Length;
             }
 
-            if (_projectionEntry)
+            if (ProjectionEntry)
             {
                 byte[] ProjectionData = GetProjectionBytes();
 
@@ -1224,7 +703,7 @@ namespace OpenSim.Framework
                 i += ProjectionData.Length;
             }
 
-            if (!_flexiEntry && !_lightEntry && !_sculptEntry && !_projectionEntry)
+            if (!FlexiEntry && !LightEntry && !SculptEntry && !ProjectionEntry)
             {
                 byte[] returnbyte = new byte[1];
                 returnbyte[0] = 0;
@@ -1246,7 +725,7 @@ namespace OpenSim.Framework
                 case FlexiEP:
                     if (!inUse)
                     {
-                        _flexiEntry = false;
+                        FlexiEntry = false;
                         return;
                     }
                     ReadFlexiData(data, 0);
@@ -1255,7 +734,7 @@ namespace OpenSim.Framework
                 case LightEP:
                     if (!inUse)
                     {
-                        _lightEntry = false;
+                        LightEntry = false;
                         return;
                     }
                     ReadLightData(data, 0);
@@ -1264,7 +743,7 @@ namespace OpenSim.Framework
                 case SculptEP:
                     if (!inUse)
                     {
-                        _sculptEntry = false;
+                        SculptEntry = false;
                         return;
                     }
                     ReadSculptData(data, 0);
@@ -1272,7 +751,7 @@ namespace OpenSim.Framework
                 case ProjectionEP:
                     if (!inUse)
                     {
-                        _projectionEntry = false;
+                        ProjectionEntry = false;
                         return;
                     }
                     ReadProjectionData(data, 0);
@@ -1338,13 +817,13 @@ namespace OpenSim.Framework
             }
 
             if (!lGotFlexi)
-                _flexiEntry = false;
+                FlexiEntry = false;
             if (!lGotLight)
-                _lightEntry = false;
+                LightEntry = false;
             if (!lGotSculpt)
-                _sculptEntry = false;
+                SculptEntry = false;
             if (!lGotFilter)
-                _projectionEntry = false;
+                ProjectionEntry = false;
         }
 
         public void ReadSculptData(byte[] data, int pos)
@@ -1355,7 +834,7 @@ namespace OpenSim.Framework
 
             if (data.Length+pos >= 17)
             {
-                _sculptEntry = true;
+                SculptEntry = true;
                 SculptTextureUUID = new byte[16];
                 SculptTypel = data[16 + pos];
                 Array.Copy(data, pos, SculptTextureUUID,0, 16);
@@ -1363,19 +842,19 @@ namespace OpenSim.Framework
             }
             else
             {
-                _sculptEntry = false;
+                SculptEntry = false;
                 SculptUUID = UUID.Zero;
                 SculptTypel = 0x00;
             }
 
-            if (_sculptEntry)
+            if (SculptEntry)
             {
-                if (_sculptType != (byte)1 && _sculptType != (byte)2 && _sculptType != (byte)3 && _sculptType != (byte)4)
-                    _sculptType = 4;
+                if (SculptType != (byte)1 && SculptType != (byte)2 && SculptType != (byte)3 && SculptType != (byte)4)
+                    SculptType = 4;
             }
 
-            _sculptTexture = SculptUUID;
-            _sculptType = SculptTypel;
+            SculptTexture = SculptUUID;
+            SculptType = SculptTypel;
             //m_log.Info("[SCULPT]:" + SculptUUID.ToString());
         }
 
@@ -1383,8 +862,8 @@ namespace OpenSim.Framework
         {
             byte[] data = new byte[17];
 
-            _sculptTexture.GetBytes().CopyTo(data, 0);
-            data[16] = (byte)_sculptType;
+            SculptTexture.GetBytes().CopyTo(data, 0);
+            data[16] = (byte)SculptType;
 
             return data;
         }
@@ -1517,30 +996,30 @@ namespace OpenSim.Framework
         {
             if (data.Length-pos >= 16)
             {
-                _flexiEntry = true;
-                _flexiSoftness = ((data[pos] & 0x80) >> 6) | ((data[pos + 1] & 0x80) >> 7);
+                FlexiEntry = true;
+                FlexiSoftness = ((data[pos] & 0x80) >> 6) | ((data[pos + 1] & 0x80) >> 7);
 
-                _flexiTension = (float)(data[pos++] & 0x7F) / 10.0f;
-                _flexiDrag = (float)(data[pos++] & 0x7F) / 10.0f;
-                _flexiGravity = (float)(data[pos++] / 10.0f) - 10.0f;
-                _flexiWind = (float)data[pos++] / 10.0f;
+                FlexiTension = (float)(data[pos++] & 0x7F) / 10.0f;
+                FlexiDrag = (float)(data[pos++] & 0x7F) / 10.0f;
+                FlexiGravity = (float)(data[pos++] / 10.0f) - 10.0f;
+                FlexiWind = (float)data[pos++] / 10.0f;
                 Vector3 lForce = new Vector3(data, pos);
-                _flexiForceX = lForce.X;
-                _flexiForceY = lForce.Y;
-                _flexiForceZ = lForce.Z;
+                FlexiForceX = lForce.X;
+                FlexiForceY = lForce.Y;
+                FlexiForceZ = lForce.Z;
             }
             else
             {
-                _flexiEntry = false;
-                _flexiSoftness = 0;
+                FlexiEntry = false;
+                FlexiSoftness = 0;
 
-                _flexiTension = 0.0f;
-                _flexiDrag = 0.0f;
-                _flexiGravity = 0.0f;
-                _flexiWind = 0.0f;
-                _flexiForceX = 0f;
-                _flexiForceY = 0f;
-                _flexiForceZ = 0f;
+                FlexiTension = 0.0f;
+                FlexiDrag = 0.0f;
+                FlexiGravity = 0.0f;
+                FlexiWind = 0.0f;
+                FlexiForceX = 0f;
+                FlexiForceY = 0f;
+                FlexiForceZ = 0f;
             }
         }
 
@@ -1550,14 +1029,14 @@ namespace OpenSim.Framework
             int i = 0;
 
             // Softness is packed in the upper bits of tension and drag
-            data[i] = (byte)((_flexiSoftness & 2) << 6);
-            data[i + 1] = (byte)((_flexiSoftness & 1) << 7);
+            data[i] = (byte)((FlexiSoftness & 2) << 6);
+            data[i + 1] = (byte)((FlexiSoftness & 1) << 7);
 
-            data[i++] |= (byte)((byte)(_flexiTension * 10.01f) & 0x7F);
-            data[i++] |= (byte)((byte)(_flexiDrag * 10.01f) & 0x7F);
-            data[i++] = (byte)((_flexiGravity + 10.0f) * 10.01f);
-            data[i++] = (byte)(_flexiWind * 10.01f);
-            Vector3 lForce = new Vector3(_flexiForceX, _flexiForceY, _flexiForceZ);
+            data[i++] |= (byte)((byte)(FlexiTension * 10.01f) & 0x7F);
+            data[i++] |= (byte)((byte)(FlexiDrag * 10.01f) & 0x7F);
+            data[i++] = (byte)((FlexiGravity + 10.0f) * 10.01f);
+            data[i++] = (byte)(FlexiWind * 10.01f);
+            Vector3 lForce = new Vector3(FlexiForceX, FlexiForceY, FlexiForceZ);
             lForce.GetBytes().CopyTo(data, i);
 
             return data;
@@ -1567,29 +1046,29 @@ namespace OpenSim.Framework
         {
             if (data.Length - pos >= 16)
             {
-                _lightEntry = true;
+                LightEntry = true;
                 Color4 lColor = new Color4(data, pos, false);
-                _lightIntensity = Math.Min(lColor.A, 1.0f);
-                _lightColorA = 1f;
-                _lightColorR = lColor.R;
-                _lightColorG = lColor.G;
-                _lightColorB = lColor.B;
+                LightIntensity = Math.Min(lColor.A, 1.0f);
+                LightColorA = 1f;
+                LightColorR = lColor.R;
+                LightColorG = lColor.G;
+                LightColorB = lColor.B;
 
-                _lightRadius = Utils.BytesToFloat(data, pos + 4);
-                _lightCutoff = Utils.BytesToFloat(data, pos + 8);
-                _lightFalloff = Utils.BytesToFloat(data, pos + 12);
+                LightRadius = Utils.BytesToFloat(data, pos + 4);
+                LightCutoff = Utils.BytesToFloat(data, pos + 8);
+                LightFalloff = Utils.BytesToFloat(data, pos + 12);
             }
             else
             {
-                _lightEntry = false;
-                _lightColorA = 1f;
-                _lightColorR = 0f;
-                _lightColorG = 0f;
-                _lightColorB = 0f;
-                _lightRadius = 0f;
-                _lightCutoff = 0f;
-                _lightFalloff = 0f;
-                _lightIntensity = 0f;
+                LightEntry = false;
+                LightColorA = 1f;
+                LightColorR = 0f;
+                LightColorG = 0f;
+                LightColorB = 0f;
+                LightRadius = 0f;
+                LightCutoff = 0f;
+                LightFalloff = 0f;
+                LightIntensity = 0f;
             }
         }
 
@@ -1598,37 +1077,37 @@ namespace OpenSim.Framework
             byte[] data = new byte[16];
 
             // Alpha channel in color is intensity
-            Color4 tmpColor = new Color4(_lightColorR,_lightColorG,_lightColorB, Math.Min(_lightIntensity, 1.0f));
+            Color4 tmpColor = new Color4(LightColorR,LightColorG,LightColorB, Math.Min(LightIntensity, 1.0f));
 
             tmpColor.GetBytes().CopyTo(data, 0);
-            Utils.FloatToBytes(_lightRadius).CopyTo(data, 4);
-            Utils.FloatToBytes(_lightCutoff).CopyTo(data, 8);
-            Utils.FloatToBytes(_lightFalloff).CopyTo(data, 12);
+            Utils.FloatToBytes(LightRadius).CopyTo(data, 4);
+            Utils.FloatToBytes(LightCutoff).CopyTo(data, 8);
+            Utils.FloatToBytes(LightFalloff).CopyTo(data, 12);
 
             return data;
         }
 
         public void ReadProjectionData(byte[] data, int pos)
         {
-            byte[] ProjectionTextureUUID = new byte[16];
+            byte[] projectionTextureUUID = new byte[16];
 
             if (data.Length - pos >= 28)
             {
-                _projectionEntry = true;
-                Array.Copy(data, pos, ProjectionTextureUUID,0, 16);
-                _projectionTextureID = new UUID(ProjectionTextureUUID, 0);
+                ProjectionEntry = true;
+                Array.Copy(data, pos, projectionTextureUUID,0, 16);
+                ProjectionTextureUUID = new UUID(projectionTextureUUID, 0);
 
-                _projectionFOV = Utils.BytesToFloat(data, pos + 16);
-                _projectionFocus = Utils.BytesToFloat(data, pos + 20);
-                _projectionAmb = Utils.BytesToFloat(data, pos + 24);
+                ProjectionFOV = Utils.BytesToFloat(data, pos + 16);
+                ProjectionFocus = Utils.BytesToFloat(data, pos + 20);
+                ProjectionAmbiance = Utils.BytesToFloat(data, pos + 24);
             }
             else
             {
-                _projectionEntry = false;
-                _projectionTextureID = UUID.Zero;
-                _projectionFOV = 0f;
-                _projectionFocus = 0f;
-                _projectionAmb = 0f;
+                ProjectionEntry = false;
+                ProjectionTextureUUID = UUID.Zero;
+                ProjectionFOV = 0f;
+                ProjectionFocus = 0f;
+                ProjectionAmbiance = 0f;
             }
         }
 
@@ -1636,10 +1115,10 @@ namespace OpenSim.Framework
         {
             byte[] data = new byte[28];
 
-            _projectionTextureID.GetBytes().CopyTo(data, 0);
-            Utils.FloatToBytes(_projectionFOV).CopyTo(data, 16);
-            Utils.FloatToBytes(_projectionFocus).CopyTo(data, 20);
-            Utils.FloatToBytes(_projectionAmb).CopyTo(data, 24);
+            ProjectionTextureUUID.GetBytes().CopyTo(data, 0);
+            Utils.FloatToBytes(ProjectionFOV).CopyTo(data, 16);
+            Utils.FloatToBytes(ProjectionFocus).CopyTo(data, 20);
+            Utils.FloatToBytes(ProjectionAmbiance).CopyTo(data, 24);
 
             return data;
         }
@@ -1820,7 +1299,17 @@ namespace OpenSim.Framework
             }
             public PrimMedia(PrimMedia other) : base()
             {
-                m_MediaFaces = other.CopyArray();
+                if ((other == null) || (other.m_MediaFaces == null))
+                {
+                    New(0);
+                }
+                else
+                {
+                    lock (this)
+                    {
+                        m_MediaFaces = other.CopyArray();
+                    }
+                }
             }
 
             public int Count
@@ -1881,6 +1370,9 @@ namespace OpenSim.Framework
             {
                 lock (this)
                 {
+                    if (m_MediaFaces == null)
+                        return null;
+
                     int len = m_MediaFaces.Length;
                     MediaEntry[] copyFaces = new MediaEntry[len];
                     for (int x=0; x<len; x++)
@@ -1927,10 +1419,13 @@ namespace OpenSim.Framework
                             OSDArray meArray = new OSDArray();
                             lock (this)
                             {
-                                foreach (MediaEntry me in m_MediaFaces)
+                                if (m_MediaFaces != null)
                                 {
-                                    OSD osd = (null == me ? new OSD() : me.GetOSD());
-                                    meArray.Add(osd);
+                                    foreach (MediaEntry me in m_MediaFaces)
+                                    {
+                                        OSD osd = (null == me ? new OSD() : me.GetOSD());
+                                        meArray.Add(osd);
+                                    }
                                 }
                             }
 

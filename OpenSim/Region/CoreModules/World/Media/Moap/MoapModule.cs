@@ -249,7 +249,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
 
             SetPartMediaFlags(part, face, me != null);
 
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
             part.TriggerScriptChangedEvent(Changed.MEDIA);
         }
 
@@ -328,15 +328,18 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 return String.Empty;
             }
 
-            if (null == part.Shape.Media)
-                return String.Empty;
-
             ObjectMediaResponse resp = new ObjectMediaResponse();
-
             resp.PrimID = primId;
 
             lock (part.Shape.Media)
+            {
+                if (null == part.Shape.Media)
+                    return String.Empty;
+
                 resp.FaceMedia = part.Shape.Media.CopyArray();
+                if (null == resp.FaceMedia)
+                    return String.Empty;
+            }
 
             resp.Version = part.MediaUrl;
 
@@ -452,7 +455,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
             UpdateMediaUrl(part, agentId);
 
             // Arguably, we could avoid sending a full update to the avatar that just changed the texture.
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.MediaURL);
 
             part.TriggerScriptChangedEvent(Changed.MEDIA);
 
@@ -530,7 +533,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
 
             UpdateMediaUrl(part, agentId);
 
-            part.ScheduleFullUpdate();
+            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
 
             part.TriggerScriptChangedEvent(Changed.MEDIA);
 

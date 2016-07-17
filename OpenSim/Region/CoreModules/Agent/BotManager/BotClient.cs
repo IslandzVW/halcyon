@@ -41,6 +41,7 @@ using System.Xml;
 using OpenSim.Region.Framework.Interfaces;
 using log4net;
 using System.Reflection;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Region.CoreModules.Agent.BotManager
 {
@@ -58,6 +59,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         private Dictionary<string, UUID> m_defaultAnimations = new Dictionary<string, UUID>();
         private bool m_frozenUser = false;
         private bool m_closing = false;
+        private static int m_depth = 0;
 
         #endregion
 
@@ -78,6 +80,13 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             TimeCreated = DateTime.Now;
 
             InitDefaultAnimations();
+
+            m_log.Warn("[BOTCLIENT]: Constructor, clients now: " + (++m_depth).ToString());
+        }
+
+        ~BotClient()
+        {
+            m_log.Warn("[BOTCLIENT]: Destructor, clients now: " + (--m_depth).ToString());
         }
 
         #endregion
@@ -253,9 +262,13 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             chatFromClient.Message = message;
             chatFromClient.Position = StartPos;
             chatFromClient.Scene = m_scene;
-            chatFromClient.Sender = this;
             chatFromClient.SenderUUID = AgentId;
             chatFromClient.Type = sourceType;
+
+            // Force avatar position to be server-known avatar position. (Former contents of FixPositionOfChatMessage.)
+            ScenePresence avatar;
+            if (m_scene.TryGetAvatar(m_UUID, out avatar))
+                chatFromClient.Position = avatar.AbsolutePosition;
 
             OnChatFromClient(this, chatFromClient);
         }
@@ -464,6 +477,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         public event TextureRequest OnRequestTexture;
 
         public event RezObject OnRezObject;
+        public event RestoreObject OnRestoreObject;
 
         public event ModifyTerrain OnModifyTerrain;
 
@@ -910,7 +924,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
         }
 
-        public void SendAppearance(OpenMetaverse.UUID agentID, byte[] visualParams, byte[] textureEntry)
+        public void SendAppearance(AvatarAppearance app)
         {
         }
 
@@ -1033,7 +1047,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
         }
 
-        public void SendPrimitiveToClient(object sop, uint clientFlags, OpenMetaverse.Vector3 lpos)
+        public void SendPrimitiveToClient(object sop, uint clientFlags, OpenMetaverse.Vector3 lpos, PrimUpdateFlags updateFlags)
         {
         }
 
@@ -1119,6 +1133,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public void SendAlertMessage(string message)
         {
+        }
+
+        public void SendAlertMessage(string message, string infoMessage, OSD extraParams)
+        {
+            /* no op */
         }
 
         public void SendAgentAlertMessage(string message, bool modal)

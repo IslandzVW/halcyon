@@ -94,6 +94,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private bool _receivedCompleteAgentMovement = false;
 
+        private Vector3 m_grabStartPos = Vector3.Zero;
+
         private class AvatarUpdateComparer : IEqualityComparer<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>
         {
             #region IEqualityComparer<ObjectDataBlock> Members
@@ -730,6 +732,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 //we have to do the actual close work in another thread because otherwise
                 //this one will stay on the active jobs list and deadlock the closure
                 Util.FireAndForget(this.CloseWorker);
+                m_clientInterfaces.Clear();
             }
         }
 
@@ -1029,7 +1032,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 RefreshGroupMembership();   // Do this before AddNewClient since it will send the data down
             }
 
-            m_scene.AddNewClient(this);
+            m_scene.AddNewClient(this, false);
 
             // check if we've already received the CompleteAgentMovement packet for this client
             if (_receivedCompleteAgentMovement)
@@ -1137,6 +1140,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event ChatMessage OnChatFromClient;
         public event TextureRequest OnRequestTexture;
         public event RezObject OnRezObject;
+        public event RestoreObject OnRestoreObject;
         public event DeRezObjects OnDeRezObjects;
         public event ModifyTerrain OnModifyTerrain;
         public event Action<IClientAPI> OnRegionHandShakeReply;
@@ -2720,18 +2724,33 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             sendAgentDataUpdate.AgentData.LastName = Util.StringToBytes256(lastname);
             OutPacket(sendAgentDataUpdate, ThrottleOutPacketType.Task);
         }
+           
+        /// <summary>
+        /// A convenience function for sending simple alert messages to the client.
+        /// </summary>
+        /// <param name="message">Message</param>
+        public void SendAlertMessage(string message)
+        {
+            SendAlertMessage(message, String.Empty, new OSD());
+        }
 
         /// <summary>
-        /// Send an alert message to the client.  On the Linden client (tested 1.19.1.4), this pops up a brief duration
-        /// blue information box in the bottom right hand corner.
+        /// Send an alert message to the client.
         /// </summary>
-        /// <param name="message"></param>
-        public void SendAlertMessage(string message)
+        /// <param name="message"></param>        
+        /// <param name="infoMessage">Info message</param>
+        /// <param name="extraParams">Extra parameters</param>
+        public void SendAlertMessage(string message, string infoMessage, OSD extraParams)
+
         {
             AlertMessagePacket alertPack = (AlertMessagePacket)PacketPool.Instance.GetPacket(PacketType.AlertMessage);
             alertPack.AlertData = new AlertMessagePacket.AlertDataBlock();
             alertPack.AlertData.Message = Util.StringToBytes256(message);
-            alertPack.AlertInfo = new AlertMessagePacket.AlertInfoBlock[0];
+            alertPack.AlertInfo = new AlertMessagePacket.AlertInfoBlock[1];
+            alertPack.AlertInfo[0] = new AlertMessagePacket.AlertInfoBlock();
+            alertPack.AlertInfo[0].Message = Util.StringToBytes256(infoMessage);
+            alertPack.AlertInfo[0].ExtraParams = OSDParser.SerializeLLSDXmlBytes(extraParams);
+
             OutPacket(alertPack, ThrottleOutPacketType.Task);
         }
 
@@ -2755,6 +2774,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <returns></returns>
         protected AgentAlertMessagePacket BuildAgentAlertPacket(string message, bool modal)
         {
+            if (!modal && !message.StartsWith("ALERT: ") && !message.StartsWith("NOTIFY: ")
+                && message != "Home position set." && message != "You died and have been teleported to your home location")
+            {
+                message = "/" + message;
+            }
             AgentAlertMessagePacket alertPack = (AgentAlertMessagePacket)PacketPool.Instance.GetPacket(PacketType.AgentAlertMessage);
             alertPack.AgentData.AgentID = AgentId;
             alertPack.AlertData.Message = Util.StringToBytes256(message);
@@ -3036,12 +3060,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(aw, ThrottleOutPacketType.Task);
         }
 
-        public void SendAppearance(UUID agentID, byte[] visualParams, byte[] textureEntry)
+        public void SendAppearance(AvatarAppearance app)
         {
+            // UUID agentID, byte[] visualParams, byte[] textureEntry)
+            // m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes()
+
             // Disallow any self-referencing AvatarAppearance packets
-            if (agentID == this.AgentId)
+            if (app.Owner == this.AgentId)
             {
-                m_log.ErrorFormat("[CLIENT]: Refusing to send self-update of AvatarAppearance to {0}", agentID.ToString());
+                m_log.ErrorFormat("[CLIENT]: Refusing to send self-update of AvatarAppearance to {0}", app.Owner.ToString());
                 return;
             }
 
@@ -3049,26 +3076,36 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // TODO: don't create new blocks if recycling an old packet
             int clientParamsLength = MaxVisualParams();
 
-            if (clientParamsLength > visualParams.Length)
-                clientParamsLength = visualParams.Length;
+            if (clientParamsLength > app.VisualParams.Length)
+                clientParamsLength = app.VisualParams.Length;
 
             avp.VisualParam = new AvatarAppearancePacket.VisualParamBlock[clientParamsLength];
-            avp.ObjectData.TextureEntry = textureEntry;
+            avp.ObjectData.TextureEntry = app.Texture.GetBytes();
 
             AvatarAppearancePacket.VisualParamBlock avblock = null;
 
             for (int i = 0; i < clientParamsLength; i++)
             {
                 avblock = new AvatarAppearancePacket.VisualParamBlock();
-                avblock.ParamValue = (i < visualParams.Length) ? visualParams[i] : AvatarAppearance.VISUALPARAM_DEFAULT;
+                avblock.ParamValue = (i < app.VisualParams.Length) ? app.VisualParams[i] : AvatarAppearance.VISUALPARAM_DEFAULT;
                 avp.VisualParam[i] = avblock;
             }
 
-            // Coff Version and SSA flag. Currently ununsed.
-            avp.AppearanceData = new AvatarAppearancePacket.AppearanceDataBlock[0];
+            // Coff Version and SSA flag.
+            avp.AppearanceData = 
+                new AvatarAppearancePacket.AppearanceDataBlock[1]
+                {
+                    new AvatarAppearancePacket.AppearanceDataBlock()
+                    {
+                        CofVersion = app.Serial,
+                        AppearanceVersion = (int)RegionProtocols.None
+                    }
+                };
+
+            // TODO Add AvatarHoverPacket block here 
 
             avp.Sender.IsTrial = false;
-            avp.Sender.ID = agentID;
+            avp.Sender.ID = app.Owner;
             OutPacket(avp, ThrottleOutPacketType.Task);
         }
 
@@ -3301,7 +3338,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                   clickAction, material, textureanim, false, 0, UUID.Zero, UUID.Zero, 0, 0, 0);
         }*/
 
-        public void SendPrimitiveToClient(object obj, uint flags, Vector3 lPos)
+        public void SendPrimitiveToClient(object obj, uint flags, Vector3 lPos, PrimUpdateFlags updateFlags)
         {
             if (m_closeActive == 1) return;
 
@@ -3740,7 +3777,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             if (validParts.Count == 0) return false;
-
+            
             outPacket.ObjectData =
                 new ImprovedTerseObjectUpdatePacket.
                     ObjectDataBlock[validParts.Count];
@@ -4804,6 +4841,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.AgentIsNowWearing, HandlerAgentIsNowWearing, PacketHandlingDisposition.HandleSynchronized);
             AddLocalPacketHandler(PacketType.RezSingleAttachmentFromInv, HandlerRezSingleAttachmentFromInv, PacketHandlingDisposition.HandleAsync);
             AddLocalPacketHandler(PacketType.RezMultipleAttachmentsFromInv, HandleRezMultipleAttachmentsFromInv, PacketHandlingDisposition.HandleAsync);
+            AddLocalPacketHandler(PacketType.RezRestoreToWorld, HandlerRezRestoreToWorld, PacketHandlingDisposition.HandleAsync);
             AddLocalPacketHandler(PacketType.DetachAttachmentIntoInv, HandleDetachAttachmentIntoInv, PacketHandlingDisposition.HandleAsync);
             AddLocalPacketHandler(PacketType.ObjectAttach, HandleObjectAttach, PacketHandlingDisposition.HandleSynchronized);
             AddLocalPacketHandler(PacketType.ObjectDetach, HandleObjectDetach, PacketHandlingDisposition.HandleSynchronized);
@@ -7463,6 +7501,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
+            m_grabStartPos = Vector3.Zero;  // grab no longer active
+
             DeGrabObject handlerDeGrabObject = OnDeGrabObject;
             if (handlerDeGrabObject != null)
             {
@@ -7549,9 +7589,13 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 args.Position = fromPos;
 
                 args.Scene = Scene;
-                args.Sender = this;
                 args.SenderUUID = this.AgentId;
                 args.DestinationUUID = UUID.Zero;
+
+                // Force avatar position to be server-known avatar position. (Former contents of FixPositionOfChatMessage.)
+                ScenePresence avatar;
+                if (((Scene)Scene).TryGetAvatar(args.SenderUUID, out avatar))
+                    args.Position = avatar.AbsolutePosition;
 
                 ChatMessage handlerChatFromClient = OnChatFromClient;
                 if (handlerChatFromClient != null)
@@ -7631,7 +7675,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 args.Type = ChatTypeEnum.Say;
                 args.Position = pos;
                 args.Scene = Scene;
-                args.Sender = this;
+                args.SenderUUID = this.AgentId;
                 args.DestinationUUID = UUID.Zero;
 
                 ChatMessage handlerChatFromClient2 = OnChatFromClient;
@@ -7650,7 +7694,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 if (msgpack.MessageBlock.ToAgentID != m_frozenBy)
                 {
-                    // determin if we should report that the IM was blocked
+                    // determine if we should report that the IM was blocked
                     if ((msgpack.MessageBlock.Dialog == (byte)InstantMessageDialog.MessageFromAgent) ||
                         (msgpack.MessageBlock.Dialog == (byte)InstantMessageDialog.InventoryOffered))
                         SendAlertMessage("You have been frozen by " + m_frozenByName + ". You are only allowed to send IMs to " + m_frozenByName + " while frozen.");
@@ -7876,6 +7920,29 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return true;
         }
 
+        private bool HandlerRezRestoreToWorld(IClientAPI sender, Packet Pack)
+        {
+            if (m_frozenUser) return true;
+
+            RezRestoreToWorldPacket rezPacket = (RezRestoreToWorldPacket)Pack;
+
+            #region Packet Session and User Check
+            if (m_checkPackets)
+            {
+                if (rezPacket.AgentData.SessionID != SessionId ||
+                    rezPacket.AgentData.AgentID != AgentId)
+                    return true;
+            }
+            #endregion
+
+            RestoreObject handlerRestoreObject = OnRestoreObject;
+            if (handlerRestoreObject != null)
+            {
+                handlerRestoreObject(this, rezPacket.InventoryData.GroupID, rezPacket.InventoryData.ItemID);
+            }
+            return true;
+        }
+
         private bool HandlerModifyLand(IClientAPI sender, Packet Pack)
         {
             if (m_frozenUser) return true;
@@ -7987,7 +8054,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         };
                         items[i] = cache;
                     }
-                    handlerSetAppearance(appear.ObjectData.TextureEntry, visualparams, items);
+
+                    uint serial = appear.AgentData.SerialNum;
+
+                    m_log.InfoFormat("[LLCV]: Avatar appearance update ({0}) for user {1}", serial, this.Name);
+
+                    handlerSetAppearance(appear.ObjectData.TextureEntry, visualparams, items, serial);
                 }
                 catch (Exception e)
                 {
@@ -9032,6 +9104,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         arg.STCoord = surfaceInfo.STCoord;
                         arg.UVCoord = surfaceInfo.UVCoord;
                         touchArgs.Add(arg);
+
+                        // Store the start of grab position for relative offsets from future updates (llDetectedGrab).
+                        this.m_grabStartPos = surfaceInfo.Position;
                     }
                 }
                 handlerGrabObject(grab.ObjectData.LocalID, grab.ObjectData.GrabOffset, this, touchArgs);
@@ -9073,49 +9148,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         touchArgs.Add(arg);
                     }
                 }
-                handlerGrabUpdate(grabUpdate.ObjectData.ObjectID, grabUpdate.ObjectData.GrabOffsetInitial,
+                handlerGrabUpdate(grabUpdate.ObjectData.ObjectID, m_grabStartPos,
                                   grabUpdate.ObjectData.GrabPosition, this, touchArgs);
             }
             return true;
         }
-
-        /*
-        private bool HandleObjectDeGrab(IClientAPI sender, Packet Pack)
-        {
-            ObjectDeGrabPacket deGrab = (ObjectDeGrabPacket)Pack;
-
-            #region Packet Session and User Check
-            if (m_checkPackets)
-            {
-                if (deGrab.AgentData.SessionID != SessionId ||
-                    deGrab.AgentData.AgentID != AgentId)
-                    return true;
-            }
-            #endregion
-
-            DeGrabObject handlerDeGrabObject = OnDeGrabObject;
-            if (handlerDeGrabObject != null)
-            {
-                List<SurfaceTouchEventArgs> touchArgs = new List<SurfaceTouchEventArgs>();
-                if ((deGrab.SurfaceInfo != null) && (deGrab.SurfaceInfo.Length > 0))
-                {
-                    foreach (ObjectDeGrabPacket.SurfaceInfoBlock surfaceInfo in deGrab.SurfaceInfo)
-                    {
-                        SurfaceTouchEventArgs arg = new SurfaceTouchEventArgs();
-                        arg.Binormal = surfaceInfo.Binormal;
-                        arg.FaceIndex = surfaceInfo.FaceIndex;
-                        arg.Normal = surfaceInfo.Normal;
-                        arg.Position = surfaceInfo.Position;
-                        arg.STCoord = surfaceInfo.STCoord;
-                        arg.UVCoord = surfaceInfo.UVCoord;
-                        touchArgs.Add(arg);
-                    }
-                }
-                handlerDeGrabObject(deGrab.ObjectData.LocalID, this, touchArgs);
-           }
-            return true;
-        }
-        */
 
         private bool HandleObjectSpinStart(IClientAPI sender, Packet Pack)
         {

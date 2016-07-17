@@ -103,8 +103,8 @@ namespace OpenSim.Framework.Communications
         /// User profiles indexed by name
         /// This MUST be kept in sync with all UserProfileData lists
         /// </summary>
-        private readonly Dictionary<string, UserProfileData> m_userDataByName
-            = new Dictionary<string, UserProfileData>();
+        private readonly Dictionary<string, UUID> m_userByName
+            = new Dictionary<string, UUID>();
 
         ///////////// Caches for CachedUserInfo //////////////
 
@@ -169,7 +169,7 @@ namespace OpenSim.Framework.Communications
             lock (m_userDataLock)
             {
                 if (m_localUser.ContainsKey(uuid))
-                    return m_localUser[uuid];
+                    return m_localUser[uuid];   // never updates on timer (!)
 
                 if (m_tempDataByUUID.ContainsKey(uuid))
                     return m_tempDataByUUID[uuid];
@@ -188,29 +188,63 @@ namespace OpenSim.Framework.Communications
             return null;    // not in cache
         }
 
+        private string CombineNames(string fname, string lname)
+        {
+            return fname.Trim() + " " + lname.Trim();
+        }
+        private string DictName(string name)
+        {
+            return name.Trim().ToUpper();
+        }
+        private string DictName(string fname, string lname)
+        {
+            return DictName(CombineNames(fname, lname));
+        }
+
+        private UUID TryGetUUIDByName(string name, bool removeIfFound)
+        {
+            string dictName = DictName(name);
+            UUID uuid;
+            lock (m_userDataLock)
+            {
+                // m_userByName includes both regular and local UserProfileData entries.
+                if (!m_userByName.TryGetValue(dictName, out uuid))
+                    return UUID.Zero;    // not known
+
+                if (removeIfFound)
+                    m_userByName.Remove(dictName);
+            }
+
+            return uuid;
+        }
+
+        private UUID TryGetUUIDByName(string fname, string lname, bool removeIfFound)
+        {
+            string name = CombineNames(fname, lname);
+            return TryGetUUIDByName(name, removeIfFound);
+        }
+
+        private void RemoveName(string name)
+        {
+            TryGetUUIDByName(name, true);
+        }
+
         private void RemoveUserData(UUID uuid)
         {
+            // never remove temp profiles this way
             lock (m_userDataLock)
             {
                 UserProfileData profile;
                 if (m_localUser.TryGetValue(uuid, out profile))
                 {
                     m_localUser.Remove(uuid);
-                    if (m_userDataByName.ContainsKey(profile.Name))
-                        m_userDataByName.Remove(profile.Name);
-                }
-                if (m_tempDataByUUID.TryGetValue(uuid, out profile))
-                {
-                    m_tempDataByUUID.Remove(uuid);
-                    if (m_userDataByName.ContainsKey(profile.Name))
-                        m_userDataByName.Remove(profile.Name);
+                    RemoveName(profile.Name);
                 }
                 TimestampedItem<UserProfileData> item;
                 if (m_userDataByUUID.TryGetValue(uuid, out item))
                 {
                     m_userDataByUUID.Remove(uuid);
-                    if (m_userDataByName.ContainsKey(item.Item.Name))
-                        m_userDataByName.Remove(item.Item.Name);
+                    RemoveName(item.Item.Name);
                 }
             }
         }
@@ -221,12 +255,13 @@ namespace OpenSim.Framework.Communications
             {
                 if (m_userDataByUUID.Contains(profile.ID))
                     m_userDataByUUID.Remove(profile.ID);
-                if (m_userDataByName.ContainsKey(profile.Name))
-                    m_userDataByName.Remove(profile.Name);
-                m_userDataByName.Add(profile.Name, profile);
+                RemoveName(profile.Name);
+                m_userByName.Add(DictName(profile.Name), profile.ID);
                 m_userDataByUUID.Add(profile.ID, new TimestampedItem<UserProfileData>(profile));
             }
         }
+
+        private Dictionary<UUID, object> m_fetchLocks = new Dictionary<UUID, object>();
 
         public UserProfileData GetUserProfile(UUID uuid, bool forceRefresh)
         {
@@ -235,32 +270,103 @@ namespace OpenSim.Framework.Communications
 
             UserProfileData profile;
 
-            lock (m_userDataLock)
+            const int ATTEMPTS = 3;
+            int attempts = 0;
+            do
             {
-                profile = TryGetUserProfile(uuid, false);
-                if (profile != null)
-                {
-                    // Check if we should force a refresh.
-                    if (!forceRefresh)
-                        return profile;
-                    // Never force refresh of local profiles or temp profiles.
-                    if (m_localUser.ContainsKey(uuid) || m_tempDataByUUID.ContainsKey(uuid))
-                        return profile;
-                }
-            }
 
-            // Else cache expired, or forcing a refresh of a normal cached profile.
-            profile = m_storage.GetUserProfileData(uuid);
-            if (profile != null)
-            {
-                profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
-                ReplaceUserData(profile);
-            }
-            else
-                RemoveUserData(uuid);
+                // Temp profiles do not exist in permanent storage, cannot force refresh.
+                lock (m_userDataLock)
+                {
+                    if (m_tempDataByUUID.TryGetValue(uuid, out profile))
+                        return profile;
+
+                    if (!forceRefresh)
+                    {
+                        profile = TryGetUserProfile(uuid, false);
+                        if (profile != null)
+                        {
+                            // Make sure we also have an AgentData for the profile.
+                            profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
+                            return profile;
+                        }
+                    }
+                }
+
+                // Else cache expired, or forcing a refresh of a normal cached profile.
+                object myLock = new object();
+                object uuidLock = null;
+                // grab a tentative claim on fetching this uuid by locking the new object
+                lock (myLock)
+                {
+                    // now see if we're the first ones in on this uuid
+                    lock (m_fetchLocks)
+                    {
+                        // check if someone else is working on this uuid, use their lock object
+                        if (!m_fetchLocks.TryGetValue(uuid, out uuidLock))
+                        {
+                            // nope, this is the first one in, myLock will be the lock object
+                            m_fetchLocks[uuid] = myLock;
+                            uuidLock = myLock;
+                        }
+                    }
+
+                    // Now try to lock it. If original owner/fetcher, we already have it locked above on lock(fetchLock).
+                    // If not the original owner, this will block until the original fetcher finishes.
+                    lock (uuidLock)
+                    {
+                        if (uuidLock == myLock)
+                        {
+                            attempts = 0; // We're in, no more retries.
+
+                            // Now that we've got a "write lock" on the profile data, 
+                            // try to find it in the cache again in case it was added between locks
+                            // Temp profiles do not exist in permanent storage, cannot force refresh.
+                            if (!m_tempDataByUUID.TryGetValue(uuid, out profile))
+                            {
+                                // not a temp profile (bot)
+                                profile = TryGetUserProfile(uuid, false);
+                                if (profile == null)
+                                {
+                                    // still not found, get it from User service (or db if this is User).
+                                    profile = m_storage.GetUserProfileData(uuid);
+                                    if (profile != null)
+                                    {
+                                        profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
+                                        ReplaceUserData(profile);
+                                    }
+                                    else
+                                    {
+                                        // not found in storage. If this is now known in temp profiles, return it,
+                                        // otherwise remove it from non-temp profile info.
+                                        if (!m_tempDataByUUID.TryGetValue(uuid, out profile))
+                                        {
+                                            RemoveUserData(uuid);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // no longer outstanding
+                            lock (m_fetchLocks)
+                            {
+                                m_fetchLocks.Remove(uuid);
+                            }
+                        }
+                        else
+                        {
+                            if (attempts == 0) // first time in
+                                attempts = ATTEMPTS;
+                            else
+                                attempts--;
+                        }
+                    }
+                }
+            } while (attempts > 0);
 
             return profile;
         }
+
         public UserProfileData GetUserProfile(UUID uuid)
         {
             return GetUserProfile(uuid, false);
@@ -275,13 +381,10 @@ namespace OpenSim.Framework.Communications
                 return null;    // fast exit for no user specified
 
             UserProfileData profile;
-            lock (m_userDataLock)
-            {
-                // m_userDataByName includes both regular and local UserProfileData entries.
-                if (m_userDataByName.TryGetValue(name, out profile))
-                    uuid = profile.ID;
-            }
-            // Now if know the UUID, outside the lock, just use the other function.
+
+            uuid = TryGetUUIDByName(name, false);
+
+            // Now if we know the UUID, just use the other function.
             if (uuid != UUID.Zero)
                 return GetUserProfile(uuid, forceRefresh);  // in case it has expired
 
@@ -290,17 +393,12 @@ namespace OpenSim.Framework.Communications
             lock (m_userDataLock)
             {
                 // Now that it's locked again, ensure the lists have the correct data.
-                if (profile == null)
+                if (profile != null)
                 {
-                    if (m_userDataByName.ContainsKey(name))
-                        m_userDataByName.Remove(name);
-                    if ((uuid != UUID.Zero) && m_userDataByUUID.Contains(uuid))
-                        m_userDataByUUID.Remove(uuid);
-                    return null;
+                    // We fetched a profile above, just use the function above.
+                    profile.CurrentAgent = GetUserAgent(profile.ID);
+                    ReplaceUserData(profile);
                 }
-
-                // We fetched a profile above, just use the function above.
-                ReplaceUserData(profile);
             }
 
             return profile;
@@ -318,16 +416,11 @@ namespace OpenSim.Framework.Communications
         // Just call these if all you need is the name from cache.
         public UUID Name2Key(string firstName, string lastName)
         {
-            string name = firstName.Trim() + " " + lastName.Trim();
-            UserProfileData profile;
+            UUID uuid = TryGetUUIDByName(firstName, lastName, false);
+            if (uuid != UUID.Zero)
+                return uuid;
 
-            lock (m_userDataLock)
-            {
-                if (m_userDataByName.TryGetValue(name, out profile))
-                    return profile.ID;
-            }
-
-            profile = GetUserProfile(firstName, lastName, false);   // also adds to cache
+            UserProfileData profile = GetUserProfile(firstName, lastName, false);   // also adds to cache
             if (profile != null)
                 return profile.ID;
 
@@ -418,9 +511,11 @@ namespace OpenSim.Framework.Communications
         public UserProfileData GetUserProfile(Uri uri)
         {
             UserProfileData profile = m_storage.GetUserProfileData(uri);
-
             if (profile != null)
-                ReplaceUserData(profile);   // this has the latest data
+            {
+                profile.CurrentAgent = GetUserAgent(profile.ID);
+                ReplaceUserData(profile);
+            }
 
             return profile;
         }
@@ -467,39 +562,40 @@ namespace OpenSim.Framework.Communications
         /// <returns>Agent profiles</returns>
         public UserAgentData GetUserAgent(UUID uuid, bool forceRefresh)
         {
-            if (!m_isUserServer)
+            if ((!m_isUserServer) && (!forceRefresh))   // don't do this if User or forced
             {
                 lock (m_agentDataByUUID)
                 {
                     TimestampedItem<UserAgentData> item;
                     if (m_agentDataByUUID.TryGetValue(uuid, out item))
                     {
-                        if (item.ElapsedSeconds < CACHE_ITEM_EXPIRY)
-                            if (!forceRefresh)
+                        if ((item.ElapsedSeconds < CACHE_ITEM_EXPIRY) && !forceRefresh)
+                        {
+                            UserAgentData agentData = item.Item;
+                            // The profile may have been initialized when the user was not logged in, if the cache was warmed by EO or owners of prims in the region.
+                            if (agentData.ProfileID != UUID.Zero)   // agentData is initialized?
                             {
-                                // m_log.WarnFormat("[PROFILE]: AgentData cached: {0} at {1} {2}", item.Item.ProfileID, item.Item.Handle, item.Item.Position);
-                                return item.Item;
+                                // m_log.WarnFormat("[PROFILE]: AgentData cached: {0} at {1} {2}", agentData.ProfileID, Util.RegionHandleToLocationString(agentData.Handle), agentData.Position);
+                                return agentData;
                             }
+                        }
 
                         // Else cache expired, or forcing a refresh.
-                        // m_log.WarnFormat("[PROFILE]: AgentData cache expired or forced: {0} at {1} {2}", item.Item.ProfileID, item.Item.Handle, item.Item.Position);
+                        // m_log.WarnFormat("[PROFILE]: AgentData cache expired or forced: {0} at {1} {2}", item.Item.ProfileID, Util.RegionHandleToLocationString(item.Item.Handle), item.Item.Position);
                     }
                 }
             }
 
             UserAgentData agent = m_storage.GetAgentData(uuid);
-            if (!m_isUserServer)
+            if (agent != null)
             {
-                if (agent != null)
-                {
-                    // m_log.WarnFormat("[PROFILE]: Updating AgentData: {0} at {1} {2}", agent.ProfileID, agent.Handle, agent.Position);
-                    ReplaceAgentData(agent);
-                }
-                else
-                {
-                    // m_log.WarnFormat("[PROFILE]: Removing AgentData for {0}", uuid);
-                    RemoveAgentData(uuid);
-                }
+                // m_log.WarnFormat("[PROFILE]: Updating AgentData: {0} at {1} {2}", agent.ProfileID, Util.RegionHandleToLocationString(agent.Handle), agent.Position);
+                ReplaceAgentData(agent);
+            }
+            else
+            {
+                // m_log.WarnFormat("[PROFILE]: Removing AgentData for {0}", uuid);
+                RemoveAgentData(uuid);
             }
 
             return agent;
@@ -659,7 +755,8 @@ namespace OpenSim.Framework.Communications
                 }
             }
 
-            UserProfileData profile = m_storage.GetUserProfileData(uuid);
+            // Need to update UserAgentData. Also check if UserProfile needs an update.
+            UserProfileData profile = GetUserProfile(uuid, false);
             if (profile == null)
             {
                 FlushCachedInfo(uuid);
@@ -688,9 +785,9 @@ namespace OpenSim.Framework.Communications
                     m_tempDataByUUID.Remove(userProfile.ID);
                 m_tempDataByUUID.Add(userProfile.ID, userProfile);
 
-                if (m_userDataByName.ContainsKey(userProfile.Name))
-                    m_userDataByName.Remove(userProfile.Name);
-                m_userDataByName.Add(userProfile.Name, userProfile);
+                string dictName = DictName(userProfile.Name);
+                RemoveName(dictName);
+                m_userByName.Add(dictName, userProfile.ID);
             }
         }
 
@@ -703,8 +800,7 @@ namespace OpenSim.Framework.Communications
                 if (m_tempDataByUUID.ContainsKey(uuid))
                 {
                     string name = m_tempDataByUUID[uuid].Name;
-                    if (m_userDataByName.ContainsKey(name))
-                        m_userDataByName.Remove(name);
+                    RemoveName(name);
                     m_tempDataByUUID.Remove(uuid);
                 }
             }
@@ -767,17 +863,59 @@ namespace OpenSim.Framework.Communications
         public virtual void AddNewUserFriend(UUID friendlistowner, UUID friend, uint perms)
         {
             m_storage.AddNewUserFriend(friendlistowner, friend, perms);
+
+            CachedUserInfo userInfo = GetUserInfo(friend);
+            if (userInfo != null) userInfo.AdjustPermissionsFromFriend(friendlistowner, perms);
         }
 
         public virtual void RemoveUserFriend(UUID friendlistowner, UUID friend)
         {
             m_storage.RemoveUserFriend(friendlistowner, friend);
+
+            CachedUserInfo userInfo = GetUserInfo(friend);
+            if (userInfo != null) userInfo.RemoveFromFriendsCache(friendlistowner);
         }
 
         public virtual void UpdateUserFriendPerms(UUID friendlistowner, UUID friend, uint perms)
         {
             if (friendlistowner == UUID.Zero) return;
             m_storage.UpdateUserFriendPerms(friendlistowner, friend, perms);
+
+            CachedUserInfo userInfo = GetUserInfo(friend);
+            if (userInfo != null) userInfo.AdjustPermissionsFromFriend(friendlistowner, perms);
+        }
+
+        /// <summary>
+        /// Check if this user can access another's items.
+        /// </summary>
+        /// <param name="friendlistowner">This user (to check).</param>
+        /// <param name="friendId">The ID of the other user (friend owner of the items).</param>
+        /// <param name="permissionMask">Desired permission.</param>
+        /// <param name="noFetch">If true, don't make any net/storage calls. Memory only.</param>
+        /// <returns>true if permission is available</returns>
+        public bool UserHasFriendPerms(UUID requestingFriend, UUID objectOwner, uint permissionMask, bool noFetch)
+        {
+            CachedUserInfo userInfo = null;
+
+            if (noFetch)
+            {
+                // Can be called this way on crossings to prevent lookups.
+                TimestampedItem<CachedUserInfo> item;
+                lock (m_userInfoLock)
+                {
+                    // Ignore timeouts etc if this is a noFetch/fastCheck call.
+                    if (!m_userInfoByUUID.TryGetValue(requestingFriend, out item))
+                        return false;   // user will need to repeat the operation not in a crossing.
+                }
+                userInfo = item.Item;
+            } else {
+                userInfo = GetUserInfo(requestingFriend);
+            }
+
+            if (userInfo == null)
+                return false;
+
+            return userInfo.HasPermissionFromFriend(objectOwner, permissionMask);
         }
 
         /// <summary>
@@ -798,12 +936,13 @@ namespace OpenSim.Framework.Communications
 
         /// <summary>
         /// Creates and initializes a new user agent - make sure to use CommitAgent when done to submit to the DB
+        /// This method is only ever invoked by the User server (not regions).
         /// </summary>
         /// <param name="profile">The users profile</param>
         /// <param name="request">The users loginrequest</param>
         public void CreateAgent(UserProfileData profile, XmlRpcRequest request)
         {
-            //m_log.DebugFormat("[USER CACHE]: Creating agent {0} {1}", profile.Name, profile.ID);
+            // m_log.DebugFormat("[USER CACHE]: Creating agent {0} {1}", profile.Name, profile.ID);
             
             UserAgentData agent = new UserAgentData();
 
@@ -836,7 +975,7 @@ namespace OpenSim.Framework.Communications
             // Current location/position/alignment
             if (profile.CurrentAgent != null)
             {
-                // m_log.WarnFormat("[USER CACHE]: Creating agent {0} {1} at {2} {3} was {4} {5}", profile.Name, profile.ID, profile.CurrentAgent.Handle, profile.CurrentAgent.Position, agent.Handle, agent.Position);
+                m_log.InfoFormat("[USER CACHE]: Creating agent {0} {1} at {2} {3} was {4} {5}", profile.Name, profile.ID, Util.RegionHandleToLocationString(profile.CurrentAgent.Handle), profile.CurrentAgent.Position, Util.RegionHandleToLocationString(agent.Handle), agent.Position);
                 agent.Region = profile.CurrentAgent.Region;
                 agent.Handle = profile.CurrentAgent.Handle;
                 agent.Position = profile.CurrentAgent.Position;
@@ -844,7 +983,7 @@ namespace OpenSim.Framework.Communications
             }
             else
             {
-                // m_log.WarnFormat("[USER CACHE]: Creating agent {0} {1} at HOME {2} {3} was {4} {5}", profile.Name, profile.ID, profile.HomeRegion, profile.HomeLocation, agent.Handle, agent.Position);
+                m_log.InfoFormat("[USER CACHE]: Creating agent {0} {1} at HOME {2} {3} was {4} {5}", profile.Name, profile.ID, Util.RegionHandleToLocationString(profile.HomeRegion), profile.HomeLocation, Util.RegionHandleToLocationString(agent.Handle), agent.Position);
                 agent.Region = profile.HomeRegionID;
                 agent.Handle = profile.HomeRegion;
                 agent.Position = profile.HomeLocation;
@@ -856,11 +995,12 @@ namespace OpenSim.Framework.Communications
             agent.LogoutTime = 0;
 
             // if (m_isUserServer)
-            //     m_log.WarnFormat("[USER CACHE]: Creating new agent data for {0} SSID={1} at {2} {3}", agent.ProfileID, agent.SecureSessionID, agent.Handle, agent.Position); 
+            //     m_log.WarnFormat("[USER CACHE]: Creating new agent data for {0} SSID={1} at {2} {3}", agent.ProfileID, agent.SecureSessionID, Util.RegionHandleToLocationString(agent.Handle), agent.Position); 
 
             profile.CurrentAgent = agent;
         }
 
+        // This method is only ever invoked by the User server (not regions).
         public void CreateAgent(UserProfileData profile, OSD request)
         {
             //m_log.DebugFormat("[USER CACHE]: Creating agent {0} {1}", profile.Name, profile.ID);
@@ -915,13 +1055,13 @@ namespace OpenSim.Framework.Communications
 
         /// <summary>
         /// Saves a target agent to the database
+        /// This method is only ever invoked by the User server (not regions).
         /// </summary>
         /// <param name="profile">The users profile</param>
         /// <returns>Successful?</returns>
         public bool CommitAgent(ref UserProfileData profile)
         {
-            // if (m_isUserServer)
-            //      m_log.WarnFormat("[USER CACHE]: CommitAgent: {0} SSID={1} at {2} {3}", profile.ID, profile.CurrentAgent.SecureSessionID, profile.CurrentAgent.Handle, profile.CurrentAgent.Position);
+            // if (m_isUserServer) m_log.WarnFormat("[USER CACHE]: CommitAgent: {0} SSID={1} at {2} {3}", profile.ID, profile.CurrentAgent.SecureSessionID, Util.RegionHandleToLocationString(profile.CurrentAgent.Handle), profile.CurrentAgent.Position);
 
             // TODO: how is this function different from setUserProfile?  -> Add AddUserAgent() here and commit both tables "users" and "agents"
             // TODO: what is the logic should be?
@@ -958,7 +1098,7 @@ namespace OpenSim.Framework.Communications
                     {
                         userAgent.Region = regionid;
                     }
-                    // m_log.WarnFormat("[LOGOFF]: User {0} at {1} {2} was at {3} {4}", userAgent.ProfileID, userAgent.Handle, userAgent.Position, regionhandle, position);
+                    m_log.WarnFormat("[LOGOFF]: User {0} at {1} {2} was at {3} {4}", userAgent.ProfileID, Util.RegionHandleToLocationString(userAgent.Handle), userAgent.Position, regionhandle, position);
                     userAgent.Handle = regionhandle;
                     userAgent.Position = position;
                     userAgent.LookAt = lookat;
@@ -1531,13 +1671,13 @@ namespace OpenSim.Framework.Communications
                     RemoveUserData(uuid);
 
                     m_localUser[uuid] = profile;
-                    m_userDataByName[profile.Name] = profile;
+                    m_userByName[DictName(profile.Name)] = profile.ID;
                 }
             }
             if (profile != null)
             {
                 // we're all done here
-                m_log.DebugFormat("[USER CACHE]: Converted cache profile to local user for: {0} {1}", uuid, profile.Name);
+                // m_log.DebugFormat("[USER CACHE]: Converted cache profile to local user for: {0} {1}", uuid, profile.Name);
                 return;
             }
 
@@ -1556,11 +1696,11 @@ namespace OpenSim.Framework.Communications
                 RemoveUserData(uuid);
 
                 m_localUser[uuid] = profile;
-                m_userDataByName[profile.Name] = profile;
+                m_userByName[DictName(profile.Name)] = profile.ID;
 
             }
 
-            m_log.DebugFormat("[USER CACHE]: Added profile to local user cache for: {0} {1}", uuid, profile.Name);
+            // m_log.DebugFormat("[USER CACHE]: Added profile to local user cache for: {0} {1}", uuid, profile.Name);
         }
 
         public void UnmakeLocalUser(UUID uuid)
@@ -1584,8 +1724,7 @@ namespace OpenSim.Framework.Communications
                 }
             }
 
-            if (profile != null)
-                m_log.DebugFormat("[USER CACHE]: Converted cache profile from local user to normal user for: {0} {1}", uuid, profile.Name);
+            // if (profile != null) m_log.DebugFormat("[USER CACHE]: Converted cache profile from local user to normal user for: {0} {1}", uuid, profile.Name);
         }
 
         #endregion
