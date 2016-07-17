@@ -103,10 +103,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
         public void Initialize(Scene scene, IConfigSource config)
         {
             IConfig economyConfig = config.Configs["Economy"];
-            // Adding the line from Profile in order to get the connection string
-            // TODO: clean up the ini file to just allow this connection for Profile, Search and Money
-            IConfig profileConfig = config.Configs["Profile"];
-            string connstr = profileConfig.GetString("ProfileConnString", String.Empty);
+            string connstr = economyConfig.GetString("EconomyConnString", String.Empty);
+            if (connstr.Length <= 0) // EconomyConnString not found or blank, try the connection string this code previously used.
+            {
+                m_log.Info("[CURRENCY] EconomyConnString not found in INI file section [Economy]. Falling back to legacy usage of ProfileConnString in [Profile].");
+                IConfig profileConfig = config.Configs["Profile"];
+                connstr = profileConfig.GetString("ProfileConnString", String.Empty);
+            }
 
             _connFactory = new ConnectionFactory("MySQL", connstr);
 
