@@ -17025,6 +17025,8 @@ namespace InWorldz.Phlox.Engine
                         return ScriptBaseClass.BOT_USER_NOT_FOUND;
                     case BotMovementResult.Success:
                         return ScriptBaseClass.BOT_SUCCESS;
+                    default:
+                        return ScriptBaseClass.BOT_ERROR;
                 }
             }
             return ScriptBaseClass.BOT_NOT_FOUND;

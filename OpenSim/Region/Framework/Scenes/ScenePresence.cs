@@ -1875,18 +1875,23 @@ namespace OpenSim.Region.Framework.Scenes
                         {
                             try
                             {
-                                // move avatar in 2D at one meter/second towards target, in avatar coordinate frame.
+                                // move avatar in 3D at one meter/second towards target, in avatar coordinate frame.
                                 // This movement vector gets added to the velocity through AddNewMovement().
                                 // Theoretically we might need a more complex PID approach here if other 
                                 // unknown forces are acting on the avatar and we need to adaptively respond
                                 // to such forces, but the following simple approach seems to works fine.
-                                Vector3 LocalVectorToTarget3D =
+                                Vector3 LocalVectorToTarget =
                                     (m_moveToPositionTarget - AbsolutePosition) // vector from cur. pos to target in global coords
                                     * Matrix4.CreateFromQuaternion(Quaternion.Inverse(bodyRotation)); // change to avatar coords
-                                // Ignore z component of vector
-                                Vector3 LocalVectorToTarget2D = new Vector3((float)(LocalVectorToTarget3D.X), (float)(LocalVectorToTarget3D.Y), 0f);
-                                LocalVectorToTarget2D.Normalize();
-                                agent_control_v3 += LocalVectorToTarget2D;
+                                LocalVectorToTarget.Normalize();
+                                agent_control_v3 += LocalVectorToTarget;
+
+                                Vector3 movementPush = (m_moveToPositionTarget - AbsolutePosition);
+                                movementPush.Normalize();
+                                movementPush.Z *= physActor.Mass;
+                                if (physActor.IsColliding)
+                                    movementPush.Z *= FLY_LAUNCH_FORCE;
+                                physActor.AddForce(movementPush, ForceType.GlobalLinearImpulse);
 
                                 // update avatar movement flags. the avatar coordinate system is as follows:
                                 //
@@ -1909,24 +1914,37 @@ namespace OpenSim.Region.Framework.Scenes
 
                                 // based on the above avatar coordinate system, classify the movement into 
                                 // one of left/right/back/forward.
-                                if (LocalVectorToTarget2D.Y > 0)//MoveLeft
+                                if (LocalVectorToTarget.Y > 0)//MoveLeft
                                 {
                                     m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_LEFT;
                                     update_movementflag = true;
                                 }
-                                else if (LocalVectorToTarget2D.Y < 0) //MoveRight
+                                else if (LocalVectorToTarget.Y < 0) //MoveRight
                                 {
                                     m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_RIGHT;
                                     update_movementflag = true;
                                 }
-                                if (LocalVectorToTarget2D.X < 0) //MoveBack
+                                if (LocalVectorToTarget.X < 0) //MoveBack
                                 {
                                     m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_BACK;
                                     update_movementflag = true;
                                 }
-                                else if (LocalVectorToTarget2D.X > 0) //Move Forward
+                                else if (LocalVectorToTarget.X > 0) //Move Forward
                                 {
                                     m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_FORWARD;
+                                    update_movementflag = true;
+                                }
+                                if (LocalVectorToTarget.Z > 0) //Up
+                                {
+                                    // Don't set these flags for up - doing so will make the avatar
+                                    // keep trying to jump even if walking along level ground.
+                                    // m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_UP;
+                                    update_movementflag = true;
+                                }
+                                else if (LocalVectorToTarget.Z < 0) //Down
+                                {
+                                    // Don't set these flags for down - doing so will make the avatar crouch.
+                                    // m_movementflag += (uint)Dir_ControlFlags.DIR_CONTROL_FLAG_DOWN;
                                     update_movementflag = true;
                                 }
                             }
@@ -1940,7 +1958,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
 
                     // Determine whether the user has said to stop and the agent is not sitting.
-                    physActor.SetAirBrakes = (m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_STOP) != 0 && !IsInTransitOnPrim;
+                    physActor.SetAirBrakes = (m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_STOP) != 0 && !IsInTransitOnPrim && !m_moveToPositionInProgress;
+
                 }
                 
                 // Cause the avatar to stop flying if it's colliding
