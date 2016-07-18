@@ -243,7 +243,7 @@ namespace OpenSim.Framework.Communications.Services
         {
             return
                 (GenerateFailureResponse("key",
-                                         "The viewer you are using is not allowed to connect to the InWorldz grid. Please use a different viewer.",
+                                         "The viewer you are using is not allowed to connect to the grid. Please use a different viewer.",
                                          "false"));
         }
 
