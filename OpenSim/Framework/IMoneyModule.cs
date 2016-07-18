@@ -32,6 +32,8 @@ namespace OpenSim.Framework
     public delegate void ObjectPaid(UUID objectID, UUID agentID, int amount);
     public interface IMoneyModule
     {
+        string GetCurrencySymbol();
+
         // Upload-related charges
         bool UploadChargeApplies(AssetType type);
         bool UploadCovered(UUID agentID);

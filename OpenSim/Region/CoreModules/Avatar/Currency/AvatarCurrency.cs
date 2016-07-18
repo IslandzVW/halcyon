@@ -93,6 +93,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
         private int PriceUpload = 0;
         private int TeleportMinPrice = 0;
         private int MinDebugMoney = Int32.MinValue;
+        private string CurrencySymbol = "I'z$";
 
         private float TeleportPriceExponent = 0f;
 
@@ -126,7 +127,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             const int DEFAULT_TELEPORT_MIN_PRICE = 2;
             const float DEFAULT_TELEPORT_PRICE_EXPONENT = 2f;
             const int DEFAULT_ENERGY_EFFICIENCY = 1;
-            const int DEFALULT_PRICE_OBJECT_RENT = 1;
+            const int DEFAULT_PRICE_OBJECT_RENT = 1;
             const int DEFAULT_PRICE_OBJECT_SCALE_FACTOR = 10;
             const int DEFAULT_PRICE_PARCEL_RENT = 1;
             const int DEFAULT_PRICE_GROUP_CREATE = -1;
@@ -145,10 +146,12 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 TeleportMinPrice = economyConfig.GetInt("TeleportMinPrice", DEFAULT_TELEPORT_MIN_PRICE);
                 TeleportPriceExponent = economyConfig.GetFloat("TeleportPriceExponent", DEFAULT_TELEPORT_PRICE_EXPONENT);
                 EnergyEfficiency = economyConfig.GetFloat("EnergyEfficiency", DEFAULT_ENERGY_EFFICIENCY);
-                PriceObjectRent = economyConfig.GetFloat("PriceObjectRent", DEFALULT_PRICE_OBJECT_RENT);
+                PriceObjectRent = economyConfig.GetFloat("PriceObjectRent", DEFAULT_PRICE_OBJECT_RENT);
                 PriceObjectScaleFactor = economyConfig.GetFloat("PriceObjectScaleFactor", DEFAULT_PRICE_OBJECT_SCALE_FACTOR);
                 PriceParcelRent = economyConfig.GetInt("PriceParcelRent", DEFAULT_PRICE_PARCEL_RENT);
                 PriceGroupCreate = economyConfig.GetInt("PriceGroupCreate", DEFAULT_PRICE_GROUP_CREATE);
+
+                CurrencySymbol = economyConfig.GetString("CurrencySymbol", CurrencySymbol);
 
                 // easy way for all accounts on debug servers to have some cash to test Buy operations and transfers
                 MinDebugMoney = economyConfig.GetInt("MinDebugMoney", Int32.MinValue);
@@ -169,7 +172,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 TeleportMinPrice = DEFAULT_TELEPORT_MIN_PRICE;
                 TeleportPriceExponent = DEFAULT_TELEPORT_PRICE_EXPONENT;
                 EnergyEfficiency = DEFAULT_ENERGY_EFFICIENCY;
-                PriceObjectRent = DEFALULT_PRICE_OBJECT_RENT;
+                PriceObjectRent = DEFAULT_PRICE_OBJECT_RENT;
                 PriceObjectScaleFactor = DEFAULT_PRICE_OBJECT_SCALE_FACTOR;
                 PriceParcelRent = DEFAULT_PRICE_PARCEL_RENT;
                 PriceGroupCreate = DEFAULT_PRICE_GROUP_CREATE;
@@ -201,6 +204,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             scene.EventManager.OnClientClosed += ClientLoggedOut;
             */
 
+        }
+
+        public string GetCurrencySymbol()
+        {
+            return CurrencySymbol;
         }
 
         public bool UploadChargeApplies(AssetType type)
@@ -259,9 +267,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
 
                 string message;
                 if (String.IsNullOrEmpty(transDesc))
-                    message = "You paid $" + transAmount.ToString() + ".";
+                    message = "You paid " + CurrencySymbol + transAmount.ToString() + ".";
                 else
-                    message = "You paid $" + transAmount.ToString() + " for " + transDesc + ".";
+                    message = "You paid " + CurrencySymbol + transAmount.ToString() + " for " + transDesc + ".";
                 SendMoneyBalanceTransaction(client, transID, true, message, transInfo);
             }
         }
@@ -524,7 +532,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             }
             else
             {
-                string sourceText = objName + " paid out Iz$" + amount + " to " + resolveAgentName(destAvatarID);
+                string sourceText = objName + " paid out " + CurrencySymbol + amount + " to " + resolveAgentName(destAvatarID);
                 SendMoneyBalanceTransaction(sourceAvatarClient, transID, true, sourceText, transInfo);
             }
 
@@ -535,7 +543,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 // the destination avatar is not in the same scene list or online at all.
             } else
             {
-                string destText = "You were paid Iz$" + amount + " by " + part.ParentGroup.Name;
+                string destText = "You were paid " + CurrencySymbol + amount + " by " + part.ParentGroup.Name;
                 SendMoneyBalanceTransaction(destAvatarClient, transID, true, destText, transInfo);
             }
 
@@ -665,8 +673,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 transInfo.ItemDescription = Util.StringToBytes256(part.ParentGroup.RootPart.Name);
 
                 transDesc = String.Format("Paid {0} via object {1} in {2} at <{3},{4},{5}>", resolveAgentName(destAvatarID), part.ParentGroup.Name, part.ParentGroup.Scene.RegionInfo.RegionName, posx, posy, posz);
-                sourceText = "You paid " + resolveAgentName(destAvatarID) + " Iz$" + transAmount + " via " + part.ParentGroup.Name;
-                destText = resolveAgentName(sourceAvatarID) + " paid you Iz$" + transAmount;
+                sourceText = "You paid " + resolveAgentName(destAvatarID) + " " + CurrencySymbol + transAmount + " via " + part.ParentGroup.Name;
+                destText = resolveAgentName(sourceAvatarID) + " paid you " + CurrencySymbol + transAmount;
             }
             else
             {
@@ -681,8 +689,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                     return;
                 }
                 transDesc = "Gift";
-                sourceText = "You paid " + resolveAgentName(destAvatarID) + " Iz$" + transAmount;
-                destText = resolveAgentName(sourceAvatarID) + " paid you Iz$" + transAmount;
+                sourceText = "You paid " + resolveAgentName(destAvatarID) + " " + CurrencySymbol + transAmount;
+                destText = resolveAgentName(sourceAvatarID) + " paid you " + CurrencySymbol + transAmount;
             }
 
             if (transAmount > 0)
@@ -744,7 +752,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                     string costText = String.Empty;
                     if (e.mOrigPrice != 0) // this is an updated classified
                         costText = "increase ";
-                    remoteClient.SendAgentAlertMessage("The classified price " + costText + " (I'z$" + costToApply.ToString() + ") exceeds your current balance (" + avatarFunds.ToString() + ").", true);
+                    remoteClient.SendAgentAlertMessage("The classified price " + costText + " (" + CurrencySymbol + costToApply.ToString() + ") exceeds your current balance (" + avatarFunds.ToString() + ").", true);
                     return;
                 }
             }
@@ -758,9 +766,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             SendMoneyBalance(remoteClient);   // send balance update
 
             if (e.mOrigPrice == 0) // this is an initial classified charge.
-                remoteClient.SendAgentAlertMessage("You have paid I'z$" + costToApply.ToString() + " for this classified ad.", false);
+                remoteClient.SendAgentAlertMessage("You have paid " + CurrencySymbol + costToApply.ToString() + " for this classified ad.", false);
             else  // this is an updated classified
-                remoteClient.SendAgentAlertMessage("You have paid an additional I'z$" + costToApply.ToString() + " for this classified ad.", false);
+                remoteClient.SendAgentAlertMessage("You have paid an additional " + CurrencySymbol + costToApply.ToString() + " for this classified ad.", false);
         }
 
         public void ObjectBuy(IClientAPI remoteClient, UUID agentID, UUID sessionID, UUID groupID, UUID categoryID,
@@ -824,8 +832,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             int posz = (int)(pos.Z + 0.5);
             string transDesc = String.Format("{0} in {1} at <{2},{3},{4}>", objName, objectPart.ParentGroup.Scene.RegionInfo.RegionName, posx, posy, posz);
 
-            string sourceAlertText = "Purchased " + objName + " for Iz$" + salePrice;
-            string destAlertText = resolveAgentName(agentID) + " paid you Iz$" + salePrice + " via " + objName;
+            string sourceAlertText = "Purchased " + objName + " for " + CurrencySymbol + salePrice;
+            string destAlertText = resolveAgentName(agentID) + " paid you " + CurrencySymbol + salePrice + " via " + objName;
 
             int transType = (int)MoneyTransactionType.ObjectSale;
             UUID transID = UUID.Zero;
@@ -964,14 +972,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             {
                 string destName = resolveAgentName(destClientID);
                 if (String.IsNullOrEmpty(destName)) destName = "a group (or unknown user)";
-                string sourceText = "You paid Iz$" + transAmount + " to " + destName + " for a parcel of land.";
+                string sourceText = "You paid " + CurrencySymbol + transAmount + " to " + destName + " for a parcel of land.";
                 SendMoneyBalanceTransaction(sourceClient, transID, true, sourceText, transInfo);
             }
             if (destClient != null)
             {
                 string destName = resolveAgentName(sourceClientID);
                 if (String.IsNullOrEmpty(destName)) destName = "a group (or unknown user)";
-                string destText = "You were paid Iz$" + transAmount + " by " + destName + " for a parcel of land.";
+                string destText = "You were paid " + CurrencySymbol + transAmount + " by " + destName + " for a parcel of land.";
                 SendMoneyBalanceTransaction(destClient, transID, true, destText, transInfo);
             }
         }
