@@ -8560,29 +8560,31 @@ namespace InWorldz.Phlox.Engine
 
         private SceneObjectPart FindAvatarOnObject(UUID agentId, bool IncludeSitTargetOnly)
         {
-            var parts = m_host.ParentGroup.GetParts();
-            foreach (SceneObjectPart part in parts)
-            {
-                if ((!IncludeSitTargetOnly) || (part.SitTargetPosition != Vector3.Zero))
-                    if (part.SitTargetAvatar == agentId)
-                        return part;
-            }
-            return null;
+            ScenePresence sp = m_host.ParentGroup.Scene.GetScenePresence(agentId);
+            return (sp == null) ? null : sp.SitTargetPart;
         }
 
         private string AvatarOnSitTarget(int linknumber, bool IncludeSitTargetOnly)
         {
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkParts(linknumber);   // only matching parts, not all parts
+            UUID seatedAvatar = UUID.Zero;
 
             // We'll spin through the "list" but return the values from the first match with a sit target.
             // Should only be one match, but if the script specified LINK_ALL_OTHERS or another wildcard,
             // then this function will return the first match.
             foreach (SceneObjectPart part in parts) {
                 if ((!IncludeSitTargetOnly) || (part.SitTargetPosition != Vector3.Zero))
-                    if (part.SitTargetAvatar != UUID.Zero)
-                        return part.SitTargetAvatar.ToString();
+                {
+                    part.ForEachSittingAvatar((ScenePresence sp) =>
+                    {
+                        if (seatedAvatar != UUID.Zero)
+                            seatedAvatar = sp.UUID;
+                    });
+                    if (seatedAvatar != UUID.Zero)
+                        break;
+                }
             }
-            return UUID.Zero.ToString();
+            return seatedAvatar.ToString();
         }
         public string llAvatarOnSitTarget()
         {

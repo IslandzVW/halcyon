@@ -7,8 +7,10 @@ using System.Collections;
 namespace OpenSim.Region.Framework.Scenes
 {
     /// <summary>
-    /// A collection that stores ScenePresences for a group and provides
-    /// the most efficient access for different data types
+    /// A collection that stores ScenePresences for a group or part
+    /// and provides the most efficient access for different data types.
+    /// Corresponds to the ScenePresence version of GroupPartsCollection
+    /// but may be a per-group (SOG) or per-part (SOP) list.
     /// </summary>
     internal class AvatarPartsCollection
     {
@@ -60,7 +62,8 @@ namespace OpenSim.Region.Framework.Scenes
         private ImmutableDictionary<uint, UUID> m_avatarsByLocalId =
             ImmutableDictionary.Create<uint, UUID>();
 
-
+        // Represents a collection of avatar-as-a-prim, either in 
+        // a group list (all avatars) or those that sat on a specific prim.
         public AvatarPartsCollection()
         {
         }
@@ -111,6 +114,22 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
+        /// Removes the given avatar from this collection
+        /// </summary>
+        /// <param name="sp">The avatar to remove</param>
+        public void RemovePart(UUID avatarID)
+        {
+            lock (m_mutationLock)
+            {
+                ScenePresence sp;
+                if (m_avatarsByUuid.TryGetValue(avatarID, out sp))
+                {
+                    RemovePart(sp);
+                }
+            }
+        }
+
+        /// <summary>
         /// Clears all parts from this collection
         /// </summary>
         public void Clear()
@@ -134,7 +153,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Calls the given function on each avatar we know about
         /// </summary>
         /// <param name="action">The function to call</param>
-        public void ForEachPart(Action<ScenePresence> action)
+        public void ForEach(Action<ScenePresence> action)
         {
             foreach (var sp in m_avatarsByUuid.Values)
             {

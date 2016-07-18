@@ -656,8 +656,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         // If the sat-upon object is physical, we can't stop it.
                         // First, let's check each rider to see if we need to eject them.
-                        List<ScenePresence> sitters = GetSittingAvatars();
-                        foreach(ScenePresence sitter in sitters)
+                        this.ForEachSittingAvatar(delegate (ScenePresence sitter)
                         {
                             if (NewParcel.DenyParcelAccess(sitter.UUID, out reason))
                             {
@@ -670,7 +669,7 @@ namespace OpenSim.Region.Framework.Scenes
                                         sitter.ControllingClient.SendAlertMessage("You are not permitted to enter this parcel due to parcel restrictions.");
                                 });
                             }
-                        }
+                        });
                         // Then, if the owner of the object itself is banned, let's return it.
                         if (NewParcel.DenyParcelAccess(this, false, out reason))
                         {
@@ -773,19 +772,15 @@ namespace OpenSim.Region.Framework.Scenes
 
             //if there are any avatars currently in the region, sitting on this prim that
             //still have connections establishing, fail the crossing and let them establish
-            List<ScenePresence> sittingAvatars = this.GetSittingAvatars();
-            if (sittingAvatars.Count > 0)
+            this.ForEachSittingAvatar(delegate (ScenePresence avatar)
             {
-                foreach (var avatar in sittingAvatars)
+                if (avatar.RemotePresences.HasConnectionsEstablishing())
                 {
-                    if (avatar.RemotePresences.HasConnectionsEstablishing())
-                    {
-//                        avatar.ControllingClient.SendAlertMessage("Can not move to a new region, connections are still being established");
-                        ForcePositionInRegion();
-                        return;
-                    }
+                    // avatar.ControllingClient.SendAlertMessage("Can not move to a new region, connections are still being established");
+                    ForcePositionInRegion();
+                    return;
                 }
-            }
+            });
 
             //don't allow an object to quickly recross if it just got here and there
             //crossing avatars aboard
@@ -1024,20 +1019,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             ClearTargetWaypoints();
             ClearRotWaypoints();
+            m_childAvatars.Clear();
             m_childParts.ForEachPart((SceneObjectPart part) => {
                 part.ResetInstance(isNewInstance, isScriptReset, itemId);
             });
-        }
-
-        public int NumAvatarsSeated()
-        {
-            int total = 0;
-            
-            m_childParts.ForEachPart((SceneObjectPart part) => {
-                total += part.NumAvatarsSeated();
-            });
-
-            return total;
         }
 
         public void LoadScriptState(XmlDocument doc)
@@ -1659,21 +1644,13 @@ namespace OpenSim.Region.Framework.Scenes
                 ClearTargetWaypoints();
                 ClearRotWaypoints();
 
-                m_childParts.ForEachPart((SceneObjectPart part) => {
-                    UUID seatedAvatar = part.GetAvatarOnSitTarget();
-                    if (seatedAvatar != UUID.Zero)
-                    {
-                        foreach (ScenePresence SP in avatars)
-                        {
-                            if (seatedAvatar == SP.ControllingClient.AgentId)
-                            {
-                                m_log.WarnFormat("[SCENE]: DeleteGroup {0} with avatar {1} seated on prim (crossing={2}).",
-                                                    UUID.ToString(), SP.ControllingClient.AgentId, fromCrossing.ToString());
-                                SP.StandUp(part, fromCrossing, false);
-                            }
-                        }
-                    }
+                m_childAvatars.ForEach((ScenePresence SP) => {
+                    m_log.WarnFormat("[SCENE]: DeleteGroup {0} with avatar {1} seated on prim (crossing={2}).",
+                                        UUID.ToString(), SP.ControllingClient.AgentId, fromCrossing.ToString());
+                    SP.StandUp(null, fromCrossing, false);
+                });
 
+                m_childParts.ForEachPart((SceneObjectPart part) => {
                     if (m_rootPart != null && part == m_rootPart)
                     {
                         if (!silent)
@@ -4192,15 +4169,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (IsAttachment) return false;
 
-                foreach (SceneObjectPart part in m_childParts.GetAllParts())
-                {
-                    if (part.SitTargetAvatar != UUID.Zero)
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
+                return m_childAvatars.Count != 0;
             }
         }
 
@@ -4209,35 +4178,36 @@ namespace OpenSim.Region.Framework.Scenes
             if (agentID == UUID.Zero)
                 return false;
 
-            foreach (SceneObjectPart part in m_childParts.GetAllParts())
-            {
-                if (part.SitTargetAvatar == agentID)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return m_childAvatars.FindPartByFullId(agentID) != null;
         }
 
+        public void ForEachSittingAvatar(Action<ScenePresence> action)
+        {
+            m_childAvatars.ForEach(action);
+        }
+
+        // These two must be called from the correspondingly-named SceneObjectPart methods.
+        // They handle updates to the part data and script notifications.
+        public void AddSeatedAvatar(ScenePresence sp)
+        {
+            m_childAvatars.AddPart(sp);
+        }
+        public void RemoveSeatedAvatar(ScenePresence sp)
+        {
+            m_childAvatars.RemovePart(sp);
+        }
+
+        /**** Use ForEachSittingAvatar(sp) now instead of copying the list.
         public List<ScenePresence> GetSittingAvatars()
         {
             List<ScenePresence> sitters = new List<ScenePresence>();
-            var parts = this.GetParts();
-
-            foreach (SceneObjectPart part in parts)
+            ForEachSittingAvatar((ScenePresence sp) =>
             {
-                if (part.SitTargetAvatar != UUID.Zero)
-                {
-                    ScenePresence sp = m_scene.GetScenePresence(part.SitTargetAvatar);
-                    if (sp != null)
-                    {
-                        sitters.Add(sp);
-                    }
-                }
-            }
+                sitters.Add(sp);
+            });
             return sitters;
         }
+        */
 
         /// <summary>
         /// Marks the sitting avatars in transit, and waits for this group to be sent
@@ -4247,24 +4217,12 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns></returns>
         public async Task BeginCrossSittingAvatars(ulong newRegionHandle)
         {
-            var parts = this.GetParts();
             System.Lazy<List<Task>> crossingUsers = new System.Lazy<List<Task>>();
 
-            foreach (SceneObjectPart part in parts)
+            ForEachSittingAvatar((ScenePresence sp) =>
             {
-                if (part.SitTargetAvatar != UUID.Zero)
-                {
-                    ScenePresence sp = m_scene.GetScenePresence(part.SitTargetAvatar);
-                    if (sp == null)
-                    {
-                        m_log.ErrorFormat("[SCENE OBJECT GROUP]: Crossing failed: Could not find avatar {0} seated on part {1}", part.SitTargetAvatar.ToString(), part.LocalId.ToString());
-                    }
-                    else
-                    {
-                        crossingUsers.Value.Add(sp.CrossIntoNewRegionWithGroup(this, part, newRegionHandle));
-                    }
-                }
-            }
+                crossingUsers.Value.Add(sp.CrossIntoNewRegionWithGroup(this, sp.SitTargetPart, newRegionHandle));
+            });
 
             if (crossingUsers.IsValueCreated)
             {

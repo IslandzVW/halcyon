@@ -189,7 +189,7 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
             //unsit the SP if appropriate
             if (_avatar.TransitArgs.RideOnPart != null)
             {
-                _avatar.TransitArgs.RideOnPart.SetAvatarOnSitTarget(UUID.Zero, false);
+                _avatar.TransitArgs.RideOnPart.AddSeatedAvatar(_avatar.ScenePresence, false);
             }
 
             //this avatar is history.

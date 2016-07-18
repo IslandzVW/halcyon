@@ -148,6 +148,7 @@ namespace OpenSim.Region.Framework.Scenes
         private readonly List<Vector3> m_forcesList = new List<Vector3>();
         private uint m_requestedSitTargetID = 0;
         private UUID m_requestedSitTargetUUID = UUID.Zero;
+        private SceneObjectPart m_sitTargetPart = null;
         private Vector3 m_requestedSitTargetOffset;
 
         private bool m_startAnimationSet;
@@ -466,6 +467,18 @@ namespace OpenSim.Region.Framework.Scenes
         private bool m_shouldJump = false;
 
         public bool ShouldJump { get { return m_shouldJump; } set { m_shouldJump = value; } }
+
+        public SceneObjectPart SitTargetPart
+        {
+            get { return m_sitTargetPart;  }
+        }
+
+        private bool m_avatarMovesWithPart = true; // i.e. legacy mode, NOT avatar-as-a-prim (SL) mode
+        public bool AvatarMovesWithPart
+        {
+            get { return m_avatarMovesWithPart;  }
+            set { m_avatarMovesWithPart = value;  }
+        }
 
         /// <value>
         /// The client controlling this presence
@@ -1231,7 +1244,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 lock (m_posInfo)
                 {
-                    part.SitTargetAvatar = client.AgentId;
+                    part.AddSeatedAvatar(this,false);
                     sitOrientation = part.SitTargetOrientation;
 
                     m_requestedSitTargetUUID = part.UUID;
@@ -2225,9 +2238,9 @@ namespace OpenSim.Region.Framework.Scenes
 
                             }
 
-                            // Reset sit target.
-                            if (prim.GetAvatarOnSitTarget() == UUID)
-                                prim.SetAvatarOnSitTarget(UUID.Zero, !fromCrossing);
+                            // This avatar is no longer seated.
+                            prim.RemoveSeatedAvatar(this, !fromCrossing);
+                            m_avatarMovesWithPart = true;  // reset SP to legacy mode, not avatar-as-a-prim
                         }
 
                         if (!fromCrossing)
@@ -2371,9 +2384,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // Is a sit target available?
                 Vector3 avSitOffSet = part.SitTargetPosition;
                 Quaternion avSitOrientation = part.SitTargetOrientation;
-                UUID avOnTargetAlready = part.GetAvatarOnSitTarget();
-
-                bool SitTargetUnOccupied = (!(avOnTargetAlready != UUID.Zero));
+                bool SitTargetUnOccupied = (part.NumAvatarsSeated == 0);
                 bool SitTargetisSet =
                     (!(avSitOffSet.X == 0f && avSitOffSet.Y == 0f && avSitOffSet.Z == 0f && avSitOrientation.W == 1f &&
                        avSitOrientation.X == 0f && avSitOrientation.Y == 0f && avSitOrientation.Z == 0f));
@@ -2419,12 +2430,6 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 bool HasSitTarget = (part.SitTargetPosition != Vector3.Zero);
-                bool SitTargetOccupied = (part.GetAvatarOnSitTarget() != UUID.Zero);
-                if (SitTargetOccupied)
-                {
-                    remoteClient.SendAgentAlertMessage("That seat is taken by another user.", false);
-                    return;
-                }
 
                 // First, remove the PhysicsActor since we're going to be sitting, so that physics doesn't interfere while we're doing this update.
                 if (PhysicsActor != null)
@@ -2496,7 +2501,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // Update these together
                     SetAgentPositionInfo(null, true, avSitPos, part, part.AbsolutePosition, Vector3.Zero);
                     // now update the part to reflect the new avatar
-                    part.SetAvatarOnSitTarget(UUID, true);
+                    part.AddSeatedAvatar(this, true);
                     // Now update the SP.Rotation with the sit rotation
                     // m_bodyRot also needs the root rotation
                     m_bodyRot = avSitRot;

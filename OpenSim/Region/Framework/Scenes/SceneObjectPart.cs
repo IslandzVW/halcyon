@@ -696,7 +696,6 @@ namespace OpenSim.Region.Framework.Scenes
         private uint _category;
         private Int32 _creationDate;
         private uint _parentID = 0;
-        private UUID m_sitTargetAvatar = UUID.Zero;
         private uint _baseMask = (uint)(PermissionMask.All | PermissionMask.Export);
         private uint _ownerMask = (uint)(PermissionMask.All | PermissionMask.Export);
         private uint _groupMask = (uint)PermissionMask.None;
@@ -1004,15 +1003,13 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        private void UpdateSeatedAvatarPosition()
+        private void UpdateSeatedAvatarPositions()
         {
-            UUID avatarID = SitTargetAvatar;
-            if (avatarID  != UUID.Zero)
+            m_seatedAvatars.ForEach((ScenePresence sp) =>
             {
-                ScenePresence sp = m_parentGroup.Scene.GetScenePresence(avatarID);
-                if (sp != null)
+                if (sp.AvatarMovesWithPart)
                     sp.SendTerseUpdateToAllClients();
-            }
+            });
         }
         
         public Vector3 OffsetPosition
@@ -1033,7 +1030,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     physActor.UpdateOffsetPosition(m_offsetPosition, m_rotationOffset);
                 }
-                UpdateSeatedAvatarPosition();
+                UpdateSeatedAvatarPositions();
             }
         }
 
@@ -1061,7 +1058,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     physActor.Rotation = value;
                 }
-                UpdateSeatedAvatarPosition();
+                UpdateSeatedAvatarPositions();
             }
         }
 
@@ -1659,13 +1656,6 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         [XmlIgnore]
-        public UUID SitTargetAvatar
-        {
-            get { return m_sitTargetAvatar; }
-            set { m_sitTargetAvatar = value; }
-        }
-
-        [XmlIgnore]
         public virtual UUID RegionID
         {
             get
@@ -1707,9 +1697,18 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Private Methods
 
-        public int NumAvatarsSeated()
+        [XmlIgnore]
+        private AvatarPartsCollection m_seatedAvatars = new AvatarPartsCollection ();
+
+        [XmlIgnore]
+        public int NumAvatarsSeated
         {
-            return (m_sitTargetAvatar == UUID.Zero) ? 0 : 1;
+            get { return m_seatedAvatars.Count; }
+        }
+
+        public void ForEachSittingAvatar(Action<ScenePresence> action)
+        {
+            m_seatedAvatars.ForEach(action);
         }
 
         private uint ApplyMask(uint val, bool set, uint mask)
@@ -2224,11 +2223,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             // for tempOnRez objects, we have to fix the Expire date.
             if ((this.Flags & PrimFlags.TemporaryOnRez) != 0) this.ResetExpire();
-        }
-
-        public UUID GetAvatarOnSitTarget()
-        {
-            return m_sitTargetAvatar;
         }
 
         public bool GetDieAtEdge()
@@ -2884,9 +2878,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (isNewInstance)
             {
-                this.SitTargetAvatar = UUID.Zero;
+                this.m_seatedAvatars.Clear();
             }
-
         }
 
         /// <summary>
@@ -3311,11 +3304,26 @@ namespace OpenSim.Region.Framework.Scenes
             return Vector3.Zero;
         }
 
-        public void SetAvatarOnSitTarget(UUID avatarID, bool sendEvent)
+        public void AddSeatedAvatar(ScenePresence sp, bool sendEvent)
         {
-            m_sitTargetAvatar = avatarID;
-            if (sendEvent && (ParentGroup != null))
-                ParentGroup.TriggerScriptChangedEvent(Changed.LINK);
+            m_seatedAvatars.AddPart(sp);
+            if (ParentGroup != null)
+            {
+                ParentGroup.AddSeatedAvatar(sp);    // event sent below if needed
+                if (sendEvent)
+                    ParentGroup.TriggerScriptChangedEvent(Changed.LINK);
+            }
+        }
+
+        public void RemoveSeatedAvatar(ScenePresence sp, bool sendEvent)
+        {
+            m_seatedAvatars.RemovePart(sp);
+            if (ParentGroup != null)
+            {
+                ParentGroup.RemoveSeatedAvatar(sp);    // event sent below if needed
+                if (sendEvent)
+                    ParentGroup.TriggerScriptChangedEvent(Changed.LINK);
+            }
         }
 
         public void SetBuoyancy(float fvalue)
