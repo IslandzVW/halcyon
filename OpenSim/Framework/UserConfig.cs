@@ -49,6 +49,7 @@ namespace OpenSim.Framework
         public uint DefaultUserLevel = 0;
         public string LibraryName = String.Empty;
         public string LibraryXmlfile = String.Empty;
+        public string CurrencySymbol = String.Empty;
 
         private Uri m_inventoryUrl;
 
@@ -157,6 +158,9 @@ namespace OpenSim.Framework
 
             m_configMember.addConfigurationOption("default_loginLevel", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Minimum Level a user should have to login [0 default]", "0", false);
+
+            m_configMember.addConfigurationOption("currency_symbol", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "The currency symbol string to show in the viewer in place of L$", String.Empty, true);
         }
 
         public bool handleIncomingConfiguration(string configuration_key, object configuration_result)
@@ -216,6 +220,9 @@ namespace OpenSim.Framework
                     break;
                 case "profile_server_uri":
                     ProfileServerURI = (string)configuration_result;
+                    break;
+                case "currency_symbol":
+                    CurrencySymbol = (string)configuration_result;
                     break;
             }
 

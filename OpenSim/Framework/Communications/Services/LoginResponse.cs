@@ -415,6 +415,11 @@ namespace OpenSim.Framework.Communications.Services
                     responseData["buddy-list"] = m_buddyList.ToArray();
                 }
 
+                if (CurrencySymbol.Length > 0)
+                {
+                    responseData["currency"] = CurrencySymbol;
+                }
+
                 responseData["login"] = "true";
                 xmlRpcResponse.Value = responseData;
 
@@ -514,6 +519,11 @@ namespace OpenSim.Framework.Communications.Services
                 if (m_buddyList != null)
                 {
                     map["buddy-list"] = ArrayListToOSDArray(m_buddyList.ToArray());
+                }
+
+                if (CurrencySymbol.Length > 0)
+                {
+                    map["currency"] = OSD.FromString(CurrencySymbol);
                 }
 
                 map["login"] = OSD.FromString("true");
@@ -792,6 +802,12 @@ namespace OpenSim.Framework.Communications.Services
         {
             get { return profileServerURI; }
             set { profileServerURI = value; }
+        }
+
+        public string CurrencySymbol
+        {
+            get;
+            set;
         }
 
         #endregion
