@@ -4840,6 +4840,17 @@ namespace InWorldz.Phlox.Engine
             // returns a string version of NULL_KEY for not found or invalid linknum.
             string result = UUID.Zero.ToString();
 
+            if (linknum > m_host.ParentGroup.LinkCount)
+                return result;
+
+            if (linknum > m_host.ParentGroup.PartCount)
+            {
+                // It's a seated avatar:
+                List<object> res = new List<object>();
+                AvatarAsPrimParam(linknum, ref res, ScriptBaseClass.PRIM_NAME);
+                return (string)res[0];
+            }
+
             if (m_host.LinkNum == 0)
             {
                 // Single prim, only one non-NULL_KEY return
@@ -10438,30 +10449,119 @@ namespace InWorldz.Phlox.Engine
             return new LSL_Vector(m_host.GetGeometricCenter().X, m_host.GetGeometricCenter().Y, m_host.GetGeometricCenter().Z);
         }
 
+        private void AvatarAsPrimParam(int linknum, ref List<object> res, int rule)
+        {
+            ScenePresence sp = m_host.ParentGroup.GetSeatedAvatarByLink(linknum);
+            switch (rule)
+            {
+                case ScriptBaseClass.PRIM_NAME: // will return the avatar's legacy name.
+                    res.Add((sp != null) ? sp.Name : String.Empty);
+                    break;
+                case ScriptBaseClass.PRIM_DESC:
+                    res.Add(String.Empty);
+                    break;
+                case ScriptBaseClass.PRIM_TYPE:
+                    res.Add(ScriptBaseClass.PRIM_TYPE_BOX);
+                    res.Add(ScriptBaseClass.PRIM_HOLE_DEFAULT);
+                    res.Add(new LSL_Vector(0.0f, 1.0f, 0.0f));
+                    res.Add((float)0.0f);
+                    res.Add(new LSL_Vector(Vector3.Zero));
+                    res.Add(new LSL_Vector(1.0f, 1.0f, 0.0f));
+                    res.Add(new LSL_Vector(Vector3.Zero));
+                    break;
+                case ScriptBaseClass.PRIM_SLICE:
+                    res.Add(new LSL_Vector(0.0f, 1.0f, 0.0f));
+                    break;
+                case ScriptBaseClass.PRIM_MATERIAL:
+                    res.Add((int)ScriptBaseClass.PRIM_MATERIAL_FLESH);
+                    break;
+                case ScriptBaseClass.PRIM_TEMP_ON_REZ:
+                    res.Add(ScriptBaseClass.FALSE);
+                    break;
+                case ScriptBaseClass.PRIM_PHANTOM:
+                    res.Add(ScriptBaseClass.FALSE);
+                    break;
+                case ScriptBaseClass.PRIM_SIZE:
+                    res.Add(new LSL_Vector(llGetAgentSize(llGetLinkKey(linknum))));
+                    break;
+                case ScriptBaseClass.PRIM_TEXT:
+                    res.Add(String.Empty);
+                    res.Add(new LSL_Vector(Vector3.Zero));
+                    res.Add((float)1.0f);
+                    break;
+                case ScriptBaseClass.PRIM_POINT_LIGHT:
+                    res.Add(ScriptBaseClass.FALSE);
+                    res.Add(new LSL_Vector(Vector3.Zero));
+                    res.Add((float)0.0f);
+                    res.Add((float)0.0f);
+                    res.Add((float)0.0f);
+                    break;
+                case ScriptBaseClass.PRIM_FLEXIBLE:
+                    res.Add(ScriptBaseClass.FALSE);
+                    res.Add((int)0);
+                    res.Add((float)0.0f);
+                    res.Add((float)0.0f);
+                    res.Add((float)0.0f);
+                    res.Add((float)0.0f);
+                    res.Add(new LSL_Vector(Vector3.Zero));
+                    break;
+
+                case ScriptBaseClass.PRIM_COLOR:
+                case ScriptBaseClass.PRIM_TEXTURE:
+                case ScriptBaseClass.PRIM_GLOW:
+                case ScriptBaseClass.PRIM_FULLBRIGHT:
+                case ScriptBaseClass.PRIM_BUMP_SHINY:
+                case ScriptBaseClass.PRIM_TEXGEN:
+                    ScriptShoutError("texture info cannot be accessed for avatars.");
+                    break;
+            }
+        }
+
         private LSL_List GetPrimParams(int linknumber, LSL_List rules)
         {
             List<object> res = new List<object>();
             int idx = 0;
             int face = 0;
             Primitive.TextureEntry tex;
-            var parts = GetLinkParts(linknumber);
+            IReadOnlyCollection<SceneObjectPart> parts = null;
+            ScenePresence avatar = null;
+
+            // Support avatar-as-a-prim link number.
+            if (linknumber > m_host.ParentGroup.PartCount)
+                avatar = m_host.ParentGroup.GetSeatedAvatarByLink(linknumber);
+            else
+                parts = GetLinkParts(linknumber);
 
             while (idx < rules.Length)
             {
                 int code = (int)rules.GetLSLIntegerItem(idx++);
                 int remain = rules.Length - idx;
 
+                // Handle changing target prim(s) and/or avatars.
+                if (code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
+                {
+                    if (remain < 1)
+                        return new LSL_List(res);
+                    linknumber = (int)rules.GetLSLIntegerItem(idx++);
+                    remain = rules.Length - idx;
+
+                    if (linknumber > m_host.ParentGroup.PartCount)
+                        avatar = m_host.ParentGroup.GetSeatedAvatarByLink(linknumber);
+                    else
+                        parts = GetLinkParts(linknumber);
+                    continue;
+                }
+
+                // Support avatar-as-a-prim link number.
+                if (avatar != null)
+                {
+                    AvatarAsPrimParam(linknumber, ref res, code);
+                    continue;
+                }
+
+                // Neither of the above, fall through to normal prim properties.
                 switch (code)
                 {
-                    case (int)ScriptBaseClass.PRIM_LINK_TARGET:
-                        if (remain < 1)
-                            return new LSL_List(res);
-                        linknumber = (int)rules.GetLSLIntegerItem(idx++);
-                        remain = rules.Length - idx;
-
-                        parts = GetLinkParts(linknumber);
-                        break;
-
                     case (int)ScriptBaseClass.PRIM_MATERIAL:
                         foreach (SceneObjectPart part in parts)
                             res.Add((int)(part.Material));

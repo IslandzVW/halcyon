@@ -453,14 +453,6 @@ namespace OpenSim.Region.Framework.Scenes
             m_landCost = land_cost;
         }
 
-        /// <summary>
-        /// This method updates all seated avatars with new link numbers after link changes.
-        /// </summary>
-        public void RecalcSeatedAvatarLinks()
-        {
-
-        }
-
         public Quaternion GroupRotation
         {
             get { return m_rootPart.RotationOffset; }
@@ -2611,6 +2603,9 @@ namespace OpenSim.Region.Framework.Scenes
         /// <returns>null if no child part with that linknum or child part</returns>
         public SceneObjectPart GetLinkNumPart(int linknum)
         {
+            if ((linknum > m_childParts.Count) || (linknum < 0))
+                return null;    // skip O(n) search if out of range
+
             //TODO: This is terrible. We really should be indexing this somehow so we dont need O(n)
             foreach (SceneObjectPart part in m_childParts.GetAllParts())
             {
@@ -4191,23 +4186,37 @@ namespace OpenSim.Region.Framework.Scenes
         public void AddSeatedAvatar(ScenePresence sp)
         {
             m_childAvatars.AddPart(sp);
+            // Now fix avatar link numbers
+            RecalcSeatedAvatarLinks();
         }
         public void RemoveSeatedAvatar(ScenePresence sp)
         {
             m_childAvatars.RemovePart(sp);
+            // Now fix avatar link numbers
+            RecalcSeatedAvatarLinks();
+        }
+        public ScenePresence GetSeatedAvatarByLink(int linknum)
+        {
+            ScenePresence result = null;
+            m_childAvatars.ForEach((ScenePresence sp) =>
+            {
+                if (sp.LinkNum == linknum)
+                    result = sp;
+            });
+            return result;
         }
 
-        /**** Use ForEachSittingAvatar(sp) now instead of copying the list.
-        public List<ScenePresence> GetSittingAvatars()
+        /// <summary>
+        /// This method updates all seated avatars with new link numbers after link changes.
+        /// </summary>
+        public void RecalcSeatedAvatarLinks()
         {
-            List<ScenePresence> sitters = new List<ScenePresence>();
-            ForEachSittingAvatar((ScenePresence sp) =>
+            int next = PartCount;
+            m_childAvatars.ForEach((ScenePresence sp) =>
             {
-                sitters.Add(sp);
+                sp.LinkNum = ++next;
             });
-            return sitters;
         }
-        */
 
         /// <summary>
         /// Marks the sitting avatars in transit, and waits for this group to be sent

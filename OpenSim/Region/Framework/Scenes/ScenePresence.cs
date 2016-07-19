@@ -473,6 +473,14 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_sitTargetPart;  }
         }
 
+        // LinkNum 0 means avatar not seated
+        private int m_linkNum = 0;
+        public int LinkNum
+        {
+            get { return m_linkNum; }
+            set { m_linkNum = value; }
+        }
+
         private bool m_avatarMovesWithPart = true; // i.e. legacy mode, NOT avatar-as-a-prim (SL) mode
         public bool AvatarMovesWithPart
         {
