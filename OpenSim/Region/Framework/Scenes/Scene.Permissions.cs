@@ -205,6 +205,12 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
+        // Minimum functionality: if the GenerateClientFlagsHandler is not set, there is no permissions module available.
+        public bool IsAvailable()
+        {
+            return (OnGenerateClientFlags != null);
+        }
+
         public bool PropagatePermissions()
         {
             PropagatePermissionsHandler handler = OnPropagatePermissions;
