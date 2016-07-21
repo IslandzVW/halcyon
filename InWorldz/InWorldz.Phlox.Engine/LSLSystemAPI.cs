@@ -13614,7 +13614,10 @@ namespace InWorldz.Phlox.Engine
                                 ret.Add(new LSL_Vector(part.Velocity.X, part.Velocity.Y, part.Velocity.Z));
                                 break;
                             case ScriptBaseClass.OBJECT_OWNER:
-                                ret.Add(part.OwnerID.ToString());
+                                if ((part.GroupID != UUID.Zero) && (part.OwnerID == part.GroupID))  // group-deeded
+                                    ret.Add(UUID.Zero.ToString());  // documented to return NULL_KEY for group-deeded
+                                else
+                                    ret.Add(part.OwnerID.ToString());
                                 break;
                             case ScriptBaseClass.OBJECT_GROUP:
                                 ret.Add(part.GroupID.ToString());
