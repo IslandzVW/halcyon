@@ -130,7 +130,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             {
                 regionTileExportFilename = worldmapConfig.GetString("RegionMapTileExportFilename", regionTileExportFilename);
 
-                int pushTimeSeconds = Math.Max(0, worldmapConfig.GetInt("MinimumTaintedMapTileWaitTime", (int) minimumMapPushTime.TotalSeconds));
+                // Low values could exhaust F&F pools or cause overdue amounts of CPU usage.  No need to refresh the map faster than once a minute anyway.
+                int pushTimeSeconds = Math.Max(60, worldmapConfig.GetInt("MinimumTaintedMapTileWaitTime", (int) minimumMapPushTime.TotalSeconds));
                 minimumMapPushTime = new TimeSpan(0, 0, pushTimeSeconds);
                 m_log.DebugFormat("[WORLD MAP] Got min wait time of {0} seconds which resulted in a span of {1}", pushTimeSeconds, minimumMapPushTime);
 
