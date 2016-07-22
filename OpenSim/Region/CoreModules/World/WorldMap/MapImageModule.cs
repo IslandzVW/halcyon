@@ -248,24 +248,44 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private DirectBitmap DrawObjectVolume(Scene whichScene, DirectBitmap mapbmp)
         {
             int tc = 0;
-            double[,] hm = whichScene.Heightmap.GetDoubles();
+            var hm = whichScene.Heightmap.GetDoubles();
             tc = Environment.TickCount;
             m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
-            List<EntityBase> objs = whichScene.GetEntities();
-            Dictionary<uint, DrawStruct> z_sort = new Dictionary<uint, DrawStruct>();
+            var objs = whichScene.GetEntities();
+            var z_sort = new Dictionary<uint, DrawStruct>();
             //SortedList<float, RectangleDrawStruct> z_sort = new SortedList<float, RectangleDrawStruct>();
-            List<float> z_sortheights = new List<float>();
-            List<uint> z_localIDs = new List<uint>();
+            var z_sortheights = new List<float>();
+            var z_localIDs = new List<uint>();
 
-            lock (objs)
+            //useless: lock (objs)
             {
+                SceneObjectGroup mapdot;
+                Color mapdotspot;
+                Color4 texcolor;
+                Vector3 pos;
+                Quaternion rot;
+                Vector3 scale;
+                Vector3 tScale;
+
+                var vertexes = new Vector3[8];
+                // float[] distance = new float[6];
+                var FaceA = new Vector3[6]; // vertex A for Facei
+                var FaceB = new Vector3[6]; // vertex B for Facei
+                var FaceC = new Vector3[6]; // vertex C for Facei
+                var FaceD = new Vector3[6]; // vertex D for Facei
+
+                // Love the copy-on-assignment for structs...
+                var ds = new DrawStruct();
+                face workingface;// = new face();
+                workingface.pts = new Point[5];
+
                 foreach (EntityBase obj in objs)
                 {
                     // Only draw the contents of SceneObjectGroup
-                    if (obj is SceneObjectGroup)
+                    mapdot = obj as SceneObjectGroup;
+                    if (mapdot != null)
                     {
-                        SceneObjectGroup mapdot = (SceneObjectGroup)obj;
-                        Color mapdotspot = Color.Gray; // Default color when prim color is white
+                        mapdotspot = Color.Gray; // Default color when prim color is white
                         // Loop over prim in group
                         foreach (SceneObjectPart part in mapdot.GetParts())
                         {
@@ -302,7 +322,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     if (part.Shape.Textures.DefaultTexture == null)
                                         continue;
 
-                                    Color4 texcolor = part.Shape.Textures.DefaultTexture.RGBA;
+                                    texcolor = part.Shape.Textures.DefaultTexture.RGBA;
 
                                     // Not sure why some of these are null, oh well.
 
@@ -332,7 +352,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     // Mono Array
                                 }
 
-                                Vector3 pos = part.GetWorldPosition();
+                                pos = part.GetWorldPosition();
 
                                 // skip prim outside of region
                                 if (pos.X < 0.0f || pos.X >= 256.0f || pos.Y < 0.0f || pos.Y >= 256.0f)
@@ -357,19 +377,20 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                 if (isBelow256AboveTerrain)
                                 {
                                     // Translate scale by rotation so scale is represented properly when object is rotated
-                                    Vector3 lscale = new Vector3(part.Shape.Scale.X, part.Shape.Scale.Y, part.Shape.Scale.Z);
-                                    Vector3 scale = new Vector3();
-                                    Vector3 tScale = new Vector3();
-                                    Vector3 axPos = new Vector3(pos.X,pos.Y,pos.Z);
+                                    rot = part.GetWorldRotation();
+                                    // Convert from LL's XYZW format to the WXYZ format the following math needs.
+                                    float temp = rot.X;
+                                    rot.X = rot.W; // WYZW
+                                    rot.W = rot.Z; // WYZZ
+                                    rot.Z = rot.Y; // WYYZ
+                                    rot.Y = temp; // WXYZ
 
-                                    Quaternion llrot = part.GetWorldRotation();
-                                    Quaternion rot = new Quaternion(llrot.W, llrot.X, llrot.Y, llrot.Z);
-                                    scale = lscale * rot;
+                                    scale = part.Shape.Scale * rot;
 
                                     // negative scales don't work in this situation
                                     scale.X = Math.Abs(scale.X);
                                     scale.Y = Math.Abs(scale.Y);
-                                    scale.Z = Math.Abs(scale.Z);
+                                    //scale.Z = Math.Abs(scale.Z); // Z unused.
 
                                     // This scaling isn't very accurate and doesn't take into account the face rotation :P
                                     int mapdrawstartX = (int)(pos.X - scale.X);
@@ -384,116 +405,127 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                         continue;
 
 #region obb face reconstruction part duex
-                                    Vector3[] vertexes = new Vector3[8];
+                                    // Do these in the order that leave the least amount of changes.
+                                    tScale = part.Shape.Scale;
 
-                                    // float[] distance = new float[6];
-                                    Vector3[] FaceA = new Vector3[6]; // vertex A for Facei
-                                    Vector3[] FaceB = new Vector3[6]; // vertex B for Facei
-                                    Vector3[] FaceC = new Vector3[6]; // vertex C for Facei
-                                    Vector3[] FaceD = new Vector3[6]; // vertex D for Facei
-
-                                    tScale = new Vector3(lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[0] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-                                    // vertexes[0].x = pos.X + vertexes[0].x;
-                                    //vertexes[0].y = pos.Y + vertexes[0].y;
-                                    //vertexes[0].z = pos.Z + vertexes[0].z;
-
-                                    FaceA[0] = vertexes[0];
-                                    FaceB[3] = vertexes[0];
-                                    FaceA[4] = vertexes[0];
-
-                                    tScale = lscale;
-                                    scale = ((tScale * rot));
-                                    vertexes[1] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[1].x = pos.X + vertexes[1].x;
-                                    // vertexes[1].y = pos.Y + vertexes[1].y;
-                                    //vertexes[1].z = pos.Z + vertexes[1].z;
-
+                                    scale = tScale * rot;
+                                    //vertexes[1] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+                                    vertexes[1].X = pos.X + scale.X;
+                                    vertexes[1].Y = pos.Y + scale.Y;
+                                    vertexes[1].Z = pos.Z + scale.Z;
                                     FaceB[0] = vertexes[1];
                                     FaceA[1] = vertexes[1];
                                     FaceC[4] = vertexes[1];
+                                    //+X +Y +Z
 
-                                    tScale = new Vector3(lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
+                                    //tScale = new Vector3(part.Shape.Scale.X, -part.Shape.Scale.Y, part.Shape.Scale.Z);
+                                    tScale.Y = -tScale.Y; // instead of allocating a whole new copy.
+                                    scale = tScale * rot;
+                                    vertexes[0].X = pos.X + scale.X;
+                                    vertexes[0].Y = pos.Y + scale.Y;
+                                    vertexes[0].Z = pos.Z + scale.Z;
+                                    FaceA[0] = vertexes[0];
+                                    FaceB[3] = vertexes[0];
+                                    FaceA[4] = vertexes[0];
+                                    // And reverse the above for the next operation.
+                                    //tScale.Y = -tScale.Y; // or not.
+                                    //+X -Y +Z
 
-                                    vertexes[2] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    //vertexes[2].x = pos.X + vertexes[2].x;
-                                    //vertexes[2].y = pos.Y + vertexes[2].y;
-                                    //vertexes[2].z = pos.Z + vertexes[2].z;
-
+                                    //tScale = new Vector3(part.Shape.Scale.X, -part.Shape.Scale.Y, -part.Shape.Scale.Z);
+                                    //tScale.Y = -tScale.Y;
+                                    tScale.Z = -tScale.Z;
+                                    scale = tScale * rot;
+                                   // vertexes[2] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+                                    vertexes[2].X = pos.X + scale.X;
+                                    vertexes[2].Y = pos.Y + scale.Y;
+                                    vertexes[2].Z = pos.Z + scale.Z;
                                     FaceC[0] = vertexes[2];
                                     FaceD[3] = vertexes[2];
                                     FaceC[5] = vertexes[2];
+                                    // And reverse the above for the next operation.
+                                    tScale.Y = -tScale.Y;
+                                    //tScale.Z = -tScale.Z;
+                                    //+X +Y -Z
 
-                                    tScale = new Vector3(lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[3] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    //vertexes[3].x = pos.X + vertexes[3].x;
-                                    // vertexes[3].y = pos.Y + vertexes[3].y;
-                                    // vertexes[3].z = pos.Z + vertexes[3].z;
-
+                                    //tScale = new Vector3(part.Shape.Scale.X, part.Shape.Scale.Y, -part.Shape.Scale.Z);
+                                    //tScale.Z = -tScale.Z;
+                                    scale = tScale * rot;
+                                    //vertexes[3] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+                                    vertexes[3].X = pos.X + scale.X;
+                                    vertexes[3].Y = pos.Y + scale.Y;
+                                    vertexes[3].Z = pos.Z + scale.Z;
                                     FaceD[0] = vertexes[3];
                                     FaceC[1] = vertexes[3];
                                     FaceA[5] = vertexes[3];
+                                    // And reverse the above for the next operation.
+                                    tScale.Z = -tScale.Z;
+                                    //+X +Y +Z
 
-                                    tScale = new Vector3(-lscale.X, lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[4] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[4].x = pos.X + vertexes[4].x;
-                                    // vertexes[4].y = pos.Y + vertexes[4].y;
-                                    // vertexes[4].z = pos.Z + vertexes[4].z;
-
+                                    //tScale = new Vector3(-part.Shape.Scale.X, part.Shape.Scale.Y, part.Shape.Scale.Z);
+                                    tScale.X = -tScale.X;
+                                    scale = tScale * rot;
+                                    //vertexes[4] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+                                    vertexes[4].X = pos.X + scale.X;
+                                    vertexes[4].Y = pos.Y + scale.Y;
+                                    vertexes[4].Z = pos.Z + scale.Z;
                                     FaceB[1] = vertexes[4];
                                     FaceA[2] = vertexes[4];
                                     FaceD[4] = vertexes[4];
+                                    // And reverse the above for the next operation.
+                                    //tScale.X = -tScale.X;
+                                    //-X +Y +Z
 
-                                    tScale = new Vector3(-lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[5] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[5].x = pos.X + vertexes[5].x;
-                                    // vertexes[5].y = pos.Y + vertexes[5].y;
-                                    // vertexes[5].z = pos.Z + vertexes[5].z;
-
+                                    //tScale = new Vector3(-part.Shape.Scale.X, part.Shape.Scale.Y, -part.Shape.Scale.Z);
+                                    //tScale.X = -tScale.X;
+                                    tScale.Z = -tScale.Z;
+                                    scale = tScale * rot;
+                                    //vertexes[5] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+                                    vertexes[5].X = pos.X + scale.X;
+                                    vertexes[5].Y = pos.Y + scale.Y;
+                                    vertexes[5].Z = pos.Z + scale.Z;
                                     FaceD[1] = vertexes[5];
                                     FaceC[2] = vertexes[5];
                                     FaceB[5] = vertexes[5];
+                                    // And reverse the above for the next operation.
+                                    //tScale.X = -tScale.X;
+                                    tScale.Z = -tScale.Z;
+                                    //-X +Y +Z
 
-                                    tScale = new Vector3(-lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[6] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[6].x = pos.X + vertexes[6].x;
-                                    // vertexes[6].y = pos.Y + vertexes[6].y;
-                                    // vertexes[6].z = pos.Z + vertexes[6].z;
-
+                                    //tScale = new Vector3(-part.Shape.Scale.X, -part.Shape.Scale.Y, part.Shape.Scale.Z);
+                                    //tScale.X = -tScale.X;
+                                    tScale.Y = -tScale.Y;
+                                    scale = tScale * rot;
+                                    //vertexes[6] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+                                    vertexes[6].X = pos.X + scale.X;
+                                    vertexes[6].Y = pos.Y + scale.Y;
+                                    vertexes[6].Z = pos.Z + scale.Z;
                                     FaceB[2] = vertexes[6];
                                     FaceA[3] = vertexes[6];
                                     FaceB[4] = vertexes[6];
+                                    // And reverse the above for the next operation.
+                                    //tScale.X = -tScale.X;
+                                    //tScale.Y = -tScale.Y;
+                                    //-X -Y +Z
 
-                                    tScale = new Vector3(-lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[7] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[7].x = pos.X + vertexes[7].x;
-                                    // vertexes[7].y = pos.Y + vertexes[7].y;
-                                    // vertexes[7].z = pos.Z + vertexes[7].z;
-
+                                    //tScale = new Vector3(-part.Shape.Scale.X, -part.Shape.Scale.Y, -part.Shape.Scale.Z);
+                                    //tScale.X = -tScale.X;
+                                    //tScale.Y = -tScale.Y;
+                                    tScale.Z = -tScale.Z;
+                                    scale = tScale * rot;
+                                    //vertexes[7] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
+                                    vertexes[7].X = pos.X + scale.X;
+                                    vertexes[7].Y = pos.Y + scale.Y;
+                                    vertexes[7].Z = pos.Z + scale.Z;
                                     FaceD[2] = vertexes[7];
                                     FaceC[3] = vertexes[7];
                                     FaceD[5] = vertexes[7];
+                                    //-X -Y -Z
 #endregion
 
                                     //int wy = 0;
 
                                     //bool breakYN = false; // If we run into an error drawing, break out of the
                                     // loop so we don't lag to death on error handling
-                                    DrawStruct ds = new DrawStruct();
                                     ds.brush = new SolidBrush(mapdotspot);
                                     //ds.rect = new Rectangle(mapdrawstartX, (255 - mapdrawstartY), mapdrawendX - mapdrawstartX, mapdrawendY - mapdrawstartY);
 
@@ -501,15 +533,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                                     for (int i = 0; i < FaceA.Length; i++)
                                     {
-                                        Point[] working = new Point[5];
-                                        working[0] = project(FaceA[i], axPos);
-                                        working[1] = project(FaceB[i], axPos);
-                                        working[2] = project(FaceD[i], axPos);
-                                        working[3] = project(FaceC[i], axPos);
-                                        working[4] = project(FaceA[i], axPos);
-
-                                        face workingface = new face();
-                                        workingface.pts = working;
+                                        workingface.pts[0] = project(FaceA[i], pos);
+                                        workingface.pts[1] = project(FaceB[i], pos);
+                                        workingface.pts[2] = project(FaceD[i], pos);
+                                        workingface.pts[3] = project(FaceC[i], pos);
+                                        workingface.pts[4] = project(FaceA[i], pos);
 
                                         ds.trns[i] = workingface;
                                     }
@@ -554,11 +582,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                 Graphics g = Graphics.FromImage(mapbmp.Bitmap);
 
+                DrawStruct rectDrawStruct;
                 for (int s = 0; s < sortedZHeights.Length; s++)
                 {
                     if (z_sort.ContainsKey(sortedlocalIds[s]))
                     {
-                        DrawStruct rectDrawStruct = z_sort[sortedlocalIds[s]];
+                        rectDrawStruct = z_sort[sortedlocalIds[s]];
                         for (int r = 0; r < rectDrawStruct.trns.Length; r++ )
                         {
                             g.FillPolygon(rectDrawStruct.brush,rectDrawStruct.trns[r].pts);
