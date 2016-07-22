@@ -644,14 +644,6 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         item.AssetID = fromItem.AssetID;
                     }
-                    else if ((InventoryType)item.Type == InventoryType.Notecard)
-                    {
-                        ScenePresence presence = m_part.ParentGroup.Scene.GetScenePresence(item.OwnerID);
-                        if (presence != null)
-                        {
-                            presence.ControllingClient.SendAgentAlertMessage("Notecard saved", false);
-                        }
-                    }
 
                     // Check if next owner perms were changed
                     if (item.InvType == (int)InventoryType.Object)

@@ -13614,7 +13614,10 @@ namespace InWorldz.Phlox.Engine
                                 ret.Add(new LSL_Vector(part.Velocity.X, part.Velocity.Y, part.Velocity.Z));
                                 break;
                             case ScriptBaseClass.OBJECT_OWNER:
-                                ret.Add(part.OwnerID.ToString());
+                                if ((part.GroupID != UUID.Zero) && (part.OwnerID == part.GroupID))  // group-deeded
+                                    ret.Add(UUID.Zero.ToString());  // documented to return NULL_KEY for group-deeded
+                                else
+                                    ret.Add(part.OwnerID.ToString());
                                 break;
                             case ScriptBaseClass.OBJECT_GROUP:
                                 ret.Add(part.GroupID.ToString());
@@ -14641,6 +14644,10 @@ namespace InWorldz.Phlox.Engine
             {
                 return new LSL_List(node.AsString());
             }
+            else if (node.Type == OSDType.Unknown)
+            {
+                return new LSL_List(ScriptBaseClass.JSON_NULL);
+            }
             else if (node.Type == OSDType.Array)
             {
                 // JSON arrays are stored in LSL lists as strings
@@ -14698,6 +14705,13 @@ namespace InWorldz.Phlox.Engine
                     return "\""+node.AsString()+"\"";
                 else
                     return node.AsString();
+            }
+            else if (node.Type == OSDType.Unknown)
+            {
+                if (nested)
+                    return "null";
+                else
+                    return ScriptBaseClass.JSON_NULL;
             }
             else if (node.Type == OSDType.Array)
             {
@@ -17029,6 +17043,8 @@ namespace InWorldz.Phlox.Engine
                         return ScriptBaseClass.BOT_USER_NOT_FOUND;
                     case BotMovementResult.Success:
                         return ScriptBaseClass.BOT_SUCCESS;
+                    default:
+                        return ScriptBaseClass.BOT_ERROR;
                 }
             }
             return ScriptBaseClass.BOT_NOT_FOUND;

@@ -703,6 +703,9 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             if ((bot = GetBotWithPermission(botID, attemptingUser)) == null)
                 return BotMovementResult.BotNotFound;
 
+            if (m_scene.GetScenePresence(avatarID) == null)
+                return BotMovementResult.UserNotFound;
+
             bot.MovementController.StartFollowingAvatar(avatarID, options);
             return BotMovementResult.Success;
         }

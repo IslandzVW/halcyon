@@ -1,0 +1,145 @@
+swagger: '2.0'
+
+info:
+  version: "1.0.0"
+  title: Halcyon Remote Console
+  description: |
+    Remote console access is only enabled if in the Halcyon.ini [Startup]::console is "rest" and either [Startup]::gui is false or [Startup]::background is true.
+
+paths:
+  /StartSession/:
+    post:
+      description: |
+        Logs the user into the API. See RemoteConsole::HandleHttpStartSession()
+      parameters:
+        -
+          name: USER
+          in: formData
+          description: Name of local system user used for Halcyon maintenance.
+          required: true
+          type: string
+        -
+          name: PASS
+          in: formData
+          description: Password (really... This needs to be done differently.) of local system user used for Halcyon maintenance.
+          required: true
+          type: string
+      consumes:
+      - application/x-www-form-urlencoded
+      produces:
+      - text/xml
+      responses:
+        200:
+          description: Successful response
+          schema:
+            title: ConsoleSession
+            type: object
+            required:
+              - SessionID
+              - Prompt
+            properties:
+              SessionID:
+                type: string
+              Prompt:
+                type: string
+              HelpTree:
+                type: object
+                description: May contain multiple entries in a tree structure as a help to the user for what commands can be executed.
+        401:
+         description: Invalid user details or badly formed input.
+  /CloseSession/:
+    post:
+      description: |
+        Disconnects the user and logs them out of the remote console.
+      parameters:
+        -
+          name: ID
+          in: formData
+          description: The Session ID returned after a valid StartSession call.
+          required: true
+          type: string
+      consumes:
+      - application/x-www-form-urlencoded
+      produces:
+      - text/xml
+      responses:
+        200:
+          description: Successful response
+          schema:
+            title: ConsoleSession
+            type: object
+            required:
+              - Result
+            properties:
+              Result:
+                type: string
+                pattern: ^OK$
+        404:
+         description: Invalid session ID or badly formed input.
+  /SessionCommand/:
+    post:
+      description: |
+        Sends a command to the remote console.
+      parameters:
+        -
+          name: ID
+          in: formData
+          description: The Session ID returned after a valid StartSession call.
+          required: true
+          type: string
+        -
+          name: COMMAND
+          in: formData
+          description: The Halcyon command to execute.
+          type: string
+      consumes:
+      - application/x-www-form-urlencoded
+      produces:
+      - text/xml
+      responses:
+        200:
+          description: Successful response
+          schema:
+            title: ConsoleSession
+            type: object
+            required:
+              - Result
+            properties:
+              Result:
+                type: string
+                pattern: ^OK$
+        404:
+         description: Invalid session ID or badly formed input.
+  /ReadResponses/{sessionid}/:
+   post:
+      description: |
+        Reads out any reponses to input. See RemoteConsole::AsyncReadResponses()
+      parameters:
+        -
+          name: sessionid
+          in: path
+          description: The Session ID returned after a valid StartSession call.
+          required: true
+          type: string
+      consumes:
+      - application/x-www-form-urlencoded
+      produces:
+      - text/xml
+      responses:
+        200:
+          description: Successful response
+          schema:
+            title: ConsoleSession
+            type: object
+            properties:
+              lines:
+                type: array
+                items:
+                  type: string
+                  xml:
+                    name: Line
+                  properties:
+                    Number:
+                      type: integer
+                      xml:
+                        attribute: true

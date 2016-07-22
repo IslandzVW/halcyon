@@ -144,16 +144,33 @@ namespace OpenSim.Framework.Configuration.XML
             // Perform commit out of place in case of insufficient disk space.
             String oldFile = fileName + ".old";
             String newFile = fileName + ".new";
-            if (File.Exists(newFile))
-                File.Delete(newFile);
-            doc.Save(newFile);
-            if (File.Exists(oldFile))
-                File.Delete(oldFile);
-            File.Move(fileName, oldFile);
-            File.Move(newFile, fileName);
-            if (File.Exists(fileName) && File.Exists(oldFile))
-                File.Delete(oldFile);
-            needsCommit = false;
+            try
+            {
+                if (File.Exists(newFile))
+                {
+                    File.Delete(newFile);
+                }
+                doc.Save(newFile);
+                if (File.Exists(oldFile))
+                {
+                    File.Delete(oldFile);
+                }
+                File.Move(fileName, oldFile);
+                File.Move(newFile, fileName);
+                if (File.Exists(fileName) && File.Exists(oldFile))
+                {
+                    File.Delete(oldFile);
+                }
+                needsCommit = false;
+            }
+            catch (IOException ex)
+            {
+                if (!File.Exists(fileName) && File.Exists(newFile)) //On new installations with missing configurations
+                {
+                    File.Move(newFile, fileName);
+                }
+            }
+
         }
 
         public void Close()

@@ -171,8 +171,6 @@ namespace OpenSim.Region.Framework.Scenes
                             remoteClient.SendAgentAlertMessage("Insufficient permissions to edit notecard", false);
                             return new UpdateItemResponse();
                         }
-
-                        remoteClient.SendAgentAlertMessage("Notecard saved", false);
                     }
                     else if ((InventoryType)item.InvType == InventoryType.LSL)
                     {

@@ -894,6 +894,15 @@ namespace OpenSim.Region.Framework.Scenes
                 case "simulator_hostname":
                     ret = RegionInfo.ExternalHostName;
                     break;
+                case "region_size_x":
+                    ret = Constants.RegionSize.ToString();
+                    break;
+                case "region_size_y":
+                    ret = Constants.RegionSize.ToString();
+                    break;
+                case "region_size_z":
+                    ret = ((int)Constants.REGION_MAXIMUM_Z).ToString();
+                    break;
                 case "agent_limit":
                     ret = m_regInfo.RegionSettings.AgentLimit.ToString();
                     break;
