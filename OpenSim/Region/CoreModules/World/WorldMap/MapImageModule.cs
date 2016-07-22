@@ -36,6 +36,8 @@ using OpenMetaverse.Imaging;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Interfaces;
+using System.Runtime.InteropServices;
+using System.Drawing.Imaging;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {
@@ -59,6 +61,37 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         public face[] trns;
     }
 
+    /// <summary>
+    /// A very fast, but special purpose, tool for doing lots of drawing operations.
+    /// </summary>
+    public class DirectBitmap : IDisposable
+    {
+        public Bitmap Bitmap { get; private set; }
+        public Int32[] Bits { get; private set; }
+        public bool Disposed { get; private set; }
+        public int Height { get; private set; }
+        public int Width { get; private set; }
+
+        protected GCHandle BitsHandle { get; private set; }
+
+        public DirectBitmap(int width, int height)
+        {
+            Width = width;
+            Height = height;
+            Bits = new Int32[width * height];
+            BitsHandle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
+            Bitmap = new Bitmap(width, height, width * 4, PixelFormat.Format32bppPArgb, BitsHandle.AddrOfPinnedObject());
+        }
+
+        public void Dispose()
+        {
+            if (Disposed) return;
+            Disposed = true;
+            Bitmap.Dispose();
+            BitsHandle.Free();
+        }
+    }
+
     public class MapImageModule : IMapImageGenerator, IRegionModule
     {
         private static readonly ILog m_log =
@@ -73,7 +106,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         private byte[] imageData = null;
 
-        private Bitmap mapbmp = new Bitmap(256, 256);
+        private DirectBitmap mapbmp = new DirectBitmap(256, 256);
 
         #region IMapImageGenerator Members
 
@@ -96,7 +129,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             try
             {
-                imageData = OpenJPEG.EncodeFromImage(mapbmp, true);
+                imageData = OpenJPEG.EncodeFromImage(mapbmp.Bitmap, true);
             }
             catch (Exception e) // LEGIT: Catching problems caused by OpenJPEG p/invoke
             {
@@ -212,7 +245,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 //             }
 //         }
 
-        private Bitmap DrawObjectVolume(Scene whichScene, Bitmap mapbmp)
+        private DirectBitmap DrawObjectVolume(Scene whichScene, DirectBitmap mapbmp)
         {
             int tc = 0;
             double[,] hm = whichScene.Heightmap.GetDoubles();
@@ -519,7 +552,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 // Sort prim by Z position
                 Array.Sort(sortedZHeights, sortedlocalIds);
 
-                Graphics g = Graphics.FromImage(mapbmp);
+                Graphics g = Graphics.FromImage(mapbmp.Bitmap);
 
                 for (int s = 0; s < sortedZHeights.Length; s++)
                 {

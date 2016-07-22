@@ -273,7 +273,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         }
         #endregion
 
-        public void TerrainToBitmap(Bitmap mapbmp)
+        public void TerrainToBitmap(DirectBitmap mapbmp)
         {
             int tc = Environment.TickCount;
             m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain (Textured)");
@@ -390,7 +390,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                 hsv.v = (hsv.v + hfdiff > 0f) ? hsv.v + hfdiff : 0f;
                             }
                         }
-                        mapbmp.SetPixel(x, yr, hsv.toColor());
+                        mapbmp.Bitmap.SetPixel(x, yr, hsv.toColor());
                     }
                     else
                     {
@@ -407,7 +407,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         heightvalue = 100f - (heightvalue * 100f) / 19f;  // 0 - 19 => 100 - 0
 
                         Color water = Color.FromArgb((int)heightvalue, (int)heightvalue, 255);
-                        mapbmp.SetPixel(x, yr, water);
+                        mapbmp.Bitmap.SetPixel(x, yr, water);
                     }
                 }
             }
