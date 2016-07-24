@@ -533,11 +533,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                                     for (int i = 0; i < FaceA.Length; i++)
                                     {
-                                        workingface.pts[0] = project(FaceA[i], pos);
-                                        workingface.pts[1] = project(FaceB[i], pos);
-                                        workingface.pts[2] = project(FaceD[i], pos);
-                                        workingface.pts[3] = project(FaceC[i], pos);
-                                        workingface.pts[4] = project(FaceA[i], pos);
+                                        project(ref FaceA[i], /*pos,*/ ref workingface.pts[0]);
+                                        project(ref FaceB[i], /*pos,*/ ref workingface.pts[1]);
+                                        project(ref FaceD[i], /*pos,*/ ref workingface.pts[2]);
+                                        project(ref FaceC[i], /*pos,*/ ref workingface.pts[3]);
+                                        project(ref FaceA[i], /*pos,*/ ref workingface.pts[4]);
 
                                         ds.trns[i] = workingface;
                                     }
@@ -582,15 +582,20 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                 Graphics g = Graphics.FromImage(mapbmp.Bitmap);
 
+                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.None;
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+
                 DrawStruct rectDrawStruct;
                 for (int s = 0; s < sortedZHeights.Length; s++)
                 {
-                    if (z_sort.ContainsKey(sortedlocalIds[s]))
+                    if (z_sort.TryGetValue(sortedlocalIds[s], out rectDrawStruct))
                     {
-                        rectDrawStruct = z_sort[sortedlocalIds[s]];
                         for (int r = 0; r < rectDrawStruct.trns.Length; r++ )
                         {
-                            g.FillPolygon(rectDrawStruct.brush,rectDrawStruct.trns[r].pts);
+                            g.FillPolygon(rectDrawStruct.brush, rectDrawStruct.trns[r].pts);
                         }
                         //g.FillRectangle(rectDrawStruct.brush , rectDrawStruct.rect);
                     }
@@ -603,9 +608,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             return mapbmp;
         }
 
-        private Point project(Vector3 point3d, Vector3 originpos)
+        private static Point project(ref Vector3 point3d, /*Vector3 originpos, */ref Point returnpt)
         {
-            Point returnpt = new Point();
+            //Point returnpt;// = new Point();
             //originpos = point3d;
             //int d = (int)(256f / 1.5f);
 
@@ -613,7 +618,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
            // float z = -point3d.z - topos.z;
 
             returnpt.X = (int)point3d.X;//(int)((topos.x - point3d.x) / z * d);
-            returnpt.Y = (int)(255 - point3d.Y);//(int)(255 - (((topos.y - point3d.y) / z * d)));
+            returnpt.Y = 255 - (int)point3d.Y;//(int)(255 - (((topos.y - point3d.y) / z * d)));
 
             return returnpt;
         }
