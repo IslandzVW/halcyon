@@ -337,6 +337,35 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             if (!isBelow256AboveTerrain)
                                 continue;
 
+                            // Translate scale by rotation so scale is represented properly when object is rotated
+                            rot = part.GetWorldRotation();
+                            // Convert from LL's XYZW format to the WXYZ format the following math needs.
+                            float temp = rot.X;
+                            rot.X = rot.W; // WYZW
+                            rot.W = rot.Z; // WYZZ
+                            rot.Z = rot.Y; // WYYZ
+                            rot.Y = temp; // WXYZ
+
+                            scale = part.Shape.Scale * rot;
+
+                            // negative scales don't work in this situation
+                            scale.X = Math.Abs(scale.X);
+                            scale.Y = Math.Abs(scale.Y);
+                            //scale.Z = Math.Abs(scale.Z); // Z unused.
+
+                            // This scaling isn't very accurate and doesn't take into account the face rotation :P
+                            int mapdrawstartX = (int)(pos.X - scale.X);
+                            int mapdrawstartY = (int)(pos.Y - scale.Y);
+                            int mapdrawendX = (int)(pos.X + scale.X);
+                            int mapdrawendY = (int)(pos.Y + scale.Y);
+
+                            // If object is beyond the edge of the map, don't draw it to avoid errors
+                            if (mapdrawstartX < 0 || mapdrawstartX > 255 || mapdrawendX < 0 || mapdrawendX > 255
+                                                  || mapdrawstartY < 0 || mapdrawstartY > 255 || mapdrawendY < 0
+                                                  || mapdrawendY > 255)
+                                continue;
+
+
                             /* * * * * * * * * * * * * * * * * * */
                             // OBB DRAWING PREPARATION PASS
                             /* * * * * * * * * * * * * * * * * * */
@@ -371,34 +400,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                             {
                                 // Color4 fail
                             }
-
-                            // Translate scale by rotation so scale is represented properly when object is rotated
-                            rot = part.GetWorldRotation();
-                            // Convert from LL's XYZW format to the WXYZ format the following math needs.
-                            float temp = rot.X;
-                            rot.X = rot.W; // WYZW
-                            rot.W = rot.Z; // WYZZ
-                            rot.Z = rot.Y; // WYYZ
-                            rot.Y = temp; // WXYZ
-
-                            scale = part.Shape.Scale * rot;
-
-                            // negative scales don't work in this situation
-                            scale.X = Math.Abs(scale.X);
-                            scale.Y = Math.Abs(scale.Y);
-                            //scale.Z = Math.Abs(scale.Z); // Z unused.
-
-                            // This scaling isn't very accurate and doesn't take into account the face rotation :P
-                            int mapdrawstartX = (int)(pos.X - scale.X);
-                            int mapdrawstartY = (int)(pos.Y - scale.Y);
-                            int mapdrawendX = (int)(pos.X + scale.X);
-                            int mapdrawendY = (int)(pos.Y + scale.Y);
-
-                            // If object is beyond the edge of the map, don't draw it to avoid errors
-                            if (mapdrawstartX < 0 || mapdrawstartX > 255 || mapdrawendX < 0 || mapdrawendX > 255
-                                                  || mapdrawstartY < 0 || mapdrawstartY > 255 || mapdrawendY < 0
-                                                  || mapdrawendY > 255)
-                                continue;
 
 #region obb face reconstruction part duex
                             // Do these in the order that leave the least amount of changes.
