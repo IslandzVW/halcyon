@@ -277,7 +277,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 // Love the copy-on-assignment for structs...
                 var ds = new DrawStruct();
                 face workingface;// = new face();
-                workingface.pts = new Point[5];
 
                 foreach (EntityBase obj in objs)
                 {
@@ -525,6 +524,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                             for (int i = 0; i < FaceA.Length; i++)
                             {
+                                workingface.pts = new Point[5];
+
                                 project(ref FaceA[i], /*pos,*/ ref workingface.pts[0]);
                                 project(ref FaceB[i], /*pos,*/ ref workingface.pts[1]);
                                 project(ref FaceD[i], /*pos,*/ ref workingface.pts[2]);
