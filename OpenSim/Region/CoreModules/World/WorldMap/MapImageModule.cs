@@ -208,47 +208,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         #endregion
 
-// TODO: unused:
-//         private void ShadeBuildings(Bitmap map)
-//         {
-//             lock (map)
-//             {
-//                 lock (m_scene.Entities)
-//                 {
-//                     foreach (EntityBase entity in m_scene.Entities.Values)
-//                     {
-//                         if (entity is SceneObjectGroup)
-//                         {
-//                             SceneObjectGroup sog = (SceneObjectGroup) entity;
-//
-//                             foreach (SceneObjectPart primitive in sog.Children.Values)
-//                             {
-//                                 int x = (int) (primitive.AbsolutePosition.X - (primitive.Scale.X / 2));
-//                                 int y = (int) (primitive.AbsolutePosition.Y - (primitive.Scale.Y / 2));
-//                                 int w = (int) primitive.Scale.X;
-//                                 int h = (int) primitive.Scale.Y;
-//
-//                                 int dx;
-//                                 for (dx = x; dx < x + w; dx++)
-//                                 {
-//                                     int dy;
-//                                     for (dy = y; dy < y + h; dy++)
-//                                     {
-//                                         if (x < 0 || y < 0)
-//                                             continue;
-//                                         if (x >= map.Width || y >= map.Height)
-//                                             continue;
-//
-//                                         map.SetPixel(dx, dy, Color.DarkGray);
-//                                     }
-//                                 }
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-
         private static readonly SolidBrush DefaultBrush = new SolidBrush(Color.Black);
         private static SolidBrush GetFaceBrush(SceneObjectPart part, uint face)
         {
@@ -282,9 +241,21 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
         }
 
+        private static float ZOfCrossDiff(ref Vector3 P, ref Vector3 Q, ref Vector3 R)
+        {
+            // let A = Q - P
+            // let B = R - P
+            // Vz = AxBy - AyBx
+            //    = (Qx - Px)(Ry - Py) - (Qy - Py)(Rx - Px)
+            return (Q.X - P.X)* (R.Y - P.Y) - (Q.Y - P.Y) * (R.X - P.X);
+        }
+
         private static DirectBitmap DrawObjectVolume(Scene whichScene, DirectBitmap mapbmp)
         {
-            int time_start_temp = Environment.TickCount, time_start = time_start_temp, time_prep = 0, time_filtering = 0, time_vertex_calcs = 0, time_sort_height_calc = 0, time_obb_prep = 0, time_sorting = 0, time_drawing = 0;
+            int time_start_temp = Environment.TickCount, time_start = time_start_temp;
+            int time_prep = 0, time_filtering = 0, time_vertex_calcs = 0, time_sort_height_calc = 0;
+            int time_obb_norm = 0, time_obb_calc = 0, time_obb_brush = 0, time_obb_addtolist = 0;
+            int time_sorting = 0, time_drawing = 0;
             int sop_count = 0, sop_count_filtered = 0;
 
             m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
@@ -480,13 +451,19 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     /* * * * * * * * * * * * * * * * * * */
                     // OBB DRAWING PREPARATION PASS
                     /* * * * * * * * * * * * * * * * * * */
-                    time_start_temp = Environment.TickCount;
 
                     // Compute face 0 of OBB and add if facing up.
-                    if (Vector3.Cross(Vector3.Subtract(vertices[1], vertices[0]), Vector3.Subtract(vertices[3], vertices[0])).Z > 0)
+                    time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[1], vertices[0]), Vector3.Subtract(vertices[3], vertices[0])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[0], ref vertices[1], ref vertices[3]) > 0)
                     {
-                        drawdata.brush = GetFaceBrush(part, 0);
+                        time_obb_norm += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 0);
+                        time_obb_brush += Environment.TickCount - time_start_temp;
+
+                        time_start_temp = Environment.TickCount;
                         drawdata.vertices = new Point[4];
                         drawdata.vertices[0].X = (int)(vertices[0].X * scale_factor);
                         drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[0].Y * scale_factor);
@@ -499,16 +476,30 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         drawdata.vertices[3].X = (int)(vertices[3].X * scale_factor);
                         drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[3].Y * scale_factor);
+                        time_obb_calc += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
                         sortheights.Add(sort_height);
+                        time_obb_addtolist += Environment.TickCount - time_start_temp;
+                    }
+                    else
+                    {
+                        time_obb_norm += Environment.TickCount - time_start_temp;
                     }
 
                     // Compute face 1 of OBB and add if facing up.
-                    if (Vector3.Cross(Vector3.Subtract(vertices[5], vertices[4]), Vector3.Subtract(vertices[0], vertices[4])).Z > 0)
+                    time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[5], vertices[4]), Vector3.Subtract(vertices[0], vertices[4])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[4], ref vertices[5], ref vertices[0]) > 0)
                     {
-                        drawdata.brush = GetFaceBrush(part, 1);
+                        time_obb_norm += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 1);
+                        time_obb_brush += Environment.TickCount - time_start_temp;
+
+                        time_start_temp = Environment.TickCount;
                         drawdata.vertices = new Point[4];
                         drawdata.vertices[0].X = (int)(vertices[4].X * scale_factor);
                         drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[4].Y * scale_factor);
@@ -521,16 +512,30 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         drawdata.vertices[3].X = (int)(vertices[0].X * scale_factor);
                         drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[0].Y * scale_factor);
+                        time_obb_calc += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
                         sortheights.Add(sort_height);
+                        time_obb_addtolist += Environment.TickCount - time_start_temp;
+                    }
+                    else
+                    {
+                        time_obb_norm += Environment.TickCount - time_start_temp;
                     }
 
                     // Compute face 2 of OBB and add if facing up.
-                    if (Vector3.Cross(Vector3.Subtract(vertices[6], vertices[5]), Vector3.Subtract(vertices[1], vertices[5])).Z > 0)
+                    time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[6], vertices[5]), Vector3.Subtract(vertices[1], vertices[5])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[5], ref vertices[6], ref vertices[1]) > 0)
                     {
-                        drawdata.brush = GetFaceBrush(part, 2);
+                        time_obb_norm += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 2);
+                        time_obb_brush += Environment.TickCount - time_start_temp;
+
+                        time_start_temp = Environment.TickCount;
                         drawdata.vertices = new Point[4];
                         drawdata.vertices[0].X = (int)(vertices[5].X * scale_factor);
                         drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[5].Y * scale_factor);
@@ -543,16 +548,30 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         drawdata.vertices[3].X = (int)(vertices[1].X * scale_factor);
                         drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[1].Y * scale_factor);
+                        time_obb_calc += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
                         sortheights.Add(sort_height);
+                        time_obb_addtolist += Environment.TickCount - time_start_temp;
+                    }
+                    else
+                    {
+                        time_obb_norm += Environment.TickCount - time_start_temp;
                     }
 
                     // Compute face 3 of OBB and add if facing up.
-                    if (Vector3.Cross(Vector3.Subtract(vertices[7], vertices[6]), Vector3.Subtract(vertices[2], vertices[6])).Z > 0)
+                    time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[7], vertices[6]), Vector3.Subtract(vertices[2], vertices[6])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[6], ref vertices[7], ref vertices[2]) > 0)
                     {
-                        drawdata.brush = GetFaceBrush(part, 3);
+                        time_obb_norm += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 3);
+                        time_obb_brush += Environment.TickCount - time_start_temp;
+
+                        time_start_temp = Environment.TickCount;
                         drawdata.vertices = new Point[4];
                         drawdata.vertices[0].X = (int)(vertices[6].X * scale_factor);
                         drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[6].Y * scale_factor);
@@ -565,16 +584,30 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         drawdata.vertices[3].X = (int)(vertices[2].X * scale_factor);
                         drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[2].Y * scale_factor);
+                        time_obb_calc += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
+                        time_obb_addtolist += Environment.TickCount - time_start_temp;
                         sortheights.Add(sort_height);
+                    }
+                    else
+                    {
+                        time_obb_norm += Environment.TickCount - time_start_temp;
                     }
 
                     // Compute face 4 of OBB and add if facing up.
-                    if (Vector3.Cross(Vector3.Subtract(vertices[4], vertices[7]), Vector3.Subtract(vertices[3], vertices[7])).Z > 0)
+                    time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[4], vertices[7]), Vector3.Subtract(vertices[3], vertices[7])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[7], ref vertices[4], ref vertices[3]) > 0)
                     {
-                        drawdata.brush = GetFaceBrush(part, 4);
+                        time_obb_norm += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 4);
+                        time_obb_brush += Environment.TickCount - time_start_temp;
+
+                        time_start_temp = Environment.TickCount;
                         drawdata.vertices = new Point[4];
                         drawdata.vertices[0].X = (int)(vertices[7].X * scale_factor);
                         drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[7].Y * scale_factor);
@@ -587,16 +620,30 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         drawdata.vertices[3].X = (int)(vertices[3].X * scale_factor);
                         drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[3].Y * scale_factor);
+                        time_obb_calc += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
                         sortheights.Add(sort_height);
+                        time_obb_addtolist += Environment.TickCount - time_start_temp;
+                    }
+                    else
+                    {
+                        time_obb_norm += Environment.TickCount - time_start_temp;
                     }
 
                     // Compute face 5 of OBB and add if facing up.
-                    if (Vector3.Cross(Vector3.Subtract(vertices[6], vertices[7]), Vector3.Subtract(vertices[4], vertices[7])).Z > 0)
+                    time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[6], vertices[7]), Vector3.Subtract(vertices[4], vertices[7])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[7], ref vertices[6], ref vertices[4]) > 0)
                     {
-                        drawdata.brush = GetFaceBrush(part, 5);
+                        time_obb_norm += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 5);
+                        time_obb_brush += Environment.TickCount - time_start_temp;
+
+                        time_start_temp = Environment.TickCount;
                         drawdata.vertices = new Point[4];
                         drawdata.vertices[0].X = (int)(vertices[7].X * scale_factor);
                         drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[7].Y * scale_factor);
@@ -609,12 +656,17 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         drawdata.vertices[3].X = (int)(vertices[4].X * scale_factor);
                         drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[4].Y * scale_factor);
+                        time_obb_calc += Environment.TickCount - time_start_temp;
 
+                        time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
                         sortheights.Add(sort_height);
+                        time_obb_addtolist += Environment.TickCount - time_start_temp;
                     }
-
-                    time_obb_prep += Environment.TickCount - time_start_temp;
+                    else
+                    {
+                        time_obb_norm += Environment.TickCount - time_start_temp;
+                    }
                 }
             }
 
@@ -652,69 +704,21 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 "filtering prims took {1}ms, " +
                 "calculating vertices took {2}ms, " +
                 "computing sorting height took {3}ms, " +
-                "calculating OBBs took {4}ms, " +
-                "sorting took {5}ms, " +
-                "drawing took {6}ms, " +
-                "total time: {7}ms",
-                time_prep, time_filtering, time_vertex_calcs, time_sort_height_calc, time_obb_prep, time_sorting, time_drawing,
+                "calculating OBB normal took {4}ms, " +
+                "getting OBB face colors took {5}ms, " +
+                "calculating OBBs took {6}ms, " +
+                "adding OBBs to list took {7}ms, " +
+                "sorting took {8}ms, " +
+                "drawing took {9}ms, " +
+                "total time: {10}ms",
+                time_prep, time_filtering, time_vertex_calcs, time_sort_height_calc,
+                time_obb_norm, time_obb_brush, time_obb_calc, time_obb_addtolist,
+                time_sorting, time_drawing,
                 Environment.TickCount - time_start
             );
 
             return mapbmp;
         }
 
-        private static Point project(ref Vector3 point3d, /*Vector3 originpos, */ref Point returnpt)
-        {
-            //Point returnpt;// = new Point();
-            //originpos = point3d;
-            //int d = (int)(256f / 1.5f);
-
-            //Vector3 topos = new Vector3(0, 0, 0);
-           // float z = -point3d.z - topos.z;
-
-            returnpt.X = (int)point3d.X;//(int)((topos.x - point3d.x) / z * d);
-            returnpt.Y = 255 - (int)point3d.Y;//(int)(255 - (((topos.y - point3d.y) / z * d)));
-
-            return returnpt;
-        }
-
-// TODO: unused:
-//         #region Deprecated Maptile Generation.  Adam may update this
-//         private Bitmap TerrainToBitmap(string gradientmap)
-//         {
-//             Bitmap gradientmapLd = new Bitmap(gradientmap);
-//
-//             int pallete = gradientmapLd.Height;
-//
-//             Bitmap bmp = new Bitmap(m_scene.Heightmap.Width, m_scene.Heightmap.Height);
-//             Color[] colours = new Color[pallete];
-//
-//             for (int i = 0; i < pallete; i++)
-//             {
-//                 colours[i] = gradientmapLd.GetPixel(0, i);
-//             }
-//
-//             lock (m_scene.Heightmap)
-//             {
-//                 ITerrainChannel copy = m_scene.Heightmap;
-//                 for (int y = 0; y < copy.Height; y++)
-//                 {
-//                     for (int x = 0; x < copy.Width; x++)
-//                     {
-//                         // 512 is the largest possible height before colours clamp
-//                         int colorindex = (int) (Math.Max(Math.Min(1.0, copy[x, y] / 512.0), 0.0) * (pallete - 1));
-//
-//                         // Handle error conditions
-//                         if (colorindex > pallete - 1 || colorindex < 0)
-//                             bmp.SetPixel(x, copy.Height - y - 1, Color.Red);
-//                         else
-//                             bmp.SetPixel(x, copy.Height - y - 1, colours[colorindex]);
-//                     }
-//                 }
-//                 ShadeBuildings(bmp);
-//                 return bmp;
-//             }
-//         }
-//         #endregion
     }
 }
