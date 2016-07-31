@@ -61,6 +61,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
     public struct DrawStruct2
     {
+        public float sort_order;
         public SolidBrush brush;
         public Point[] vertices;
     }
@@ -271,13 +272,11 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             DrawStruct2 drawdata;
 
-            var sortheights = new List<float>();
             var drawdata_for_sorting = new List<DrawStruct2>();
 
             var vertices = new Vector3[8];
 
-            float sort_height;
-
+            // Get all the faces for valid prims and prep them for drawing.
             var entities = whichScene.GetEntities(); // GetEntities returns a new list of entities, so no threading issues.
             time_prep += Environment.TickCount - time_start_temp;
             foreach (EntityBase obj in entities)
@@ -427,7 +426,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     time_start_temp = Environment.TickCount;
 
                     // Sort faces by AABB top height, which by nature will always be the maximum Z value of all upwards facing face vertices, but is also simply the highest vertex.
-                    sort_height =
+                    drawdata.sort_order =
                         Math.Max(vertices[0].Z,
                             Math.Max(vertices[1].Z,
                                 Math.Max(vertices[2].Z,
@@ -480,7 +479,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
-                        sortheights.Add(sort_height);
                         time_obb_addtolist += Environment.TickCount - time_start_temp;
                     }
                     else
@@ -516,7 +514,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
-                        sortheights.Add(sort_height);
                         time_obb_addtolist += Environment.TickCount - time_start_temp;
                     }
                     else
@@ -552,7 +549,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
-                        sortheights.Add(sort_height);
                         time_obb_addtolist += Environment.TickCount - time_start_temp;
                     }
                     else
@@ -589,7 +585,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
                         time_obb_addtolist += Environment.TickCount - time_start_temp;
-                        sortheights.Add(sort_height);
                     }
                     else
                     {
@@ -624,7 +619,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
-                        sortheights.Add(sort_height);
                         time_obb_addtolist += Environment.TickCount - time_start_temp;
                     }
                     else
@@ -660,7 +654,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         time_start_temp = Environment.TickCount;
                         drawdata_for_sorting.Add(drawdata);
-                        sortheights.Add(sort_height);
                         time_obb_addtolist += Environment.TickCount - time_start_temp;
                     }
                     else
@@ -670,16 +663,12 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 }
             }
 
+            // Sort faces by Z position
             time_start_temp = Environment.TickCount;
-            // TODO: keep all this in a combined list and sort there
-            float[] sorted_z_heights = sortheights.ToArray();
-            DrawStruct2[] sorted_drawdata = drawdata_for_sorting.ToArray();
-
-            // Sort prim by Z position
-            Array.Sort(sorted_z_heights, sorted_drawdata);
-
+            drawdata_for_sorting.Sort((h1, h2) => h1.sort_order.CompareTo(h2.sort_order));;
             time_sorting = Environment.TickCount - time_start_temp;
 
+            // Draw the faces
             time_start_temp = Environment.TickCount;
             using (Graphics g = Graphics.FromImage(mapbmp.Bitmap))
             {
@@ -689,15 +678,15 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.None;
                 g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
 
-                for (int s = 0; s < sorted_z_heights.Length; s++)
+                for (int s = 0; s < drawdata_for_sorting.Count; s++)
                 {
-                    g.FillPolygon(sorted_drawdata[s].brush, sorted_drawdata[s].vertices);
+                    g.FillPolygon(drawdata_for_sorting[s].brush, drawdata_for_sorting[s].vertices);
                 }
             }
             time_drawing = Environment.TickCount - time_start_temp;
 
             m_log.InfoFormat("[MAPTILE]: Generating Maptile Step 2 (Objects): Processed {0} entities, {1} prims, {2} used for map drawing, resulting in {3} faces to draw.",
-                entities.Count, sop_count, sop_count_filtered, sorted_z_heights.Length
+                entities.Count, sop_count, sop_count_filtered, drawdata_for_sorting.Count
             );
             m_log.InfoFormat("[MAPTILE]: Generating Maptile Step 2 (Objects): Timing: " +
                 "prepping took {0}ms, " +
