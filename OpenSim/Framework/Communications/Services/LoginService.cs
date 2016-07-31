@@ -169,6 +169,46 @@ namespace OpenSim.Framework.Communications.Services
                 _DefaultRegionsList = LoadRegionsFromFile(fileName, "Default region locations");
         }
 
+        private const string BANS_FILE = "bans.txt";
+        private List<string> bannedIPs = new List<string>();
+        private DateTime bannedIPsLoadedAt = DateTime.MinValue;
+        private void LoadBannedIPs()
+        {
+            if (File.Exists(BANS_FILE))
+            {
+                DateTime changedAt = File.GetLastWriteTime(BANS_FILE);
+                lock (bannedIPs)    // don't reload it in parallel, block login if reloading
+                {
+                    if ( changedAt > bannedIPsLoadedAt)
+                    {
+                        bannedIPsLoadedAt = DateTime.Now;
+                        bannedIPs.Clear();
+                        string[] lines = File.ReadAllLines("bans.txt");
+                        foreach (string line in lines)
+                        {
+                            bannedIPs.Add(line.Trim());
+                        }
+                    }
+                }
+            }
+        }
+
+        // Assumes IPstr is trimmed.
+        private bool IsBannedIP(string IPstr)
+        {
+            LoadBannedIPs();    // refresh, if changed
+
+            lock (bannedIPs)
+            {
+                foreach (string ban in bannedIPs)
+                {
+                    if (IPstr.StartsWith(ban))
+                        return true;
+                }
+            }
+            return false;
+        }
+
 
         private HashSet<string> _loginsProcessing = new HashSet<string>();
 
@@ -183,6 +223,16 @@ namespace OpenSim.Framework.Communications.Services
 
             try
             {
+                LoginResponse logResponse = new LoginResponse();
+
+                IPAddress IPaddr = remoteClient.Address;
+                string IPstr = IPaddr.ToString();
+                if (this.IsBannedIP(IPstr))
+                {
+                    m_log.WarnFormat("[LOGIN]: Denying login, IP {0} is BANNED.", IPstr);
+                    return logResponse.CreateIPBannedResponseLLSD();
+                }
+
                 XmlRpcResponse response = new XmlRpcResponse();
                 Hashtable requestData = (Hashtable)request.Params[0];
 
@@ -193,7 +243,6 @@ namespace OpenSim.Framework.Communications.Services
 
                 string firstname = null;
                 string lastname = null;
-                LoginResponse logResponse = new LoginResponse();
 
                 if (GoodXML)
                 {
