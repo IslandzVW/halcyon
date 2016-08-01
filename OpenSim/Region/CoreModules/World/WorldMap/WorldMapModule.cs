@@ -1069,8 +1069,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             UUID lastMapRegionUUID = m_scene.RegionInfo.lastMapUUID;
 
             int lastMapRefresh = 0;
-            int twoDays = 172800;
-            int RefreshSeconds = twoDays;
+            const int RefreshSeconds = 172800; // 172800 = two days in seconds.
 
             try
             {
@@ -1091,7 +1090,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             if (lastMapRegionUUID == UUID.Zero || (lastMapRefresh + RefreshSeconds) < Util.UnixTimeSinceEpoch())
             {
                 m_scene.RegionInfo.SaveLastMapUUID(TerrainImageUUID);
-
                 m_log.Debug("[MAPTILE]: STORING MAPTILE IMAGE");
             }
             else
@@ -1105,18 +1103,23 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             AssetBase asset = new AssetBase();
             asset.FullID = m_scene.RegionInfo.RegionSettings.TerrainImageID;
             asset.Data = data;
-            asset.Name = "terrainImage_" + m_scene.RegionInfo.RegionID.ToString() + "_" + lastMapRefresh.ToString();
+            asset.Name = "terrainImage_" + m_scene.RegionInfo.RegionID + "_" + lastMapRefresh;
             asset.Description = m_scene.RegionInfo.RegionName;
 
             asset.Type = 0;
             asset.Temporary = temporary;
 
-            try
             {
-                m_scene.CommsManager.AssetCache.AddAsset(asset, AssetRequestInfo.InternalRequest());
-            }
-            catch (AssetServerException)
-            {
+                int t = Environment.TickCount;
+                try
+                {
+                    m_scene.CommsManager.AssetCache.AddAsset(asset, AssetRequestInfo.InternalRequest());
+                }
+                catch (AssetServerException)
+                {
+                }
+                t = Environment.TickCount - t;
+                m_log.InfoFormat("[MAPTILE] Attempted save to asset server took {0}ms", t);
             }
 
             readyToDrawMap = true; // This seems to be the most guaranteed place to detect that the region's got all its peices loaded up and is ready to render a map tile.
@@ -1194,6 +1197,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private readonly object ExportMapTileToDiskLock = new object();
         private void ExportMapTileToDisk(object o)
         {
+            int t = Environment.TickCount;
             var exportData = (MapTileDataForExport)o;
 
             // Attempt to get a lock, but if that fails, just abort - another request to update the file will come soon enough.
@@ -1220,6 +1224,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                     Monitor.Exit(ExportMapTileToDiskLock);
                 }
             }
+            t = Environment.TickCount - t;
+            m_log.InfoFormat ("[WORLD MAP] disk write of map tile took {0} ms", t);
         }
 
         private void MakeRootAgent(ScenePresence avatar)

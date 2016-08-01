@@ -119,12 +119,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         {
             if (terrainRenderer != null)
             {
-            //long t = System.Environment.TickCount;
-            //for (int i = 0; i < 10; ++i) {
                 terrainRenderer.TerrainToBitmap(mapbmp);
-            //}
-            //t = System.Environment.TickCount - t;
-            //m_log.InfoFormat("[MAPTILE] generation of 10 maptiles needed {0} ms", t);
             }
 
             if (drawPrimVolume)
@@ -132,6 +127,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 DrawObjectVolume(m_scene, mapbmp);
             }
 
+            int t = Environment.TickCount;
             try
             {
                 imageData = OpenJPEG.EncodeFromImage(mapbmp.Bitmap, true);
@@ -140,6 +136,8 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             {
                 m_log.Error("Failed generating terrain map: " + e);
             }
+            t = Environment.TickCount - t;
+            m_log.InfoFormat("[MAPTILE] encoding of image needed {0}ms", t);
 
             return imageData;
         }
