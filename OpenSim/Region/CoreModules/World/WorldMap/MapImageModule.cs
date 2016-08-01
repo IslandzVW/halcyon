@@ -212,34 +212,21 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private static readonly SolidBrush DefaultBrush = new SolidBrush(Color.Black);
         private static SolidBrush GetFaceBrush(SceneObjectPart part, uint face)
         {
-            if (face >= part.Shape.Textures.FaceTextures.Length)
+            // Block sillyness that would cause an exception.
+            if (face >= OpenMetaverse.Primitive.TextureEntry.MAX_FACES)
                 return DefaultBrush;
 
-            try
-            {
-                var facetexture = part.Shape.Textures.GetFace(face);
+            var facetexture = part.Shape.Textures.GetFace(face);
+            // GetFace throws a generic exception if the parameter is greater than MAX_FACES.
 
-                // TODO: compute a better color from the texture data AND the color applied.
+            // TODO: compute a better color from the texture data AND the color applied.
 
-                //Try to set the map spot color
-                // If the color gets goofy somehow, skip it *shakes fist at Color4
-                return new SolidBrush(Color.FromArgb((int)(facetexture.RGBA.R * 255f), (int)(facetexture.RGBA.G * 255f), (int)(facetexture.RGBA.B * 255f)));
-            }
-            catch (IndexOutOfRangeException)
-            {
-                // Windows Array fail
-                return DefaultBrush;
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                // Mono Array fail
-                return DefaultBrush;
-            }
-            catch (ArgumentException)
-            {
-                // Color4 fail
-                return DefaultBrush;
-            }
+            return new SolidBrush(Color.FromArgb(
+                Math.Max(0, Math.Min(255, (int)(facetexture.RGBA.R * 255f))),
+                Math.Max(0, Math.Min(255, (int)(facetexture.RGBA.G * 255f))),
+                Math.Max(0, Math.Min(255, (int)(facetexture.RGBA.B * 255f)))
+            ));
+            // FromARGB can throw an exception if a parameter is outside 0-255, but that is prevented.
         }
 
         private static float ZOfCrossDiff(ref Vector3 P, ref Vector3 Q, ref Vector3 R)
