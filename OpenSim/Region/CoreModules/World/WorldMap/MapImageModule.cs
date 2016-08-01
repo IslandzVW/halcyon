@@ -295,9 +295,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         part.Scale.X <= 1f || part.Scale.Y <= 1f || part.Scale.Z <= 1f ||
 
                         // Eliminate trees from this since we don't really have a good tree representation
-                        part.Shape.PCode == (byte)PCode.Tree || part.Shape.PCode == (byte)PCode.NewTree || part.Shape.PCode == (byte)PCode.Grass ||
-
-                        false
+                        part.Shape.PCode == (byte)PCode.Tree || part.Shape.PCode == (byte)PCode.NewTree || part.Shape.PCode == (byte)PCode.Grass
                     )
                         continue;
 
@@ -318,7 +316,9 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                     rot = part.GetWorldRotation();
 
-                    radial_scale = Vector3.Multiply(part.Shape.Scale, 0.5f);
+                    radial_scale.X = part.Shape.Scale.X * 0.5f;
+                    radial_scale.Y = part.Shape.Scale.Y * 0.5f;
+                    radial_scale.Z = part.Shape.Scale.Z * 0.5f;
 
                     time_filtering += Environment.TickCount - time_start_temp;
 

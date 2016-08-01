@@ -1737,11 +1737,10 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool IsRootPart()
         {
-            if (m_parentGroup == null)
-                return true;    // no parent group...consider this root
-            if (m_parentGroup.RootPart == null)
-                return true;    // no parent part... consider this root
-            return (m_parentGroup.RootPart == this);    // matches?
+            return m_parentGroup == null             // no parent group...consider this root
+                || m_parentGroup.RootPart == null    // no parent part... consider this root
+                || m_parentGroup.RootPart == this    // matches?
+            ;
         }
 
         public static readonly uint LEGACY_BASEMASK = 0x7FFFFFF0;
