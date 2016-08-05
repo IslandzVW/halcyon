@@ -330,7 +330,13 @@ namespace OpenSim.Framework.Communications
                                 {
                                     // still not found, get it from User service (or db if this is User).
                                     profile = m_storage.GetUserProfileData(uuid);
-                                    if (profile == null)
+                                    if (profile != null)
+                                    {
+                                        // Refresh agent data (possibly forced refresh)
+                                        profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
+                                        ReplaceUserData(profile);
+                                    }
+                                    else
                                     {
                                         // not found in storage. If this is now known in temp profiles, return it,
                                         // otherwise remove it from non-temp profile info.
@@ -340,8 +346,9 @@ namespace OpenSim.Framework.Communications
                                         }
                                     }
                                 }
-                                if (profile != null)
+                                else
                                 {
+                                    // Refresh agent data (possibly forced refresh)
                                     profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
                                     ReplaceUserData(profile);
                                 }
