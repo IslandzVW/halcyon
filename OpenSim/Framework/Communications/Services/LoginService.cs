@@ -147,7 +147,7 @@ namespace OpenSim.Framework.Communications.Services
             List<string> newList = new List<string>();
             LoadStringListFromFile(newList, fileName, desc);
             if (newList.Count < 1)
-                m_log.Error("No locations found.");
+                m_log.ErrorFormat("{0}: No locations found.", fileName);
             else
                 m_log.InfoFormat("{0} updated with {1} locations.", desc, newList.Count);
             return newList;
@@ -1059,7 +1059,19 @@ namespace OpenSim.Framework.Communications.Services
                 // regionInfo = m_gridService.RequestClosestRegion(String.Empty);
                 //m_log.InfoFormat("[LOGIN]: StartLocation not available sending to region {0}", regionInfo.regionName);
 
-                // Normal login failed, try to find a default region from the list
+                // Normal login failed, try to find an alternative region, starting with Home.
+                if ((regionInfo == null) || (regionInfo.RegionID != homeInfo.RegionID))
+                {
+                    regionInfo = homeInfo;
+                    theUser.CurrentAgent.Position = theUser.HomeLocation;
+                    response.LookAt = String.Format("[r{0},r{1},r{2}]", theUser.HomeLookAt.X.ToString(),
+                                                    theUser.HomeLookAt.Y.ToString(), theUser.HomeLookAt.Z.ToString());
+                    m_log.InfoFormat("[LOGIN]: StartLocation not available, trying user's Home region {0}", regionInfo.RegionName);
+                    if (PrepareLoginToRegion(regionInfo, theUser, response, clientVersion))
+                        return true;
+                }
+
+                // No Home location available either, try to find a default region from the list
                 if (PrepareNextDefaultRegion(response, theUser, clientVersion))
                     return true;
             }
