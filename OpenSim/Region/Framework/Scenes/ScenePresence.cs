@@ -749,6 +749,44 @@ namespace OpenSim.Region.Framework.Scenes
             return isSafe;
         }
 
+        public void SetAvatarAsAPrimMode()
+        {
+            lock (m_posInfo)
+            {
+                SceneObjectPart oldPart = m_posInfo.m_parent;
+                SceneObjectPart rootPart = oldPart.ParentGroup.RootPart;
+                if (rootPart != oldPart)
+                {
+                    // Reparent to root prim if not already
+                    m_bodyRot = m_bodyRot / m_posInfo.m_parent.RotationOffset;
+                    m_posInfo.Position += oldPart.OffsetPosition;
+                    m_posInfo.m_parentPos = rootPart.GroupPosition;
+                    m_posInfo.m_parent = rootPart;
+                }
+
+                // now in Avatar-As-A-Prim mode, only moves with root prim, not child prims
+                m_avatarMovesWithPart = false;
+            }
+        }
+
+        public void UpdateSeatedPosition(Vector3 newpos)
+        {
+            lock (m_posInfo)
+            {
+                m_posInfo.Position = newpos;
+            }
+            SendTerseUpdateToAllClients();
+        }
+
+        public void UpdateSeatedRotation(Quaternion newrot)
+        {
+            lock (m_posInfo)
+            {
+                m_bodyRot = newrot;
+            }
+            SendTerseUpdateToAllClients();
+        }
+
         /// <summary>
         /// If this is true, agent doesn't have a representation in this scene.
         ///    this is an agent 'looking into' this scene from a nearby scene(region)

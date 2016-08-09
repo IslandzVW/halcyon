@@ -4847,7 +4847,7 @@ namespace InWorldz.Phlox.Engine
             {
                 // It's a seated avatar:
                 List<object> res = new List<object>();
-                AvatarAsPrimParam(linknum, ref res, ScriptBaseClass.PRIM_NAME);
+                GetAvatarAsPrimParam(linknum, ref res, ScriptBaseClass.PRIM_NAME);
                 return (string)res[0];
             }
 
@@ -9326,7 +9326,14 @@ namespace InWorldz.Phlox.Engine
         private void SetPrimParams(int linknumber, LSL_List rules, SceneObjectPart newPart)
         {
             List<SceneObjectPart> initial = new List<SceneObjectPart>();
-            IReadOnlyCollection<SceneObjectPart> parts = initial;
+            IReadOnlyCollection<SceneObjectPart> parts;
+            ScenePresence avatar = null;
+
+            // Support avatar-as-a-prim link number.
+            if (linknumber > m_host.ParentGroup.PartCount)
+                avatar = m_host.ParentGroup.GetSeatedAvatarByLink(linknumber);
+            else
+                parts = GetLinkParts(linknumber);
 
             if (newPart == null) // normal SetPrimParams
                 parts = GetLinkParts(linknumber);
@@ -9334,6 +9341,7 @@ namespace InWorldz.Phlox.Engine
             {
                 // force it to use newPart
                 initial.Add(newPart);
+                parts = initial;
             }
 
             int idx = 0;
@@ -9346,17 +9354,34 @@ namespace InWorldz.Phlox.Engine
                 int face;
                 LSL_Vector v;
 
+                if (code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
+                {
+                    if (remain < 1)
+                        return;
+                    linknumber = (int)rules.GetLSLIntegerItem(idx++);
+                    remain = rules.Length - idx;
+
+                    if (linknumber > m_host.ParentGroup.PartCount)
+                    {
+                        avatar = m_host.ParentGroup.GetSeatedAvatarByLink(linknumber);
+                        parts = null;
+                    }
+                    else
+                    {
+                        avatar = null;
+                        parts = (newPart == null) ? GetLinkParts(linknumber) : null;
+                    }
+                }
+                
+                // Is it an avatar-as-a-prim 'part'?
+                if (avatar != null)
+                {
+                    idx--;  // start at the switch code
+                    SetAvatarAsPrimParam(avatar, rules, ref idx);
+                }
+                else   // a real prim part
                 switch (code)
                 {
-                    case (int)ScriptBaseClass.PRIM_LINK_TARGET:
-                        if (remain < 1)
-                            return;
-                        linknumber = (int)rules.GetLSLIntegerItem(idx++);
-                        remain = rules.Length - idx;
-                        if (newPart == null)
-                            parts = GetLinkParts(linknumber);
-                        break;
-
                     case (int)ScriptBaseClass.PRIM_POSITION:
                     case (int)ScriptBaseClass.PRIM_POS_LOCAL:   // same as PRIM_POSITION on a SET operation
                         if (remain < 1)
@@ -10449,11 +10474,17 @@ namespace InWorldz.Phlox.Engine
             return new LSL_Vector(m_host.GetGeometricCenter().X, m_host.GetGeometricCenter().Y, m_host.GetGeometricCenter().Z);
         }
 
-        private void AvatarAsPrimParam(int linknum, ref List<object> res, int rule)
+        private void GetAvatarAsPrimParam(int linknum, ref List<object> res, int rule)
         {
             ScenePresence sp = m_host.ParentGroup.GetSeatedAvatarByLink(linknum);
             switch (rule)
             {
+                case ScriptBaseClass.PRIM_POSITION:
+                    res.Add(new LSL_Vector(sp.AbsolutePosition));
+                    break;
+                case ScriptBaseClass.PRIM_POS_LOCAL:
+                    res.Add(new LSL_Vector(sp.AbsolutePosition-m_host.ParentGroup.RootPart.AbsolutePosition));
+                    break;
                 case ScriptBaseClass.PRIM_NAME: // will return the avatar's legacy name.
                     res.Add((sp != null) ? sp.Name : String.Empty);
                     break;
@@ -10517,6 +10548,63 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
+        private void SetAvatarAsPrimParam(ScenePresence sp, LSL_List rules, ref int idx)
+        {
+            // continue even if sp == null here to ensure that the rules are consumed and idx is updated
+            // Switch presence to avatar-as-a-prim mode for parentage.
+            if (sp != null)
+                sp.SetAvatarAsAPrimMode();
+
+            int code = rules.GetLSLIntegerItem(idx++);
+            int remain = rules.Length - idx;
+            switch (code)
+            {
+                case ScriptBaseClass.PRIM_POSITION:
+                case ScriptBaseClass.PRIM_POS_LOCAL:
+                    if (remain < 1)
+                        return;
+                    if (sp != null) sp.UpdateSeatedPosition(rules.GetVector3Item(idx++));
+                    break;
+                case ScriptBaseClass.PRIM_ROTATION:
+                    if (remain < 1)
+                        return;
+                    LSL_Rotation q = rules.GetQuaternionItem(idx++);
+                    if (sp != null) sp.Rotation = m_host.ParentGroup.RootPart.RotationOffset * Rot2Quaternion(q);
+                    break;
+                case ScriptBaseClass.PRIM_ROT_LOCAL:
+                    if (remain < 1)
+                        return;
+                    LSL_Rotation lq = rules.GetQuaternionItem(idx++);
+                    if (sp != null) sp.Rotation = Rot2Quaternion(lq);
+                    break;
+
+                // TODO: These no-ops need to still consume the params list items as appropriate
+                case ScriptBaseClass.PRIM_COLOR:
+                case ScriptBaseClass.PRIM_TEXTURE:
+                case ScriptBaseClass.PRIM_GLOW:
+                case ScriptBaseClass.PRIM_FULLBRIGHT:
+                case ScriptBaseClass.PRIM_BUMP_SHINY:
+                case ScriptBaseClass.PRIM_TEXGEN:
+                    ScriptShoutError("texture info cannot be set for avatars.");
+                    break;
+
+                case ScriptBaseClass.PRIM_NAME:
+                case ScriptBaseClass.PRIM_DESC:
+                case ScriptBaseClass.PRIM_TYPE:
+                case ScriptBaseClass.PRIM_SLICE:
+                case ScriptBaseClass.PRIM_MATERIAL:
+                case ScriptBaseClass.PRIM_TEMP_ON_REZ:
+                case ScriptBaseClass.PRIM_PHANTOM:
+                case ScriptBaseClass.PRIM_SIZE:
+                case ScriptBaseClass.PRIM_TEXT:
+                case ScriptBaseClass.PRIM_POINT_LIGHT:
+                case ScriptBaseClass.PRIM_FLEXIBLE:
+                    // silently don't allow other avatar changes
+                    break;
+
+            }
+        }
+
         private LSL_List GetPrimParams(int linknumber, LSL_List rules)
         {
             List<object> res = new List<object>();
@@ -10546,16 +10634,22 @@ namespace InWorldz.Phlox.Engine
                     remain = rules.Length - idx;
 
                     if (linknumber > m_host.ParentGroup.PartCount)
+                    {
                         avatar = m_host.ParentGroup.GetSeatedAvatarByLink(linknumber);
+                        parts = null;
+                    }
                     else
+                    {
+                        avatar = null;
                         parts = GetLinkParts(linknumber);
+                    }
                     continue;
                 }
 
                 // Support avatar-as-a-prim link number.
                 if (avatar != null)
                 {
-                    AvatarAsPrimParam(linknumber, ref res, code);
+                    GetAvatarAsPrimParam(linknumber, ref res, code);
                     continue;
                 }
 
