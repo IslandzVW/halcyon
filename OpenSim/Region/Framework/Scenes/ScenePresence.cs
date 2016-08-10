@@ -3252,6 +3252,11 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectPart part = parent;
             SceneObjectPart rootPart = (part == null) ? null : part.ParentGroup.RootPart;
 
+            if (!this.AvatarMovesWithPart)
+            {   // avatar-as-a-prim mode
+                return;
+            }
+
             // Viewer seems to draw the avatar based on the hip position.
             // If you don't include HipOffset (which is raising the avatar 
             // since it's normally negative), then the viewer will draw 
