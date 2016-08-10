@@ -4230,7 +4230,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             ForEachSittingAvatar((ScenePresence sp) =>
             {
-                crossingUsers.Value.Add(sp.CrossIntoNewRegionWithGroup(this, sp.SitTargetPart, newRegionHandle));
+                PositionInfo posInfo = sp.GetPosInfo();
+                if (posInfo != null)
+                    crossingUsers.Value.Add(sp.CrossIntoNewRegionWithGroup(this, posInfo.Parent, newRegionHandle));
             });
 
             if (crossingUsers.IsValueCreated)
