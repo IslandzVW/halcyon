@@ -3326,6 +3326,15 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        // Called the same way on both old and new parent part.
+        public void ReparentSeatedAvatar(ScenePresence sp, SceneObjectPart newParent)
+        {
+            if (newParent == this)
+                m_seatedAvatars.AddPart(sp);
+            else
+                m_seatedAvatars.RemovePart(sp);
+        }
+
         public void SetBuoyancy(float fvalue)
         {
             PhysicsActor physActor = PhysActor;

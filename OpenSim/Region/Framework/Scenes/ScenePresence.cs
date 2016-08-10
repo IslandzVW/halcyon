@@ -762,6 +762,8 @@ namespace OpenSim.Region.Framework.Scenes
                     m_posInfo.Position += oldPart.OffsetPosition;
                     m_posInfo.m_parentPos = rootPart.GroupPosition;
                     m_posInfo.m_parent = rootPart;
+                    oldPart.ReparentSeatedAvatar(this, rootPart);
+                    rootPart.ReparentSeatedAvatar(this, rootPart);
                 }
 
                 // now in Avatar-As-A-Prim mode, only moves with root prim, not child prims
