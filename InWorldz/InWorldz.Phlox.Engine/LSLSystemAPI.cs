@@ -7868,7 +7868,7 @@ namespace InWorldz.Phlox.Engine
 
                 if (av != null)
                 {
-                    SceneObjectPart part = FindAvatarOnObject(key, false);
+                    SceneObjectPart part = FindAvatarOnObject(key);
                     if (part != null)
                     {
                         // if the avatar is sitting on this object, then
@@ -8569,10 +8569,11 @@ namespace InWorldz.Phlox.Engine
             llLinkSitTarget(m_host.LinkNum, offset, rot);
         }
 
-        private SceneObjectPart FindAvatarOnObject(UUID agentId, bool IncludeSitTargetOnly)
+        private SceneObjectPart FindAvatarOnObject(UUID agentId)
         {
             ScenePresence sp = m_host.ParentGroup.Scene.GetScenePresence(agentId);
-            return (sp == null) ? null : sp.SitTargetPart;
+            ScenePresence.PositionInfo posInfo = (sp == null) ? null : sp.GetPosInfo();
+            return (posInfo == null) ? null : posInfo.Parent;
         }
 
         private string AvatarOnSitTarget(int linknumber, bool IncludeSitTargetOnly)
