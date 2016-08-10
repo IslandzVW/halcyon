@@ -1298,14 +1298,17 @@ namespace OpenSim.Region.Framework.Scenes
                     m_requestedSitTargetUUID = part.UUID;
                     m_requestedSitTargetID = part.LocalId;
 
-                    Vector3 sitTargetPos = part.SitTargetPosition;
-                    Quaternion sitTargetOrient = part.SitTargetOrientation;
+                    if (m_avatarMovesWithPart)
+                    {
+                        Vector3 sitTargetPos = part.SitTargetPosition;
+                        Quaternion sitTargetOrient = part.SitTargetOrientation;
 
-                    Vector3 newPos = sitTargetPos;
-                    newPos += m_sitTargetCorrectionOffset;
-                    m_bodyRot = sitTargetOrient;
-                    //Rotation = sitTargetOrient;
-                    SetAgentPositionInfo(null, true, newPos, part, part.AbsolutePosition, Vector3.Zero);
+                        Vector3 newPos = sitTargetPos;
+                        newPos += m_sitTargetCorrectionOffset;
+                        m_bodyRot = sitTargetOrient;
+                        //Rotation = sitTargetOrient;
+                        SetAgentPositionInfo(null, true, newPos, part, part.AbsolutePosition, Vector3.Zero);
+                    }
                 }
                 //m_animPersistUntil = 0;    // abort any timed animation
 
@@ -4103,6 +4106,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             cAgent.ActiveGroupID = m_controllingClient.ActiveGroupId;
+
+            cAgent.AvatarAsAPrim = !AvatarMovesWithPart;    // default (false) in protocol is legacy value (AvatarMovesWithPart==true).
         }
 
         public void CopyFrom(AgentData cAgent)
@@ -4159,6 +4164,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_restoredConstantForce = cAgent.ConstantForces;
             m_restoredConstantForceIsLocal = cAgent.ConstantForcesAreLocal;
+
+            AvatarMovesWithPart = !cAgent.AvatarAsAPrim;    // default (false) in protocol is legacy value (AvatarMovesWithPart==true).
 
             if (cAgent.LocomotionState == 1)
             {

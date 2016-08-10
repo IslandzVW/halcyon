@@ -309,6 +309,8 @@ namespace OpenSim.Framework
         public Vector3 ConstantForces;
         public bool ConstantForcesAreLocal;
 
+        public bool AvatarAsAPrim;
+
         public virtual OSDMap Pack()
         {
             OSDMap args = new OSDMap();
@@ -392,6 +394,8 @@ namespace OpenSim.Framework
                 args["sat_on_prim"] = OSD.FromUUID(SatOnPrim);
                 args["sit_offset"] = OSD.FromString(SatOnPrimOffset.ToString());
             }
+
+            args["avatar_as_a_prim"] = OSD.FromBoolean(AvatarAsAPrim);
 
             return args;
         }
@@ -547,6 +551,9 @@ namespace OpenSim.Framework
 
             if (args.ContainsKey("callback_uri"))
                 CallbackURI = args["callback_uri"].AsString();
+
+            if (args.ContainsKey("avatar_as_a_prim"))
+                AvatarAsAPrim = args["avatar_as_a_prim"].AsBoolean();
 
             if (args.ContainsKey("sat_on_group"))
             {
