@@ -10481,8 +10481,9 @@ namespace InWorldz.Phlox.Engine
             return new LSL_Vector(m_host.GetGeometricCenter().X, m_host.GetGeometricCenter().Y, m_host.GetGeometricCenter().Z);
         }
 
-        private void GetAvatarAsPrimParam(int linknum, ref List<object> res, int rule)
+        private int GetAvatarAsPrimParam(int linknum, ref List<object> res, int rule)
         {
+            int paramCount = 0;
             ScenePresence sp = m_host.ParentGroup.GetSeatedAvatarByLink(linknum);
             switch (rule)
             {
@@ -10544,15 +10545,23 @@ namespace InWorldz.Phlox.Engine
                     res.Add(new LSL_Vector(Vector3.Zero));
                     break;
 
-                case ScriptBaseClass.PRIM_COLOR:
-                case ScriptBaseClass.PRIM_TEXTURE:
-                case ScriptBaseClass.PRIM_GLOW:
-                case ScriptBaseClass.PRIM_FULLBRIGHT:
-                case ScriptBaseClass.PRIM_BUMP_SHINY:
-                case ScriptBaseClass.PRIM_TEXGEN:
+                // These all expect a single parameter in the params list:
+                case (int)ScriptBaseClass.PRIM_TEXTURE:
+                case (int)ScriptBaseClass.IW_PRIM_ALPHA:
+				case (int)ScriptBaseClass.PRIM_COLOR:
+				case (int)ScriptBaseClass.PRIM_BUMP_SHINY:
+				case (int)ScriptBaseClass.PRIM_FULLBRIGHT:
+				case (int)ScriptBaseClass.PRIM_TEXGEN:
+				case (int)ScriptBaseClass.PRIM_GLOW:
+				case (int)ScriptBaseClass.PRIM_SPECULAR:
+				case (int)ScriptBaseClass.PRIM_NORMAL:
+				case (int)ScriptBaseClass.PRIM_ALPHA_MODE:
+                    paramCount = 1;
                     ScriptShoutError("texture info cannot be accessed for avatars.");
                     break;
             }
+
+            return paramCount;
         }
 
         private void SetAvatarAsPrimParam(ScenePresence sp, LSL_List rules, ref int idx)
@@ -10859,7 +10868,7 @@ namespace InWorldz.Phlox.Engine
                 // Support avatar-as-a-prim link number.
                 if (avatar != null)
                 {
-                    GetAvatarAsPrimParam(linknumber, ref res, code);
+                    idx += GetAvatarAsPrimParam(linknumber, ref res, code);
                     continue;
                 }
 
