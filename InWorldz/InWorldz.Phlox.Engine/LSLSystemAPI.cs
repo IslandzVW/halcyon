@@ -10585,30 +10585,233 @@ namespace InWorldz.Phlox.Engine
                     if (sp != null) sp.Rotation = Rot2Quaternion(lq);
                     break;
 
-                // TODO: These no-ops need to still consume the params list items as appropriate
-                case ScriptBaseClass.PRIM_COLOR:
-                case ScriptBaseClass.PRIM_TEXTURE:
-                case ScriptBaseClass.PRIM_GLOW:
-                case ScriptBaseClass.PRIM_FULLBRIGHT:
-                case ScriptBaseClass.PRIM_BUMP_SHINY:
-                case ScriptBaseClass.PRIM_TEXGEN:
-                    ScriptShoutError("texture info cannot be set for avatars.");
+                // silently don't allow other avatar changes
+
+                case (int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_TYPE:
+                    if (remain < 1)
+                        return;
+                    idx++;
                     break;
 
-                case ScriptBaseClass.PRIM_NAME:
-                case ScriptBaseClass.PRIM_DESC:
-                case ScriptBaseClass.PRIM_TYPE:
-                case ScriptBaseClass.PRIM_SLICE:
-                case ScriptBaseClass.PRIM_MATERIAL:
-                case ScriptBaseClass.PRIM_TEMP_ON_REZ:
-                case ScriptBaseClass.PRIM_PHANTOM:
-                case ScriptBaseClass.PRIM_SIZE:
-                case ScriptBaseClass.PRIM_TEXT:
-                case ScriptBaseClass.PRIM_POINT_LIGHT:
-                case ScriptBaseClass.PRIM_FLEXIBLE:
-                    // silently don't allow other avatar changes
+                case (int)ScriptBaseClass.PRIM_OMEGA:
+                    if (remain < 3)
+                        return;
+                    idx += 3;
                     break;
 
+                case (int)ScriptBaseClass.PRIM_TYPE:
+                    if (remain < 3)
+                        return;
+                    code = (int)rules.GetLSLIntegerItem(idx++);
+
+                    remain = rules.Length - idx;
+                    switch (code)
+                    {
+                        case (int)ScriptBaseClass.PRIM_TYPE_BOX:
+                            if (remain < 6)
+                                return;
+                            idx += 6;
+                            break;
+
+                        case (int)ScriptBaseClass.PRIM_TYPE_CYLINDER:
+                            if (remain < 6)
+                                return;
+                            idx += 6;
+                            break;
+
+                        case (int)ScriptBaseClass.PRIM_TYPE_PRISM:
+                            if (remain < 6)
+                                return;
+                            idx += 6;
+                            break;
+
+                        case (int)ScriptBaseClass.PRIM_TYPE_SPHERE:
+                            if (remain < 5)
+                                return;
+                            idx += 5;
+                            break;
+
+                        case (int)ScriptBaseClass.PRIM_TYPE_TORUS:
+                            if (remain < 11)
+                                return;
+                            idx += 11;
+                            break;
+
+                        case (int)ScriptBaseClass.PRIM_TYPE_TUBE:
+                            if (remain < 11)
+                                return;
+                            idx += 11;
+                            break;
+
+                        case (int)ScriptBaseClass.PRIM_TYPE_RING:
+                            if (remain < 11)
+                                return;
+                            idx += 11;
+                            break;
+
+                        case (int)ScriptBaseClass.PRIM_TYPE_SCULPT:
+                            if (remain < 2)
+                                return;
+                            idx += 2;
+                            break;
+                    }
+                    break;  // PRIM_TYPE
+
+                case (int)ScriptBaseClass.PRIM_SLICE:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_TEXTURE:
+                    if (remain < 5)
+                        return;
+                    idx += 5;
+                    break;
+
+                case (int)ScriptBaseClass.IW_PRIM_ALPHA:
+                    if (remain < 2)
+                        return;
+                    idx += 2;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_COLOR:
+                    if (remain < 3)
+                        return;
+                    idx += 3;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_FLEXIBLE:
+                    if (remain < 7)
+                        return;
+                    idx += 7;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_POINT_LIGHT:
+                    if (remain < 5)
+                        return;
+                    idx += 5;
+                    break;
+
+                case ScriptBaseClass.IW_PRIM_PROJECTOR:
+                    if (remain < 5)
+                        return;
+                    idx += 5;
+                    break;
+
+                case ScriptBaseClass.IW_PRIM_PROJECTOR_ENABLED:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case ScriptBaseClass.IW_PRIM_PROJECTOR_TEXTURE:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case ScriptBaseClass.IW_PRIM_PROJECTOR_FOV:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case ScriptBaseClass.IW_PRIM_PROJECTOR_FOCUS:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case ScriptBaseClass.IW_PRIM_PROJECTOR_AMBIENCE:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_GLOW:
+                    if (remain < 2)
+                        return;
+                    idx += 2;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_BUMP_SHINY:
+                    if (remain < 3)
+                        return;
+                    idx += 3;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_FULLBRIGHT:
+                    if (remain < 2)
+                        return;
+                    idx += 2;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_MATERIAL:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_PHANTOM:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_PHYSICS:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_TEMP_ON_REZ:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_TEXGEN:
+                    if (remain < 2)
+                        return;
+                    idx += 2;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_TEXT:
+                    if (remain < 3)
+                        return;
+                    idx += 3;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_NAME:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_DESC:
+                    if (remain < 1)
+                        return;
+                    idx++;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_SPECULAR:
+                    if (remain < 8)
+                        return;
+                    idx += 8;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_NORMAL:
+                    if (remain < 5)
+                        return;
+                    idx += 8;
+                    break;
+
+                case (int)ScriptBaseClass.PRIM_ALPHA_MODE:
+                    if (remain < 3)
+                        return;
+                    idx += 3;
+                    break;
             }
         }
 
