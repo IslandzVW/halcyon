@@ -8589,7 +8589,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     part.ForEachSittingAvatar((ScenePresence sp) =>
                     {
-                        if (seatedAvatar != UUID.Zero)
+                        if (seatedAvatar == UUID.Zero)
                             seatedAvatar = sp.UUID;
                     });
                     if (seatedAvatar != UUID.Zero)
