@@ -174,7 +174,6 @@ namespace OpenSim.Framework
         {
             AgentID = new UUID(cAgent.AgentID);
 
-            // next: ???
             Size = new Vector3();
             Size.Z = cAgent.AVHeight;
 

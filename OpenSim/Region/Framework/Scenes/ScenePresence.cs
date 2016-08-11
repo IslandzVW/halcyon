@@ -1370,10 +1370,12 @@ namespace OpenSim.Region.Framework.Scenes
             m_requestedSitTargetUUID = UUID.Zero;
             lock (m_posInfo)
             {
+                Vector3 restorePos = m_posInfo.Parent == null ? AbsolutePosition : m_posInfo.m_parentPos;
                 IsFullyInRegion = false;
                 m_isChildAgent = true;
-                m_posInfo.Position = Vector3.Zero;
+                m_posInfo.Position = restorePos;
                 m_posInfo.Parent = null;
+                m_posInfo.m_parentPos = Vector3.Zero;
                 m_scene.SwapRootAgentCount(true);
                 currentParcelUUID = UUID.Zero;  // so that if the agent reenters this region, it recognizes it as a parcel change.
                 if (!IsBot)
@@ -1483,28 +1485,33 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_isChildAgent)
                 {
                     Vector3 pos;
-                    bool m_flying;
+                    bool flying;
                     SceneObjectPart parent = null;
 
                     lock (m_posInfo)
                     {
                         IsFullyInRegion = false;
                         m_isChildAgent = false;
-                        m_flying = ((m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
+                        flying = ((m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
+                        // m_log.Warn("[SCENE PRESENCE]: CompleteMovement, flying=" + flying.ToString());
 
                         pos = AbsolutePosition;
-                        if (m_requestedSitTargetID != 0)
+                        if (parent == null)
                         {
-                            parent = Scene.GetSceneObjectPart(m_requestedSitTargetID);
-                            // now make it all consistent with updated parent ID while inside the lock
-                            SetAgentPositionInfo(null, true, m_sitTargetCorrectionOffset, parent, pos, m_velocity);
+                            // not already marked seated, check for sitting
+                            if (AvatarMovesWithPart && (m_requestedSitTargetID != 0))
+                            {
+                                parent = Scene.GetSceneObjectPart(m_requestedSitTargetID);
+                                // now make it all consistent with updated parent ID while inside the lock
+                                SetAgentPositionInfo(null, true, m_sitTargetCorrectionOffset, parent, pos, m_velocity);
+                            }
                         }
 
                         parent = MakeRootAgent(pos);
                     }
 
                     // Release the lock before calling PostProcessMakeRootAgent, it calls functions that use lock
-                    PostProcessMakeRootAgent(parent, m_flying);
+                    PostProcessMakeRootAgent(parent, flying);
 
                     if (!String.IsNullOrEmpty(m_callbackURI))
                     {
@@ -3882,9 +3889,6 @@ namespace OpenSim.Region.Framework.Scenes
         public void Reset(SimpleRegionInfo destinationRegion)
         {
             m_scene.SendKillObject(m_localId, destinationRegion);
-
-            // Put the child agent back at the center
-            AbsolutePosition = new Vector3(128, 128, 70);
             ResetAnimations();
         }
 
@@ -3983,31 +3987,25 @@ namespace OpenSim.Region.Framework.Scenes
         /// This updates important decision making data about a child agent
         /// The main purpose is to figure out what objects to send to a child agent that's in a neighboring region
         /// </summary>
-        public void ChildAgentDataUpdate(AgentPosition cAgentData, uint tRegionX, uint tRegionY, uint rRegionX, uint rRegionY)
+        public void ChildAgentPositionUpdate(AgentPosition cAgentData, uint tRegionX, uint tRegionY, uint rRegionX, uint rRegionY)
         {
-            // m_log.Debug("[SCENE PRESENCE]: >>> ChildAgentPositionUpdate <<< " + rRegionX + "-" + rRegionY);
+            // m_log.Warn("[SCENE PRESENCE]: >>> ChildAgentPositionUpdate (" + rRegionX + "," + rRegionY+") at "+cAgentData.Position.ToString());
             int shiftx = ((int)rRegionX - (int)tRegionX) * (int)Constants.RegionSize;
             int shifty = ((int)rRegionY - (int)tRegionY) * (int)Constants.RegionSize;
 
-            // m_log.ErrorFormat("[SCENE PRESENCE]: SP.ChildAgentDataUpdate for R({0},{1}) T({2},{3}) at {4}+{5},{6}+{7},{8}",
+            // m_log.ErrorFormat("[SCENE PRESENCE]: SP.ChildAgentPositionUpdate for R({0},{1}) T({2},{3}) at {4}+{5},{6}+{7},{8}",
             //          rRegionX.ToString(), rRegionY.ToString(), tRegionX.ToString(), tRegionY.ToString(),
             //          cAgentData.Position.X.ToString(), shiftx.ToString(), cAgentData.Position.Y.ToString(), shifty, cAgentData.Position.Z.ToString());
 
             if (!IsChildAgent)
             {
-                m_log.Error("[SCENE PRESENCE]: ChildAgentDataUpdate is NOT child agent - refused.");
+                m_log.Error("[SCENE PRESENCE]: ChildAgentPositionUpdate is NOT child agent - refused.");
                 return;
             }
             if (IsInTransit)
             {
-                m_log.Info("[SCENE PRESENCE]: ChildAgentDataUpdate while in transit - ignored.");
+                m_log.Info("[SCENE PRESENCE]: ChildAgentPositionUpdate while in transit - ignored.");
                 return;
-            }
-            m_DrawDistance = cAgentData.Far;    // update the SP draw distance *before* checking culling
-            if (m_sceneView != null && m_sceneView.UseCulling)
-            {
-                //Check for things that may have just entered the draw distance of the user
-                m_sceneView.CheckForDistantEntitiesToShow();
             }
             if (cAgentData.Position != new Vector3(-1, -1, -1)) // UGH!!
             {
@@ -4015,12 +4013,20 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (m_posInfo.Parent != null)
                     {
-                        m_log.InfoFormat("[SCENE PRESENCE]: ChildAgentDataUpdate move to {0} refused for agent already sitting at {1}.",
-                                        cAgentData.Position.X.ToString(), cAgentData.Position.Z.ToString());
+                        m_log.InfoFormat("[SCENE PRESENCE]: ChildAgentPositionUpdate move to {0} refused for agent already sitting at {1}.",
+                                        cAgentData.Position.ToString(), cAgentData.Position.ToString());
                         return;
                     }
                     AbsolutePosition = new Vector3(cAgentData.Position.X + shiftx, cAgentData.Position.Y + shifty, cAgentData.Position.Z);
                 }
+            }
+
+            // Do this after updating the position!
+            m_DrawDistance = cAgentData.Far;    // update the SP draw distance *before* checking culling
+            if (m_sceneView != null && m_sceneView.UseCulling)
+            {
+                //Check for things that may have just entered the draw distance of the user
+                m_sceneView.CheckForDistantEntitiesToShow();
             }
 
             m_CameraCenter = new Vector3(cAgentData.Center.X + shiftx, cAgentData.Center.Y + shifty, cAgentData.Center.Z);
@@ -4049,30 +4055,42 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.AgentID = UUID;
             cAgent.RegionHandle = m_scene.RegionInfo.RegionHandle;
 
-            // m_log.WarnFormat("[PRESENCE]: CopyToForRootAgent for {0} position {1} was {2}", cAgent.AgentID, m_posInfo.Position, cAgent.Position);
-            cAgent.Position = m_posInfo.Position;
-            cAgent.Velocity = Velocity;
-            cAgent.Center = m_CameraCenter;
-            cAgent.Size = new Vector3(0, 0, m_avHeight);
-            cAgent.AtAxis = m_CameraAtAxis;
-            cAgent.LeftAxis = m_CameraLeftAxis;
-            cAgent.UpAxis = m_CameraUpAxis;
+            lock (m_posInfo)
+            {
+                // m_log.WarnFormat("[PRESENCE]: CopyToForRootAgent for {0} position {1} was {2}", cAgent.AgentID, m_posInfo.Position, cAgent.Position);
 
-            cAgent.Far = m_DrawDistance;
+                cAgent.AvatarAsAPrim = !AvatarMovesWithPart;    // default (false) in protocol is legacy value (AvatarMovesWithPart==true).
+
+                cAgent.Position = m_posInfo.Position;
+                cAgent.Velocity = Velocity;
+                cAgent.Center = m_CameraCenter;
+                cAgent.Size = new Vector3(0, 0, m_avHeight);
+                cAgent.AtAxis = m_CameraAtAxis;
+                cAgent.LeftAxis = m_CameraLeftAxis;
+                cAgent.UpAxis = m_CameraUpAxis;
+
+                cAgent.Far = m_DrawDistance;
+
+                cAgent.HeadRotation = m_headrotation;
+                cAgent.BodyRotation = m_bodyRot;
+                cAgent.ControlFlags = m_AgentControlFlags;
+                cAgent.AlwaysRun = m_setAlwaysRun;
+
+                if (m_posInfo.Parent != null)
+                {
+                    cAgent.SatOnPrimOffset = m_posInfo.Position;
+                    cAgent.SatOnPrim = m_posInfo.Parent.UUID;
+                    cAgent.SatOnGroup = m_posInfo.Parent.ParentGroup.UUID;
+                }
+            }
 
             // Throttles
             cAgent.Throttles = ControllingClient.GetThrottlesPacked(1.0f);
-
-            cAgent.HeadRotation = m_headrotation;
-            cAgent.BodyRotation = m_bodyRot;
-            cAgent.ControlFlags = m_AgentControlFlags;
 
             if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
                 cAgent.GodLevel = (byte)m_godlevel;
             else 
                 cAgent.GodLevel = (byte) 0;
-
-            cAgent.AlwaysRun = m_setAlwaysRun;
 
             cAgent.Appearance = new AvatarAppearance(m_appearance);
 
@@ -4106,37 +4124,68 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             cAgent.ActiveGroupID = m_controllingClient.ActiveGroupId;
-
-            cAgent.AvatarAsAPrim = !AvatarMovesWithPart;    // default (false) in protocol is legacy value (AvatarMovesWithPart==true).
         }
 
         public void CopyFrom(AgentData cAgent)
         {
+            SceneObjectPart satOnPart = null;
+            if (cAgent.SatOnPrim != UUID.Zero)
+                satOnPart = m_scene.GetSceneObjectPart(cAgent.SatOnPrim);
+
+            AvatarMovesWithPart = !cAgent.AvatarAsAPrim;    // default (false) in protocol is legacy value (AvatarMovesWithPart==true).
+
             m_rootRegionHandle = cAgent.RegionHandle;
             m_callbackURI = cAgent.CallbackURI;
 
-            m_posInfo.Position = cAgent.Position;
-//            Velocity = Vector3.Zero;
-            Velocity = cAgent.Velocity;
-            m_CameraCenter = cAgent.Center;
-            m_avHeight = cAgent.Size.Z;
-            m_CameraAtAxis = cAgent.AtAxis;
-            m_CameraLeftAxis = cAgent.LeftAxis;
-            m_CameraUpAxis = cAgent.UpAxis;
+            lock(m_posInfo)
+            {
+                // Now handle position info first, and other quick fields inside the lock
+                if (satOnPart != null)
+                {
+                    m_requestedSitTargetID = satOnPart.LocalId;
+                    m_requestedSitTargetUUID = cAgent.SatOnPrim;
+                    m_requestedSitTargetOffset = cAgent.SatOnPrimOffset;
 
-            m_DrawDistance = cAgent.Far;
+                    if (cAgent.Anims == null || cAgent.Anims.Length == 0)
+                    {
+                        UUID animID = m_controllingClient.GetDefaultAnimation("SIT");
+                        this.AddAnimation(animID, m_requestedSitTargetUUID);
+                    }
+                    m_posInfo.Set(cAgent.SatOnPrimOffset, satOnPart, satOnPart.AbsolutePosition);
+                }
+                else
+                {
+                    cAgent.SatOnGroup = UUID.Zero;
+                    m_requestedSitTargetID = 0;
+                    m_requestedSitTargetUUID = UUID.Zero;
+                    m_posInfo.Set(cAgent.Position, null, Vector3.Zero);
+                }
 
+                // Velocity = Vector3.Zero;
+                Velocity = cAgent.Velocity;
+
+                m_headrotation = cAgent.HeadRotation;
+                m_bodyRot = cAgent.BodyRotation;
+                m_AgentControlFlags = cAgent.ControlFlags; 
+                m_avHeight = cAgent.Size.Z;
+
+                m_CameraCenter = cAgent.Center;
+                m_CameraAtAxis = cAgent.AtAxis;
+                m_CameraLeftAxis = cAgent.LeftAxis;
+                m_CameraUpAxis = cAgent.UpAxis;
+
+                m_DrawDistance = cAgent.Far;
+
+                m_setAlwaysRun = cAgent.AlwaysRun;
+
+                m_restoredConstantForce = cAgent.ConstantForces;
+                m_restoredConstantForceIsLocal = cAgent.ConstantForcesAreLocal;
+            }
             if ((cAgent.Throttles != null) && cAgent.Throttles.Length > 0)
                 ControllingClient.SetChildAgentThrottle(cAgent.Throttles);
 
-            m_headrotation = cAgent.HeadRotation;
-            m_bodyRot = cAgent.BodyRotation;
-            m_AgentControlFlags = cAgent.ControlFlags; 
-
             if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
                 m_godlevel = cAgent.GodLevel;
-
-            m_setAlwaysRun = cAgent.AlwaysRun;
 
             m_appearance = new AvatarAppearance(cAgent.Appearance);
 
@@ -4160,47 +4209,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (cAgent.RemoteAgents != null && !IsBot)
             {
                 m_remotePresences.SetInitialPresences(cAgent.RemoteAgents);
-            }
-
-            m_restoredConstantForce = cAgent.ConstantForces;
-            m_restoredConstantForceIsLocal = cAgent.ConstantForcesAreLocal;
-
-            AvatarMovesWithPart = !cAgent.AvatarAsAPrim;    // default (false) in protocol is legacy value (AvatarMovesWithPart==true).
-
-            if (cAgent.LocomotionState == 1)
-            {
-                lock (m_posInfo)
-                {
-                    m_requestedSitTargetID = 0;
-                    m_requestedSitTargetUUID = UUID.Zero;
-                    m_posInfo.Parent = null;
-                }
-                //if the agent is sitting...
-                if (cAgent.SatOnGroup != UUID.Zero)
-                {
-                    SceneObjectPart part = m_scene.GetSceneObjectPart(cAgent.SatOnPrim);
-
-                    if (part != null)
-                    {
-                        m_requestedSitTargetID = part.LocalId;
-                        m_requestedSitTargetUUID = cAgent.SatOnPrim;
-                        m_requestedSitTargetOffset = cAgent.SatOnPrimOffset;
-
-                        if (cAgent.Anims == null || cAgent.Anims.Length == 0)
-                        {
-                            UUID animID = m_controllingClient.GetDefaultAnimation("SIT");
-                            this.AddAnimation(animID, m_requestedSitTargetUUID);
-                        }
-                    }
-                    else
-                    {
-                        cAgent.SatOnGroup = UUID.Zero;
-                    }
-                }
-            }
-            else
-            {
-                m_log.WarnFormat("[SCENE PRESENCE]: CopyFrom called with LocomotionState={0}", cAgent.LocomotionState);
             }
         }
 

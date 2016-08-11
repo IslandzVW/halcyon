@@ -4397,7 +4397,7 @@ namespace OpenSim.Region.Framework.Scenes
                 uint tRegionX = RegionInfo.RegionLocX;
                 uint tRegionY = RegionInfo.RegionLocY;
                 //Send Data to ScenePresence
-                childAgentUpdate.ChildAgentDataUpdate(cAgentData, tRegionX, tRegionY, rRegionX, rRegionY);
+                childAgentUpdate.ChildAgentPositionUpdate(cAgentData, tRegionX, tRegionY, rRegionX, rRegionY);
                 // Not Implemented:
                 //TODO: Do we need to pass the message on to one of our neighbors?
             }
