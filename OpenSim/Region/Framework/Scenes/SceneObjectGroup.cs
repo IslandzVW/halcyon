@@ -4183,17 +4183,25 @@ namespace OpenSim.Region.Framework.Scenes
 
         // These two must be called from the correspondingly-named SceneObjectPart methods.
         // They handle updates to the part data and script notifications.
-        public void AddSeatedAvatar(ScenePresence sp)
+        public void AddSeatedAvatar(ScenePresence sp, bool sendEvent)
         {
-            m_childAvatars.AddPart(sp);
-            // Now fix avatar link numbers
-            RecalcSeatedAvatarLinks();
+            if (m_childAvatars.AddAvatar(sp))
+            {
+                // Now fix avatar link numbers
+                RecalcSeatedAvatarLinks();
+                if (sendEvent)
+                    TriggerScriptChangedEvent(Changed.LINK);
+            }
         }
-        public void RemoveSeatedAvatar(ScenePresence sp)
+        public void RemoveSeatedAvatar(ScenePresence sp, bool sendEvent)
         {
-            m_childAvatars.RemovePart(sp);
-            // Now fix avatar link numbers
-            RecalcSeatedAvatarLinks();
+            if (m_childAvatars.RemoveAvatar(sp))
+            {
+                // Now fix avatar link numbers
+                RecalcSeatedAvatarLinks();
+                if (sendEvent)
+                    TriggerScriptChangedEvent(Changed.LINK);
+            }
         }
         public ScenePresence GetSeatedAvatarByLink(int linknum)
         {

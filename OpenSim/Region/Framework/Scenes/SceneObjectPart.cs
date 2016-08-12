@@ -3306,33 +3306,25 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void AddSeatedAvatar(ScenePresence sp, bool sendEvent)
         {
-            m_seatedAvatars.AddPart(sp);
+            m_seatedAvatars.AddAvatar(sp);
             if (ParentGroup != null)
-            {
-                ParentGroup.AddSeatedAvatar(sp);    // event sent below if needed
-                if (sendEvent)
-                    ParentGroup.TriggerScriptChangedEvent(Changed.LINK);
-            }
+                ParentGroup.AddSeatedAvatar(sp, sendEvent);    // event sent if needed
         }
 
         public void RemoveSeatedAvatar(ScenePresence sp, bool sendEvent)
         {
-            m_seatedAvatars.RemovePart(sp);
+            m_seatedAvatars.RemoveAvatar(sp);
             if (ParentGroup != null)
-            {
-                ParentGroup.RemoveSeatedAvatar(sp);    // event sent below if needed
-                if (sendEvent)
-                    ParentGroup.TriggerScriptChangedEvent(Changed.LINK);
-            }
+                ParentGroup.RemoveSeatedAvatar(sp, sendEvent); // event sent if needed
         }
 
         // Called the same way on both old and new parent part.
         public void ReparentSeatedAvatar(ScenePresence sp, SceneObjectPart newParent)
         {
             if (newParent == this)
-                m_seatedAvatars.AddPart(sp);
+                m_seatedAvatars.AddAvatar(sp);
             else
-                m_seatedAvatars.RemovePart(sp);
+                m_seatedAvatars.RemoveAvatar(sp);
         }
 
         public void SetBuoyancy(float fvalue)

@@ -83,34 +83,39 @@ namespace OpenSim.Region.Framework.Scenes
         /// Adds the given avatar to this collection
         /// </summary>
         /// <param name="sp">The avatar to add</param>
-        public int AddPart(ScenePresence sp)
+        public bool AddAvatar(ScenePresence sp)
         {
             lock (m_mutationLock)
             {
-                UUID sopGlobal = sp.UUID;
-                m_avatarsByUuid = m_avatarsByUuid.Add(sp.UUID, sp);
-
-                //all local IDs will be 0 during the initial load
-                if (sp.LocalId != 0)
+                if (!m_avatarsByUuid.ContainsKey(sp.UUID))
                 {
-                    m_avatarsByLocalId = m_avatarsByLocalId.Add(sp.LocalId, sopGlobal);
+                    m_avatarsByUuid = m_avatarsByUuid.Add(sp.UUID, sp);
+
+                    //all local IDs will be 0 during the initial load
+                    if (sp.LocalId != 0)
+                        m_avatarsByLocalId = m_avatarsByLocalId.Add(sp.LocalId, sp.UUID);
+                    return true;
                 }
-                
-                return m_avatarsByUuid.Count;
             }
+            return false;
         }
 
         /// <summary>
         /// Removes the given avatar from this collection
         /// </summary>
         /// <param name="sp">The avatar to remove</param>
-        public void RemovePart(ScenePresence sp)
+        public bool RemoveAvatar(ScenePresence sp)
         {
             lock (m_mutationLock)
             {
-                m_avatarsByUuid = m_avatarsByUuid.Remove(sp.UUID);
-                m_avatarsByLocalId = m_avatarsByLocalId.Remove(sp.LocalId);
+                if (m_avatarsByUuid.ContainsKey(sp.UUID))
+                {
+                    m_avatarsByUuid = m_avatarsByUuid.Remove(sp.UUID);
+                    m_avatarsByLocalId = m_avatarsByLocalId.Remove(sp.LocalId);
+                    return true;
+                }
             }
+            return false;
         }
 
         /// <summary>
@@ -124,7 +129,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ScenePresence sp;
                 if (m_avatarsByUuid.TryGetValue(avatarID, out sp))
                 {
-                    RemovePart(sp);
+                    RemoveAvatar(sp);
                 }
             }
         }
