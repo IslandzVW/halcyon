@@ -27,14 +27,16 @@
 
 using System;
 using System.Collections;
+using System.IO;
 using System.Reflection;
 
 using log4net;
 using Nini.Config;
 using Mono.Addins;
 using OpenMetaverse;
-
+using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
+using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
@@ -52,7 +54,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         private Scene m_Scene;
 
-#region IRegionModuleBase Members
+        #region IRegionModuleBase Members
 
         public Type ReplaceableInterface
         {
@@ -66,6 +68,8 @@ namespace OpenSim.Region.CoreModules.Capabilities
         public void AddRegion(Scene pScene)
         {
             m_Scene = pScene;
+            m_Scene.EventManager.OnRegisterCaps += RegisterCaps;
+            m_Scene.EventManager.OnDeregisterCaps += DeregisterCaps;
         }
 
         public void RemoveRegion(Scene scene)
@@ -92,17 +96,62 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         public void RegisterCaps(UUID agentID, Caps caps)
         {
+            string homeLocationCap = CapsUtil.CreateCAPS("HomeLocation", String.Empty);
+
+            // OpenSimulator CAPs infrastructure seems to be somewhat hostile towards any CAP that requires both GET
+            // and POST handlers, so we first set up a POST handler normally and then add a GET/PUT handler via MainServer
+
+            IRequestHandler homeLocationRequestHandler
+                = new RestStreamHandler(
+                    "POST", homeLocationCap,
+                    (request, path, param, httpRequest, httpResponse) => HomeLocation(request, agentID),
+                    "HomeLocation", null);
+
+            MainServer.Instance.AddStreamHandler(homeLocationRequestHandler);
+            caps.RegisterHandler("HomeLocation", homeLocationRequestHandler);
         }
 
         public void EnteringRegion()
         {
         }
 
-        public void DeregisterCaps()
+        public void DeregisterCaps(UUID agentID, Caps caps)
         {
+//            m_service.RemoveStreamHandler("HomeLocation", "POST");
         }
 
         #region Other CAPS
+
+        string HomeLocation(string request, UUID agentID)
+        {
+            OSDMap rm = (OSDMap)OSDParser.DeserializeLLSDXml(request);
+            OSDMap homeLocation = rm["HomeLocation"] as OSDMap;
+            if (homeLocation != null)
+            {
+                OSDMap locationPosMap = homeLocation["LocationPos"] as OSDMap;
+                Vector3 position = new Vector3(
+                                       (float)locationPosMap["X"].AsReal(),
+                                       (float)locationPosMap["Y"].AsReal(),
+                                       (float)locationPosMap["Z"].AsReal());
+                OSDMap locationLookAtMap = homeLocation["LocationLookAt"] as OSDMap;
+                Vector3 lookAt = new Vector3(
+                                     (float)locationLookAtMap["X"].AsReal(),
+                                     (float)locationLookAtMap["Y"].AsReal(),
+                                     (float)locationLookAtMap["Z"].AsReal());
+                uint locationId = homeLocation["LocationId"].AsUInteger();
+
+                var SP = m_Scene.GetScenePresence(agentID);
+                var regionHandle = m_Scene.RegionInfo.RegionHandle;
+
+                if (SP != null)
+                {
+                    m_Scene.SetHomeRezPoint(SP.ControllingClient, regionHandle, position, lookAt, locationId);
+                }
+            }
+
+            rm.Add("success", OSD.FromBoolean(true));
+            return OSDParser.SerializeLLSDXmlString(rm);
+        }
 
 
         #endregion
