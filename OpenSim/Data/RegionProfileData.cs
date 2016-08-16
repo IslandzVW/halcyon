@@ -83,9 +83,14 @@ namespace OpenSim.Data
         public uint httpPort;
         public uint remotingPort;
 
-        public string httpServerURI 
-        { 
-            get { return "http://" + serverHostName + ":" + httpPort + "/"; } 
+
+        /// <summary>
+        /// Preformatted URI containing the unresolved external host name and specified port, terminating in a slash.
+        /// </summary>
+        /// <remarks>See serverHostName and httpPort, but also alternates such as OutsideIP and OutsideIpOrResolvedHostname if you are wanting to make a fast direct connection that doesn't have to go through a DNS resolution at some point later.</remarks>
+        public string httpServerURI
+        {
+            get { return "http://" + serverHostName + ":" + httpPort + "/"; }
         }
 
         /// <summary>
@@ -144,7 +149,7 @@ namespace OpenSim.Data
         private string _outsideIp;
 
         /// <summary>
-        /// Returns what we consider to be the outside IP address for this region
+        /// Returns what we consider to be the outside, as in public-facing, IP address for this region
         /// </summary>
         public string OutsideIP
         {
