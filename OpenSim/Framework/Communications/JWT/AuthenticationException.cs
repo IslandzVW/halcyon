@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace OpenSim.Framework.Communications.JWT
 {
@@ -17,13 +16,15 @@ namespace OpenSim.Framework.Communications.JWT
         /// Constructor
         /// </summary>
         /// <param name="cause">The cause of the exception</param>
-        public AuthenticationException(AuthenticationFailureCause cause)
+        public AuthenticationException(AuthenticationFailureCause cause) : base("Authentication failure: " + cause)
         {
             Cause = cause;
         }
 
-        public AuthenticationException(string message, Exception innerException) : base(message, innerException)
+        public AuthenticationException(AuthenticationFailureCause cause, Exception innerException) 
+            : base("Authentication failure: " + cause, innerException)
         {
+            Cause = cause;
         }
     }
 }

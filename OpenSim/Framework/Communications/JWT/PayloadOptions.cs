@@ -5,7 +5,7 @@ namespace OpenSim.Framework.Communications.JWT
     /// <summary>
     /// Options that can are passed through a JWT authentication payload
     /// </summary>
-    class PayloadOptions
+    public class PayloadOptions
     {
         /// <summary>
         /// The expiration date for this payload

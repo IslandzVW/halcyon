@@ -4,7 +4,7 @@
     /// Provides access to JWT tokens that are granted by authenticating a user
     /// against the halcyon user table
     /// </summary>
-    class JWTUserAuthenticationGateway
+    public class JWTUserAuthenticationGateway
     {
         private readonly IUserService _userService;
 
@@ -26,6 +26,10 @@
             PayloadOptions payloadOptions)
         {
             UserProfileData profile = _userService.GetUserProfile(username, password, true);
+            if (profile == null)
+            {
+                throw new AuthenticationException(AuthenticationFailureCause.UserNameNotFound);
+            }
 
             return "";
         }
