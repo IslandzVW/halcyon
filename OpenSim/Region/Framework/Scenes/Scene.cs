@@ -4464,6 +4464,11 @@ namespace OpenSim.Region.Framework.Scenes
 
                 reason = "authorized";
                 SP.ChildAgentDataUpdate2(data);
+
+                Util.FireAndForget((o) =>
+                {
+                    SP.ConfirmHandoff();
+                });
                 return ChildAgentUpdate2Response.Ok;
             }
             finally

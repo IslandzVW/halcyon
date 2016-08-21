@@ -1404,6 +1404,18 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void ConfirmHandoff()
+        {
+            string callbackURI = m_callbackURI;
+            m_callbackURI = null;
+
+            if (!String.IsNullOrEmpty(callbackURI))
+            {
+                m_log.WarnFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", callbackURI);
+                Scene.SendReleaseAgent(m_rootRegionHandle, UUID, callbackURI);
+            }
+        }
+
         /// <summary>
         /// Complete Avatar's movement into the region
         /// </summary>
@@ -1441,14 +1453,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     // Release the lock before calling PostProcessMakeRootAgent, it calls functions that use lock
                     PostProcessMakeRootAgent(parent, m_flying);
-
-                    if (!String.IsNullOrEmpty(m_callbackURI))
-                    {
-                        m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
-                        Scene.SendReleaseAgent(m_rootRegionHandle, UUID, m_callbackURI);
-                        m_callbackURI = null;
-                    }
-
+                    ConfirmHandoff();
                     //m_log.DebugFormat("[SCENE PRESENCE]: Completed movement");
                 }
 
