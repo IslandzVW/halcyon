@@ -284,6 +284,7 @@ namespace OpenSim.Region.Framework.Scenes
         object m_callbackLock = new object();
         string m_callbackURI;
         ulong m_rootRegionHandle;
+        ulong m_callbackTime;
 
         private IScriptModule[] m_scriptEngines;
 
@@ -1266,6 +1267,11 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!part.ParentGroup.IsAttachment)
                     if (avatarsRemainingOnPrim == 0)
                         part.ParentGroup.TriggerScriptChangedEvent(Changed.REGION);
+
+                ulong elapsedMs = (Util.GetLongTickCount() - part.ParentGroup.TimeReceived);
+                string msg = (elapsedMs/1000.0f).ToString("0.000") + " seconds to confirm seated on object  for " + this.Name;
+                m_log.Info("[CROSSING]: "+msg);
+                MessageToUserFromServer(msg);
             }
             else
             {
@@ -1405,9 +1411,16 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        public void ConfirmHandoff()
+        public void MessageToUserFromServer(string msg)
         {
+            Scene.SimChat(msg, ChatTypeEnum.Direct, 0, Vector3.Zero, this.Scene.RegionInfo.RegionName, UUID.Zero, this.UUID, UUID.Zero, false);
+        }
+
+        public void ConfirmHandoff(bool fromViewer)
+        {
+            ulong elapsedMs = (Util.GetLongTickCount() - m_callbackTime);
             string callbackURI;
+            m_log.Error(">>>>>>>>>> CONFIRM HANDOFF of "+this.Name+" fromViewer="+fromViewer.ToString());
 
             // There's a race between a fast viewer response and the server response. 
             // Server will almost always come in first but on a local test server it might not.
@@ -1422,6 +1435,13 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_log.WarnFormat("[SCENE PRESENCE]: Releasing agent for {0} in URI {1}", this.Name, callbackURI);
                 Scene.SendReleaseAgent(m_rootRegionHandle, UUID, callbackURI);
+            }
+            if (fromViewer && (m_callbackTime != 0))
+            {
+                string elapsed = (elapsedMs / 1000.0).ToString("0.000");
+                string msg = elapsed + " seconds to confirm crossing complete for " + this.Name;
+                m_log.Info("[CROSSING]: "+msg);
+                MessageToUserFromServer(msg);
             }
         }
 
@@ -1462,7 +1482,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     // Release the lock before calling PostProcessMakeRootAgent, it calls functions that use lock
                     PostProcessMakeRootAgent(parent, m_flying);
-                    ConfirmHandoff();
+                    ConfirmHandoff(true);
                     //m_log.DebugFormat("[SCENE PRESENCE]: Completed movement");
                 }
 
@@ -4065,6 +4085,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_rootRegionHandle = cAgent.RegionHandle;
             m_callbackURI = cAgent.CallbackURI;
+            m_callbackTime = Util.GetLongTickCount();
 
             m_posInfo.Position = cAgent.Position;
 //            Velocity = Vector3.Zero;

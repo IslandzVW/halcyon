@@ -4467,7 +4467,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 Util.FireAndForget((o) =>
                 {
-                    SP.ConfirmHandoff();
+                    SP.ConfirmHandoff(false);
                 });
                 return ChildAgentUpdate2Response.Ok;
             }
