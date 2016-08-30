@@ -281,6 +281,7 @@ namespace OpenSim.Region.Framework.Scenes
         private Vector3 posLastCullCheck;
 
         // For teleports and crossings callbacks
+        object m_callbackLock = new object();
         string m_callbackURI;
         ulong m_rootRegionHandle;
 
@@ -1406,12 +1407,20 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void ConfirmHandoff()
         {
-            string callbackURI = m_callbackURI;
-            m_callbackURI = null;
+            string callbackURI;
+
+            // There's a race between a fast viewer response and the server response. 
+            // Server will almost always come in first but on a local test server it might not.
+            lock (m_callbackLock)
+            {
+                // only send the release from one thread.
+                callbackURI = m_callbackURI;
+                m_callbackURI = null;
+            }
 
             if (!String.IsNullOrEmpty(callbackURI))
             {
-                m_log.WarnFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", callbackURI);
+                m_log.WarnFormat("[SCENE PRESENCE]: Releasing agent for {0} in URI {1}", this.Name, callbackURI);
                 Scene.SendReleaseAgent(m_rootRegionHandle, UUID, callbackURI);
             }
         }
