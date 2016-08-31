@@ -121,6 +121,12 @@ namespace InWorldz.Testing
             set {  }
         }
 
+        public bool DebugCrossings
+        {
+            get { return false; }
+            set { }
+        }
+
         public uint CircuitCode { get; set; }
 
 #pragma warning disable 0067 // disable "X is never used"

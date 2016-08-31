@@ -250,6 +250,12 @@ namespace OpenSim.Framework
         Crossing = (1 << 1)
     }
 
+    [Flags]
+    public enum PresenceFlags
+    {
+        DebugCrossings = (1 << 0)
+    }
+
     public class AgentData : IAgentData
     {
         public ulong AgentDataCreatedOn = Util.GetLongTickCount();
@@ -308,6 +314,8 @@ namespace OpenSim.Framework
 
         public Vector3 ConstantForces;
         public bool ConstantForcesAreLocal;
+
+        public ulong PresenceFlags;
 
         public virtual OSDMap Pack()
         {

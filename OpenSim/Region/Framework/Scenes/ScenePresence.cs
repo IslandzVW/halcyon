@@ -1268,10 +1268,13 @@ namespace OpenSim.Region.Framework.Scenes
                     if (avatarsRemainingOnPrim == 0)
                         part.ParentGroup.TriggerScriptChangedEvent(Changed.REGION);
 
-                ulong elapsedMs = (Util.GetLongTickCount() - part.ParentGroup.TimeReceived);
-                string msg = (elapsedMs/1000.0f).ToString("0.000") + " seconds to confirm seated on object  for " + this.Name;
-                m_log.Info("[CROSSING]: "+msg);
-                MessageToUserFromServer(msg);
+                if (ControllingClient.DebugCrossings)
+                {
+                    ulong elapsedMs = (Util.GetLongTickCount() - part.ParentGroup.TimeReceived);
+                    string msg = (elapsedMs / 1000.0f).ToString("0.000") + " seconds to confirm seated on object  for " + this.Name;
+                    m_log.Info("[CROSSING]: " + msg);
+                    MessageToUserFromServer(msg);
+                }
             }
             else
             {
@@ -1436,7 +1439,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.WarnFormat("[SCENE PRESENCE]: Releasing agent for {0} in URI {1}", this.Name, callbackURI);
                 Scene.SendReleaseAgent(m_rootRegionHandle, UUID, callbackURI);
             }
-            if (fromViewer && (m_callbackTime != 0))
+            if (ControllingClient.DebugCrossings && fromViewer && (m_callbackTime != 0))
             {
                 string elapsed = (elapsedMs / 1000.0).ToString("0.000");
                 string msg = elapsed + " seconds to confirm crossing complete for " + this.Name;
@@ -4036,6 +4039,10 @@ namespace OpenSim.Region.Framework.Scenes
             // Throttles
             cAgent.Throttles = ControllingClient.GetThrottlesPacked(1.0f);
 
+            cAgent.PresenceFlags = 0;
+            if (ControllingClient.DebugCrossings)
+                cAgent.PresenceFlags |= (ulong)PresenceFlags.DebugCrossings;
+
             cAgent.HeadRotation = m_headrotation;
             cAgent.BodyRotation = m_bodyRot;
             cAgent.ControlFlags = m_AgentControlFlags;
@@ -4100,6 +4107,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             if ((cAgent.Throttles != null) && cAgent.Throttles.Length > 0)
                 ControllingClient.SetChildAgentThrottle(cAgent.Throttles);
+
+            ControllingClient.DebugCrossings = (cAgent.PresenceFlags & (ulong)PresenceFlags.DebugCrossings) != 0;
 
             m_headrotation = cAgent.HeadRotation;
             m_bodyRot = cAgent.BodyRotation;
