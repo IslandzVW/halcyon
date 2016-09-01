@@ -2727,9 +2727,13 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Offset the positions for the new region across the border
             Vector3 oldGroupPosition = grp.RootPart.GroupPosition;
+            ulong started = Util.GetLongTickCount();
+
+            bool crossed = CrossPrimGroupIntoNewRegion(newRegionHandle, grp, silent, pos, false);
+            m_log.InfoFormat("[SCENE]: Crossing for object took {0}ms: {1}", Util.GetLongTickCount()-started, grp.Name);
 
             // If we fail to cross the border, then reset the position of the scene object on that border.
-            if (!CrossPrimGroupIntoNewRegion(newRegionHandle, grp, silent, pos, false))
+            if (!crossed)
             {
                 //physics will reset the prim position itself
                 if (grp.RootPart.PhysActor == null)

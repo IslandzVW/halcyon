@@ -1423,7 +1423,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             ulong elapsedMs = (Util.GetLongTickCount() - m_callbackTime);
             string callbackURI;
-            m_log.Error(">>>>>>>>>> CONFIRM HANDOFF of "+this.Name+" fromViewer="+fromViewer.ToString());
+            //m_log.Error(">>>>>>>>>> CONFIRM HANDOFF of "+this.Name+" fromViewer="+fromViewer.ToString());
 
             // There's a race between a fast viewer response and the server response. 
             // Server will almost always come in first but on a local test server it might not.
@@ -3809,6 +3809,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         protected void CrossToNewRegion(ulong neighborHandle, SimpleRegionInfo neighborInfo, Vector3 positionInNewRegion)
         {
+            ulong started = Util.GetLongTickCount();
+
             lock (m_posInfo)    // SetInTransit and AbsolutePosition will grab this
             {
                 if (PhysicsActor == null)
@@ -3821,6 +3823,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             m_scene.CrossWalkingOrFlyingAgentToNewRegion(this, neighborHandle, neighborInfo, positionInNewRegion);
+
+            m_log.InfoFormat("[SCENE]: Crossing for avatar took {0} ms for {1}.", Util.GetLongTickCount()-started, this.Name);
         }
 
         public Task CrossIntoNewRegionWithGroup(SceneObjectGroup sceneObjectGroup, SceneObjectPart part, ulong newRegionHandle)
