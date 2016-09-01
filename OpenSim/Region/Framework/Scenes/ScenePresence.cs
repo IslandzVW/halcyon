@@ -3549,7 +3549,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_sceneView != null && m_sceneView.UseCulling)
             {
                 //Check to see if the agent has moved enough to warrent another culling check
-                if ((!IsBot) && (Util.GetDistanceTo(pos, posLastCullCheck) > m_sceneView.DistanceBeforeCullingRequired)))
+                if ((!IsBot) && (Util.GetDistanceTo(pos, posLastCullCheck) > m_sceneView.DistanceBeforeCullingRequired))
                 {
                     posLastCullCheck = pos;
                     m_sceneView.CheckForDistantEntitiesToShow();
