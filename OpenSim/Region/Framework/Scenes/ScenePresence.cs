@@ -1465,6 +1465,8 @@ namespace OpenSim.Region.Framework.Scenes
                     Vector3 pos;
                     bool m_flying;
                     SceneObjectPart parent = null;
+                    if (m_requestedSitTargetID != 0)
+                        parent = Scene.GetSceneObjectPart(m_requestedSitTargetID);
 
                     lock (m_posInfo)
                     {
@@ -1475,13 +1477,12 @@ namespace OpenSim.Region.Framework.Scenes
                         pos = AbsolutePosition;
                         if (m_requestedSitTargetID != 0)
                         {
-                            parent = Scene.GetSceneObjectPart(m_requestedSitTargetID);
                             // now make it all consistent with updated parent ID while inside the lock
                             SetAgentPositionInfo(null, true, m_sitTargetCorrectionOffset, parent, pos, m_velocity);
                         }
-
-                        parent = MakeRootAgent(pos);
                     }
+
+                    parent = MakeRootAgent(pos);
 
                     // Release the lock before calling PostProcessMakeRootAgent, it calls functions that use lock
                     PostProcessMakeRootAgent(parent, m_flying);
