@@ -26,7 +26,7 @@
 				}
 			],
 			"request": {
-				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/auth/jwt/remote-console",
+				"url": "{{PROTOCOL}}://{{USERSERVER_URL}}:{{USERSERVER_PORT}}/auth/jwt/remote-console",
 				"method": "POST",
 				"header": [
 					{
@@ -62,7 +62,7 @@
 				}
 			],
 			"request": {
-				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/StartSession/",
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/StartSession/",
 				"method": "POST",
 				"header": [
 					{
@@ -91,7 +91,7 @@
 				}
 			],
 			"request": {
-				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/CloseSession/",
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/CloseSession/",
 				"method": "POST",
 				"header": [
 					{
@@ -118,7 +118,7 @@
 		{
 			"name": "SessionCommand JWT",
 			"request": {
-				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/SessionCommand/",
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/SessionCommand/",
 				"method": "POST",
 				"header": [
 					{
@@ -151,7 +151,7 @@
 		{
 			"name": "ReadResponses JWT",
 			"request": {
-				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/ReadResponses/{{restconsole_login_key}}/",
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/ReadResponses/{{restconsole_login_key}}/",
 				"method": "POST",
 				"header": [
 					{
@@ -187,7 +187,7 @@
 				}
 			],
 			"request": {
-				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/StartSession/",
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/StartSession/",
 				"method": "POST",
 				"header": [],
 				"body": {
@@ -223,7 +223,7 @@
 				}
 			],
 			"request": {
-				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/CloseSession/",
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/CloseSession/",
 				"method": "POST",
 				"header": [],
 				"body": {
@@ -244,7 +244,7 @@
 		{
 			"name": "SessionCommand Legacy",
 			"request": {
-				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/SessionCommand/",
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/SessionCommand/",
 				"method": "POST",
 				"header": [],
 				"body": {
@@ -271,7 +271,7 @@
 		{
 			"name": "ReadResponses Legacy",
 			"request": {
-				"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/ReadResponses/{{restconsole_login_key}}/",
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/ReadResponses/{{restconsole_login_key}}/",
 				"method": "POST",
 				"header": [],
 				"body": {
