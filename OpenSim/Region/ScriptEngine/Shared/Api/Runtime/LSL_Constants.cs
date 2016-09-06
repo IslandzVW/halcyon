@@ -346,18 +346,41 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int PRIM_NORMAL = 37;
         public const int PRIM_ALPHA_MODE = 38;
         // large out of normal range value unlikely to conflict with future LL values
+        /// \xrefitem lslconst "IW_PRIM_ALPHA" ""
+        /// <tt>[ IW_PRIM_ALPHA, integer face, float alpha ]</tt>\n\n
+        /// The alpha (opacity) of the specifed face.
         public const int IW_PRIM_ALPHA = 11001;
-        /// Get or set all the projector properties in one shot. bool, uuid, float, float, float
+        /// \xrefitem lslconst "IW_PRIM_PROJECTOR" ""
+        /// <tt>[ IW_PRIM_PROJECTOR, integer enabled, string texture, float field_of_view, float focus_dist, float ambience ]</tt> \n\n
+        /// Get or set all the projector properties in one shot.\n
+        /// See the following:
+        /// \li \ref IW_PRIM_PROJECTOR_ENABLED
+        /// \li \ref IW_PRIM_PROJECTOR_TEXTURE
+        /// \li \ref IW_PRIM_PROJECTOR_FOV
+        /// \li \ref IW_PRIM_PROJECTOR_FOCUS
+        /// \li \ref IW_PRIM_PROJECTOR_AMBIENCE
         public const int IW_PRIM_PROJECTOR          = 11100;
-        /// Whether or not the projector portion of the light source is active. Boolean.
+        /// \xrefitem lslconst "IW_PRIM_PROJECTOR_ENABLED" ""
+        /// <tt>[ IW_PRIM_PROJECTOR_ENABLED, integer enabled ]</tt>\n\n
+        /// Whether or not the projector portion of the light source is active.
         public const int IW_PRIM_PROJECTOR_ENABLED  = 11101;
-        /// The texture the projector emits. UUID.
+        /// \lslconstant{IW_PRIM_PROJECTOR_TEXTURE}
+        /// <tt>[ IW_PRIM_PROJECTOR_TEXTURE, string texture ]</tt>\n\n
+        /// The texture the projector emits.\n
+        /// \n
+        /// You can use either the UUID of a texture or the name of a texture that is in the inventory of the same prim as the script.
         public const int IW_PRIM_PROJECTOR_TEXTURE  = 11102;
-        /// The Field of View, in radians, the projector emits. float, between 0.0 and 3.0 inclusive.
+        /// \xrefitem lslconst "IW_PRIM_PROJECTOR_FOV" ""
+        /// <tt>[ IW_PRIM_PROJECTOR_FOV, float field_of_view ]</tt>\n\n
+        /// The field of view, in radians, the projector emits. Must be between 0.0 and 3.0 inclusive.
         public const int IW_PRIM_PROJECTOR_FOV      = 11103;
-        /// The distance at which the projected texture starts to blur. float.
+        /// \xrefitem lslconst "IW_PRIM_PROJECTOR_FOCUS" ""
+        /// <tt>[ IW_PRIM_PROJECTOR_FOCUS, float focus_dist ]</tt>\n\n
+        /// The distance, in meters, at which the projected texture starts to blur.
         public const int IW_PRIM_PROJECTOR_FOCUS    = 11104;
-        /// The amount of testure-controlled light to put on all faces with the FOV and range of the light. float, values >= 0.0.
+        /// \xrefitem lslconst "IW_PRIM_PROJECTOR_AMBIENCE" ""
+        /// <tt>[ IW_PRIM_PROJECTOR_AMBIENCE, float ambience ]</tt>\n\n
+        /// The amount of testure-controlled light to put on all faces with the FOV and range of the light. Cannot be negative.
         public const int IW_PRIM_PROJECTOR_AMBIENCE = 11105;
 
         public const int PRIM_TEXGEN_DEFAULT = 0;
@@ -665,9 +688,17 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int ESTATE_ACCESS_ALLOWED_GROUP_REMOVE = 3;
         public const int ESTATE_ACCESS_BANNED_AGENT_ADD = 4;
         public const int ESTATE_ACCESS_BANNED_AGENT_REMOVE = 5;
+        /// \xrefitem lslconst "ESTATE_ACCESS_QUERY_CAN_MANAGE" ""
+        /// Whether the script can manage the estate.
         public const int ESTATE_ACCESS_QUERY_CAN_MANAGE = 11000;
+        /// \xrefitem lslconst "ESTATE_ACCESS_QUERY_ALLOWED_AGENT" ""
+        /// Whether the script can ...
         public const int ESTATE_ACCESS_QUERY_ALLOWED_AGENT = 11001;
+        /// \xrefitem lslconst "ESTATE_ACCESS_QUERY_ALLOWED_GROUP" ""
+        /// Whether the script can ...
         public const int ESTATE_ACCESS_QUERY_ALLOWED_GROUP = 11002;
+        /// \xrefitem lslconst "ESTATE_ACCESS_QUERY_BANNED_AGENT" ""
+        /// Whether the script can ban agents.
         public const int ESTATE_ACCESS_QUERY_BANNED_AGENT = 11003;
 
         // llJsonXXX
@@ -785,3 +816,13 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int IW_DELIVER_NONE = 7;
     }
 }
+
+/** @page lslconst LSL Constants
+ * @brief A listing of most, if not all, constants available in Halcyon.
+ * 
+ * Please note that this is a work in progress, and not every constant may be listed,
+ * nor is it likely that each has a solid description.
+ * In fact it's likely that most of what you'll find here are Halcyon-specific extentions to what LL has defined.
+ * 
+ * Please reference the <a href="http://wiki.secondlife.com/wiki/Category:LSL_Constants">SecondLife® Wiki's Constants listing</a> for the details on constants that may not be defined here.
+ */

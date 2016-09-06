@@ -18252,3 +18252,36 @@ namespace InWorldz.Phlox.Engine
 
     }
 }
+
+/** @page lslfunc LSL Functions
+ * @brief A listing of most, if not all, functions available in Halcyon.
+ * 
+ * Please note that this is a work in progress, and not every function may be listed,
+ * nor is it likely that each has a solid description.
+ * In fact it's likely that most of what you'll find here are Halcyon-specific extentions to what LL has defined.
+ * 
+ * Please reference the <a href="http://wiki.secondlife.com/wiki/Category:LSL_Functions">SecondLife® Wiki's Functions listing</a> for the details on functions that may not be defined here.
+ */
+
+
+/** @page lslevent LSL Events
+ * @brief A listing of most, if not all, events available in Halcyon.
+ * 
+ * Please note that this is a work in progress, and not every event may be listed,
+ * nor is it likely that each has a solid description.
+ * In fact it's likely that most of what you'll find here are Halcyon-specific extentions to what LL has defined.
+ * 
+ * Please reference the <a href="http://wiki.secondlife.com/wiki/Category:LSL_Events">SecondLife® Wiki's Events listing</a> for the details on events that may not be defined here.
+ */
+
+
+/** @page lslerr LSL Errors
+ * @brief A listing of most, if not all, errors produced during the execution of LSL in Halcyon.
+ * 
+ * Please note that this is a work in progress, and not every error may be listed,
+ * nor is it likely that each has a solid description.
+ * In fact it's likely that most of what you'll find here are Halcyon-specific extentions to what LL has defined.
+ * 
+ * Please reference the <a href="http://wiki.secondlife.com/wiki/LSL_Errors">SecondLife® Wiki's Errors listing</a> for the details on erros that may not be defined here.
+ */
+
