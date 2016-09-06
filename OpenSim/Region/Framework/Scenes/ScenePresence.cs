@@ -1292,20 +1292,20 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 lock (m_posInfo)
                 {
-                    part.AddSeatedAvatar(this,false);
-                    sitOrientation = part.SitTargetOrientation;
+                    SceneObjectGroup group = part.ParentGroup;
+                    SitTargetInfo sitInfo = group.SitTargetForPart(part.UUID);
+
+                    part.AddSeatedAvatar(this, false);
+                    sitOrientation = sitInfo.Rotation;
 
                     m_requestedSitTargetUUID = part.UUID;
                     m_requestedSitTargetID = part.LocalId;
 
                     if (m_avatarMovesWithPart)
                     {
-                        Vector3 sitTargetPos = part.SitTargetPosition;
-                        Quaternion sitTargetOrient = part.SitTargetOrientation;
-
-                        Vector3 newPos = sitTargetPos;
+                        Vector3 newPos = sitInfo.Offset;
                         newPos += m_sitTargetCorrectionOffset;
-                        m_bodyRot = sitTargetOrient;
+                        m_bodyRot = sitInfo.Rotation;
                         //Rotation = sitTargetOrient;
                         SetAgentPositionInfo(null, true, newPos, part, part.AbsolutePosition, Vector3.Zero);
                     }
@@ -2295,11 +2295,11 @@ namespace OpenSim.Region.Framework.Scenes
                                 }
 
                             }
-
-                            // This avatar is no longer seated.
-                            prim.RemoveSeatedAvatar(this, !fromCrossing);
-                            m_avatarMovesWithPart = true;  // reset SP to legacy mode, not avatar-as-a-prim
                         }
+
+                        // This avatar is no longer seated.
+                        part.RemoveSeatedAvatar(this, !fromCrossing);
+                        m_avatarMovesWithPart = true;  // reset SP to legacy mode, not avatar-as-a-prim
 
                         if (!fromCrossing)
                             clearCam = true;
@@ -2348,10 +2348,12 @@ namespace OpenSim.Region.Framework.Scenes
                         if (part != null)
                         {
                             Vector3 partPos = part.GetWorldPosition();
+                            SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
 
                             // Otherwise, we have a lot to do, it's a real stand up operation.
                             // if there is a part with a sit target
-                            if ((part.SitTargetPosition != Vector3.Zero) || (part.SitTargetOrientation != Quaternion.Identity))
+
+                            if (sitInfo.IsSet)
                             {   // prim not found, or has a sit target (just use that offset)
                                 info.Position = AbsolutePosition;   // don't change it from where we are now, but update with the current absolute position
                             }
@@ -2440,14 +2442,8 @@ namespace OpenSim.Region.Framework.Scenes
             foreach (SceneObjectPart part in partArray)
             {
                 // Is a sit target available?
-                Vector3 avSitOffSet = part.SitTargetPosition;
-                Quaternion avSitOrientation = part.SitTargetOrientation;
-                bool SitTargetUnOccupied = (part.NumAvatarsSeated == 0);
-                bool SitTargetisSet =
-                    (!(avSitOffSet.X == 0f && avSitOffSet.Y == 0f && avSitOffSet.Z == 0f && avSitOrientation.W == 1f &&
-                       avSitOrientation.X == 0f && avSitOrientation.Y == 0f && avSitOrientation.Z == 0f));
-
-                if (SitTargetisSet && SitTargetUnOccupied)
+                SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
+                if (sitInfo.IsSet && !sitInfo.HasSitter)
                 {
                     //switch the target to this prim
                     return part;
@@ -2487,7 +2483,7 @@ namespace OpenSim.Region.Framework.Scenes
                     return;
                 }
 
-                bool HasSitTarget = (part.SitTargetPosition != Vector3.Zero);
+                SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
 
                 // First, remove the PhysicsActor since we're going to be sitting, so that physics doesn't interfere while we're doing this update.
                 if (PhysicsActor != null)
@@ -2522,18 +2518,17 @@ namespace OpenSim.Region.Framework.Scenes
                 // This adjustment gives the viewer the position it expects.
                 vPos.Z -= m_appearance.HipOffset;
 
-                if (HasSitTarget)
+                if (sitInfo.IsSet)
                 {
-                    avSitPos += part.SitTargetPosition;
+                    avSitPos += sitInfo.Offset;
                     if (ADJUST_SIT_TARGET)
                     {
                         // If we want to support previous IW sit target offsets, rather than SL-accurate sit targets,
                         // we need to apply the OpenSim sit target correction adjustment.
                         avSitPos += m_sitTargetCorrectionOffset;
                     }
-                    avSitRot *= part.SitTargetOrientation;
-                    vRot *= part.SitTargetOrientation;
-
+                    avSitRot *= sitInfo.Rotation;
+                    vRot *= sitInfo.Rotation;
                 }
                 else
                 {
@@ -3284,9 +3279,10 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Avatar is seated on a prim. Send viewer root-relative info.
                 vParentID = rootPart.LocalId;   // Viewer parent ID always the root prim.
-                if (part.SitTargetPosition != Vector3.Zero)
+                SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
+                if (sitInfo.Offset != Vector3.Zero)
                 {
-                    vPos = part.SitTargetPosition;  // start with the sit target position
+                    vPos = sitInfo.Offset;  // start with the sit target position
                     vPos.Z -= m_appearance.HipOffset;   // reapply correction
                     if (ADJUST_SIT_TARGET)
                     {
@@ -3300,10 +3296,10 @@ namespace OpenSim.Region.Framework.Scenes
                         // if the part is rotated compared to the root prim, adjust relative pos/rot
                         vPos *= part.RotationOffset;
                         vPos += part.OffsetPosition;
-                        vRot = part.RotationOffset * part.SitTargetOrientation;
+                        vRot = part.RotationOffset * sitInfo.Rotation;
                     }
                     else
-                        vRot = part.SitTargetOrientation;
+                        vRot = sitInfo.Rotation;
                 }
                 else
                 {

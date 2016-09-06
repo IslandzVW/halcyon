@@ -8556,11 +8556,14 @@ namespace InWorldz.Phlox.Engine
 
         public void llLinkSitTarget(int linknumber, LSL_Vector offset, LSL_Rotation rot)
         {
+            Vector3 sitPos = new Vector3((float)offset.X, (float)offset.Y, (float)offset.Z);
+            Quaternion sitRot = Rot2Quaternion(rot);
+
+            var group = m_host.ParentGroup;
             var parts = GetLinkParts(linknumber);
             foreach (SceneObjectPart part in parts)
             {
-                part.SitTargetPosition = new Vector3((float)offset.X, (float)offset.Y, (float)offset.Z);
-                part.SitTargetOrientation = Rot2Quaternion(rot);
+                part.SetSitTarget(sitPos, sitRot);
             }
         }
 
@@ -8585,7 +8588,16 @@ namespace InWorldz.Phlox.Engine
             // Should only be one match, but if the script specified LINK_ALL_OTHERS or another wildcard,
             // then this function will return the first match.
             foreach (SceneObjectPart part in parts) {
-                if ((!IncludeSitTargetOnly) || (part.SitTargetPosition != Vector3.Zero))
+                SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
+                if (IncludeSitTargetOnly)
+                {
+                    if (sitInfo.IsSet && sitInfo.HasSitter)
+                    {
+                        seatedAvatar = sitInfo.Sitter.UUID;
+                        break;
+                    }
+                }
+                else
                 {
                     part.ForEachSittingAvatar((ScenePresence sp) =>
                     {

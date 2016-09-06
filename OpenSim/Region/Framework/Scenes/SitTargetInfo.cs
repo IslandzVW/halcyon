@@ -49,7 +49,9 @@ namespace OpenSim.Region.Framework.Scenes
         private Vector3 m_offset = Vector3.Zero;
         private Quaternion m_rotation = Quaternion.Identity;
         private SceneObjectPart m_part = null;
-        private ScenePresence m_avatar = null;
+        private ScenePresence m_sitter = null;
+
+        public static readonly SitTargetInfo None = new SitTargetInfo();
 
         #region Properties
 
@@ -63,10 +65,26 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_rotation; }
         }
 
-        public ScenePresence Avatar
+        public ScenePresence Sitter
         {
-            get { return m_avatar; }
-            set { m_avatar = value; }
+            get { return m_sitter; }
+            set { m_sitter = value; }
+        }
+
+        public SceneObjectPart Seat
+        {
+            get { return m_part; }
+            set { m_part = value; }
+        }
+
+        public bool IsSet
+        {
+            get { return (m_part != null) && (m_offset != Vector3.Zero) || (m_rotation != Quaternion.Identity);  }
+        }
+
+        public bool HasSitter
+        {
+            get { return (m_sitter != null);  }
         }
         #endregion
 
@@ -76,7 +94,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_offset = Vector3.Zero;
             m_rotation = Quaternion.Identity;
             m_part = null;
-            m_avatar = null;
+            m_sitter = null;
         }
 
         public SitTargetInfo(SceneObjectPart part, Vector3 pos, Quaternion rot)
@@ -90,7 +108,15 @@ namespace OpenSim.Region.Framework.Scenes
         #region Methods
         public void SeatAvatar(ScenePresence avatar)
         {
-            m_avatar = avatar;
+            m_sitter = avatar;
+        }
+
+        public void CopyTo(SitTargetInfo sitInfo)
+        {
+            sitInfo.m_offset = this.m_offset;
+            sitInfo.m_rotation = this.m_rotation;
+            sitInfo.m_part = this.m_part;
+            sitInfo.m_sitter = this.m_sitter;
         }
         #endregion
     }

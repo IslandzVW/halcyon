@@ -1504,34 +1504,10 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_sitTargetOrientation = value; }
         }
 
-
         public Vector3 SitTargetPosition
         {
             get { return m_sitTargetPosition; }
             set { m_sitTargetPosition = value; }
-        }
-
-        // This sort of sucks, but I'm adding these in to make some of
-        // the mappings more consistant.
-        public Vector3 SitTargetPositionLL
-        {
-            get { return new Vector3(m_sitTargetPosition.X, m_sitTargetPosition.Y,m_sitTargetPosition.Z); }
-            set { m_sitTargetPosition = value; }
-        }
-
-        public Quaternion SitTargetOrientationLL
-        {
-            get
-            {
-                return new Quaternion(
-                                        m_sitTargetOrientation.X,
-                                        m_sitTargetOrientation.Y,
-                                        m_sitTargetOrientation.Z,
-                                        m_sitTargetOrientation.W
-                                        );
-            }
-
-            set { m_sitTargetOrientation = new Quaternion(value.X, value.Y, value.Z, value.W); }
         }
 
         public bool Stopped
@@ -1741,6 +1717,14 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_parentGroup.RootPart == null)
                 return true;    // no parent part... consider this root
             return (m_parentGroup.RootPart == this);    // matches?
+        }
+
+        public void SetSitTarget(Vector3 pos, Quaternion rot)
+        {
+            SitTargetPosition = pos;
+            SitTargetOrientation = rot;
+            if (ParentGroup != null)
+                ParentGroup.SetSitTarget(this, pos, rot);
         }
 
         public static readonly uint LEGACY_BASEMASK = 0x7FFFFFF0;
@@ -3308,14 +3292,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_seatedAvatars.AddAvatar(sp);
             if (ParentGroup != null)
-                ParentGroup.AddSeatedAvatar(sp, sendEvent);    // event sent if needed
+                ParentGroup.AddSeatedAvatar(this.UUID, sp, sendEvent);    // event sent if needed
         }
 
         public void RemoveSeatedAvatar(ScenePresence sp, bool sendEvent)
         {
-            m_seatedAvatars.RemoveAvatar(sp);
             if (ParentGroup != null)
-                ParentGroup.RemoveSeatedAvatar(sp, sendEvent); // event sent if needed
+                ParentGroup.RemoveSeatedAvatar(this.UUID, sp, sendEvent); // event sent if needed
+            m_seatedAvatars.RemoveAvatar(sp);
         }
 
         // Called the same way on both old and new parent part.
@@ -3594,6 +3578,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public void SetParent(SceneObjectGroup parent)
         {
+            if (m_parentGroup != parent)
+                parent.SetSitTarget(this, SitTargetPosition, SitTargetOrientation);
             m_parentGroup = parent;
         }
 

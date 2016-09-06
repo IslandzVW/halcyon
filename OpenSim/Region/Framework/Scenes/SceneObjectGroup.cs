@@ -171,6 +171,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         private GroupPartsCollection m_childParts = new GroupPartsCollection();
         private AvatarPartsCollection m_childAvatars = new AvatarPartsCollection();
+        private Dictionary<UUID, SitTargetInfo> m_sitTargets = new Dictionary<UUID, SitTargetInfo>();
 
         protected ulong m_regionHandle;
         protected SceneObjectPart m_rootPart;
@@ -1012,6 +1013,7 @@ namespace OpenSim.Region.Framework.Scenes
             ClearTargetWaypoints();
             ClearRotWaypoints();
             m_childAvatars.Clear();
+            m_sitTargets.Clear();   // new UUIDs have been assigned, need to refresh
             m_childParts.ForEachPart((SceneObjectPart part) => {
                 part.ResetInstance(isNewInstance, isScriptReset, itemId);
             });
@@ -1324,6 +1326,29 @@ namespace OpenSim.Region.Framework.Scenes
             m_childParts.ForEachPart((SceneObjectPart part) => {
                 part.GroupPosition = absolutePosition;
             });
+        }
+
+        public void SetSitTarget(SceneObjectPart part, Vector3 pos, Quaternion rot)
+        {
+            SitTargetInfo sitInfo = new SitTargetInfo(part, pos, rot);
+            if (sitInfo.IsSet)
+            {
+                m_sitTargets[part.UUID] = sitInfo;
+            }
+            else
+            {
+                if (m_sitTargets.ContainsKey(part.UUID))
+                    m_sitTargets.Remove(part.UUID);
+            }
+        }
+
+        public SitTargetInfo SitTargetForPart(UUID partID)
+        {
+            SitTargetInfo info;
+            if (m_sitTargets.TryGetValue(partID, out info))
+                return info;
+
+            return SitTargetInfo.None;
         }
 
         public void SaveScriptedState(XmlTextWriter writer, StopScriptReason stopScriptReason)
@@ -2484,6 +2509,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_childParts.RemovePart(part); // the old IDs are changing
                 part.ResetIDs(part.LinkNum); // Don't change link nums
                 m_childParts.AddPart(part); // update the part lists with new IDs
+                SetSitTarget(part, part.SitTargetPosition, part.SitTargetOrientation);
             }
         }
 
@@ -4183,18 +4209,24 @@ namespace OpenSim.Region.Framework.Scenes
 
         // These two must be called from the correspondingly-named SceneObjectPart methods.
         // They handle updates to the part data and script notifications.
-        public void AddSeatedAvatar(ScenePresence sp, bool sendEvent)
+        public void AddSeatedAvatar(UUID partID, ScenePresence sp, bool sendEvent)
         {
             if (m_childAvatars.AddAvatar(sp))
             {
+                SitTargetInfo sitInfo = SitTargetForPart(partID);
+                sitInfo.SeatAvatar(sp);
+
                 // Now fix avatar link numbers
                 RecalcSeatedAvatarLinks();
                 if (sendEvent)
                     TriggerScriptChangedEvent(Changed.LINK);
             }
         }
-        public void RemoveSeatedAvatar(ScenePresence sp, bool sendEvent)
+        public void RemoveSeatedAvatar(UUID partID, ScenePresence sp, bool sendEvent)
         {
+            SitTargetInfo sitInfo = SitTargetForPart(partID);
+            sitInfo.SeatAvatar(null);
+
             if (m_childAvatars.RemoveAvatar(sp))
             {
                 // Now fix avatar link numbers
