@@ -49,7 +49,7 @@ namespace OpenSim.Grid.UserServer.Modules
         private IGridServiceCore m_coreService;
         private UserDataBaseService m_userDataBaseService = null;
         private BaseHttpServer m_httpServer;
-        private Dictionary<string, int> m_levelsAllowedPerScope = new Dictionary<string, int>
+        private readonly Dictionary<string, int> m_levelsAllowedPerScope = new Dictionary<string, int>
         {
             {"remote-console", 250}
         };
@@ -91,16 +91,25 @@ namespace OpenSim.Grid.UserServer.Modules
             httpResponse.ContentType = "application/json";
 
             if (m_authGateway == null)
+            {
+                m_log.Error("[JWTAUTH] Hit a bug check: the JWT gatway is not initialized... Why?");
                 return JWTAuthErrors.BadAuthGateway;
+            }
 
             if (httpRequest.ContentType != "application/json")
+            {
                 return JWTAuthErrors.BadJsonRead;
+            }
 
             if (httpRequest.ContentLength <= 1)
+            {
                 return JWTAuthErrors.BadJsonRead;
+            }
 
             if (!m_levelsAllowedPerScope.ContainsKey(param))
+            {
                 return JWTAuthErrors.BadScope;
+            }
 
             var username = "";
             var password = "";
