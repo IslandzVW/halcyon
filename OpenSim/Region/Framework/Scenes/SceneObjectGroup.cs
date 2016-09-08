@@ -3278,6 +3278,14 @@ namespace OpenSim.Region.Framework.Scenes
             return parts.Except(new List<SceneObjectPart> { child });
         }
 
+        /// <summary>
+        /// Get the avatars seated on this scene object safely
+        /// </summary>
+        /// <returns>the list of ScenePresence objects</returns>
+        public IReadOnlyCollection<ScenePresence> GetSeatedAvatars()
+        {
+            return m_childAvatars.GetAllParts();
+        }
 
         /// <summary>
         /// Update the texture entry for this part
