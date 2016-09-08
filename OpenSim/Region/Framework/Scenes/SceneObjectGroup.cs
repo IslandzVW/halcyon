@@ -3287,6 +3287,40 @@ namespace OpenSim.Region.Framework.Scenes
             return m_childAvatars.GetAllParts();
         }
 
+        public List<ScenePresence> GetAvatarsAsList()
+        {
+            List<ScenePresence> ret = new List<ScenePresence>();
+            m_childAvatars.ForEach((ScenePresence sp) => {
+                ret.Add(sp);
+            });
+            return ret;
+        }
+
+        public List<object> GetAllLinksAsList()
+        {
+            List<object> ret = new List<object>();
+            m_childParts.ForEachPart((SceneObjectPart part) => {
+                ret.Add(part);
+            });
+            m_childAvatars.ForEach((ScenePresence sp) => {
+                ret.Add(sp);
+            });
+            return ret;
+        }
+
+        public List<object> GetAllLinksAsListExcept(SceneObjectPart except)
+        {
+            List<object> ret = new List<object>();
+            m_childParts.ForEachPart((SceneObjectPart part) => {
+                if ((except == null) || (part.UUID != except.UUID))
+                    ret.Add(part);
+            });
+            m_childAvatars.ForEach((ScenePresence sp) => {
+                ret.Add(sp);
+            });
+            return ret;
+        }
+
         /// <summary>
         /// Update the texture entry for this part
         /// </summary>
