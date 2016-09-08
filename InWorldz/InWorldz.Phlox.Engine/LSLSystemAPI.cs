@@ -4288,7 +4288,7 @@ namespace InWorldz.Phlox.Engine
 
         public void iwLinkTargetOmega(int linknumber, LSL_Vector axis, float spinrate, float gain)
         {
-            var parts = GetLinkPrimsOnly(linknumber) as List<SceneObjectPart>;
+            var parts = GetLinkPrimsOnly(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 PrimTargetOmega(part, axis, spinrate, gain);
