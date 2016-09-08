@@ -27,6 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+using System;
 
 namespace OpenSim.Framework.Communications.JWT
 {
@@ -47,21 +48,33 @@ namespace OpenSim.Framework.Communications.JWT
         /// <summary>
         /// Authenticates a user and returns a JWT token serialized as JSON
         /// </summary>
-        /// <param name="username">The username to authenticate</param>
+        /// <param name="firstname">The first part of the username to authenticate</param>
+        /// <param name="lastname">The last part of the username to authenticate</param>
         /// <param name="password">The user's password</param>
         /// <param name="minLevel">The minimum godlevel this user must be at to generate a token</param>
         /// <param name="payloadOptions">Options for the generated payload</param>
         /// <returns>JWT token string</returns>
-        public string Authenticate(string username, string password, int minLevel,
-            PayloadOptions payloadOptions)
+        public string Authenticate(string firstname, string lastname, string password, int minLevel, PayloadOptions payloadOptions)
         {
-            UserProfileData profile = _userService.GetUserProfile(username, password, true);
+            UserProfileData profile = _userService.GetUserProfile(firstname, lastname, true);
             if (profile == null)
             {
                 throw new AuthenticationException(AuthenticationFailureCause.UserNameNotFound);
             }
 
-            return "";
+            if (profile.GodLevel < minLevel)
+            {
+                throw new AuthenticationException(AuthenticationFailureCause.WrongUserLevel);
+            }
+
+            var pwhash = Util.Md5Hash(Util.Md5Hash(password) + ":" + profile.PasswordSalt);
+            if (!profile.PasswordHash.Equals(pwhash, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new AuthenticationException(AuthenticationFailureCause.InvalidPassword);
+            }
+
+
+            return "asdf";
         }
     }
 }
