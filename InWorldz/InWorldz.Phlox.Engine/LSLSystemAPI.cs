@@ -8584,7 +8584,6 @@ namespace InWorldz.Phlox.Engine
             Vector3 sitPos = new Vector3((float)offset.X, (float)offset.Y, (float)offset.Z);
             Quaternion sitRot = Rot2Quaternion(rot);
 
-            var group = m_host.ParentGroup;
             var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
