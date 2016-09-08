@@ -4182,7 +4182,7 @@ namespace InWorldz.Phlox.Engine
         public void iwStopLinkAnimation(int linknumber, string anim)
         {
             if (linknumber < 0) return;
-            List<SceneObjectPart> parts = GetLinkParts(linknumber, false) as List<SceneObjectPart>;
+            var parts = GetLinkPrimsOnly(linknumber);
 
             if (parts.Count != 1) return;
 
@@ -4288,7 +4288,7 @@ namespace InWorldz.Phlox.Engine
 
         public void iwLinkTargetOmega(int linknumber, LSL_Vector axis, float spinrate, float gain)
         {
-            List<SceneObjectPart> parts = GetLinkParts(linknumber, false) as List<SceneObjectPart>;
+            var parts = GetLinkPrimsOnly(linknumber) as List<SceneObjectPart>;
 
             foreach (SceneObjectPart part in parts)
                 PrimTargetOmega(part, axis, spinrate, gain);
@@ -4642,7 +4642,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llSetLinkColor(int linknumber, LSL_Vector color, int face)
         {
-            List<SceneObjectPart> parts = GetLinkParts(linknumber, false) as List<SceneObjectPart>;
+            var parts = GetLinkPrimsOnly(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 SetColor(part, color, face);
