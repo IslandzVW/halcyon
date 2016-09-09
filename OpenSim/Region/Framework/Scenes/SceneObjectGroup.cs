@@ -3296,28 +3296,36 @@ namespace OpenSim.Region.Framework.Scenes
             return ret;
         }
 
-        public List<object> GetAllLinksAsList()
+        public List<object> GetAllLinksAsList(bool includeAvatars)
         {
             List<object> ret = new List<object>();
             m_childParts.ForEachPart((SceneObjectPart part) => {
                 ret.Add(part);
             });
-            m_childAvatars.ForEach((ScenePresence sp) => {
-                ret.Add(sp);
-            });
+            if (includeAvatars)
+            {
+                m_childAvatars.ForEach((ScenePresence sp) =>
+                {
+                    ret.Add(sp);
+                });
+            }
             return ret;
         }
 
-        public List<object> GetAllLinksAsListExcept(SceneObjectPart except)
+        public List<object> GetAllLinksAsListExcept(SceneObjectPart except, bool includeAvatars)
         {
             List<object> ret = new List<object>();
             m_childParts.ForEachPart((SceneObjectPart part) => {
                 if ((except == null) || (part.UUID != except.UUID))
                     ret.Add(part);
             });
-            m_childAvatars.ForEach((ScenePresence sp) => {
-                ret.Add(sp);
-            });
+            if (includeAvatars)
+            {
+                m_childAvatars.ForEach((ScenePresence sp) =>
+                {
+                    ret.Add(sp);
+                });
+            }
             return ret;
         }
 

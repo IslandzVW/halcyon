@@ -557,7 +557,7 @@ namespace InWorldz.Phlox.Engine
             {
                 case ScriptBaseClass.LINK_SET:
                     if (m_host.ParentGroup != null)
-                        ret.AddRange(m_host.ParentGroup.GetAllLinksAsList());
+                        ret.AddRange(m_host.ParentGroup.GetAllLinksAsList(includeAvatars));
                     else
                         ret.Add(m_host);
                     break;
@@ -572,14 +572,14 @@ namespace InWorldz.Phlox.Engine
 
                 case ScriptBaseClass.LINK_ALL_OTHERS:
                     if (m_host.ParentGroup != null)
-                        ret.AddRange(m_host.ParentGroup.GetAllLinksAsListExcept(m_host));
+                        ret.AddRange(m_host.ParentGroup.GetAllLinksAsListExcept(m_host, includeAvatars));
                     else
                         ret.Add(m_host);
                     break;
 
                 case ScriptBaseClass.LINK_ALL_CHILDREN:
                     if (m_host.ParentGroup != null)
-                        ret.AddRange(m_host.ParentGroup.GetAllLinksAsListExcept(m_host.ParentGroup.RootPart));
+                        ret.AddRange(m_host.ParentGroup.GetAllLinksAsListExcept(m_host.ParentGroup.RootPart, includeAvatars));
                     else
                         ret.Add(m_host);
                     break;
@@ -4815,16 +4815,23 @@ namespace InWorldz.Phlox.Engine
 
         public string llGetLinkKey(int linknum)
         {
-            
-            SceneObjectPart part = m_host.ParentGroup.GetLinkNumPart(linknum);
-            if (part != null)
+            List<object> links = GetLinkParts(linknum, true);
+            if (links.Count == 1)
             {
-                return part.UUID.ToString();
+                object o = links.First();
+                if (o is ScenePresence)
+                {
+                    ScenePresence sp = o as ScenePresence;
+                    return sp.UUID.ToString();
+                }
+                if (o is SceneObjectPart)
+                {
+                    SceneObjectPart part = o as SceneObjectPart;
+                    return part.UUID.ToString();
+                }
             }
-            else
-            {
-                return UUID.Zero.ToString();
-            }
+
+            return UUID.Zero.ToString();
         }
 
         /// <summary>
