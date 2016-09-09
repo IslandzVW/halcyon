@@ -593,9 +593,12 @@ namespace InWorldz.Phlox.Engine
                     {
                         if (linkType > m_host.ParentGroup.PartCount)
                         {
-                            ScenePresence targetSP = m_host.ParentGroup.GetSeatedAvatarByLink(linkType);
-                            if (targetSP != null)
-                                ret.Add(targetSP);
+                            if (includeAvatars)
+                            {
+                                ScenePresence targetSP = m_host.ParentGroup.GetSeatedAvatarByLink(linkType);
+                                if (targetSP != null)
+                                    ret.Add(targetSP);
+                            }
                         }
                         else
                         if (linkType > 1)   // 0, 1 handled above
