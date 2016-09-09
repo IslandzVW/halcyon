@@ -9403,6 +9403,7 @@ namespace InWorldz.Phlox.Engine
                             if (o is ScenePresence)     // avatar-as-a-prim 'part'?
                             {
                                 var sp = o as ScenePresence;
+                                sp.SetAvatarAsAPrimMode();
                                 sp.UpdateSeatedPosition(v);
                             }
                             else
@@ -9437,6 +9438,7 @@ namespace InWorldz.Phlox.Engine
                             if (o is ScenePresence)     // avatar-as-a-prim 'part'?
                             {
                                 var sp = o as ScenePresence;
+                                sp.SetAvatarAsAPrimMode();
                                 sp.Rotation = Rot2Quaternion(lq);
                             }
                             else
@@ -9478,6 +9480,7 @@ namespace InWorldz.Phlox.Engine
                             if (o is ScenePresence)     // avatar-as-a-prim 'part'?
                             {
                                 var sp = o as ScenePresence;
+                                sp.SetAvatarAsAPrimMode();
                                 sp.Rotation = m_host.ParentGroup.RootPart.RotationOffset * Rot2Quaternion(q);
                             }
                             else
