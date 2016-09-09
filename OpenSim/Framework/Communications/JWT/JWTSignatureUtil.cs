@@ -9,8 +9,7 @@ namespace OpenSim.Framework.Communications.JWT
         private RSACryptoServiceProvider m_privateKey;
         private RSACryptoServiceProvider m_publicKey;
 
-
-        public JWTSignatureUtil(string privateKeyPath = "", string publicKeyPath = "")
+        public JWTSignatureUtil(string privateKeyPath = null, string publicKeyPath = null)
         {
             if (!string.IsNullOrWhiteSpace(privateKeyPath))
             {
