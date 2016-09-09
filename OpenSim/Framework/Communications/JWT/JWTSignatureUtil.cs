@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 
 namespace OpenSim.Framework.Communications.JWT
 {
@@ -53,12 +53,7 @@ namespace OpenSim.Framework.Communications.JWT
             return m_publicKey.VerifyData(System.Text.Encoding.UTF8.GetBytes(body), CryptoConfig.MapNameToOID("SHA256"), sig);
         }
 
-        public static string EncodeBase64(string body)
-        {
-            return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(body));
-        }
-
-        public static string DecodeBase64(string body)
+        private static string DecodeBase64(string body)
         {
             return System.Text.Encoding.UTF8.GetString(System.Text.Encoding.UTF8.GetBytes(body));
         }
