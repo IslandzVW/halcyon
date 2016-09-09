@@ -3278,6 +3278,56 @@ namespace OpenSim.Region.Framework.Scenes
             return parts.Except(new List<SceneObjectPart> { child });
         }
 
+        /// <summary>
+        /// Get the avatars seated on this scene object safely
+        /// </summary>
+        /// <returns>the list of ScenePresence objects</returns>
+        public IReadOnlyCollection<ScenePresence> GetSeatedAvatars()
+        {
+            return m_childAvatars.GetAllParts();
+        }
+
+        public List<ScenePresence> GetAvatarsAsList()
+        {
+            List<ScenePresence> ret = new List<ScenePresence>();
+            m_childAvatars.ForEach((ScenePresence sp) => {
+                ret.Add(sp);
+            });
+            return ret;
+        }
+
+        public List<object> GetAllLinksAsList(bool includeAvatars)
+        {
+            List<object> ret = new List<object>();
+            m_childParts.ForEachPart((SceneObjectPart part) => {
+                ret.Add(part);
+            });
+            if (includeAvatars)
+            {
+                m_childAvatars.ForEach((ScenePresence sp) =>
+                {
+                    ret.Add(sp);
+                });
+            }
+            return ret;
+        }
+
+        public List<object> GetAllLinksAsListExcept(SceneObjectPart except, bool includeAvatars)
+        {
+            List<object> ret = new List<object>();
+            m_childParts.ForEachPart((SceneObjectPart part) => {
+                if ((except == null) || (part.UUID != except.UUID))
+                    ret.Add(part);
+            });
+            if (includeAvatars)
+            {
+                m_childAvatars.ForEach((ScenePresence sp) =>
+                {
+                    ret.Add(sp);
+                });
+            }
+            return ret;
+        }
 
         /// <summary>
         /// Update the texture entry for this part
