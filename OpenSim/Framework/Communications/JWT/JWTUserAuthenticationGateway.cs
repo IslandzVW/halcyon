@@ -28,6 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 using System;
+using System.Security.Cryptography;
 
 namespace OpenSim.Framework.Communications.JWT
 {
@@ -39,11 +40,13 @@ namespace OpenSim.Framework.Communications.JWT
     {
         private readonly IUserService _userService;
 
+        private JWTSignatureUtil m_sigUtil;
+
         public JWTUserAuthenticationGateway(IUserService userService)
         {
             _userService = userService;
+            m_sigUtil = new JWTSignatureUtil(privateKeyPath: "./id_rsa", publicKeyPath:"./id_rsa.pub");
         }
-
 
         /// <summary>
         /// Authenticates a user and returns a JWT token serialized as JSON
@@ -73,8 +76,11 @@ namespace OpenSim.Framework.Communications.JWT
                 throw new AuthenticationException(AuthenticationFailureCause.InvalidPassword);
             }
 
+            // TODO: create header and payload strings, base64 them,
+            const string header = "{\"alg\":\"SH256\",\"typ\":\"JWT\"}";
+            var payload = "{}";
 
-            return "asdf";
+            return m_sigUtil.Sign(JWTSignatureUtil.EncodeBase64(header) + "." + JWTSignatureUtil.EncodeBase64(payload));
         }
     }
 }
