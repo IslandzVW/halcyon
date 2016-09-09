@@ -127,7 +127,7 @@ namespace OpenSim.Grid.UserServer.Modules
             }
 
             var payload = new PayloadOptions();
-            payload.Exp = (new DateTime()).AddDays(1);
+            payload.Exp = DateTime.Now.AddDays(1);
             payload.Scope = param;
             payload.Username = username;
 
