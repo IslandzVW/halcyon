@@ -28,6 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 using System;
+using InWorldz.JWT;
 
 namespace OpenSim.Framework.Communications.JWT
 {

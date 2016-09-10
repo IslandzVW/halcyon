@@ -31,6 +31,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using InWorldz.JWT;
 using OpenSim.Framework.Communications.JWT;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Grid.Framework;

@@ -30,7 +30,7 @@
 
 using System;
 
-namespace OpenSim.Framework.Communications.JWT
+namespace InWorldz.JWT
 {
     /// <summary>
     /// Options that can are passed through a JWT authentication payload

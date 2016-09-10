@@ -1,5 +1,5 @@
 ﻿using System;
-namespace OpenSim.Framework.Communications.JWT
+namespace InWorldz.JWT
 {
     /// <summary>
     /// Simplified access to and from a JWT token and the data contained therein.

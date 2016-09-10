@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OpenSim.Framework.Communications.JWT
+namespace InWorldz.JWT
 {
     public class JWTSignatureException : Exception
     {
