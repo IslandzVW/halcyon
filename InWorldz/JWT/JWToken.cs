@@ -26,6 +26,14 @@ namespace InWorldz.JWT
             private set;
         }
 
+        public bool IsNotExpired
+        {
+            get
+            {
+                return Payload?.Exp > DateTime.Now;
+            }
+        }
+
         private readonly string m_token;
 
         public JWToken(string token, JWTSignatureUtil sigUtil)
