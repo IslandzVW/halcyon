@@ -265,24 +265,23 @@ namespace OpenSim.Framework.Console
                     return reply;
                 }
 
-                JWToken token = null;
                 try
                 {
-                    token = new JWToken(authHeader.Substring(7), m_sigUtil);
+                    var token = new JWToken(authHeader.Substring(7), m_sigUtil);
 
                     // TODO: Make the scope strings come from some central list that can be registered into?
                     if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
                     {
                         return reply;
                     }
+
+                    m_log.Info($"[REMOTECONSOLE] StartSession access granted via JWT to '{token.Payload.Username}' from '{headers["remote_addr"]}'.");
                 }
                 catch (JWTokenException jte)
                 {
                     m_log.Error($"[REMOTECONSOLE] Failure with JWToken in StartSession from '{headers["remote_addr"]}': {jte}");
                     return reply;
                 }
-
-                m_log.Info($"[REMOTECONSOLE] StartSession granted via JWT to '{token.Payload.Username}' from '{headers["remote_addr"]}'.");
             }
             else if (request.ContainsKey("USER") && request.ContainsKey("PASS"))
             {
@@ -293,7 +292,7 @@ namespace OpenSim.Framework.Console
                 if (Util.AuthenticateAsSystemUser(username, password) == false)
                     return reply;
 
-                m_log.Warn($"[REMOTECONSOLE] StartSession granted via legacy system username and password to '{username}' from '{headers["remote_addr"]}'.");
+                m_log.Warn($"[REMOTECONSOLE] StartSession access granted via legacy system username and password to '{username}' from '{headers["remote_addr"]}'.");
             }
             else
             {
@@ -373,6 +372,8 @@ namespace OpenSim.Framework.Console
                     {
                         return reply;
                     }
+
+                    m_log.Info($"[REMOTECONSOLE] CloseSession for session '{post["ID"]}' accessed via JWT by '{token.Payload.Username}' from '{headers["remote_addr"]}'.");
                 }
                 catch (JWTokenException jte)
                 {
@@ -462,6 +463,8 @@ namespace OpenSim.Framework.Console
                     {
                         return reply;
                     }
+
+                    m_log.Info($"[REMOTECONSOLE] SessionCommand for session '{post["ID"]}' accessed via JWT by '{token.Payload.Username}' from '{headers["remote_addr"]}' with command '{post["COMMAND"]}'.");
                 }
                 catch (JWTokenException jte)
                 {
@@ -580,6 +583,8 @@ namespace OpenSim.Framework.Console
                     {
                         return;
                     }
+
+                    m_log.Info($"[REMOTECONSOLE] ReadResponses for session '{uri_tmp}' accessed via JWT by '{token.Payload.Username}' from '{httpRequest.RemoteIPEndPoint}'.");
                 }
                 catch (JWTokenException jte)
                 {
