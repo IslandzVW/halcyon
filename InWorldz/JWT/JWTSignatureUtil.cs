@@ -71,21 +71,27 @@ namespace InWorldz.JWT
             return Convert.ToBase64String(signature);
         }
 
-        public bool Verify(string body, string signature, bool isBase64 = true)
+        public bool Verify(string body, string signature)
         {
             if (m_publicKey == null)
             {
                 throw new JWTSignatureException(JWTSignatureFailureCauses.MissingPublicKey);
             }
 
-            var sig = Convert.FromBase64String(isBase64 ? DecodeBase64(signature) : signature);
+            var sig = DecodeBase64(signature);
 
             return m_publicKey.VerifyData(System.Text.Encoding.UTF8.GetBytes(body), CryptoConfig.MapNameToOID("SHA256"), sig);
         }
 
-        private static string DecodeBase64(string body)
+        private static byte[] DecodeBase64(string body)
         {
-            return System.Text.Encoding.UTF8.GetString(System.Text.Encoding.UTF8.GetBytes(body));
+            // Thank you to http://stackoverflow.com/a/9301545
+            body = body.Trim().Replace(" ", "+");
+            if (body.Length % 4 > 0)
+            {
+                body = body.PadRight(body.Length + 4 - body.Length % 4, '=');
+            }
+            return Convert.FromBase64String(body);
         }
     }
 }

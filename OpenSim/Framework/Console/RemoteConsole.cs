@@ -262,6 +262,7 @@ namespace OpenSim.Framework.Console
                 var authHeader = headers["Authorization"].ToString();
                 if (!authHeader.StartsWith("Bearer ", StringComparison.InvariantCultureIgnoreCase))
                 {
+                    m_log.Warn($"[REMOTECONSOLE] StartSession JWT Authorization header format failure from '{headers["remote_addr"]}'.");
                     return reply;
                 }
 
@@ -272,6 +273,7 @@ namespace OpenSim.Framework.Console
                     // TODO: Make the scope strings come from some central list that can be registered into?
                     if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
                     {
+                        m_log.Warn($"[REMOTECONSOLE] StartSession invalid/expired/wrong scope JWToken from '{headers["remote_addr"]}'.");
                         return reply;
                     }
 
@@ -360,6 +362,7 @@ namespace OpenSim.Framework.Console
                 var authHeader = headers["Authorization"].ToString();
                 if (!authHeader.StartsWith("Bearer ", StringComparison.InvariantCultureIgnoreCase))
                 {
+                    m_log.Warn($"[REMOTECONSOLE] CloseSession JWT Authorization header format failure from '{headers["remote_addr"]}'.");
                     return reply;
                 }
 
@@ -370,6 +373,7 @@ namespace OpenSim.Framework.Console
                     // TODO: Make the scope strings come from some central list that can be registered into?
                     if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
                     {
+                        m_log.Warn($"[REMOTECONSOLE] CloseSession invalid/expired/wrong scope JWToken from '{headers["remote_addr"]}'.");
                         return reply;
                     }
 
@@ -451,6 +455,7 @@ namespace OpenSim.Framework.Console
                 var authHeader = headers["Authorization"].ToString();
                 if (!authHeader.StartsWith("Bearer ", StringComparison.InvariantCultureIgnoreCase))
                 {
+                    m_log.Warn($"[REMOTECONSOLE] SessionCommand JWT Authorization header format failure from '{headers["remote_addr"]}'.");
                     return reply;
                 }
 
@@ -461,6 +466,7 @@ namespace OpenSim.Framework.Console
                     // TODO: Make the scope strings come from some central list that can be registered into?
                     if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
                     {
+                        m_log.Warn($"[REMOTECONSOLE] SessionCommand invalid/expired/wrong scope JWToken from '{headers["remote_addr"]}'.");
                         return reply;
                     }
 
@@ -571,6 +577,7 @@ namespace OpenSim.Framework.Console
             {
                 if (!authHeader.StartsWith("Bearer ", StringComparison.InvariantCultureIgnoreCase))
                 {
+                    m_log.Warn($"[REMOTECONSOLE] ReadResponses JWT Authorization header format failure from '{httpRequest.RemoteIPEndPoint}'.");
                     return;
                 }
 
@@ -581,6 +588,7 @@ namespace OpenSim.Framework.Console
                     // TODO: Make the scope strings come from some central list that can be registered into?
                     if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
                     {
+                        m_log.Warn($"[REMOTECONSOLE] ReadResponses invalid/expired/wrong scope JWToken from '{httpRequest.RemoteIPEndPoint}'.");
                         return;
                     }
 

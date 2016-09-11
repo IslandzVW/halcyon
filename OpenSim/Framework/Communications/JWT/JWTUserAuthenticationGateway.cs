@@ -61,7 +61,7 @@ namespace OpenSim.Framework.Communications.JWT
         /// <param name="minLevel">The minimum godlevel this user must be at to generate a token</param>
         /// <param name="payloadOptions">Options for the generated payload</param>
         /// <returns>JWT token string</returns>
-        public string Authenticate(string firstname, string lastname, string password, int minLevel, PayloadOptions payloadOptions)
+        public JWToken Authenticate(string firstname, string lastname, string password, int minLevel, PayloadOptions payloadOptions)
         {
             UserProfileData profile = _userService.GetUserProfile(firstname, lastname, true);
             if (profile == null)
@@ -82,7 +82,7 @@ namespace OpenSim.Framework.Communications.JWT
 
             m_log.Info($"[JWTGATEWAY] Granted token for '{payloadOptions.Scope}' to user '{payloadOptions.Username}' until {payloadOptions.Exp}");
 
-            return (new JWToken(payloadOptions, m_sigUtil)).ToString();
+            return new JWToken(payloadOptions, m_sigUtil);
         }
     }
 }

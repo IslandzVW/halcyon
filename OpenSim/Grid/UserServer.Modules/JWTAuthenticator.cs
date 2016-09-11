@@ -119,7 +119,7 @@ namespace OpenSim.Grid.UserServer.Modules
             {
                 var data = JsonMapper.ToObject(request);
 
-                username = data["username"].ToString().ToLower().Trim();
+                username = data["username"].ToString().Trim();
                 password = data["password"].ToString();
             }
             catch (Exception)
@@ -132,7 +132,7 @@ namespace OpenSim.Grid.UserServer.Modules
             payload.Scope = param;
             payload.Username = username;
 
-            var nameSplit = Regex.Replace(username, @"[\s]+", " ").Split(' ');
+            var nameSplit = Regex.Replace(username.ToLower(), @"[\s]+", " ").Split(' ');
             var firstname = nameSplit[0];
             var lastname = nameSplit.Length > 1 ? nameSplit[1] : "resident";
 
@@ -140,13 +140,14 @@ namespace OpenSim.Grid.UserServer.Modules
             {
                 var response = new Dictionary<string, string>
                 {
-                    {"token", m_authGateway.Authenticate(firstname, lastname, password, m_levelsAllowedPerScope[param], payload)}
+                    {"token", m_authGateway.Authenticate(firstname, lastname, password, m_levelsAllowedPerScope[param], payload).ToString()}
                 };
 
                 return JsonMapper.ToJson(response);
             }
             catch (AuthenticationException ae)
             {
+                m_log.Warn($"[JWTAUTH] Failed attempt to get token from {httpRequest.RemoteIPEndPoint} for user '{username}'. Error: {ae.Cause}");
                 return JWTAuthErrors.AuthFailed(ae.Cause.ToString());
             }
         }
