@@ -28,7 +28,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 using System;
+using System.Reflection;
 using InWorldz.JWT;
+using log4net;
 
 namespace OpenSim.Framework.Communications.JWT
 {
@@ -38,6 +40,8 @@ namespace OpenSim.Framework.Communications.JWT
     /// </summary>
     public class JWTUserAuthenticationGateway
     {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private readonly IUserService _userService;
 
         private readonly JWTSignatureUtil m_sigUtil;
@@ -75,6 +79,8 @@ namespace OpenSim.Framework.Communications.JWT
             {
                 throw new AuthenticationException(AuthenticationFailureCause.InvalidPassword);
             }
+
+            m_log.Info($"[JWTGATEWAY] Granted token for '{payloadOptions.Scope}' to user '{payloadOptions.Username}' until {payloadOptions.Exp}");
 
             return (new JWToken(payloadOptions, m_sigUtil)).ToString();
         }
