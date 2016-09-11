@@ -332,6 +332,7 @@ namespace OpenSim.Framework.Communications
                                     profile = m_storage.GetUserProfileData(uuid);
                                     if (profile != null)
                                     {
+                                        // Refresh agent data (possibly forced refresh)
                                         profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
                                         ReplaceUserData(profile);
                                     }
@@ -344,6 +345,12 @@ namespace OpenSim.Framework.Communications
                                             RemoveUserData(uuid);
                                         }
                                     }
+                                }
+                                else
+                                {
+                                    // Refresh agent data (possibly forced refresh)
+                                    profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
+                                    ReplaceUserData(profile);
                                 }
                             }
 

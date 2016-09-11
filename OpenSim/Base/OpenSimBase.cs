@@ -446,6 +446,18 @@ namespace OpenSim
             }
             else m_log.Error("[MODULES]: The new RegionModulesController is missing...");
 
+            // Check if a (any) permission module has been loaded.
+            // This can be any permissions module, including the default PermissionsModule with m_bypassPermissions==true.
+            // To disable permissions, specify [Startup] permissionmodules=DefaultPermissionsModule in the .ini file, and 
+            // serverside_object_permissions=false, optionally propagate_permissions=false.
+            if (!scene.Permissions.IsAvailable())
+            {
+                m_log.Error("[MODULES]: Permissions module is not set, or set incorrectly.");
+                Environment.Exit(1);
+                // Note that an Exit here can trigger a PhysX exception but if that happens it is the result of this 
+                // permissions problem and hopefully the lot will show this error and intentional exit.
+            }
+
             scene.SetModuleInterfaces();
 
             // this must be done before prims try to rez or they'll rez over no land
