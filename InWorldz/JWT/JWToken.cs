@@ -73,7 +73,7 @@ namespace InWorldz.JWT
 
         private static string DecodeBase64(string body)
         {
-            return System.Text.Encoding.UTF8.GetString(System.Text.Encoding.UTF8.GetBytes(body));
+            return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(body));
         }
     }
 }

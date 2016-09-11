@@ -132,7 +132,7 @@
 					"urlencoded": [
 						{
 							"key": "ID",
-							"value": "{{restconsole_login_key}}",
+							"value": "{{restconsole_session}}",
 							"type": "text",
 							"enabled": true
 						},
@@ -151,7 +151,7 @@
 		{
 			"name": "ReadResponses JWT",
 			"request": {
-				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/ReadResponses/{{restconsole_login_key}}/",
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/ReadResponses/{{restconsole_session}}/",
 				"method": "POST",
 				"header": [
 					{

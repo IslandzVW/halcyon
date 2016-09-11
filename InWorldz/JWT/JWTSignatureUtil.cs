@@ -50,10 +50,10 @@ namespace InWorldz.JWT
                 m_privateKey.FromXmlString(cert.PrivateKey.ToXmlString(true));
             }
 
-            if (!string.IsNullOrWhiteSpace(privateKeyPath))
+            if (!string.IsNullOrWhiteSpace(publicKeyPath))
             {
                 // Read the public certificate
-                var cert = new X509Certificate2(privateKeyPath);
+                var cert = new X509Certificate2(publicKeyPath);
 
                 m_publicKey = (RSACryptoServiceProvider)cert.PublicKey.Key;
             }
@@ -75,7 +75,7 @@ namespace InWorldz.JWT
         {
             if (m_publicKey == null)
             {
-                throw new JWTSignatureException(JWTSignatureFailureCauses.MissingPrivateKey);
+                throw new JWTSignatureException(JWTSignatureFailureCauses.MissingPublicKey);
             }
 
             var sig = Convert.FromBase64String(isBase64 ? DecodeBase64(signature) : signature);
