@@ -40,9 +40,17 @@ namespace InWorldz.JWT
         {
             m_token = token;
 
+            // TODO: Make this code have a LOT more defense agaisnt malciousness.
             var parts = m_token.Split('.');
             Header = DecodeBase64(parts[0]);
-            Payload = LitJson.JsonMapper.ToObject<PayloadOptions>(parts[1]);
+            try
+            {
+                Payload = LitJson.JsonMapper.ToObject<PayloadOptions>(DecodeBase64(parts[1]));
+            }
+            catch (LitJson.JsonException jse)
+            {
+                throw new JWTokenException(jse.Message);
+            }
             HasValidSignature = sigUtil.Verify(body: parts[0] + "." + parts[1], signature: parts[2], isBase64: true);
         }
 
