@@ -67,10 +67,5 @@ namespace InWorldz.JWT
         /// The UUID of the registered partner of the user that was used to generate this authentication payload at the time the payload was generated
         /// </summary>
         public string PartnerId { get; set; }
-
-        /// <summary>
-        /// The access control level of the user that was used to generate this authentication payload at the time the payload was generated
-        /// </summary>
-        public int UserLevel { get; set; }
     }
 }
