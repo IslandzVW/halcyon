@@ -162,6 +162,9 @@ namespace OpenSim.Framework.Communications.Messages
         [ProtoMember(37)]
         public ulong PresenceFlags;
 
+        [ProtoMember(38)]
+        public bool AvatarAsAPrim;
+
         static AgentPutMessage()
         {
             ProtoBuf.Serializer.PrepareSerializer<AgentPutMessage>();
@@ -207,7 +210,8 @@ namespace OpenSim.Framework.Communications.Messages
                 RemoteAgents = data.RemoteAgents,
                 ConstantForces = data.ConstantForces,
                 ConstantForcesAreLocal = data.ConstantForcesAreLocal,
-                PresenceFlags = data.PresenceFlags
+                PresenceFlags = data.PresenceFlags,
+                AvatarAsAPrim = data.AvatarAsAPrim
             };
 
             return message;
@@ -256,7 +260,8 @@ namespace OpenSim.Framework.Communications.Messages
                 RemoteAgents = this.RemoteAgents,
                 ConstantForces = this.ConstantForces,
                 ConstantForcesAreLocal = this.ConstantForcesAreLocal,
-                PresenceFlags = this.PresenceFlags
+                PresenceFlags = this.PresenceFlags,
+                AvatarAsAPrim = this.AvatarAsAPrim
             };
 
             return agentData;
