@@ -29,6 +29,7 @@
  */
 
 using System;
+using OpenMetaverse;
 
 namespace InWorldz.JWT
 {
@@ -51,5 +52,25 @@ namespace InWorldz.JWT
         /// The username that was used to generate this authentication payload
         /// </summary>
         public string Username { get; set; }
+
+        /// <summary>
+        /// The UUID of the user that was used to generate this authentication payload
+        /// </summary>
+        public string UserId { get; set; }
+
+        /// <summary>
+        /// The account creation date of the user that was used to generate this authentication payload
+        /// </summary>
+        public DateTime BirthDate { get; set; }
+
+        /// <summary>
+        /// The UUID of the registered partner of the user that was used to generate this authentication payload at the time the payload was generated
+        /// </summary>
+        public string PartnerId { get; set; }
+
+        /// <summary>
+        /// The access control level of the user that was used to generate this authentication payload at the time the payload was generated
+        /// </summary>
+        public int UserLevel { get; set; }
     }
 }

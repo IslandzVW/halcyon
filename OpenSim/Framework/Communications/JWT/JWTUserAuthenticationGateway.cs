@@ -31,6 +31,7 @@ using System;
 using System.Reflection;
 using InWorldz.JWT;
 using log4net;
+using OpenMetaverse;
 
 namespace OpenSim.Framework.Communications.JWT
 {
@@ -79,6 +80,11 @@ namespace OpenSim.Framework.Communications.JWT
             {
                 throw new AuthenticationException(AuthenticationFailureCause.InvalidPassword);
             }
+
+            payloadOptions.UserId = profile.ID.ToString();
+            payloadOptions.BirthDate = (new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(profile.Created).ToUniversalTime();
+            payloadOptions.PartnerId = profile.Partner == UUID.Zero ? String.Empty : profile.Partner.ToString();
+            payloadOptions.UserLevel = profile.GodLevel;
 
             m_log.Info($"[JWTGATEWAY] Granted token for '{payloadOptions.Scope}' to user '{payloadOptions.Username}' until {payloadOptions.Exp}");
 
