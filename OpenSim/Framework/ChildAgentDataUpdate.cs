@@ -174,7 +174,6 @@ namespace OpenSim.Framework
         {
             AgentID = new UUID(cAgent.AgentID);
 
-            // next: ???
             Size = new Vector3();
             Size.Z = cAgent.AVHeight;
 
@@ -317,6 +316,8 @@ namespace OpenSim.Framework
 
         public ulong PresenceFlags;
 
+        public bool AvatarAsAPrim;
+
         public virtual OSDMap Pack()
         {
             OSDMap args = new OSDMap();
@@ -400,6 +401,8 @@ namespace OpenSim.Framework
                 args["sat_on_prim"] = OSD.FromUUID(SatOnPrim);
                 args["sit_offset"] = OSD.FromString(SatOnPrimOffset.ToString());
             }
+
+            args["avatar_as_a_prim"] = OSD.FromBoolean(AvatarAsAPrim);
 
             return args;
         }
@@ -555,6 +558,9 @@ namespace OpenSim.Framework
 
             if (args.ContainsKey("callback_uri"))
                 CallbackURI = args["callback_uri"].AsString();
+
+            if (args.ContainsKey("avatar_as_a_prim"))
+                AvatarAsAPrim = args["avatar_as_a_prim"].AsBoolean();
 
             if (args.ContainsKey("sat_on_group"))
             {
