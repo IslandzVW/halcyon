@@ -1556,7 +1556,7 @@ namespace OpenSim.Region.Framework.Scenes
                     parent = MakeRootAgent(pos);
 
                     // Release the lock before calling PostProcessMakeRootAgent, it calls functions that use lock
-                    PostProcessMakeRootAgent(parent, m_flying);
+                    PostProcessMakeRootAgent(parent, flying);
                     ConfirmHandoff(true);
                     //m_log.DebugFormat("[SCENE PRESENCE]: Completed movement");
                 }
