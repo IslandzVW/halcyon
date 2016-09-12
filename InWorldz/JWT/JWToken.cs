@@ -30,7 +30,7 @@ namespace InWorldz.JWT
         {
             get
             {
-                return Payload?.Exp > DateTime.Now;
+                return Payload?.Exp > DateTime.UtcNow;
             }
         }
 
