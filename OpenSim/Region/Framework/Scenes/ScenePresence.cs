@@ -3575,6 +3575,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         protected void CheckForSignificantMovement()
         {
+            float childAgentUpdateDistance = 32;
             Vector3 pos = _GetPosition(true, true); // check for parcel changes and updates from physics
 
             if (Util.GetDistanceTo(pos, posLastSignificantMove) > 0.5)
@@ -3583,17 +3584,17 @@ namespace OpenSim.Region.Framework.Scenes
                 m_scene.EventManager.TriggerSignificantClientMovement(m_controllingClient);
             }
 
-            if (m_sceneView != null && m_sceneView.UseCulling && !IsBot)
+            if (m_sceneView != null && m_sceneView.UseCulling)
             {
                 //Check to see if the agent has moved enough to warrent another culling check
-                if (Util.GetDistanceTo(pos, posLastCullCheck) > m_sceneView.DistanceBeforeCullingRequired)
+                if ((!IsBot) && (Util.GetDistanceTo(pos, posLastCullCheck) > m_sceneView.DistanceBeforeCullingRequired))
                 {
                     posLastCullCheck = pos;
                     m_sceneView.CheckForDistantEntitiesToShow();
                 }
+                childAgentUpdateDistance = m_sceneView.DistanceBeforeCullingRequired;
             }
 
-            float childAgentUpdateDistance = (m_sceneView.UseCulling ? m_sceneView.DistanceBeforeCullingRequired : 32);
             if (Util.GetDistanceTo(pos, m_LastChildAgentUpdatePosition) >= childAgentUpdateDistance)
                 SendChildAgentUpdate();
         }
