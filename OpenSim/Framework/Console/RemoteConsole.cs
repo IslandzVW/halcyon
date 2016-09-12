@@ -54,6 +54,8 @@ namespace OpenSim.Framework.Console
     //
     public class RemoteConsole : CommandConsole
     {
+        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private IHttpServer m_Server;
         private IConfigSource m_Config;
         private List<string> m_Scrollback;
@@ -62,6 +64,8 @@ namespace OpenSim.Framework.Console
         private long m_LineNumber;
         private Dictionary<UUID, ConsoleConnection> m_Connections;
         private string m_AllowedOrigin;
+        private string m_remoteAccessHash = ""; // Empty string never matches any hashed value so is quite a safe default hash!
+        private string m_remoteAccessSalt = "";
 
         public RemoteConsole(string defaultPrompt) : base(defaultPrompt)
         {
@@ -84,6 +88,8 @@ namespace OpenSim.Framework.Console
                 return;
 
             m_AllowedOrigin = netConfig.GetString("ConsoleAllowedOrigin", String.Empty);
+            m_remoteAccessSalt = netConfig.GetString("RemoteAccessSalt", String.Empty);
+            m_remoteAccessHash = netConfig.GetString("RemoteAccessHash", String.Empty);
         }
 
         public void SetServer(IHttpServer server)
@@ -240,6 +246,19 @@ namespace OpenSim.Framework.Console
             }
         }
 
+        private string CreateRemoteAccessHash(string passcode)
+        {
+            return Util.CreateSaltedPasscodeHash(m_remoteAccessSalt, passcode);
+        }
+
+        private bool CheckRemoteAccessCode(string username, string password)
+        {
+            StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+
+            // If a remote passcode was not set up then check with the system - however that only works on Windows under .NET.
+            return m_remoteAccessHash.Length > 0 ? 0 == comparer.Compare(CreateRemoteAccessHash(password), m_remoteAccessHash) : Util.AuthenticateAsSystemUser(username, password);
+        }
+
         private Hashtable HandleHttpStartSession(Hashtable request)
         {
             DoExpire();
@@ -255,8 +274,14 @@ namespace OpenSim.Framework.Console
             string password = post["PASS"].ToString();
             
             // Validate the username/password pair
-            if (Util.AuthenticateAsSystemUser(username, password) == false)
+
+            if (CheckRemoteAccessCode(username, password) == false)
+            {
+                var headers = request["headers"] as Hashtable;
+
+                m_log.WarnFormat("[RCONSOLE]: Attempted access with invalid username or password from {0} with UA: {1}", headers["remote_addr"], headers["User-Agent"]);
                 return reply;
+            }
 
             ConsoleConnection c = new ConsoleConnection();
             c.last = System.Environment.TickCount;
@@ -333,6 +358,11 @@ namespace OpenSim.Framework.Console
                         req.SendResponse(ProcessEvents(req));
                     }
                 }
+                else
+                {
+                    var headers = request["headers"] as Hashtable;
+                    m_log.WarnFormat("[RCONSOLE]: Attempted logout with invalid session ID from {0} with UA: {1}", headers["remote_addr"], headers["User-Agent"]);
+                }
             }
 
             XmlDocument xmldoc = new XmlDocument();
@@ -377,7 +407,11 @@ namespace OpenSim.Framework.Console
             lock (m_Connections)
             {
                 if (!m_Connections.ContainsKey(id))
+                {
+                    var headers = request["headers"] as Hashtable;
+                    m_log.WarnFormat("[RCONSOLE]: Attempted command with invalid session ID from {0} with UA: {1}", headers["remote_addr"], headers["User-Agent"]);
                     return reply;
+                }
             }
 
             if (post["COMMAND"] == null)
@@ -468,7 +502,7 @@ namespace OpenSim.Framework.Console
                 ConsoleConnection connection = null;
                 m_Connections.TryGetValue(sessionID, out connection);
                 if (connection == null)
-                    return;
+                    return; // This should never execute due to how this handler is set up.
 
                 currentRequest = connection.request;
                 connection.request = newRequest;

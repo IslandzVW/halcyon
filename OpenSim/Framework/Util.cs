@@ -176,6 +176,11 @@ namespace OpenSim.Framework
         }
 
 
+        public static string CreateSaltedPasscodeHash(string salt, string passcode)
+        {
+            return SHA256Hash(salt + passcode);
+        }
+
         /// <summary
         /// Authenticate a username/password pair against the user we are running under.
         /// </summary>
@@ -187,8 +192,7 @@ namespace OpenSim.Framework
         public static bool AuthenticateAsSystemUser(string username, string password)
         {
             #if __MonoCS__
-                // TODO: find a way to check the user info cross platform.  In the mean time better security by NOT allowing remote admin.
-                return false;
+                return false; // If a hashed passcode wasn't set up, then there's no other option.  Crossplatform checks of system users has no way to exist: not all systems even use passwords, some use more advanced tech.
             #else
                 // Is the username the same as the logged in user and do they have the password correct?
                 PrincipalContext pc = new PrincipalContext(ContextType.Machine);
@@ -613,6 +617,23 @@ namespace OpenSim.Framework
         {
             SHA1CryptoServiceProvider SHA1 = new SHA1CryptoServiceProvider();
             return SHA1.ComputeHash(src);
+        }
+
+        /// <summary>
+        /// Return an SHA256 hash of the given string
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static string SHA256Hash(string data)
+        {
+            byte[] hash = ComputeSHA256Hash(data);
+            return BitConverter.ToString(hash).Replace("-", String.Empty);
+        }
+
+        private static byte[] ComputeSHA256Hash(string src)
+        {
+            var SHA256 = new SHA256CryptoServiceProvider();
+            return SHA256.ComputeHash(Encoding.Default.GetBytes(src));
         }
 
         public static int fast_distance2d(int x, int y)

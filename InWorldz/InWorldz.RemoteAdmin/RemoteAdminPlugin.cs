@@ -90,7 +90,12 @@ namespace InWorldz.RemoteAdmin
         public void Initialize(OpenSimBase openSim)
         {
             m_app = openSim;
-            m_admin = new RemoteAdmin();
+
+            IConfig netConfig = openSim.ConfigSource.Source.Configs["Network"];
+            if (netConfig == null)
+                m_admin = new RemoteAdmin("", "");
+            else
+                m_admin = new RemoteAdmin(netConfig.GetString("RemoteAccessHash", String.Empty), netConfig.GetString("RemoteAccessSalt", String.Empty));
         }
 
         public void PostInitialize()
@@ -116,7 +121,7 @@ namespace InWorldz.RemoteAdmin
 
         private object RegionRestartHandler(IList args, IPEndPoint remoteClient)
         {
-            m_admin.CheckSessionValid(new UUID((string)args[0]));
+            m_admin.CheckSessionValid(new UUID((string)args[0]), remoteClient.ToString());
 
             UUID regionID = new UUID((string)args[1]);
             Scene rebootedScene;
@@ -130,7 +135,7 @@ namespace InWorldz.RemoteAdmin
 
         public object RegionShutdownHandler(IList args, IPEndPoint remoteClient)
         {
-            m_admin.CheckSessionValid(new UUID((string)args[0]));
+            m_admin.CheckSessionValid(new UUID((string)args[0]), remoteClient.ToString());
 
             try
             {
@@ -217,7 +222,7 @@ namespace InWorldz.RemoteAdmin
         
         public object RegionSendAlertHandler(IList args, IPEndPoint remoteClient)
         {
-            m_admin.CheckSessionValid(new UUID((string)args[0]));
+            m_admin.CheckSessionValid(new UUID((string)args[0]), remoteClient.ToString());
 
             if (args.Count < 3)
                 return false;
@@ -259,7 +264,7 @@ namespace InWorldz.RemoteAdmin
         /// </remarks>
         public object LoadOARHandler(IList args, IPEndPoint remoteClient)
         {
-            m_admin.CheckSessionValid(new UUID((string)args[0]));
+            m_admin.CheckSessionValid(new UUID((string)args[0]), remoteClient.ToString());
 
             Scene scene;
             if (!m_app.SceneManager.TryGetScene((string)args[1], out scene))
@@ -319,7 +324,7 @@ namespace InWorldz.RemoteAdmin
         /// </remarks>
         public object SaveOARHandler(IList args, IPEndPoint remoteClient)
         {
-            m_admin.CheckSessionValid(new UUID((string)args[0]));
+            m_admin.CheckSessionValid(new UUID((string)args[0]), remoteClient.ToString());
 
             Scene scene;
             if (!m_app.SceneManager.TryGetScene((string)args[1], out scene))
@@ -378,7 +383,7 @@ namespace InWorldz.RemoteAdmin
         /// </remarks>
         public object RegionBackupHandler(IList args, IPEndPoint remoteClient)
         {
-            m_admin.CheckSessionValid(new UUID((string)args[0]));
+            m_admin.CheckSessionValid(new UUID((string)args[0]), remoteClient.ToString());
 
             String regionName = (string)args[1];
             String filename = (string)args[2];
@@ -428,7 +433,7 @@ namespace InWorldz.RemoteAdmin
         /// </remarks>
         public object RegionRestoreHandler(IList args, IPEndPoint remoteClient)
         {
-            m_admin.CheckSessionValid(new UUID((string)args[0]));
+            m_admin.CheckSessionValid(new UUID((string)args[0]), remoteClient.ToString());
 
             Scene scene;
             if (!m_app.SceneManager.TryGetScene((string)args[1], out scene))
@@ -468,7 +473,7 @@ namespace InWorldz.RemoteAdmin
         /// <summary>
         public object RegionChangeParcelFlagsHandler(IList args, IPEndPoint remoteClient)
         {
-            m_admin.CheckSessionValid(new UUID((string)args[0]));
+            m_admin.CheckSessionValid(new UUID((string)args[0]), remoteClient.ToString());
 
             Scene scene;
             if (!m_app.SceneManager.TryGetScene((string)args[1], out scene))

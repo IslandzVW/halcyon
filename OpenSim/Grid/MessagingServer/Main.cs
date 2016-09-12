@@ -121,7 +121,7 @@ namespace OpenSim.Grid.MessagingServer
                 m_httpServer.AddStreamHandler(new XmlRpcStreamHandler("POST", Util.XmlRpcRequestPrefix("region_startup"), m_regionModule.RegionStartup));
                 m_httpServer.AddStreamHandler(new XmlRpcStreamHandler("POST", Util.XmlRpcRequestPrefix("region_shutdown"), m_regionModule.RegionShutdown));
 
-                m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin();
+                m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin(Cfg.RemoteAccessHash, Cfg.RemoteAccessSalt);
                 m_radmin.AddCommand("MessagingService", "Shutdown", MessagingServerShutdownHandler);
                 m_radmin.AddHandler(m_httpServer);
 
@@ -140,7 +140,7 @@ namespace OpenSim.Grid.MessagingServer
 
         public object MessagingServerShutdownHandler(IList args, IPEndPoint remoteClient)
         {
-            m_radmin.CheckSessionValid(new UUID((string)args[0]));
+            m_radmin.CheckSessionValid(new UUID((string)args[0]), remoteClient.ToString());
 
             try
             {

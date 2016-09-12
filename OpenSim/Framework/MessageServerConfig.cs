@@ -47,6 +47,22 @@ namespace OpenSim.Framework
         public string UserSendKey = String.Empty;
         public string UserServerURL = String.Empty;
 
+        private string m_remoteAccessHash = String.Empty;
+        public string RemoteAccessHash
+        {
+            get {
+                return m_remoteAccessHash;
+            }
+        }
+
+        private string m_remoteAccessSalt = String.Empty;
+        public string RemoteAccessSalt
+        {
+            get {
+                return m_remoteAccessSalt;
+            }
+        }
+
         public MessageServerConfig(string description, string filename)
         {
             m_configMember =
@@ -88,6 +104,11 @@ namespace OpenSim.Framework
                                                 "Use SSL? true/false", ConfigSettings.DefaultMessageServerHttpSSL.ToString(), false);
             m_configMember.addConfigurationOption("published_ip", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                 "My Published IP Address", "127.0.0.1", false);
+
+            m_configMember.addConfigurationOption("remote_access_salt", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "The salt for the hash of the remote access code.", "", true);
+            m_configMember.addConfigurationOption("remote_access_hash", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "The salted SHA-256 hash of the remote access code. SHA256(remote_access_salt + passcode)", "", true);
         }
 
         public bool handleIncomingConfiguration(string configuration_key, object configuration_result)
@@ -129,6 +150,12 @@ namespace OpenSim.Framework
                     break;
                 case "published_ip":
                     MessageServerIP = (string) configuration_result;
+                    break;
+                case "remote_access_salt":
+                    m_remoteAccessSalt = (string)configuration_result;
+                    break;
+                case "remote_access_hash":
+                    m_remoteAccessHash = (string)configuration_result;
                     break;
             }
 
