@@ -112,8 +112,8 @@ namespace OpenSim.Grid.UserServer.Modules
                 return JWTAuthErrors.BadScope;
             }
 
-            var username = "";
-            var password = "";
+            var username = string.Empty;
+            var password = string.Empty;
 
             try
             {
