@@ -189,7 +189,7 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
             //unsit the SP if appropriate
             if (_avatar.TransitArgs.RideOnPart != null)
             {
-                _avatar.TransitArgs.RideOnPart.SetAvatarOnSitTarget(UUID.Zero, false);
+                _avatar.TransitArgs.RideOnPart.RemoveSeatedAvatar(_avatar.ScenePresence, false);
             }
 
             //this avatar is history.
@@ -221,20 +221,8 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
             AgentData cAgent = new AgentData();
             agent.CopyToForRootAgent(cAgent);
 
-            if (part != null)
-            {
-                cAgent.Position = part.AbsolutePosition;
-                cAgent.SatOnPrim = part.UUID;
-                cAgent.SatOnPrimOffset = part.SitTargetPosition;
-            }
-            else
-            {
-                // _log.WarnFormat("[SCENE COMM]: SendChildAgentUpdate2 for {0} position {1} was {2}", cAgent.AgentID, pos, cAgent.Position);
+            if (part == null)
                 cAgent.Position = pos;
-            }
-
-            if (sceneObjectGroup != null)
-                cAgent.SatOnGroup = sceneObjectGroup.UUID;
 
             cAgent.LocomotionState = 1;
             cAgent.LocomotionFlags = locomotionFlags;
