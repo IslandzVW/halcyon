@@ -78,6 +78,10 @@ namespace OpenSim.Grid.UserServer
 
         protected InWorldz.RemoteAdmin.RemoteAdmin m_radmin;
 
+        protected JWTAuthenticator m_jwtAuthenticator;
+
+        private bool m_useJwt;
+
         public static void Main(string[] args)
         {
             ServicePointManager.DefaultConnectionLimit = 12;
@@ -148,6 +152,9 @@ namespace OpenSim.Grid.UserServer
             IConfigSource defaultConfig = new IniConfigSource("Halcyon.ini");
             IConfig startupConfig = defaultConfig.Configs["Startup"];
             IConfig inventoryConfig = defaultConfig.Configs["Inventory"];
+            IConfig jwtConfig = defaultConfig.Configs["JWT"];
+
+            m_useJwt = jwtConfig?.GetBoolean("enabled") ?? false;
 
             OpenSim.Framework.ConfigSettings settings = new ConfigSettings();
             settings.InventoryPlugin = inventoryConfig.GetString("inventory_plugin");
@@ -182,6 +189,7 @@ namespace OpenSim.Grid.UserServer
             //setup database access service, for now this has to be created before the other modules.
             m_userDataBaseService = new UserDataBaseService(commsManager);
             m_userDataBaseService.Initialize(this);
+            RegisterInterface<UserDataBaseService>(m_userDataBaseService);
 
             //TODO: change these modules so they fetch the databaseService class in the PostInitialize method
             m_userManager = new Modules.UserManager(m_userDataBaseService);
@@ -193,6 +201,12 @@ namespace OpenSim.Grid.UserServer
             m_friendsModule = new UserServerFriendsModule(m_userDataBaseService);
             m_friendsModule.Initialize(this);
 
+            if (m_useJwt)
+            {
+                m_jwtAuthenticator = new JWTAuthenticator();
+                m_jwtAuthenticator.Initialize(this);
+            }
+            
             m_consoleCommandModule = new UserServerCommandModule();
             m_consoleCommandModule.Initialize(this);
 
@@ -237,6 +251,11 @@ namespace OpenSim.Grid.UserServer
             m_userManager.PostInitialize();
             m_avatarAppearanceModule.PostInitialize();
             m_friendsModule.PostInitialize();
+
+            if (m_useJwt)
+            {
+                m_jwtAuthenticator.PostInitialize();
+            }
         }
 
         protected virtual void RegisterHttpHandlers()
@@ -248,6 +267,12 @@ namespace OpenSim.Grid.UserServer
             m_avatarAppearanceModule.RegisterHandlers(m_httpServer);
             m_messagesService.RegisterHandlers(m_httpServer);
             m_gridInfoService.RegisterHandlers(m_httpServer);
+
+            if (m_useJwt)
+            {
+                m_jwtAuthenticator.RegisterHandlers(m_httpServer);
+            }
+            
 
             m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin();
             m_radmin.AddCommand("UserService", "Shutdown", UserServerShutdownHandler);
