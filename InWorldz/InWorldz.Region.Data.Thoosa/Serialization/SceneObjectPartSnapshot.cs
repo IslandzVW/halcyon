@@ -287,6 +287,7 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                     stopScriptReason = StopScriptReason.Derez;
             }
 
+            SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
             SceneObjectPartSnapshot partSnap = new SceneObjectPartSnapshot
             {
                 AngularVelocity = part.PhysicalAngularVelocity,
@@ -343,8 +344,8 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 ServerWeight = part.ServerWeight,
                 Shape = PrimShapeSnapshot.FromShape(part.Shape),
                 SitName = part.SitName,
-                SitTargetOrientation = part.SitTargetOrientation,
-                SitTargetPosition = part.SitTargetPosition,
+                SitTargetOrientation = sitInfo.Rotation,
+                SitTargetPosition = sitInfo.Offset,
                 Sound = part.Sound.Guid,
                 SoundFlags = part.SoundOptions,
                 SoundGain = part.SoundGain,

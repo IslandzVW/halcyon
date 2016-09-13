@@ -408,12 +408,13 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("RotationW" + numString, (double)FixFloat(prim.RotationOffset.W));
 
             // Sit target
-            Vector3 sitTargetPos = prim.SitTargetPositionLL;
+            SitTargetInfo sitInfo = prim.ParentGroup.SitTargetForPart(prim.UUID);
+            Vector3 sitTargetPos = sitInfo.Offset;
             cmd.Parameters.AddWithValue("SitTargetOffsetX" + numString, (double)FixFloat(sitTargetPos.X));
             cmd.Parameters.AddWithValue("SitTargetOffsetY" + numString, (double)FixFloat(sitTargetPos.Y));
             cmd.Parameters.AddWithValue("SitTargetOffsetZ" + numString, (double)FixFloat(sitTargetPos.Z));
 
-            Quaternion sitTargetOrient = prim.SitTargetOrientationLL;
+            Quaternion sitTargetOrient = sitInfo.Rotation;
             cmd.Parameters.AddWithValue("SitTargetOrientW" + numString, (double)FixFloat(sitTargetOrient.W));
             cmd.Parameters.AddWithValue("SitTargetOrientX" + numString, (double)FixFloat(sitTargetOrient.X));
             cmd.Parameters.AddWithValue("SitTargetOrientY" + numString, (double)FixFloat(sitTargetOrient.Y));
@@ -1755,17 +1756,18 @@ namespace OpenSim.Data.MySQL
                 Convert.ToSingle(row["RotationZ"]),
                 Convert.ToSingle(row["RotationW"])
                 );
-            prim.SitTargetPositionLL = new Vector3(
-                Convert.ToSingle(row["SitTargetOffsetX"]),
-                Convert.ToSingle(row["SitTargetOffsetY"]),
-                Convert.ToSingle(row["SitTargetOffsetZ"])
-                );
-            prim.SitTargetOrientationLL = new Quaternion(
-                Convert.ToSingle(row["SitTargetOrientX"]),
-                Convert.ToSingle(row["SitTargetOrientY"]),
-                Convert.ToSingle(row["SitTargetOrientZ"]),
-                Convert.ToSingle(row["SitTargetOrientW"])
-                );
+
+            prim.SetSitTarget(new Vector3(
+                                Convert.ToSingle(row["SitTargetOffsetX"]),
+                                Convert.ToSingle(row["SitTargetOffsetY"]),
+                                Convert.ToSingle(row["SitTargetOffsetZ"])
+                                ),
+                             new Quaternion(
+                                Convert.ToSingle(row["SitTargetOrientX"]),
+                                Convert.ToSingle(row["SitTargetOrientY"]),
+                                Convert.ToSingle(row["SitTargetOrientZ"]),
+                                Convert.ToSingle(row["SitTargetOrientW"])
+                             ));
 
             prim.PayPrice[0] = Convert.ToInt32(row["PayPrice"]);
             prim.PayPrice[1] = Convert.ToInt32(row["PayButton1"]);

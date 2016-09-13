@@ -447,18 +447,31 @@ namespace OpenSim.Region.CoreModules.World.Land
             return false;
         }
 
+
         // Returns false and reason == ParcelPropertiesStatus.ParcelSelected if access is allowed, otherwise reason enum.
         public bool DenyParcelAccess(SceneObjectGroup group, bool checkSitters, out ParcelPropertiesStatus reason)
         {
             if (checkSitters)
             {
-                List<ScenePresence> sitters = group.GetSittingAvatars();
-                foreach (ScenePresence sp in sitters)
+                // some voodo with reason variables to avoid compiler problems.
+                ParcelPropertiesStatus reason2;
+                ParcelPropertiesStatus sitterReason = 0;
+                bool result = true;
+                group.ForEachSittingAvatar((ScenePresence sp) =>
                 {
-                    if (sp.UUID == group.OwnerID)
-                        continue;   // checked separately below
-                    if (DenyParcelAccess(sp.UUID, out reason))
-                        return false;
+                    if (sp.UUID != group.OwnerID)   // checked separately below
+                    {
+                        if (DenyParcelAccess(sp.UUID, out reason2))
+                        {
+                            sitterReason = reason2;
+                            result = false;
+                        }
+                    }
+                });
+                if (!result)
+                {
+                    reason = sitterReason;
+                    return false;
                 }
             }
 
