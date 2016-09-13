@@ -29,31 +29,43 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using OpenMetaverse;
 
-namespace OpenSim.Framework.Communications.JWT
+namespace InWorldz.JWT
 {
     /// <summary>
-    /// Enumerates the possible causes for a user authentication failure
+    /// Options that can are passed through a JWT authentication payload
     /// </summary>
-    public enum AuthenticationFailureCause
+    public class PayloadOptions
     {
         /// <summary>
-        /// The given username was not found
+        /// The expiration date for this payload
         /// </summary>
-        UserNameNotFound,
+        public DateTime Exp { get; set; }
 
         /// <summary>
-        /// The given password was invalid
+        /// The auth scope that this authentication token applies to (eg: remote-console)
         /// </summary>
-        InvalidPassword,
+        public string Scope { get; set; }
 
         /// <summary>
-        /// The user was not at the requested level
+        /// The username that was used to generate this authentication payload
         /// </summary>
-        WrongUserLevel
+        public string Username { get; set; }
+
+        /// <summary>
+        /// The UUID of the user that was used to generate this authentication payload
+        /// </summary>
+        public string UserId { get; set; }
+
+        /// <summary>
+        /// The account creation date of the user that was used to generate this authentication payload
+        /// </summary>
+        public DateTime BirthDate { get; set; }
+
+        /// <summary>
+        /// The UUID of the registered partner of the user that was used to generate this authentication payload at the time the payload was generated
+        /// </summary>
+        public string PartnerId { get; set; }
     }
 }
