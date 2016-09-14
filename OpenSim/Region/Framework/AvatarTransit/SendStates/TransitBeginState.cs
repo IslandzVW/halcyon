@@ -60,7 +60,11 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
                 Vector3 backVel = -_avatar.ScenePresence.Velocity;
                 RollbackActions.Push(() =>
                 {
-                    Vector3 newpos = _avatar.ScenePresence.AbsolutePosition + (backVel * 2.0f);
+                    Vector3 pos = _avatar.ScenePresence.AbsolutePosition;
+                    Vector3 newpos = pos + (backVel * 2.0f);
+                    // Check if "bounce back leaves region". If so, don't apply bounce.
+                    if (!Util.IsValidRegionXY(newpos))
+                        newpos = pos;    // just limit current pos to valid.
                     Util.ForceValidRegionXYZ(ref newpos);
                     _avatar.ScenePresence.AbsolutePosition = newpos;
                 });
@@ -72,12 +76,20 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
                 throw new InvalidOperationException("An avatar can not begin transition to a new region while already in transit");
             }
 
+            //assert that this avatar is ready to leave the region
+            if (!_avatar.ScenePresence.IsFullyInRegion)
+            {
+//                _avatar.ScenePresence.ControllingClient.SendAlertMessage("Can not move to a new region, until established in the current region");
+                throw new InvalidOperationException("An avatar can not begin transition to a new region until established in the current region");
+            }
+
             //assert that this avatar is not currently establishing connections to other regions
             if (_avatar.ScenePresence.RemotePresences.HasConnectionsEstablishing())
             {
 //                _avatar.ScenePresence.ControllingClient.SendAlertMessage("Can not move to a new region, connections are still being established");
                 throw new InvalidOperationException("An avatar can not begin transition to a new region while connections are being established to neighbor regions");
             }
+
 
             //if we're riding on a prim, wait for the all clear before moving on
             if (_avatar.TransitArgs.RideOnPart != null)
