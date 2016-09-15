@@ -10773,10 +10773,7 @@ namespace InWorldz.Phlox.Engine
             ScenePresence avatar = null;
 
             // Support avatar-as-a-prim link number.
-            if (linknumber > m_host.ParentGroup.PartCount)
-                avatar = m_host.ParentGroup.GetSeatedAvatarByLink(linknumber);
-            else
-                parts = GetLinkPrimsOnly(linknumber);
+            parts = GetLinkParts(linknumber, true);
 
             while (idx < rules.Length)
             {
