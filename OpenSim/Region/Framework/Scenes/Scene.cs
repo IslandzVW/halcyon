@@ -985,7 +985,7 @@ namespace OpenSim.Region.Framework.Scenes
             return _surroundingRegions.HasKnownNeighborAt(x, y);
         }
 
-        public bool HasNeighborAtPosition(float x, float y)
+        public SimpleRegionInfo GetNeighborAtPosition(float x, float y)
         {
             uint neighborX = RegionInfo.RegionLocX;
             uint neighborY = RegionInfo.RegionLocY;
@@ -1000,7 +1000,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (y >= Constants.RegionSize)
                     neighborY++;
 
-            return HasNeighbor(neighborX, neighborY);
+            return _surroundingRegions.GetKnownNeighborAt(neighborX, neighborY);
+        }
+
+        public bool HasNeighborAtPosition(float x, float y)
+        {
+            return GetNeighborAtPosition(x, y) != null;
         }
 
         /// <summary>

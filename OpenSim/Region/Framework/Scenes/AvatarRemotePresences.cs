@@ -660,6 +660,20 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        public bool HasEstablishedConnection(SimpleRegionInfo region)
+        {
+            AvatarRemotePresence pres;
+            lock (_remotePresences)
+            {
+                if (_remotePresences.TryGetValue(region.RegionHandle, out pres))
+                {
+                    return (pres.State == RemotePresenceState.Established);
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Requests that all remote regions we have children on terminate the child agents
         /// </summary>

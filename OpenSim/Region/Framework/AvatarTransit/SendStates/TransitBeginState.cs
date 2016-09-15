@@ -55,12 +55,12 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
         {
             //no matter what happens at this point we want to make sure the avatar doesnt try to immediately recross should we have
             //a failure. bounce them off the border
+            Vector3 pos = _avatar.ScenePresence.AbsolutePosition;
             if (_avatar.TransitArgs.Type == TransitType.OutboundCrossing && _avatar.TransitArgs.RideOnGroup == null)
             {
                 Vector3 backVel = -_avatar.ScenePresence.Velocity;
                 RollbackActions.Push(() =>
                 {
-                    Vector3 pos = _avatar.ScenePresence.AbsolutePosition;
                     Vector3 newpos = pos + (backVel * 2.0f);
                     // Check if "bounce back leaves region". If so, don't apply bounce.
                     if (!Util.IsValidRegionXY(newpos))
@@ -83,13 +83,18 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
                 throw new InvalidOperationException("An avatar can not begin transition to a new region until established in the current region");
             }
 
-            //assert that this avatar is not currently establishing connections to other regions
-            if (_avatar.ScenePresence.RemotePresences.HasConnectionsEstablishing())
+            //assert that the dest region is available and this avatar has an established connection to that region
+            SimpleRegionInfo destRegion = _avatar.ScenePresence.Scene.GetNeighborAtPosition(pos.X, pos.Y);
+            if (destRegion == null)
+            {
+//                _avatar.ScenePresence.ControllingClient.SendAlertMessage("Can not move to a new region, connection is still being established to that region");
+                throw new InvalidOperationException("An avatar can not begin transition to a new region while connection is still being established to that region");
+            }
+            if (!_avatar.ScenePresence.RemotePresences.HasEstablishedConnection(destRegion))
             {
 //                _avatar.ScenePresence.ControllingClient.SendAlertMessage("Can not move to a new region, connections are still being established");
-                throw new InvalidOperationException("An avatar can not begin transition to a new region while connections are being established to neighbor regions");
+                throw new InvalidOperationException("An avatar can not begin transition to a neighbor region while the connection is being established");
             }
-
 
             //if we're riding on a prim, wait for the all clear before moving on
             if (_avatar.TransitArgs.RideOnPart != null)
