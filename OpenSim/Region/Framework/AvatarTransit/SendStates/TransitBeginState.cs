@@ -84,13 +84,7 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
             }
 
             //assert that the dest region is available and this avatar has an established connection to that region
-            SimpleRegionInfo destRegion = _avatar.ScenePresence.Scene.GetNeighborAtPosition(pos.X, pos.Y);
-            if (destRegion == null)
-            {
-//                _avatar.ScenePresence.ControllingClient.SendAlertMessage("Can not move to a new region, connection is still being established to that region");
-                throw new InvalidOperationException("An avatar can not begin transition to a new region while connection is still being established to that region");
-            }
-            if (!_avatar.ScenePresence.RemotePresences.HasEstablishedConnection(destRegion))
+            if (!_avatar.ScenePresence.RemotePresences.HasEstablishedConnection(_avatar.TransitArgs.DestinationRegion))
             {
 //                _avatar.ScenePresence.ControllingClient.SendAlertMessage("Can not move to a new region, connections are still being established");
                 throw new InvalidOperationException("An avatar can not begin transition to a neighbor region while the connection is being established");
