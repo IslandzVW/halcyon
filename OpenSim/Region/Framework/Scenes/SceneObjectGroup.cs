@@ -3259,6 +3259,17 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public int GetLinkNumFor(object o)
+        {
+            if (o is SceneObjectPart)
+                return (o as SceneObjectPart).LinkNum;
+
+            if (o is ScenePresence)
+                return (o as ScenePresence).LinkNum;
+
+            return 0;
+        }
+
         /// <summary>
         /// Get the parts of this scene object safely
         /// </summary>
@@ -3293,6 +3304,11 @@ namespace OpenSim.Region.Framework.Scenes
             m_childAvatars.ForEach((ScenePresence sp) => {
                 ret.Add(sp);
             });
+            ret.Sort(delegate(ScenePresence p1, ScenePresence p2)
+                {
+                    return p1.LinkNum.CompareTo(p2.LinkNum);
+                });
+
             return ret;
         }
 
@@ -3309,6 +3325,10 @@ namespace OpenSim.Region.Framework.Scenes
                     ret.Add(sp);
                 });
             }
+            ret.Sort(delegate(object o1, object o2)
+                {
+                    return GetLinkNumFor(o1).CompareTo(GetLinkNumFor(o2));
+                });
             return ret;
         }
 
@@ -3326,6 +3346,10 @@ namespace OpenSim.Region.Framework.Scenes
                     ret.Add(sp);
                 });
             }
+            ret.Sort(delegate(object o1, object o2)
+                {
+                    return GetLinkNumFor(o1).CompareTo(GetLinkNumFor(o2));
+                });
             return ret;
         }
 

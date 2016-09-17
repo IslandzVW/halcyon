@@ -10680,10 +10680,9 @@ namespace InWorldz.Phlox.Engine
             return new LSL_Vector(m_host.GetGeometricCenter().X, m_host.GetGeometricCenter().Y, m_host.GetGeometricCenter().Z);
         }
 
-        private int GetAvatarAsPrimParam(int linknum, ref List<object> res, int rule)
+        private int GetAvatarAsPrimParam(ScenePresence sp, ref List<object> res, int rule)
         {
             int paramCount = 0;
-            ScenePresence sp = m_host.ParentGroup.GetSeatedAvatarByLink(linknum);
             switch (rule)
             {
                 case ScriptBaseClass.PRIM_POSITION:
@@ -10720,7 +10719,7 @@ namespace InWorldz.Phlox.Engine
                     res.Add(ScriptBaseClass.FALSE);
                     break;
                 case ScriptBaseClass.PRIM_SIZE:
-                    res.Add(new LSL_Vector(llGetAgentSize(llGetLinkKey(linknum))));
+                    res.Add(new LSL_Vector(llGetAgentSize(sp.UUID.ToString())));
                     break;
                 case ScriptBaseClass.PRIM_TEXT:
                     res.Add(String.Empty);
@@ -10763,6 +10762,15 @@ namespace InWorldz.Phlox.Engine
             return paramCount;
         }
 
+        private int GetAvatarAsPrimParam(int linknum, ref List<object> res, int rule)
+        {
+            ScenePresence sp = m_host.ParentGroup.GetSeatedAvatarByLink(linknum);
+            if (sp == null)
+                return 0;
+
+            return GetAvatarAsPrimParam(linknum, ref res, rule);
+        }
+
         private LSL_List GetPrimParams(int linknumber, LSL_List rules)
         {
             List<object> res = new List<object>();
@@ -10770,13 +10778,9 @@ namespace InWorldz.Phlox.Engine
             int face = 0;
             Primitive.TextureEntry tex;
             List<object> parts = null;
-            ScenePresence avatar = null;
 
             // Support avatar-as-a-prim link number.
-            if (linknumber > m_host.ParentGroup.PartCount)
-                avatar = m_host.ParentGroup.GetSeatedAvatarByLink(linknumber);
-            else
-                parts = GetLinkPrimsOnly(linknumber);
+            parts = GetLinkParts(linknumber, true);
 
             while (idx < rules.Length)
             {
@@ -10791,23 +10795,7 @@ namespace InWorldz.Phlox.Engine
                     linknumber = (int)rules.GetLSLIntegerItem(idx++);
                     remain = rules.Length - idx;
 
-                    if (linknumber > m_host.ParentGroup.PartCount)
-                    {
-                        avatar = m_host.ParentGroup.GetSeatedAvatarByLink(linknumber);
-                        parts = null;
-                    }
-                    else
-                    {
-                        avatar = null;
-                        parts = GetLinkPrimsOnly(linknumber);
-                    }
-                    continue;
-                }
-
-                // Support avatar-as-a-prim link number.
-                if (avatar != null)
-                {
-                    idx += GetAvatarAsPrimParam(linknumber, ref res, code);
+                    parts = GetLinkParts(linknumber, true);
                     continue;
                 }
 
@@ -10815,14 +10803,22 @@ namespace InWorldz.Phlox.Engine
                 switch (code)
                 {
                     case (int)ScriptBaseClass.PRIM_MATERIAL:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add((int)(part.Material));
+                        foreach (object o in parts)
+                        {
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add((int)((o as SceneObjectPart).Material));
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_PHYSICS:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            if ((part.GetEffectiveObjectFlags() & PrimFlags.Physics) != 0)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            if (((o as SceneObjectPart).GetEffectiveObjectFlags() & PrimFlags.Physics) != 0)
                                 res.Add((int)(1));
                             else
                                 res.Add((int)(0));
@@ -10830,9 +10826,12 @@ namespace InWorldz.Phlox.Engine
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEMP_ON_REZ:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            if ((part.GetEffectiveObjectFlags() & PrimFlags.TemporaryOnRez) != 0)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            if (((o as SceneObjectPart).GetEffectiveObjectFlags() & PrimFlags.TemporaryOnRez) != 0)
                                 res.Add((int)(1));
                             else
                                 res.Add((int)(0));
@@ -10840,9 +10839,12 @@ namespace InWorldz.Phlox.Engine
                         break;
 
                     case (int)ScriptBaseClass.PRIM_PHANTOM:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            if ((part.GetEffectiveObjectFlags() & PrimFlags.Phantom) != 0)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            if (((o as SceneObjectPart).GetEffectiveObjectFlags() & PrimFlags.Phantom) != 0)
                                 res.Add((int)(1));
                             else
                                 res.Add((int)(0));
@@ -10850,36 +10852,48 @@ namespace InWorldz.Phlox.Engine
                         break;
 
                     case (int)ScriptBaseClass.PRIM_POSITION:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            Vector3 pos = part.GetSLCompatiblePosition();
-                            res.Add(new LSL_Vector(pos.X, pos.Y, pos.Z));
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add(new LSL_Vector((o as SceneObjectPart).GetSLCompatiblePosition()));
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_SIZE:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add(new LSL_Vector(part.Scale.X,
-                                                      part.Scale.Y,
-                                                      part.Scale.Z));
+                        foreach (object o in parts)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add(new LSL_Vector((o as SceneObjectPart).Scale));
                         break;
 
                     case (int)ScriptBaseClass.PRIM_ROTATION:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add(GetPartRot(part));
+                        foreach (object o in parts)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add(GetPartRot(o as SceneObjectPart));
                         break;
 
                     case (int)ScriptBaseClass.PRIM_ROT_LOCAL:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add(GetPartLocalRot(part));
+                        foreach (object o in parts)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add(GetPartLocalRot(o as SceneObjectPart));
                         break;
 
                     case (int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_TYPE:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            if (part.Shape.PreferredPhysicsShape == PhysicsShapeType.Prim)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            if ((o as SceneObjectPart).Shape.PreferredPhysicsShape == PhysicsShapeType.Prim)
                                 res.Add((int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_PRIM);
-                            else if (part.Shape.PreferredPhysicsShape == PhysicsShapeType.None)
+                            else if ((o as SceneObjectPart).Shape.PreferredPhysicsShape == PhysicsShapeType.None)
                                 res.Add((int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_NONE);
                             else
                                 res.Add((int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_CONVEX);
@@ -10889,88 +10903,105 @@ namespace InWorldz.Phlox.Engine
                     case (int)ScriptBaseClass.PRIM_OMEGA:
                         // This is probably correct in the 99% case.  It's stored in axis*spinrate (gain is ignored)
                         // and spinrate is often TWO_PI. So divide by that and hope for the best (for now).
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            res.Add(new LSL_Vector((float)(part.AngularVelocity.X / ScriptBaseClass.TWO_PI), (float)(part.AngularVelocity.Y / ScriptBaseClass.TWO_PI), (float)(part.AngularVelocity.Z / ScriptBaseClass.TWO_PI)));
-                            res.Add((float)ScriptBaseClass.TWO_PI);
-                            res.Add((float)1.0f);
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                res.Add(new LSL_Vector((float)(part.AngularVelocity.X / ScriptBaseClass.TWO_PI), (float)(part.AngularVelocity.Y / ScriptBaseClass.TWO_PI), (float)(part.AngularVelocity.Z / ScriptBaseClass.TWO_PI)));
+                                res.Add((float)ScriptBaseClass.TWO_PI);
+                                res.Add((float)1.0f);
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_POS_LOCAL:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add(new LSL_Vector(GetPartLocalPos(part)));
+                        foreach (object o in parts)
+                        {
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add(new LSL_Vector(GetPartLocalPos(o as SceneObjectPart)));
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TYPE:
                         // implementing box
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape Shape = part.Shape;
-                            int primType = getScriptPrimType(part.Shape);
-                            res.Add((int)(primType));
-                            switch (primType)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
                             {
-                                case ScriptBaseClass.PRIM_TYPE_BOX:
-                                case ScriptBaseClass.PRIM_TYPE_CYLINDER:
-                                case ScriptBaseClass.PRIM_TYPE_PRISM:
-                                    res.Add((int)(Shape.HollowShape));
-                                    res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
-                                    res.Add((float)(Shape.ProfileHollow / 50000.0));
-                                    res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
-                                    res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0));
-                                    res.Add(new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0));
-                                    break;
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape Shape = part.Shape;
+                                int primType = getScriptPrimType(part.Shape);
+                                res.Add((int)(primType));
+                                switch (primType)
+                                {
+                                    case ScriptBaseClass.PRIM_TYPE_BOX:
+                                    case ScriptBaseClass.PRIM_TYPE_CYLINDER:
+                                    case ScriptBaseClass.PRIM_TYPE_PRISM:
+                                        res.Add((int)(Shape.HollowShape));
+                                        res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
+                                        res.Add((float)(Shape.ProfileHollow / 50000.0));
+                                        res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
+                                        res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0));
+                                        res.Add(new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0));
+                                        break;
 
-                                case ScriptBaseClass.PRIM_TYPE_SPHERE:
-                                    res.Add((int)(Shape.HollowShape));
-                                    res.Add(new LSL_Vector(Shape.PathBegin / 50000.0f, 1 - Shape.PathEnd / 50000.0f, 0));
-                                    res.Add((float)(Shape.ProfileHollow / 50000.0f));
-                                    res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
-                                    res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
-                                    break;
+                                    case ScriptBaseClass.PRIM_TYPE_SPHERE:
+                                        res.Add((int)(Shape.HollowShape));
+                                        res.Add(new LSL_Vector(Shape.PathBegin / 50000.0f, 1 - Shape.PathEnd / 50000.0f, 0));
+                                        res.Add((float)(Shape.ProfileHollow / 50000.0f));
+                                        res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
+                                        res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
+                                        break;
 
-                                case ScriptBaseClass.PRIM_TYPE_SCULPT:
-                                    res.Add(ConditionalTextureNameOrUUID(part, Shape.SculptTexture));
-                                    res.Add((int)(Shape.SculptType));
-                                    break;
+                                    case ScriptBaseClass.PRIM_TYPE_SCULPT:
+                                        res.Add(ConditionalTextureNameOrUUID(part, Shape.SculptTexture));
+                                        res.Add((int)(Shape.SculptType));
+                                        break;
 
-                                case ScriptBaseClass.PRIM_TYPE_RING:
-                                case ScriptBaseClass.PRIM_TYPE_TUBE:
-                                case ScriptBaseClass.PRIM_TYPE_TORUS:
-                                    // holeshape
-                                    res.Add((int)(Shape.HollowShape));
+                                    case ScriptBaseClass.PRIM_TYPE_RING:
+                                    case ScriptBaseClass.PRIM_TYPE_TUBE:
+                                    case ScriptBaseClass.PRIM_TYPE_TORUS:
+                                        // holeshape
+                                        res.Add((int)(Shape.HollowShape));
 
-                                    // cut
-                                    res.Add(new LSL_Vector(Shape.PathBegin / 50000.0f, 1 - Shape.PathEnd / 50000.0f, 0));
+                                        // cut
+                                        res.Add(new LSL_Vector(Shape.PathBegin / 50000.0f, 1 - Shape.PathEnd / 50000.0f, 0));
 
-                                    // hollow
-                                    res.Add((float)(Shape.ProfileHollow / 50000.0));
+                                        // hollow
+                                        res.Add((float)(Shape.ProfileHollow / 50000.0));
 
-                                    // twist
-                                    res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
+                                        // twist
+                                        res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
 
-                                    // vector holesize
-                                    res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0));
+                                        // vector holesize
+                                        res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0));
 
-                                    // vector topshear
-                                    res.Add(new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0));
+                                        // vector topshear
+                                        res.Add(new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0));
 
-                                    // vector profilecut
-                                    res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
+                                        // vector profilecut
+                                        res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
 
-                                    // vector tapera
-                                    res.Add(new LSL_Vector(Shape.PathTaperX / 100.0f, Shape.PathTaperY / 100.0f, 0));
+                                        // vector tapera
+                                        res.Add(new LSL_Vector(Shape.PathTaperX / 100.0f, Shape.PathTaperY / 100.0f, 0));
 
-                                    // float revolutions, 
-                                    res.Add((float)(Shape.PathRevolutions / 50.0)); // needs fixing :(
+                                        // float revolutions, 
+                                        res.Add((float)(Shape.PathRevolutions / 50.0)); // needs fixing :(
 
-                                    // float radiusoffset, 
-                                    res.Add((float)(Shape.PathRadiusOffset / 100.0));
+                                        // float radiusoffset, 
+                                        res.Add((float)(Shape.PathRadiusOffset / 100.0));
 
-                                    // float skew
-                                    res.Add((float)(Shape.PathSkew / 100.0));
-                                    break;
+                                        // float skew
+                                        res.Add((float)(Shape.PathSkew / 100.0));
+                                        break;
+                                }
                             }
                         }
                         break;
@@ -10980,37 +11011,43 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(ConditionalTextureNameOrUUID(part, texface.TextureID));
-                                    res.Add(new LSL_Vector(texface.RepeatU,
-                                                           texface.RepeatV,
-                                                           0));
-                                    res.Add(new LSL_Vector(texface.OffsetU,
-                                                           texface.OffsetV,
-                                                           0));
-                                    res.Add((float)(texface.Rotation));
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(ConditionalTextureNameOrUUID(part, texface.TextureID).ToString());
-                                    res.Add(new LSL_Vector(texface.RepeatU,
-                                                           texface.RepeatV,
-                                                           0));
-                                    res.Add(new LSL_Vector(texface.OffsetU,
-                                                           texface.OffsetV,
-                                                           0));
-                                    res.Add((float)(texface.Rotation));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(ConditionalTextureNameOrUUID(part, texface.TextureID));
+                                        res.Add(new LSL_Vector(texface.RepeatU,
+                                                               texface.RepeatV,
+                                                               0));
+                                        res.Add(new LSL_Vector(texface.OffsetU,
+                                                               texface.OffsetV,
+                                                               0));
+                                        res.Add((float)(texface.Rotation));
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(ConditionalTextureNameOrUUID(part, texface.TextureID).ToString());
+                                        res.Add(new LSL_Vector(texface.RepeatU,
+                                                               texface.RepeatV,
+                                                               0));
+                                        res.Add(new LSL_Vector(texface.OffsetU,
+                                                               texface.OffsetV,
+                                                               0));
+                                        res.Add((float)(texface.Rotation));
+                                    }
                                 }
                             }
                         }
@@ -11021,10 +11058,15 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            double alphaValue = GetAlpha(part, face);
-                            res.Add((float)alphaValue);
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                double alphaValue = GetAlpha(o as SceneObjectPart, face);
+                                res.Add((float)alphaValue);
+                            }
                         }
                         break;
 
@@ -11033,13 +11075,27 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            Color4 texcolor;
-                            if (face == ScriptBaseClass.ALL_SIDES)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
                             {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                Color4 texcolor;
+                                if (face == ScriptBaseClass.ALL_SIDES)
+                                {
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        texcolor = tex.GetFace((uint)face).RGBA;
+                                        res.Add(new LSL_Vector(texcolor.R,
+                                                               texcolor.G,
+                                                               texcolor.B));
+                                        res.Add((float)(texcolor.A));
+                                    }
+                                }
+                                else
                                 {
                                     texcolor = tex.GetFace((uint)face).RGBA;
                                     res.Add(new LSL_Vector(texcolor.R,
@@ -11047,14 +11103,6 @@ namespace InWorldz.Phlox.Engine
                                                            texcolor.B));
                                     res.Add((float)(texcolor.A));
                                 }
-                            }
-                            else
-                            {
-                                texcolor = tex.GetFace((uint)face).RGBA;
-                                res.Add(new LSL_Vector(texcolor.R,
-                                                       texcolor.G,
-                                                       texcolor.B));
-                                res.Add((float)(texcolor.A));
                             }
                         }
                         break;
@@ -11064,31 +11112,37 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            Primitive.TextureEntryFace texface;
-
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    texface = tex.GetFace((uint)face);
-                                    // Convert Shininess to PRIM_SHINY_*
-                                    res.Add((int)((uint)texface.Shiny >> 6));
-                                    // PRIM_BUMP_*
-                                    res.Add((int)texface.Bump);
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                Primitive.TextureEntryFace texface;
+
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    texface = tex.GetFace((uint)face);
-                                    // Convert Shininess to PRIM_SHINY_*
-                                    res.Add((int)((uint)texface.Shiny >> 6));
-                                    // PRIM_BUMP_*
-                                    res.Add((int)((int)texface.Bump));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        texface = tex.GetFace((uint)face);
+                                        // Convert Shininess to PRIM_SHINY_*
+                                        res.Add((int)((uint)texface.Shiny >> 6));
+                                        // PRIM_BUMP_*
+                                        res.Add((int)texface.Bump);
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        texface = tex.GetFace((uint)face);
+                                        // Convert Shininess to PRIM_SHINY_*
+                                        res.Add((int)((uint)texface.Shiny >> 6));
+                                        // PRIM_BUMP_*
+                                        res.Add((int)((int)texface.Bump));
+                                    }
                                 }
                             }
                         }
@@ -11099,45 +11153,57 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(texface.Fullbright ? 1 : 0);
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(texface.Fullbright ? 1 : 0);
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(texface.Fullbright ? 1 : 0);
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(texface.Fullbright ? 1 : 0);
+                                    }
                                 }
                             }
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_FLEXIBLE:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-
-                            if (shape.FlexiEntry)
-                                res.Add((int)(1));              // active
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
-                                res.Add((int)(0));
-                            res.Add((int)(shape.FlexiSoftness));// softness
-                            res.Add((float)(shape.FlexiGravity));   // gravity
-                            res.Add((float)(shape.FlexiDrag));      // friction
-                            res.Add((float)(shape.FlexiWind));      // wind
-                            res.Add((float)(shape.FlexiTension));   // tension
-                            res.Add(new LSL_Vector(shape.FlexiForceX,       // force
-                                                   shape.FlexiForceY,
-                                                   shape.FlexiForceZ));
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+
+                                if (shape.FlexiEntry)
+                                    res.Add((int)(1));              // active
+                                else
+                                    res.Add((int)(0));
+                                res.Add((int)(shape.FlexiSoftness));// softness
+                                res.Add((float)(shape.FlexiGravity));   // gravity
+                                res.Add((float)(shape.FlexiDrag));      // friction
+                                res.Add((float)(shape.FlexiWind));      // wind
+                                res.Add((float)(shape.FlexiTension));   // tension
+                                res.Add(new LSL_Vector(shape.FlexiForceX,       // force
+                                                       shape.FlexiForceY,
+                                                       shape.FlexiForceZ));
+                            }
                         }
                         break;
 
@@ -11146,101 +11212,149 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    MappingType texgen = tex.GetFace((uint)face).TexMapType;
-                                    // Convert MappingType to PRIM_TEXGEN_DEFAULT, PRIM_TEXGEN_PLANAR etc.
-                                    res.Add((int)((uint)texgen >> 1));
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    MappingType texgen = tex.GetFace((uint)face).TexMapType;
-                                    res.Add((int)((uint)texgen >> 1));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        MappingType texgen = tex.GetFace((uint)face).TexMapType;
+                                        // Convert MappingType to PRIM_TEXGEN_DEFAULT, PRIM_TEXGEN_PLANAR etc.
+                                        res.Add((int)((uint)texgen >> 1));
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        MappingType texgen = tex.GetFace((uint)face).TexMapType;
+                                        res.Add((int)((uint)texgen >> 1));
+                                    }
                                 }
                             }
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_POINT_LIGHT:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            if (shape.LightEntry)
-                                res.Add((int)(1));              // active
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
-                                res.Add((int)(0));
-                            res.Add(new LSL_Vector(shape.LightColorR,       // color
-                                                   shape.LightColorG,
-                                                   shape.LightColorB));
-                            res.Add((float)(shape.LightIntensity)); // intensity
-                            res.Add((float)(shape.LightRadius));    // radius
-                            res.Add((float)(shape.LightFalloff));   // falloff
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                if (shape.LightEntry)
+                                    res.Add((int)(1));              // active
+                                else
+                                    res.Add((int)(0));
+                                res.Add(new LSL_Vector(shape.LightColorR,       // color
+                                                       shape.LightColorG,
+                                                       shape.LightColorB));
+                                res.Add((float)(shape.LightIntensity)); // intensity
+                                res.Add((float)(shape.LightRadius));    // radius
+                                res.Add((float)(shape.LightFalloff));   // falloff
+                            }
                         }
                         break;
 
                     case ScriptBaseClass.IW_PRIM_PROJECTOR:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            if (shape.ProjectionEntry)
-                                res.Add((int)(1));              // active
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
-                                res.Add((int)(0));
-                            res.Add(ConditionalTextureNameOrUUID(part, shape.ProjectionTextureUUID));
-                            res.Add((float)(shape.ProjectionFOV));
-                            res.Add((float)(shape.ProjectionFocus));
-                            res.Add((float)(shape.ProjectionAmbiance));
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                if (shape.ProjectionEntry)
+                                    res.Add((int)(1));              // active
+                                else
+                                    res.Add((int)(0));
+                                res.Add(ConditionalTextureNameOrUUID(part, shape.ProjectionTextureUUID));
+                                res.Add((float)(shape.ProjectionFOV));
+                                res.Add((float)(shape.ProjectionFocus));
+                                res.Add((float)(shape.ProjectionAmbiance));
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_ENABLED:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            if (shape.ProjectionEntry)
-                                res.Add((int)(1));              // active
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
-                                res.Add((int)(0));
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                if (shape.ProjectionEntry)
+                                    res.Add((int)(1));              // active
+                                else
+                                    res.Add((int)(0));
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_TEXTURE:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            res.Add(ConditionalTextureNameOrUUID(part, shape.ProjectionTextureUUID));
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                res.Add(ConditionalTextureNameOrUUID(part, shape.ProjectionTextureUUID));
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_FOV:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            res.Add((float)(shape.ProjectionFOV));
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                res.Add((float)(shape.ProjectionFOV));
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_FOCUS:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            res.Add((float)(shape.ProjectionFocus));
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                res.Add((float)(shape.ProjectionFocus));
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_AMBIENCE:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            res.Add((float)(shape.ProjectionAmbiance));
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                res.Add((float)(shape.ProjectionAmbiance));
+                            }
                         }
                         break;
 
@@ -11249,75 +11363,103 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(texface.Glow);
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(texface.Glow);
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(texface.Glow);
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(texface.Glow);
+                                    }
                                 }
                             }
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEXT:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            res.Add((string)(part.Text));
-                            res.Add(new LSL_Vector(part.TextColor.R,
-                                                    part.TextColor.G,
-                                                    part.TextColor.B));
-                            res.Add((float)((255.0 - part.TextColor.A) / 255)); // see part.SetText()
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                res.Add((string)(part.Text));
+                                res.Add(new LSL_Vector(part.TextColor.R,
+                                                        part.TextColor.G,
+                                                        part.TextColor.B));
+                                res.Add((float)((255.0 - part.TextColor.A) / 255)); // see part.SetText()
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_NAME:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add((string)(part.Name));
+                        foreach (object o in parts)
+                        {
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add((string)((o as SceneObjectPart).Name));
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_DESC:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add((string)(part.Description));
+                        foreach (object o in parts)
+                        {
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add((string)((o as SceneObjectPart).Description));
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_SLICE:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape Shape = part.Shape;
-                            int primType = getScriptPrimType(part.Shape);
-
-                            int hollowShape = (int)(Shape.HollowShape);
-                            LSL_Vector profileCut = new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0.0f);
-                            float profileHollow = (float)(Shape.ProfileHollow / 50000.0);
-                            LSL_Vector pathTwist = new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0);
-                            LSL_Vector pathScale = new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0);
-                            LSL_Vector pathShear = new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0);
-
-                            float sliceBegin = Shape.PathBegin / 50000.0f;
-                            float sliceEnd = 1 - Shape.PathEnd / 50000.0f;
-
-                            switch (primType)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
                             {
-                                case ScriptBaseClass.PRIM_TYPE_BOX:
-                                case ScriptBaseClass.PRIM_TYPE_CYLINDER:
-                                case ScriptBaseClass.PRIM_TYPE_PRISM:
-                                    res.Add(new LSL_Vector(sliceBegin, sliceEnd, 0.0f));
-                                    break;
-                                default:    // anything else has full slice
-                                    res.Add(new LSL_Vector(0.0f, 1.0f, 0.0f));
-                                    break;
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape Shape = part.Shape;
+                                int primType = getScriptPrimType(part.Shape);
+
+                                int hollowShape = (int)(Shape.HollowShape);
+                                LSL_Vector profileCut = new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0.0f);
+                                float profileHollow = (float)(Shape.ProfileHollow / 50000.0);
+                                LSL_Vector pathTwist = new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0);
+                                LSL_Vector pathScale = new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0);
+                                LSL_Vector pathShear = new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0);
+
+                                float sliceBegin = Shape.PathBegin / 50000.0f;
+                                float sliceEnd = 1 - Shape.PathEnd / 50000.0f;
+
+                                switch (primType)
+                                {
+                                    case ScriptBaseClass.PRIM_TYPE_BOX:
+                                    case ScriptBaseClass.PRIM_TYPE_CYLINDER:
+                                    case ScriptBaseClass.PRIM_TYPE_PRISM:
+                                        res.Add(new LSL_Vector(sliceBegin, sliceEnd, 0.0f));
+                                        break;
+                                    default:    // anything else has full slice
+                                        res.Add(new LSL_Vector(0.0f, 1.0f, 0.0f));
+                                        break;
+                                }
                             }
                         }
                         break;
@@ -11328,21 +11470,27 @@ namespace InWorldz.Phlox.Engine
 
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    res.AddRange(GetRenderMaterialSpecularData(part, face));
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    res.AddRange(GetRenderMaterialSpecularData(part, face));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        res.AddRange(GetRenderMaterialSpecularData(part, face));
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        res.AddRange(GetRenderMaterialSpecularData(part, face));
+                                    }
                                 }
                             }
                         }
@@ -11355,21 +11503,27 @@ namespace InWorldz.Phlox.Engine
 
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    res.AddRange(GetRenderMaterialNormalData(part, face));
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    res.AddRange(GetRenderMaterialNormalData(part, face));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        res.AddRange(GetRenderMaterialNormalData(part, face));
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        res.AddRange(GetRenderMaterialNormalData(part, face));
+                                    }
                                 }
                             }
                         }
@@ -11381,21 +11535,27 @@ namespace InWorldz.Phlox.Engine
 
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    res.AddRange(GetRenderMaterialAlphaModeData(part, face));
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    res.AddRange(GetRenderMaterialAlphaModeData(part, face));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        res.AddRange(GetRenderMaterialAlphaModeData(part, face));
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        res.AddRange(GetRenderMaterialAlphaModeData(part, face));
+                                    }
                                 }
                             }
                         }
