@@ -507,7 +507,7 @@ CREATE TABLE `events` (
   `mature` enum('true','false') NOT NULL,
   PRIMARY KEY (`eventid`),
   KEY `IDX_DATE` (`dateUTC`)
-) ENGINE=InnoDB AUTO_INCREMENT=24408 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=24408 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
