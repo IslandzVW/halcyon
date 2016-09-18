@@ -1210,7 +1210,7 @@ CREATE TABLE `regions` (
   KEY `regionHandle` (`regionHandle`),
   KEY `overrideHandles` (`eastOverrideHandle`,`westOverrideHandle`,`southOverrideHandle`,`northOverrideHandle`),
   KEY `IDX_XY` (`locX`,`locY`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Rev. 3';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Rev. 3';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
