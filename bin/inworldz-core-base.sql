@@ -212,7 +212,7 @@ DROP TABLE IF EXISTS `botappearance`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `botappearance` (
   `Owner` char(36) NOT NULL,
-  `OutfitName` varchar(36) NOT NULL,
+  `OutfitName` varchar(255) NOT NULL,
   `LastUsed` int(11) NOT NULL,
   `Serial` int(10) unsigned NOT NULL,
   `Visual_Params` blob NOT NULL,
@@ -263,7 +263,7 @@ DROP TABLE IF EXISTS `botattachments`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `botattachments` (
   `UUID` char(36) NOT NULL,
-  `outfitName` varchar(36) NOT NULL,
+  `outfitName` varchar(255) NOT NULL,
   `attachpoint` int(11) NOT NULL,
   `item` char(36) NOT NULL,
   `asset` char(36) NOT NULL,
