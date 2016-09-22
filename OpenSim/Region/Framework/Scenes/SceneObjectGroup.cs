@@ -4287,11 +4287,11 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (m_childAvatars.AddAvatar(sp))
             {
+                sp.LinkNum = LinkCount; // add to end
+
                 SitTargetInfo sitInfo = SitTargetForPart(partID);
                 sitInfo.SeatAvatar(sp);
 
-                // Now fix avatar link numbers
-                RecalcSeatedAvatarLinks();
                 if (sendEvent)
                     TriggerScriptChangedEvent(Changed.LINK);
             }
@@ -4301,6 +4301,8 @@ namespace OpenSim.Region.Framework.Scenes
             SitTargetInfo sitInfo = SitTargetForPart(partID);
             sitInfo.SeatAvatar(null);
 
+            int linkNum = sp.LinkNum;   // save it
+            sp.LinkNum = 0;
             if (m_childAvatars.RemoveAvatar(sp))
             {
                 // Now fix avatar link numbers
@@ -4321,14 +4323,17 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// This method updates all seated avatars with new link numbers after link changes.
+        /// This method updates all seated avatars with new link numbers after new links are added or and avatar or link removed.
+        /// Avatars are always added to the end (so no need to call this).
         /// </summary>
         public void RecalcSeatedAvatarLinks()
         {
-            int next = PartCount;
-            m_childAvatars.ForEach((ScenePresence sp) =>
+            List<ScenePresence> avatars = GetAvatarsAsList();   // comes back sorted by link number
+            int next = PartCount+1;
+
+            avatars.ForEach((ScenePresence sp) =>
             {
-                sp.LinkNum = ++next;
+                sp.LinkNum = next++;
             });
         }
 
