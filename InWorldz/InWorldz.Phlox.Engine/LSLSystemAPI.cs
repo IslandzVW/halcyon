@@ -10768,7 +10768,7 @@ namespace InWorldz.Phlox.Engine
             if (sp == null)
                 return 0;
 
-            return GetAvatarAsPrimParam(linknum, ref res, rule);
+            return GetAvatarAsPrimParam(sp, ref res, rule);
         }
 
         private LSL_List GetPrimParams(int linknumber, LSL_List rules)
