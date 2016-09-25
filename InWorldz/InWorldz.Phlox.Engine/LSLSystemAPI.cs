@@ -2532,6 +2532,29 @@ namespace InWorldz.Phlox.Engine
             return GetPartLocalRot(m_host);
         }
 
+		public LSL_Vector iwGetEulerRot()
+		{
+			return llRot2Euler (llGetRot ()) * (float)ScriptBaseClass.RAD_TO_DEG;
+		}
+
+		public LSL_Vector iwGetEulerRootRot()
+		{
+			return llRot2Euler (llGetRootRotation ()) * (float)ScriptBaseClass.RAD_TO_DEG;
+		}
+
+		public LSL_Vector iwGetEulerLocalRot()
+		{
+			return llRot2Euler (llGetLocalRot ()) * (float)ScriptBaseClass.RAD_TO_DEG;
+		}
+
+		public void iwSetEulerRot(LSL_Vector rot) {
+			llSetRot (llEuler2Rot (rot * (float)ScriptBaseClass.DEG_TO_RAD));
+		}
+
+		public void iwSetEulerLocalRot(LSL_Vector rot) {
+			llSetLocalRot (llEuler2Rot (rot * (float)ScriptBaseClass.DEG_TO_RAD));
+		}
+
         public void llSetForce(LSL_Vector force, int local)
         {
             m_host.SetForce(force, local != 0);
@@ -9428,11 +9451,17 @@ namespace InWorldz.Phlox.Engine
                             }
                         }
                         break;
-                    case (int)ScriptBaseClass.PRIM_ROT_LOCAL:
-                        if (remain < 1)
-                            return;
-
-                        LSL_Rotation lq = rules.GetQuaternionItem(idx++);
+					case (int)ScriptBaseClass.PRIM_ROT_LOCAL:
+					case (int)ScriptBaseClass.IW_PRIM_EULER_ROT_LOCAL:
+						if (remain < 1)
+							return;
+								
+						LSL_Rotation lq;
+						if (code == ScriptBaseClass.PRIM_ROT_LOCAL) {
+							lq = rules.GetQuaternionItem (idx++);
+						} else {
+							lq = llEuler2Rot (rules.GetVector3Item (idx++) * (float)ScriptBaseClass.RAD_TO_DEG);
+						}
                         foreach (var o in links)
                         {
                             if (o is ScenePresence)     // avatar-as-a-prim 'part'?
@@ -9448,7 +9477,7 @@ namespace InWorldz.Phlox.Engine
                                 SetRot(part, Rot2Quaternion(lq));
                             }
                         }
-                        break;
+					break;
                     case (int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_TYPE:
                         if (remain < 1)
                             return;
@@ -9469,11 +9498,17 @@ namespace InWorldz.Phlox.Engine
                         }
 
                         break;
+					case (int)ScriptBaseClass.IW_PRIM_EULER_ROTATION:
                     case (int)ScriptBaseClass.PRIM_ROTATION:
                         if (remain < 1)
                             return;
-
-                        LSL_Rotation q = rules.GetQuaternionItem(idx++);
+						
+						LSL_Rotation q;
+						if (code == ScriptBaseClass.PRIM_ROT_LOCAL) {
+							q = rules.GetQuaternionItem (idx++);
+						} else {
+							q = llEuler2Rot (rules.GetVector3Item (idx++) * (float)ScriptBaseClass.DEG_TO_RAD);
+						}
                         // try to let this work as in SL...
                         foreach (var o in links)
                         {
@@ -10859,7 +10894,14 @@ namespace InWorldz.Phlox.Engine
                             else
                                 res.Add(new LSL_Vector((o as SceneObjectPart).GetSLCompatiblePosition()));
                         }
-                        break;
+						break;
+					case (int)ScriptBaseClass.IW_PRIM_EULER_ROTATION:
+						foreach (object o in parts)
+							if (o is ScenePresence)
+								GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+							else
+								res.Add(llRot2Euler(GetPartRot(o as SceneObjectPart) * (float)ScriptBaseClass.RAD_TO_DEG));
+						break;
 
                     case (int)ScriptBaseClass.PRIM_SIZE:
                         foreach (object o in parts)
@@ -10868,7 +10910,6 @@ namespace InWorldz.Phlox.Engine
                             else
                                 res.Add(new LSL_Vector((o as SceneObjectPart).Scale));
                         break;
-
                     case (int)ScriptBaseClass.PRIM_ROTATION:
                         foreach (object o in parts)
                             if (o is ScenePresence)
@@ -10877,6 +10918,13 @@ namespace InWorldz.Phlox.Engine
                                 res.Add(GetPartRot(o as SceneObjectPart));
                         break;
 
+					case (int)ScriptBaseClass.IW_PRIM_EULER_ROT_LOCAL:
+						foreach (object o in parts)
+							if (o is ScenePresence)
+								GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+							else
+								res.Add(llRot2Euler(GetPartLocalRot(o as SceneObjectPart) * (float)ScriptBaseClass.RAD_TO_DEG));
+						break;
                     case (int)ScriptBaseClass.PRIM_ROT_LOCAL:
                         foreach (object o in parts)
                             if (o is ScenePresence)

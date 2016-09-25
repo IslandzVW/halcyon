@@ -383,6 +383,9 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         /// The amount of testure-controlled light to put on all faces with the FOV and range of the light. Cannot be negative.
         public const int IW_PRIM_PROJECTOR_AMBIENCE = 11105;
 
+		public const int IW_PRIM_EULER_ROTATION = 11106;
+		public const int IW_PRIM_EULER_ROT_LOCAL = 11107;
+
         public const int PRIM_TEXGEN_DEFAULT = 0;
         public const int PRIM_TEXGEN_PLANAR = 1;
 
