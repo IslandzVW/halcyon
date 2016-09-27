@@ -3576,16 +3576,21 @@ namespace OpenSim.Region.Framework.Scenes
         /// <summary>
         ///
         /// </summary>
-        public void SetParent(SceneObjectGroup parent)
+        public void SetParent(SceneObjectGroup parent, bool isDuplicate)
         {
-            if (m_parentGroup != parent)
-                parent.SetSitTarget(this, SitTargetPosition, SitTargetOrientation);
+            bool hasChanged = (m_parentGroup != parent);
             m_parentGroup = parent;
+
+            // If this is being called from CopyPart, as part of the persistence backup, 
+            // then it is a duplicate copy of the SOP/SOG that has UUID/LocalID that 
+            // matches the in-world copy, so don't change the in-world SOG/SOP.
+            if (hasChanged && !isDuplicate)
+                parent.SetSitTarget(this, SitTargetPosition, SitTargetOrientation);
         }
 
         public void SetParentAndUpdatePhysics(SceneObjectGroup parent)
         {
-            this.SetParent(parent);
+            this.SetParent(parent, false);
 
             PhysicsActor physActor = PhysActor;
             if (physActor != null)
