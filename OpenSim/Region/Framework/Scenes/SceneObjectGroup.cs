@@ -1535,7 +1535,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetRootPart(SceneObjectPart part)
         {
             m_rootPart = part;
-            part.SetParent(this);
+            part.SetParent(this, false);
 
             if (!IsAttachment)
                 part.ParentID = 0;
@@ -2471,7 +2471,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
             else
             {
-                newPart.SetParent(this);
+                newPart.SetParent(this, true);
             }
             
             m_childParts.AddPart(newPart);
