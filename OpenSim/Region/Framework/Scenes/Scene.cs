@@ -2501,7 +2501,7 @@ namespace OpenSim.Region.Framework.Scenes
                 group.ForEachSittingAvatar((ScenePresence sp) =>
                 {
                     if (!sp.IsChildAgent)
-                        sp.StandUp(null, fromCrossing, false);
+                        sp.StandUp(fromCrossing, false);
                 });
             }
 
@@ -3590,7 +3590,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (avatar != null)
             {
                 isChildAgent = avatar.IsChildAgent;
-                avatar.StandUp(null, false, true);
+                avatar.StandUp(false, true);
             }
 
             try
@@ -4795,7 +4795,7 @@ namespace OpenSim.Region.Framework.Scenes
                     position.Z = newPosZ;
                 }
 
-                avatar.StandUp(null, false, true);
+                avatar.StandUp(false, true);
                 avatar.ControllingClient.SendLocalTeleport(position, lookAt, (uint)teleportFlags);
                 avatar.Teleport(position);
 
@@ -4811,7 +4811,7 @@ namespace OpenSim.Region.Framework.Scenes
                     "[SCENE COMMUNICATION SERVICE]: RequestTeleportToLocation to {0} in {1}",
                     position, destRegionName);
 
-                avatar.StandUp(null, false, true);
+                avatar.StandUp(false, true);
 
                 AvatarTransit.TransitArguments args = new AvatarTransit.TransitArguments
                 {

@@ -7892,12 +7892,12 @@ namespace InWorldz.Phlox.Engine
                 if (av != null)
                 {
                     SceneObjectPart part = FindAvatarOnObject(key);
-                    if (part != null)
+                    if (part.ParentGroup == m_host.ParentGroup)
                     {
                         // if the avatar is sitting on this object, then
                         // we can unsit them.  We don't want random scripts unsitting random people
                         // Lets avoid the popcorn avatar scenario.
-                        av.StandUp(part, false, true);
+                        av.StandUp(false, true);
                     }
                     else
                     {
@@ -7915,7 +7915,7 @@ namespace InWorldz.Phlox.Engine
                                 (m_host.OwnerID == m_host.GroupID && m_host.GroupID == parcel.landData.GroupID && parcel.landData.IsGroupOwned) ||
                                 scene.Permissions.CanIssueEstateCommand(m_host.OwnerID, false) || World.Permissions.IsGod(m_host.OwnerID))
                             {
-                                av.StandUp(null, false, true);
+                                av.StandUp(false, true);
                             }
                         }
                     }
@@ -14718,7 +14718,7 @@ namespace InWorldz.Phlox.Engine
                 ScenePresence avatar = World.GetScenePresence(m_host.AttachedAvatar);
                 if (avatar == null)
                     return 0;
-                avatar.StandUp(null, false, true);
+                avatar.StandUp(false, true);
                 avatar.Teleport(position);
             }
             else
