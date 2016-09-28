@@ -2253,13 +2253,10 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if ((known_part != null) || (info.Parent != null))
                 {
-                    part = info.Parent;
-                    if (known_part != null)
-                    {
-                        if ((part != null) && (part != info.Parent))
-                            m_log.ErrorFormat("[SCENE PRESENCE]: StandUp for {0} with parentID={1} does not match seated part {2}.", this.Name, (info.Parent==null)? 0 : info.Parent.LocalId, part.LocalId.ToString());
-                        part = known_part;
-                    }
+                    if (m_requestedSitTargetUUID != UUID.Zero)
+                        part = Scene.GetSceneObjectPart(m_requestedSitTargetUUID);  // stand from sit target
+                    else
+                        part = info.Parent;     // stand from prim without sit target
 
                     if (part == null)
                     {
