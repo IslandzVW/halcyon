@@ -776,7 +776,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
 
-                if (!avatar.RemotePresences.HasEstablishedConnection(destRegion))
+                if (avatar.RemotePresences.HasConnectionsEstablishing())
                 {
                     // avatar.ControllingClient.SendAlertMessage("Can not move to a new region, connections are still being established");
                     ForcePositionInRegion();

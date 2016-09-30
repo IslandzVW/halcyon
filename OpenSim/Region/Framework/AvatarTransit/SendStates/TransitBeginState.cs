@@ -84,10 +84,10 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
             }
 
             //assert that the dest region is available and this avatar has an established connection to that region
-            if (!_avatar.ScenePresence.RemotePresences.HasEstablishedConnection(_avatar.TransitArgs.DestinationRegion))
+            if (_avatar.ScenePresence.RemotePresences.HasConnectionsEstablishing())
             {
 //                _avatar.ScenePresence.ControllingClient.SendAlertMessage("Can not move to a new region, connections are still being established");
-                throw new InvalidOperationException("An avatar can not begin transition to a neighbor region while the connection is being established");
+                throw new InvalidOperationException("An avatar can not begin transition to a neighbor region while the connections are still being established");
             }
 
             //if we're riding on a prim, wait for the all clear before moving on
