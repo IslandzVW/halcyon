@@ -946,7 +946,6 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Constructor(s)
 
-        private static int m_depth = 0;
         private ScenePresence(IClientAPI client, Scene world, RegionInfo reginfo)
         {
             m_regionHandle = reginfo.RegionHandle;
@@ -967,8 +966,6 @@ namespace OpenSim.Region.Framework.Scenes
                 m_grouptitle = gm.GetGroupTitle(m_uuid);
 
             m_scriptEngines = m_scene.RequestModuleInterfaces<IScriptModule>();
-
-            m_log.Warn("[PRESENCE]: Constructor, clients now: " + (++m_depth).ToString());
 
             ISceneViewModule sceneViewModule = m_scene.RequestModuleInterface<ISceneViewModule>();
             if (sceneViewModule != null)
@@ -997,11 +994,6 @@ namespace OpenSim.Region.Framework.Scenes
             : this(client, world, reginfo)
         {
             m_appearance = appearance;
-        }
-
-        ~ScenePresence()
-        {
-            m_log.Warn("[PRESENCE]: Destructor, clients now: " + (--m_depth).ToString());
         }
 
         public void RegisterToEvents()
@@ -1803,7 +1795,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_STAND_UP) != 0)
             {
-                StandUp(null, false, true);
+                StandUp(false, true);
             }
 
             m_mouseLook = (flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) != 0;
@@ -2276,7 +2268,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Perform the logic necessary to stand the client up.  This method also executes
         /// the stand animation.
         /// </summary>
-        public void StandUp(SceneObjectPart known_part, bool fromCrossing, bool recheckGroupForAutoreturn)
+        public void StandUp(bool fromCrossing, bool recheckGroupForAutoreturn)
         {
             SceneObjectPart part = null;
             float partTop = 0.0f;
@@ -2297,15 +2289,12 @@ namespace OpenSim.Region.Framework.Scenes
 
                 PositionInfo info = GetPosInfo();
 
-                if ((known_part != null) || (info.Parent != null))
+                if (info.Parent != null)
                 {
-                    part = info.Parent;
-                    if (known_part != null)
-                    {
-                        if ((part != null) && (part != info.Parent))
-                            m_log.ErrorFormat("[SCENE PRESENCE]: StandUp for {0} with parentID={1} does not match seated part {2}.", this.Name, (info.Parent==null)? 0 : info.Parent.LocalId, part.LocalId.ToString());
-                        part = known_part;
-                    }
+                    if (m_requestedSitTargetUUID != UUID.Zero)
+                        part = Scene.GetSceneObjectPart(m_requestedSitTargetUUID);  // stand from sit target
+                    else
+                        part = info.Parent;     // stand from prim without sit target
 
                     if (part == null)
                     {
@@ -2632,7 +2621,7 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            StandUp(null, false, true);
+            StandUp(false, true);
 
             //SceneObjectPart part = m_scene.GetSceneObjectPart(targetID);
             SceneObjectPart part = FindNextAvailableSitTarget(targetID);
@@ -2667,7 +2656,7 @@ namespace OpenSim.Region.Framework.Scenes
 //            m_log.InfoFormat("[SCENE PRESENCE]: HandleAgentRequestSit agent {0} at {1} requesing sit at {2} ", agentID.ToString(), m_pos.ToString(), offset.ToString());
 //            m_movementflag = 0;
 
-            StandUp(null, false, true);
+            StandUp(false, true);
 
             if (!String.IsNullOrEmpty(sitAnimation))
             {
@@ -5019,7 +5008,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
             }
 
-            StandUp(null, false, true); // SL stands up the user on a forced controls release
+            StandUp(false, true); // SL stands up the user on a forced controls release
 
             if (!found) // fail-safe... do *something* when this is called.
                 ControllingClient.SendTakeControls2(-1, false, false, -1, false, true);

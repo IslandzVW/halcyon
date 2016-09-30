@@ -555,7 +555,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (posInfo.Parent != null)
             {
                 // can't find the prim seated on, stand up
-                sp.StandUp(null, false, true);
+                sp.StandUp(false, true);
 
                 // fall through to unseated avatar code.
             }
