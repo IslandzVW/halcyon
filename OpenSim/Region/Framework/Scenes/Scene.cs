@@ -2740,6 +2740,47 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
+        public bool PrecheckAvatarCrossing(ScenePresence avatar, out String result)
+        {
+            //assert that this avatar is fully in this region before beginning a send
+            if (avatar.Connection.State != OpenSim.Framework.AvatarConnectionState.Established)
+            {
+                result = "Can not begin transition to a new region while already in transit";
+                return false;
+            }
+
+            //assert that this avatar is ready to leave the region
+            if (!avatar.IsFullyInRegion)
+            {
+                result = "Can not move to a new region, until established in the current region";
+                return false;
+            }
+
+            //assert that the dest region is available and this avatar has an established connection to that region
+            if (avatar.RemotePresences.HasConnectionsEstablishing())
+            {
+                result = "Can not move to a new region, connections are still being established";
+                return false;
+            }
+
+            result = String.Empty;
+            return true;
+        }
+
+        public bool PrecheckCrossing(SceneObjectGroup grp, out String result)
+        {
+            bool rc = true;
+            string result_msg = String.Empty;
+            grp.ForEachSittingAvatar(delegate (ScenePresence avatar)
+                {
+                    // result is effectively an AND of all avatar prechecks.
+                    if (rc)
+                        rc = PrecheckAvatarCrossing(avatar, out result_msg);
+                });
+            result = result_msg;
+            return rc;
+        }
+
         /// <summary>
         /// Move the given scene object into a new region
         /// </summary>
@@ -2757,6 +2798,14 @@ namespace OpenSim.Region.Framework.Scenes
             if (newRegionHandle != 0)
             {
                 bool wasPersisted = grp.IsPersisted;
+
+                string result = String.Empty;
+                if (!PrecheckCrossing(grp, out result))
+                {
+                    m_log.WarnFormat("[CROSSING]: {0} {1}", grp.Name, result);
+                    grp.ForcePositionInRegion();
+                    return false;
+                }
 
                 m_sceneGraph.RemoveGroupFromSceneGraph(grp.LocalId, false, true);
                 SceneGraph.RemoveFromUpdateList(grp);
