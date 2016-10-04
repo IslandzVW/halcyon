@@ -798,7 +798,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             if (sp == null)
                 return false;
 
-            sp.StandUp(null, false, true);
+            sp.StandUp(false, true);
             sp.Teleport(position);
             return true;
         }
