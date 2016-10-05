@@ -106,19 +106,6 @@ namespace OpenSim.Framework.Communications
             return null;
         }
 
-        public UserProfileData GetUserProfileData(Uri uri)
-        {
-            // m_log.DebugFormat("[USERSTORAGE]: GetUserProfileData plugin request for {0}", uri.ToString());
-            foreach (IUserDataPlugin plugin in m_plugins)
-            {
-                UserProfileData profile = plugin.GetUserByUri(uri);
-                if (null != profile)
-                    return profile;
-            }
-
-            return null;
-        }
-
         public virtual UserAgentData GetAgentData(UUID uuid)
         {
             // m_log.DebugFormat("[USERSTORAGE]: GetAgentData plugin request for {0}", uuid);

@@ -67,8 +67,6 @@ namespace OpenSim.Framework.Communications
         UserProfileData GetUserProfile(UUID uuid, bool forceRefresh);
         UserProfileData GetUserProfile(UUID uuid);
 
-        UserProfileData GetUserProfile(Uri uri);
-
         // Just call these if all you need is the name from cache.
         UUID Name2Key(string firstName, string lastName);
         UUID Name2Key(string name);
@@ -76,8 +74,6 @@ namespace OpenSim.Framework.Communications
         bool Key2Names(UUID uuid, bool onlyIfCached, out string firstName, out string lastName);
         string GetLastName(UUID uuid, bool onlyIfCached);
         string GetFirstName(UUID uuid, bool onlyIfCached);
-
-        Uri GetUserUri(UserProfileData userProfile);
 
         UserAgentData GetUserAgent(UUID uuid, bool forceRefresh);
         UserAgentData GetUserAgent(UUID uuid);
