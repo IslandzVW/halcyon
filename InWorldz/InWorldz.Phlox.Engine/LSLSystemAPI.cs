@@ -4371,8 +4371,8 @@ namespace InWorldz.Phlox.Engine
                     }
                     else
                     {
-                        ScenePresence.PositionInfo info = presence.GetPosInfo();
-                        if(info.Parent != null && info.Parent.ObjectOwner == m_host.OwnerID)
+                        SceneObjectPart parent = presence.GetSitTargetPart();
+                        if(parent != null && parent.ObjectOwner == m_host.OwnerID)
                         {
                             implicitPerms = ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION;
                         }
@@ -5857,18 +5857,10 @@ namespace InWorldz.Phlox.Engine
 
                 // Find pushee position
                 // Pushee Linked?
-                ScenePresence.PositionInfo info = pusheeav.GetPosInfo();
-                if (info.Parent != null)
+                SceneObjectPart parentobj = pusheeav.GetSitTargetPart();
+                if (parentobj != null)
                 {
-                    SceneObjectPart parentobj = info.Parent;
-                    if (parentobj != null)
-                    {
-                        PusheePos = parentobj.AbsolutePosition;
-                    }
-                    else
-                    {
-                        PusheePos = pusheeav.AbsolutePosition;
-                    }
+                    PusheePos = parentobj.AbsolutePosition;
                 }
                 else
                 {
@@ -7133,8 +7125,8 @@ namespace InWorldz.Phlox.Engine
                 flags |= ScriptBaseClass.AGENT_WALKING;
             }
 
-            ScenePresence.PositionInfo info = agent.GetPosInfo();
-            if (info.Parent != null)
+            SceneObjectPart parent = agent.GetSitTargetPart();
+            if (parent != null)
             {
                 flags |= ScriptBaseClass.AGENT_ON_OBJECT;
                 flags |= ScriptBaseClass.AGENT_SITTING;
@@ -7891,8 +7883,8 @@ namespace InWorldz.Phlox.Engine
 
                 if (av != null)
                 {
-                    SceneObjectPart part = FindAvatarOnObject(key);
-                    if (part.ParentGroup == m_host.ParentGroup)
+                    SceneObjectPart part = av.GetSitTargetPart();
+                    if ((part != null) && (part.ParentGroup == m_host.ParentGroup))
                     {
                         // if the avatar is sitting on this object, then
                         // we can unsit them.  We don't want random scripts unsitting random people
@@ -8592,13 +8584,6 @@ namespace InWorldz.Phlox.Engine
         public void llSitTarget(LSL_Vector offset, LSL_Rotation rot)
         {
             llLinkSitTarget(m_host.LinkNum, offset, rot);
-        }
-
-        private SceneObjectPart FindAvatarOnObject(UUID agentId)
-        {
-            ScenePresence sp = m_host.ParentGroup.Scene.GetScenePresence(agentId);
-            ScenePresence.PositionInfo posInfo = (sp == null) ? null : sp.GetPosInfo();
-            return (posInfo == null) ? null : posInfo.Parent;
         }
 
         private string AvatarOnSitTarget(int linknumber, bool IncludeSitTargetOnly)

@@ -1114,6 +1114,15 @@ namespace OpenSim.Region.Framework.Scenes
 
 #region Status Methods
 
+        public SceneObjectPart GetSitTargetPart()
+        {
+            SceneObjectPart part = null;
+            if (m_requestedSitTargetUUID != UUID.Zero)
+                part = m_scene.GetSceneObjectPart(m_requestedSitTargetUUID);
+
+            return part;
+        }
+
         /// <summary>
         /// This turns a child agent, into a root agent
         /// This is called when an agent teleports into a region, or if an
@@ -1122,9 +1131,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public SceneObjectPart MakeRootAgent(Vector3 pos)
         {
-            SceneObjectPart part = null;
-            if (m_requestedSitTargetUUID != UUID.Zero)
-                part = m_scene.GetSceneObjectPart(m_requestedSitTargetUUID);
+            SceneObjectPart part = GetSitTargetPart();
 
             DumpDebug("MakeRootAgent", "n/a");
             m_log.DebugFormat(
@@ -2152,7 +2159,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_sitAtAutoTarget)
                 {
-                    SceneObjectPart part = m_scene.GetSceneObjectPart(m_requestedSitTargetUUID);
+                    SceneObjectPart part = GetSitTargetPart();
                     if (part != null)
                     {
                         lock (m_posInfo)
