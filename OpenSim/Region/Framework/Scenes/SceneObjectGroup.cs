@@ -1664,7 +1664,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_childAvatars.ForEach((ScenePresence SP) => {
                     m_log.WarnFormat("[SCENE]: DeleteGroup {0} with avatar {1} seated on prim (crossing={2}).",
                                         UUID.ToString(), SP.ControllingClient.AgentId, fromCrossing.ToString());
-                    SP.StandUp(null, fromCrossing, false);
+                    SP.StandUp(fromCrossing, false);
                 });
 
                 m_childParts.ForEachPart((SceneObjectPart part) => {
