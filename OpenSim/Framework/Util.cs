@@ -2500,7 +2500,19 @@ namespace OpenSim.Framework
 
                 m_log.Info(m_context + ": " + elapsed.ToString());
             }
-            
+        }
+
+        public static void ReportIfSlow(string prefix, int millis, System.Action action)
+        {
+            Util.SlowTimeReporter slowCheck = new Util.SlowTimeReporter(prefix, new TimeSpan(0, 0, 0, 0, millis));
+            try
+            {
+                action();
+            }
+            finally
+            {
+                slowCheck.Complete();
+            }
         }
     }
 }
