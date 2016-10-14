@@ -123,10 +123,7 @@ namespace InWorldz.VivoxVoice
 
             m_config = config.Configs["VivoxVoice"];
 
-            if (null == m_config)
-                return;
-
-            if (!m_config.GetBoolean("enabled", false))
+            if (null == m_config || !m_config.GetBoolean("enabled", false))
                 return;
 
             try

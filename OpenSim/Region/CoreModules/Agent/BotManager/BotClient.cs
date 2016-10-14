@@ -59,12 +59,10 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         private Dictionary<string, UUID> m_defaultAnimations = new Dictionary<string, UUID>();
         private bool m_frozenUser = false;
         private bool m_closing = false;
-        private static int m_depth = 0;
 
         #endregion
 
         #region Constructor
-
         public BotClient(string firstName, string lastName, Scene scene, Vector3 startPos, UUID ownerID)
         {
             m_circuitCode = (uint)Util.RandomClass.Next(0, int.MaxValue);
@@ -80,15 +78,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             TimeCreated = DateTime.Now;
 
             InitDefaultAnimations();
-
-            m_log.Warn("[BOTCLIENT]: Constructor, clients now: " + (++m_depth).ToString());
         }
-
-        ~BotClient()
-        {
-            m_log.Warn("[BOTCLIENT]: Destructor, clients now: " + (--m_depth).ToString());
-        }
-
         #endregion
 
         #region IBot Properties
@@ -154,7 +144,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             if (sp == null)
                 return false;
 
-            sp.StandUp(null, false, true);
+            sp.StandUp(false, true);
             return true;
         }
 

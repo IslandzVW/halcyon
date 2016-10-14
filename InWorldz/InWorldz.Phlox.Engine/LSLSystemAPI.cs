@@ -549,55 +549,83 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
-        private IReadOnlyCollection<SceneObjectPart> GetLinkParts(int linkType)
+        private List<object> GetLinkParts(int linkType, bool includeAvatars)
         {
-            IReadOnlyCollection<SceneObjectPart> ret = new SceneObjectPart[] { m_host };
+            List<object> ret = new List<object>();
 
             switch (linkType)
             {
                 case ScriptBaseClass.LINK_SET:
                     if (m_host.ParentGroup != null)
-                    {
-                        return m_host.ParentGroup.GetParts();
-                    }
-                    return ret;
+                        ret.AddRange(m_host.ParentGroup.GetAllLinksAsList(includeAvatars));
+                    else
+                        ret.Add(m_host);
+                    break;
 
                 case ScriptBaseClass.LINK_ROOT:
+                case 0: // the other LINK_ROOT linknum
                     if (m_host.ParentGroup != null)
-                    {
-                        return new SceneObjectPart[] { m_host.ParentGroup.RootPart };
-                    }
-                    return ret;
+                        ret.Add(m_host.ParentGroup.RootPart);
+                    else
+                        ret.Add(m_host);
+                    break;
 
                 case ScriptBaseClass.LINK_ALL_OTHERS:
-                    if (m_host.ParentGroup == null)
-                        return new SceneObjectPart[0];
-
-                    ret = new List<SceneObjectPart>(m_host.ParentGroup.GetPartsExcluding(m_host));
-                    return ret;
+                    if (m_host.ParentGroup != null)
+                        ret.AddRange(m_host.ParentGroup.GetAllLinksAsListExcept(m_host, includeAvatars));
+                    else
+                        ret.Add(m_host);
+                    break;
 
                 case ScriptBaseClass.LINK_ALL_CHILDREN:
-                    if (m_host.ParentGroup == null)
-                        return new SceneObjectPart[0];
-
-                    ret = new List<SceneObjectPart>(m_host.ParentGroup.GetPartsExcluding(m_host.ParentGroup.RootPart));
-                    return ret;
+                    if (m_host.ParentGroup != null)
+                        ret.AddRange(m_host.ParentGroup.GetAllLinksAsListExcept(m_host.ParentGroup.RootPart, includeAvatars));
+                    else
+                        ret.Add(m_host);
+                    break;
 
                 case ScriptBaseClass.LINK_THIS:
-                    return ret;
+                    ret.Add(m_host);
+                    break;
 
                 default:
-                    if (linkType < 0 || m_host.ParentGroup == null)
-                        return new SceneObjectPart[0];
-
-                    SceneObjectPart target = m_host.ParentGroup.GetLinkNumPart(linkType);
-                    if (target == null)
-                        return new SceneObjectPart[0];
-
-                    ret = new SceneObjectPart[] { target };
-                    return ret;
-
+                    if (m_host.ParentGroup != null)
+                    {
+                        if (linkType > m_host.ParentGroup.PartCount)
+                        {
+                            if (includeAvatars)
+                            {
+                                ScenePresence targetSP = m_host.ParentGroup.GetSeatedAvatarByLink(linkType);
+                                if (targetSP != null)
+                                    ret.Add(targetSP);
+                            }
+                        }
+                        else
+                        if (linkType > 1)   // 0, 1 handled above
+                        {
+                            SceneObjectPart target = m_host.ParentGroup.GetLinkNumPart(linkType);
+                            if (target != null)
+                                ret.Add(target);
+                        }
+                    }
+                    break;
             }
+
+            return ret;
+        }
+
+        private List<object> GetLinkPrimsOnly(int linknum)
+        {
+            return GetLinkParts(linknum, false);
+        }
+
+        private SceneObjectPart GetLinkOnePrimOnly(int linknum)
+        {
+            SceneObjectPart part = null;
+            List<object> links = GetLinkParts(linknum, false);
+            if (links.First() is SceneObjectPart)
+                part = links.First() as SceneObjectPart;
+            return part;
         }
 
         private UUID InventorySelf()
@@ -1900,7 +1928,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llSetLinkAlpha(int linknumber, float alpha, int face)
         {
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 SetAlpha(part, alpha, face);
@@ -2092,7 +2120,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llSetLinkTexture(int linknumber, string texture, int face)
         {
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 SetTexture(part, texture, face);
@@ -4031,12 +4059,9 @@ namespace InWorldz.Phlox.Engine
         public void iwStartLinkAnimation(int linknumber, string anim)
         {
             if (linknumber < 0) return;
-            var parts = GetLinkParts(linknumber);
-
-            if (parts.Count != 1) return;
-
-            StartAnimation(parts.First(), anim);
-
+            var part = GetLinkOnePrimOnly(linknumber);
+            if (part != null)
+                StartAnimation(part, anim);
         }
 
         /*
@@ -4157,11 +4182,10 @@ namespace InWorldz.Phlox.Engine
         public void iwStopLinkAnimation(int linknumber, string anim)
         {
             if (linknumber < 0) return;
-            var parts = GetLinkParts(linknumber);
 
-            if (parts.Count != 1) return;
-
-            StopAnimation(parts.First(), anim);
+            var part = GetLinkOnePrimOnly(linknumber);
+            if (part != null)
+                StopAnimation(part, anim);
         }
         
         /*
@@ -4263,7 +4287,7 @@ namespace InWorldz.Phlox.Engine
 
         public void iwLinkTargetOmega(int linknumber, LSL_Vector axis, float spinrate, float gain)
         {
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 PrimTargetOmega(part, axis, spinrate, gain);
@@ -4347,8 +4371,8 @@ namespace InWorldz.Phlox.Engine
                     }
                     else
                     {
-                        ScenePresence.PositionInfo info = presence.GetPosInfo();
-                        if(info.Parent != null && info.Parent.ObjectOwner == m_host.OwnerID)
+                        SceneObjectPart parent = presence.GetSitTargetPart();
+                        if(parent != null && parent.ObjectOwner == m_host.OwnerID)
                         {
                             implicitPerms = ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION;
                         }
@@ -4605,7 +4629,7 @@ namespace InWorldz.Phlox.Engine
         {
             
 
-            if (m_host.ParentGroup.PrimCount > 1)
+            if (m_host.ParentGroup.PartCount > 1)
             {
                 return m_host.LinkNum;
             }
@@ -4617,7 +4641,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llSetLinkColor(int linknumber, LSL_Vector color, int face)
         {
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 SetColor(part, color, face);
@@ -4785,10 +4809,7 @@ namespace InWorldz.Phlox.Engine
             if (parentPrim.RootPart.AttachmentPoint != 0)
                 return; // Fail silently if attached
 
-            List<SceneObjectPart> parts = new List<SceneObjectPart>(parentPrim.GetParts());
-            parts.Remove(parentPrim.RootPart);
-
-            foreach (SceneObjectPart part in parts)
+            foreach (SceneObjectPart part in parentPrim.GetPartsExcluding(parentPrim.RootPart))
             {
                 parentPrim.DelinkFromGroup(part.LocalId, true);
                 parentPrim.TriggerScriptChangedEvent(Changed.LINK);
@@ -4797,16 +4818,23 @@ namespace InWorldz.Phlox.Engine
 
         public string llGetLinkKey(int linknum)
         {
-            
-            SceneObjectPart part = m_host.ParentGroup.GetLinkNumPart(linknum);
-            if (part != null)
+            List<object> links = GetLinkParts(linknum, true);
+            if (links.Count == 1)
             {
-                return part.UUID.ToString();
+                object o = links.First();
+                if (o is ScenePresence)
+                {
+                    ScenePresence sp = o as ScenePresence;
+                    return sp.UUID.ToString();
+                }
+                if (o is SceneObjectPart)
+                {
+                    SceneObjectPart part = o as SceneObjectPart;
+                    return part.UUID.ToString();
+                }
             }
-            else
-            {
-                return UUID.Zero.ToString();
-            }
+
+            return UUID.Zero.ToString();
         }
 
         /// <summary>
@@ -4839,6 +4867,17 @@ namespace InWorldz.Phlox.Engine
         {
             // returns a string version of NULL_KEY for not found or invalid linknum.
             string result = UUID.Zero.ToString();
+
+            if (linknum > m_host.ParentGroup.LinkCount)
+                return result;
+
+            if (linknum > m_host.ParentGroup.PartCount)
+            {
+                // It's a seated avatar:
+                List<object> res = new List<object>();
+                GetAvatarAsPrimParam(linknum, ref res, ScriptBaseClass.PRIM_NAME);
+                return (string)res[0];
+            }
 
             if (m_host.LinkNum == 0)
             {
@@ -4922,7 +4961,7 @@ namespace InWorldz.Phlox.Engine
         public int iwGetLinkInventoryNumber(int linknumber, int type)
         {
             int count = 0;
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
 
             foreach (SceneObjectPart part in parts)
             {
@@ -5007,10 +5046,9 @@ namespace InWorldz.Phlox.Engine
         public string iwGetLinkInventoryName(int linknumber, int type, int number)
         {
             string name = String.Empty;
-            var parts = GetLinkParts(linknumber);
-    
-            if (parts.Count == 1)
-                name = GetInventoryName(parts.First(), type, number);
+            var part = GetLinkOnePrimOnly(linknumber);
+            if (part != null)
+                name = GetInventoryName(part, type, number);
 
             return name;
         }
@@ -5054,10 +5092,9 @@ namespace InWorldz.Phlox.Engine
         public LSL_List iwSearchLinkInventory(int link, int type, string pattern, int matchtype)
         {
             if (link < 0) return new LSL_List();
-            var parts = GetLinkParts(link);
-
-            if (parts.Count == 1)
-                return SearchInventory(parts.First(), type, pattern, matchtype);
+            var part = GetLinkOnePrimOnly(link);
+            if (part != null)
+                return SearchInventory(part, type, pattern, matchtype);
             else
                 return new LSL_List();
         }
@@ -5336,7 +5373,7 @@ namespace InWorldz.Phlox.Engine
             int rc = ScriptBaseClass.IW_DELIVER_PRIM;   // part not found
             try
             {
-                var parts = GetLinkParts(linknumber);
+                var parts = GetLinkPrimsOnly(linknumber);
                 foreach (SceneObjectPart part in parts)
                 {
                     rc = _GiveInventory(part, destination, inventory, out needsDelay);
@@ -5386,7 +5423,7 @@ namespace InWorldz.Phlox.Engine
         }
         public void iwRemoveLinkInventory(int linknumber, string name)
         {
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
                 RemoveLinkInventory(part, name);
         }
@@ -5752,7 +5789,7 @@ namespace InWorldz.Phlox.Engine
         {
             int DELAY = 0;
 
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
 
             UUID partItemID;
             foreach (SceneObjectPart part in parts)
@@ -5765,7 +5802,7 @@ namespace InWorldz.Phlox.Engine
                     {
                         partItemID = item.ItemID;
                         int linkNumber = m_host.LinkNum;
-                        if (m_host.ParentGroup.PrimCount == 1)
+                        if (m_host.ParentGroup.LinkCount == 1)  // if there are seated avatars, single-prim becomes multi, else 0
                             linkNumber = 0;
 
                         object[] resobj = new object[] { linkNumber, num, msg, id };
@@ -5820,18 +5857,10 @@ namespace InWorldz.Phlox.Engine
 
                 // Find pushee position
                 // Pushee Linked?
-                ScenePresence.PositionInfo info = pusheeav.GetPosInfo();
-                if (info.Parent != null)
+                SceneObjectPart parentobj = pusheeav.GetSitTargetPart();
+                if (parentobj != null)
                 {
-                    SceneObjectPart parentobj = info.Parent;
-                    if (parentobj != null)
-                    {
-                        PusheePos = parentobj.AbsolutePosition;
-                    }
-                    else
-                    {
-                        PusheePos = pusheeav.AbsolutePosition;
-                    }
+                    PusheePos = parentobj.AbsolutePosition;
                 }
                 else
                 {
@@ -6051,7 +6080,7 @@ namespace InWorldz.Phlox.Engine
         {
             int sides = 0;
 
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 sides += part.GetNumberOfSides();
@@ -6218,14 +6247,14 @@ namespace InWorldz.Phlox.Engine
         {
             return GetInventoryKey(m_host, name).ToString(); ;
         }
+
         public string iwGetLinkInventoryKey(int linknumber, string name)
         {
-            var parts = GetLinkParts(linknumber);
-
-            if (parts.Count != 1)
+            var part = GetLinkOnePrimOnly(linknumber);
+            if (part == null)
                 return UUID.Zero.ToString();
 
-            return GetInventoryKey(parts.First(), name).ToString();
+            return GetInventoryKey(part, name).ToString();
         }
 
         public string GetInventoryDesc(SceneObjectPart part, string name)
@@ -6244,14 +6273,12 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkInventoryDesc(int linknumber, string name)
         {
-            var parts = GetLinkParts(linknumber);
-
-            if (parts.Count != 1)
+            var part = GetLinkOnePrimOnly(linknumber);
+            if (part == null)
                 return String.Empty;
 
-            return GetInventoryDesc(parts.First(), name);
+            return GetInventoryDesc(part, name);
         }
-
 
         public string GetInventoryLastOwner(SceneObjectPart part, string name)
         {
@@ -6269,12 +6296,11 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkInventoryLastOwner(int linknumber, string name)
         {
-            var parts = GetLinkParts(linknumber);
-
-            if (parts.Count != 1)
+            var part = GetLinkOnePrimOnly(linknumber);
+            if (part == null)
                 return UUID.Zero.ToString();
 
-            return GetInventoryLastOwner(parts.First(), name);
+            return GetInventoryLastOwner(part, name);
         }
 
         public void llAllowInventoryDrop(int add)
@@ -7099,8 +7125,8 @@ namespace InWorldz.Phlox.Engine
                 flags |= ScriptBaseClass.AGENT_WALKING;
             }
 
-            ScenePresence.PositionInfo info = agent.GetPosInfo();
-            if (info.Parent != null)
+            SceneObjectPart parent = agent.GetSitTargetPart();
+            if (parent != null)
             {
                 flags |= ScriptBaseClass.AGENT_ON_OBJECT;
                 flags |= ScriptBaseClass.AGENT_SITTING;
@@ -7226,7 +7252,7 @@ namespace InWorldz.Phlox.Engine
         public void llSetLinkTextureAnim(int linknumber, int mode, int face, int sizex, int sizey, float start, float length, float rate)
         {
 
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 SetPrimTextureAnim(part, mode, face, sizex, sizey, start, length, rate);
@@ -7857,13 +7883,13 @@ namespace InWorldz.Phlox.Engine
 
                 if (av != null)
                 {
-                    SceneObjectPart part = FindAvatarOnObject(key, false);
-                    if (part != null)
+                    SceneObjectPart part = av.GetSitTargetPart();
+                    if ((part != null) && (part.ParentGroup == m_host.ParentGroup))
                     {
                         // if the avatar is sitting on this object, then
                         // we can unsit them.  We don't want random scripts unsitting random people
                         // Lets avoid the popcorn avatar scenario.
-                        av.StandUp(part, false, true);
+                        av.StandUp(false, true);
                     }
                     else
                     {
@@ -7881,7 +7907,7 @@ namespace InWorldz.Phlox.Engine
                                 (m_host.OwnerID == m_host.GroupID && m_host.GroupID == parcel.landData.GroupID && parcel.landData.IsGroupOwned) ||
                                 scene.Permissions.CanIssueEstateCommand(m_host.OwnerID, false) || World.Permissions.IsGod(m_host.OwnerID))
                             {
-                                av.StandUp(null, false, true);
+                                av.StandUp(false, true);
                             }
                         }
                     }
@@ -8290,7 +8316,7 @@ namespace InWorldz.Phlox.Engine
         public void llLinkParticleSystem(int linknumber, LSL_List rules)
         {
 
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
 
             foreach (SceneObjectPart part in parts)
                 PrimParticleSystem(part, rules);
@@ -8402,7 +8428,7 @@ namespace InWorldz.Phlox.Engine
             int rc = ScriptBaseClass.IW_DELIVER_PRIM;   // part not found
             try
             {
-                var parts = GetLinkParts(linknumber);
+                var parts = GetLinkPrimsOnly(linknumber);
                 foreach (SceneObjectPart part in parts)
                 {
                     rc = _GiveLinkInventoryList(part, destination, category, inventory, includeRC, out needsDelay);
@@ -8545,11 +8571,13 @@ namespace InWorldz.Phlox.Engine
 
         public void llLinkSitTarget(int linknumber, LSL_Vector offset, LSL_Rotation rot)
         {
-            var parts = GetLinkParts(linknumber);
+            Vector3 sitPos = new Vector3((float)offset.X, (float)offset.Y, (float)offset.Z);
+            Quaternion sitRot = Rot2Quaternion(rot);
+
+            var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
-                part.SitTargetPosition = new Vector3((float)offset.X, (float)offset.Y, (float)offset.Z);
-                part.SitTargetOrientation = Rot2Quaternion(rot);
+                part.SetSitTarget(sitPos, sitRot);
             }
         }
 
@@ -8558,31 +8586,36 @@ namespace InWorldz.Phlox.Engine
             llLinkSitTarget(m_host.LinkNum, offset, rot);
         }
 
-        private SceneObjectPart FindAvatarOnObject(UUID agentId, bool IncludeSitTargetOnly)
-        {
-            var parts = m_host.ParentGroup.GetParts();
-            foreach (SceneObjectPart part in parts)
-            {
-                if ((!IncludeSitTargetOnly) || (part.SitTargetPosition != Vector3.Zero))
-                    if (part.SitTargetAvatar == agentId)
-                        return part;
-            }
-            return null;
-        }
-
         private string AvatarOnSitTarget(int linknumber, bool IncludeSitTargetOnly)
         {
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);   // only matching parts, not all parts
+            UUID seatedAvatar = UUID.Zero;
 
             // We'll spin through the "list" but return the values from the first match with a sit target.
             // Should only be one match, but if the script specified LINK_ALL_OTHERS or another wildcard,
             // then this function will return the first match.
             foreach (SceneObjectPart part in parts) {
-                if ((!IncludeSitTargetOnly) || (part.SitTargetPosition != Vector3.Zero))
-                    if (part.SitTargetAvatar != UUID.Zero)
-                        return part.SitTargetAvatar.ToString();
+                SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
+                if (IncludeSitTargetOnly)
+                {
+                    if (sitInfo.IsSet && sitInfo.HasSitter)
+                    {
+                        seatedAvatar = sitInfo.Sitter.UUID;
+                        break;
+                    }
+                }
+                else
+                {
+                    part.ForEachSittingAvatar((ScenePresence sp) =>
+                    {
+                        if (seatedAvatar == UUID.Zero)
+                            seatedAvatar = sp.UUID;
+                    });
+                    if (seatedAvatar != UUID.Zero)
+                        break;
+                }
             }
-            return UUID.Zero.ToString();
+            return seatedAvatar.ToString();
         }
         public string llAvatarOnSitTarget()
         {
@@ -8637,7 +8670,7 @@ namespace InWorldz.Phlox.Engine
 
         public void llSetLinkCamera(int linknumber, LSL_Vector eyeOffset, LSL_Vector cameraAt)
         {
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
                 part.SetCameraEyeOffset(new Vector3((float)eyeOffset.X, (float)eyeOffset.Y, (float)eyeOffset.Z));
@@ -9312,65 +9345,94 @@ namespace InWorldz.Phlox.Engine
 
         private void SetPrimParams(int linknumber, LSL_List rules, SceneObjectPart newPart)
         {
-            List<SceneObjectPart> initial = new List<SceneObjectPart>();
-            IReadOnlyCollection<SceneObjectPart> parts = initial;
+            IReadOnlyCollection<object> links;
 
             if (newPart == null) // normal SetPrimParams
-                parts = GetLinkParts(linknumber);
+                links = GetLinkParts(linknumber, true);
             else                // iwRezPart call
             {
                 // force it to use newPart
+                List<SceneObjectPart> initial = new List<SceneObjectPart>();
                 initial.Add(newPart);
+                links = initial;
             }
 
             int idx = 0;
             while (idx < rules.Length)
             {
                 int code = rules.GetLSLIntegerItem(idx++);
-
                 int remain = rules.Length - idx;
-
                 int face;
                 LSL_Vector v;
 
+                if (code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
+                {
+                    if (remain < 1)
+                        return;
+                    linknumber = (int)rules.GetLSLIntegerItem(idx++);
+                    remain = rules.Length - idx;
+
+                    links = GetLinkParts(linknumber, true);
+                }
+                
                 switch (code)
                 {
-                    case (int)ScriptBaseClass.PRIM_LINK_TARGET:
-                        if (remain < 1)
-                            return;
-                        linknumber = (int)rules.GetLSLIntegerItem(idx++);
-                        remain = rules.Length - idx;
-                        if (newPart == null)
-                            parts = GetLinkParts(linknumber);
-                        break;
-
                     case (int)ScriptBaseClass.PRIM_POSITION:
                     case (int)ScriptBaseClass.PRIM_POS_LOCAL:   // same as PRIM_POSITION on a SET operation
                         if (remain < 1)
                             return;
 
                         v = rules.GetVector3Item(idx++);
-                        foreach (SceneObjectPart part in parts)
-                            SetPos(part, v, true);
-
+                        foreach (var o in links)
+                        {
+                            if (o is ScenePresence)     // avatar-as-a-prim 'part'?
+                            {
+                                var sp = o as ScenePresence;
+                                sp.SetAvatarAsAPrimMode();
+                                sp.UpdateSeatedPosition(v);
+                            }
+                            else
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetPos(part, v, true);
+                            }
+                        }
                         break;
                     case (int)ScriptBaseClass.PRIM_SIZE:
                         if (remain < 1)
                             return;
 
                         v = rules.GetVector3Item(idx++);
-                        foreach (SceneObjectPart part in parts)
-                            SetScale(part, v);
-
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetScale(part, v);
+                            }
+                        }
                         break;
                     case (int)ScriptBaseClass.PRIM_ROT_LOCAL:
                         if (remain < 1)
                             return;
 
                         LSL_Rotation lq = rules.GetQuaternionItem(idx++);
-                        foreach (SceneObjectPart part in parts)
-                            SetRot(part, Rot2Quaternion(lq));
-
+                        foreach (var o in links)
+                        {
+                            if (o is ScenePresence)     // avatar-as-a-prim 'part'?
+                            {
+                                var sp = o as ScenePresence;
+                                sp.SetAvatarAsAPrimMode();
+                                sp.Rotation = Rot2Quaternion(lq);
+                            }
+                            else
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetRot(part, Rot2Quaternion(lq));
+                            }
+                        }
                         break;
                     case (int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_TYPE:
                         if (remain < 1)
@@ -9380,10 +9442,14 @@ namespace InWorldz.Phlox.Engine
 
                         if (Enum.IsDefined(typeof(PhysicsShapeType), (byte)pshape_type))
                         {
-                            foreach (var part in parts)
+                            foreach (var o in links)
                             {
-                                part.Shape.PreferredPhysicsShape = (PhysicsShapeType)pshape_type;
-                                part.PhysicsShapeChanged();
+                                if (o is SceneObjectPart)
+                                {
+                                    var part = o as SceneObjectPart;
+                                    part.Shape.PreferredPhysicsShape = (PhysicsShapeType)pshape_type;
+                                    part.PhysicsShapeChanged();
+                                }
                             }
                         }
 
@@ -9394,23 +9460,34 @@ namespace InWorldz.Phlox.Engine
 
                         LSL_Rotation q = rules.GetQuaternionItem(idx++);
                         // try to let this work as in SL...
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            if (part.IsRootPart())
+                            if (o is ScenePresence)     // avatar-as-a-prim 'part'?
                             {
-                                // special case: If we are root, rotate complete SOG to new rotation
-                                SetRot(part, Rot2Quaternion(q));
+                                var sp = o as ScenePresence;
+                                sp.SetAvatarAsAPrimMode();
+                                sp.Rotation = m_host.ParentGroup.RootPart.RotationOffset * Rot2Quaternion(q);
                             }
                             else
+                            if (o is SceneObjectPart)
                             {
-                                // we are a child. The rotation values will be set to the one of root modified by rot, as in SL. Don't ask.
-                                SceneObjectGroup group = part.ParentGroup;
-                                if (group != null) // a bit paranoid, maybe
+                                var part = o as SceneObjectPart;
+                                if (part.IsRootPart())
                                 {
-                                    SceneObjectPart rootPart = group.RootPart;
-                                    if (rootPart != null) // again, better safe than sorry
+                                    // special case: If we are root, rotate complete SOG to new rotation
+                                    SetRot(part, Rot2Quaternion(q));
+                                }
+                                else
+                                {
+                                    // we are a child. The rotation values will be set to the one of root modified by rot, as in SL. Don't ask.
+                                    SceneObjectGroup group = part.ParentGroup;
+                                    if (group != null) // a bit paranoid, maybe
                                     {
-                                        SetRot(part, rootPart.RotationOffset * Rot2Quaternion(q));
+                                        SceneObjectPart rootPart = group.RootPart;
+                                        if (rootPart != null) // again, better safe than sorry
+                                        {
+                                            SetRot(part, rootPart.RotationOffset * Rot2Quaternion(q));
+                                        }
                                     }
                                 }
                             }
@@ -9425,8 +9502,14 @@ namespace InWorldz.Phlox.Engine
                         double spinrate = (float)rules.GetLSLFloatItem(idx++);
                         double gain = (float)rules.GetLSLFloatItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
-                            PrimTargetOmega(part, axis, spinrate, gain);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                PrimTargetOmega(part, axis, spinrate, gain);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TYPE:
@@ -9458,10 +9541,14 @@ namespace InWorldz.Phlox.Engine
                                 twist = rules.GetVector3Item(idx++);
                                 taper_b = rules.GetVector3Item(idx++);
                                 topshear = rules.GetVector3Item(idx++);
-                                foreach (SceneObjectPart part in parts)
+                                foreach (var o in links)
                                 {
-                                    part.Shape.PathCurve = (byte)Extrusion.Straight;
-                                    SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, DEFAULT_SLICE, 1);
+                                    if (o is SceneObjectPart)
+                                    {
+                                        var part = o as SceneObjectPart;
+                                        part.Shape.PathCurve = (byte)Extrusion.Straight;
+                                        SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, DEFAULT_SLICE, 1);
+                                    }
                                 }
                                 break;
 
@@ -9475,11 +9562,15 @@ namespace InWorldz.Phlox.Engine
                                 twist = rules.GetVector3Item(idx++);
                                 taper_b = rules.GetVector3Item(idx++);
                                 topshear = rules.GetVector3Item(idx++);
-                                foreach (SceneObjectPart part in parts)
+                                foreach (var o in links)
                                 {
-                                    part.Shape.ProfileShape = ProfileShape.Circle;
-                                    part.Shape.PathCurve = (byte)Extrusion.Straight;
-                                    SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, DEFAULT_SLICE, 0);
+                                    if (o is SceneObjectPart)
+                                    {
+                                        var part = o as SceneObjectPart;
+                                        part.Shape.ProfileShape = ProfileShape.Circle;
+                                        part.Shape.PathCurve = (byte)Extrusion.Straight;
+                                        SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, DEFAULT_SLICE, 0);
+                                    }
                                 }
                                 break;
 
@@ -9493,10 +9584,14 @@ namespace InWorldz.Phlox.Engine
                                 twist = rules.GetVector3Item(idx++);
                                 taper_b = rules.GetVector3Item(idx++);
                                 topshear = rules.GetVector3Item(idx++);
-                                foreach (SceneObjectPart part in parts)
+                                foreach (var o in links)
                                 {
-                                    part.Shape.PathCurve = (byte)Extrusion.Straight;
-                                    SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, DEFAULT_SLICE, 3);
+                                    if (o is SceneObjectPart)
+                                    {
+                                        var part = o as SceneObjectPart;
+                                        part.Shape.PathCurve = (byte)Extrusion.Straight;
+                                        SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, DEFAULT_SLICE, 3);
+                                    }
                                 }
                                 break;
 
@@ -9509,10 +9604,14 @@ namespace InWorldz.Phlox.Engine
                                 hollow = (float)rules.GetLSLFloatItem(idx++);
                                 twist = rules.GetVector3Item(idx++);
                                 taper_b = rules.GetVector3Item(idx++); // dimple
-                                foreach (SceneObjectPart part in parts)
+                                foreach (var o in links)
                                 {
-                                    part.Shape.PathCurve = (byte)Extrusion.Curve1;
-                                    SetPrimitiveShapeParamsSphere(part, face, v, hollow, twist, taper_b, 5);
+                                    if (o is SceneObjectPart)
+                                    {
+                                        var part = o as SceneObjectPart;
+                                        part.Shape.PathCurve = (byte)Extrusion.Curve1;
+                                        SetPrimitiveShapeParamsSphere(part, face, v, hollow, twist, taper_b, 5);
+                                    }
                                 }
                                 break;
 
@@ -9531,10 +9630,14 @@ namespace InWorldz.Phlox.Engine
                                 revolutions = (float)rules.GetLSLFloatItem(idx++);
                                 radiusoffset = (float)rules.GetLSLFloatItem(idx++);
                                 skew = (float)rules.GetLSLFloatItem(idx++);
-                                foreach (SceneObjectPart part in parts)
+                                foreach (var o in links)
                                 {
-                                    part.Shape.PathCurve = (byte)Extrusion.Curve1;
-                                    SetPrimitiveShapeParamsTorus(part, face, v, hollow, twist, holesize, topshear, profilecut, taper_b, revolutions, radiusoffset, skew, 0);
+                                    if (o is SceneObjectPart)
+                                    {
+                                        var part = o as SceneObjectPart;
+                                        part.Shape.PathCurve = (byte)Extrusion.Curve1;
+                                        SetPrimitiveShapeParamsTorus(part, face, v, hollow, twist, holesize, topshear, profilecut, taper_b, revolutions, radiusoffset, skew, 0);
+                                    }
                                 }
                                 break;
 
@@ -9553,10 +9656,14 @@ namespace InWorldz.Phlox.Engine
                                 revolutions = (float)rules.GetLSLFloatItem(idx++);
                                 radiusoffset = (float)rules.GetLSLFloatItem(idx++);
                                 skew = (float)rules.GetLSLFloatItem(idx++);
-                                foreach (SceneObjectPart part in parts)
+                                foreach (var o in links)
                                 {
-                                    part.Shape.PathCurve = (byte)Extrusion.Curve1;
-                                    SetPrimitiveShapeParamsTorus(part, face, v, hollow, twist, holesize, topshear, profilecut, taper_b, revolutions, radiusoffset, skew, 1);
+                                    if (o is SceneObjectPart)
+                                    {
+                                        var part = o as SceneObjectPart;
+                                        part.Shape.PathCurve = (byte)Extrusion.Curve1;
+                                        SetPrimitiveShapeParamsTorus(part, face, v, hollow, twist, holesize, topshear, profilecut, taper_b, revolutions, radiusoffset, skew, 1);
+                                    }
                                 }
                                 break;
 
@@ -9575,10 +9682,14 @@ namespace InWorldz.Phlox.Engine
                                 revolutions = (float)rules.GetLSLFloatItem(idx++);
                                 radiusoffset = (float)rules.GetLSLFloatItem(idx++);
                                 skew = (float)rules.GetLSLFloatItem(idx++);
-                                foreach (SceneObjectPart part in parts)
+                                foreach (var o in links)
                                 {
-                                    part.Shape.PathCurve = (byte)Extrusion.Curve1;
-                                    SetPrimitiveShapeParamsTorus(part, face, v, hollow, twist, holesize, topshear, profilecut, taper_b, revolutions, radiusoffset, skew, 3);
+                                    if (o is SceneObjectPart)
+                                    {
+                                        var part = o as SceneObjectPart;
+                                        part.Shape.PathCurve = (byte)Extrusion.Curve1;
+                                        SetPrimitiveShapeParamsTorus(part, face, v, hollow, twist, holesize, topshear, profilecut, taper_b, revolutions, radiusoffset, skew, 3);
+                                    }
                                 }
                                 break;
 
@@ -9588,10 +9699,14 @@ namespace InWorldz.Phlox.Engine
 
                                 string map = rules.Data[idx++].ToString();
                                 face = (int)rules.GetLSLIntegerItem(idx++); // type
-                                foreach (SceneObjectPart part in parts)
+                                foreach (var o in links)
                                 {
-                                    part.Shape.PathCurve = (byte)Extrusion.Curve1;
-                                    SetPrimitiveShapeParamsSculpt(part, map, face);
+                                    if (o is SceneObjectPart)
+                                    {
+                                        var part = o as SceneObjectPart;
+                                        part.Shape.PathCurve = (byte)Extrusion.Curve1;
+                                        SetPrimitiveShapeParamsSculpt(part, map, face);
+                                    }
                                 }
                                 break;
                         }
@@ -9603,35 +9718,38 @@ namespace InWorldz.Phlox.Engine
                             return;
                         LSL_Vector slice = rules.GetVector3Item(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            PrimitiveBaseShape Shape = part.Shape;
-                            int primType = getScriptPrimType(part.Shape);
-
-                            face = (int)(Shape.HollowShape);
-                            v = new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0);
-                            hollow = (float)(Shape.ProfileHollow / 50000.0);
-                            twist = new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0);
-                            taper_b = new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0);
-                            topshear = new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0);
-
-                            switch (primType)
+                            if (o is SceneObjectPart)
                             {
-                                case ScriptBaseClass.PRIM_TYPE_BOX:
-                                    part.Shape.PathCurve = (byte)Extrusion.Straight;
-                                    SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, slice, 1);
-                                    break;
-                                case ScriptBaseClass.PRIM_TYPE_CYLINDER:
-                                    part.Shape.ProfileShape = ProfileShape.Circle;
-                                    part.Shape.PathCurve = (byte)Extrusion.Straight;
-                                    SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, slice, 0);
-                                    break;
-                                case ScriptBaseClass.PRIM_TYPE_PRISM:
-                                    part.Shape.PathCurve = (byte)Extrusion.Straight;
-                                    SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, slice, 3);
-                                    break;
-                            }
+                                var part = o as SceneObjectPart;
+                                PrimitiveBaseShape Shape = part.Shape;
+                                int primType = getScriptPrimType(part.Shape);
 
+                                face = (int)(Shape.HollowShape);
+                                v = new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0);
+                                hollow = (float)(Shape.ProfileHollow / 50000.0);
+                                twist = new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0);
+                                taper_b = new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0);
+                                topshear = new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0);
+
+                                switch (primType)
+                                {
+                                    case ScriptBaseClass.PRIM_TYPE_BOX:
+                                        part.Shape.PathCurve = (byte)Extrusion.Straight;
+                                        SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, slice, 1);
+                                        break;
+                                    case ScriptBaseClass.PRIM_TYPE_CYLINDER:
+                                        part.Shape.ProfileShape = ProfileShape.Circle;
+                                        part.Shape.PathCurve = (byte)Extrusion.Straight;
+                                        SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, slice, 0);
+                                        break;
+                                    case ScriptBaseClass.PRIM_TYPE_PRISM:
+                                        part.Shape.PathCurve = (byte)Extrusion.Straight;
+                                        SetPrimitiveShapeParamsCommon(part, face, v, hollow, twist, taper_b, topshear, slice, 3);
+                                        break;
+                                }
+                            }
                         }
                         break;
 
@@ -9645,14 +9763,17 @@ namespace InWorldz.Phlox.Engine
                         LSL_Vector offsets = rules.GetVector3Item(idx++);
                         double rotation = (double)rules.GetLSLFloatItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            SetTexture(part, tex, face);
-                            ScaleTexture(part, repeats.X, repeats.Y, face);
-                            OffsetTexture(part, offsets.X, offsets.Y, face);
-                            RotateTexture(part, rotation, face);
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetTexture(part, tex, face);
+                                ScaleTexture(part, repeats.X, repeats.Y, face);
+                                OffsetTexture(part, offsets.X, offsets.Y, face);
+                                RotateTexture(part, rotation, face);
+                            }
                         }
-
                         break;
 
                     case (int)ScriptBaseClass.IW_PRIM_ALPHA:
@@ -9662,9 +9783,13 @@ namespace InWorldz.Phlox.Engine
                         face = (int)rules.GetLSLIntegerItem(idx++);
                         double alphaValue = (double)rules.GetLSLFloatItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            SetAlpha(part, alphaValue, face);
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetAlpha(part, alphaValue, face);
+                            }
                         }
 
                         break;
@@ -9677,10 +9802,14 @@ namespace InWorldz.Phlox.Engine
                         LSL_Vector color = rules.GetVector3Item(idx++);
                         double alpha = (double)rules.GetLSLFloatItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            SetColor(part, color, face);
-                            SetAlpha(part, alpha, face);
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetColor(part, color, face);
+                                SetAlpha(part, alpha, face);
+                            }
                         }
                         break;
 
@@ -9696,8 +9825,14 @@ namespace InWorldz.Phlox.Engine
                         float tension = (float)rules.GetLSLFloatItem(idx++);
                         LSL_Vector force = rules.GetVector3Item(idx++);
 
-                        foreach (SceneObjectPart part in parts)
-                            SetFlexi(part, flexi, softness, gravity, friction, wind, tension, force);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetFlexi(part, flexi, softness, gravity, friction, wind, tension, force);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_POINT_LIGHT:
@@ -9708,8 +9843,14 @@ namespace InWorldz.Phlox.Engine
                         float intensity = (float)rules.GetLSLFloatItem(idx++);
                         float radius = (float)rules.GetLSLFloatItem(idx++);
                         float falloff = (float)rules.GetLSLFloatItem(idx++);
-                        foreach (SceneObjectPart part in parts)
-                            SetPointLight(part, light, lightcolor, intensity, radius, falloff);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetPointLight(part, light, lightcolor, intensity, radius, falloff);
+                            }
+                        }
                         break;
 
                     case ScriptBaseClass.IW_PRIM_PROJECTOR:
@@ -9726,29 +9867,39 @@ namespace InWorldz.Phlox.Engine
                             ScriptShoutError("The second argument of IW_PRIM_PROJECTOR must not be NULL_KEY.");
                         }
                         else
-                            foreach (SceneObjectPart part in parts)
+                        {
+                            foreach (var o in links)
                             {
-                                PrimitiveBaseShape shape = part.Shape;
-                                shape.ProjectionEntry = enabled;
-                                shape.ProjectionTextureUUID = texID;
-                                shape.ProjectionFOV = field_of_view;
-                                shape.ProjectionFocus = ford;
-                                shape.ProjectionAmbiance = ambience;
-                                part.ParentGroup.HasGroupChanged = true;
-                                part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+                                if (o is SceneObjectPart)
+                                {
+                                    var part = o as SceneObjectPart;
+                                    PrimitiveBaseShape shape = part.Shape;
+                                    shape.ProjectionEntry = enabled;
+                                    shape.ProjectionTextureUUID = texID;
+                                    shape.ProjectionFOV = field_of_view;
+                                    shape.ProjectionFocus = ford;
+                                    shape.ProjectionAmbiance = ambience;
+                                    part.ParentGroup.HasGroupChanged = true;
+                                    part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
+                                }
                             }
+                        }
                         break;
 
                     case ScriptBaseClass.IW_PRIM_PROJECTOR_ENABLED:
                         if (remain < 1)
                             return;
                         bool projector = rules.GetLSLIntegerItem(idx++) == 1;
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            shape.ProjectionEntry = projector;
-                            part.ParentGroup.HasGroupChanged = true;
-                            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                shape.ProjectionEntry = projector;
+                                part.ParentGroup.HasGroupChanged = true;
+                                part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+                            }
                         }
                         break;
 
@@ -9763,25 +9914,35 @@ namespace InWorldz.Phlox.Engine
                             ScriptShoutError("The argument of IW_PRIM_PROJECTOR_TEXTURE must not be NULL_KEY.");
                         }
                         else
-                            foreach (SceneObjectPart part in parts)
+                        {
+                            foreach (var o in links)
                             {
-                                PrimitiveBaseShape shape = part.Shape;
-                                shape.ProjectionTextureUUID = textureID;
-                                part.ParentGroup.HasGroupChanged = true;
-                                part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+                                if (o is SceneObjectPart)
+                                {
+                                    var part = o as SceneObjectPart;
+                                    PrimitiveBaseShape shape = part.Shape;
+                                    shape.ProjectionTextureUUID = textureID;
+                                    part.ParentGroup.HasGroupChanged = true;
+                                    part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+                                }
                             }
+                        }
                         break;
 
                     case ScriptBaseClass.IW_PRIM_PROJECTOR_FOV:
                         if (remain < 1)
                             return;
                         float fov = rules.GetLSLFloatItem(idx++);
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            shape.ProjectionFOV = fov;
-                            part.ParentGroup.HasGroupChanged = true;
-                            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                shape.ProjectionFOV = fov;
+                                part.ParentGroup.HasGroupChanged = true;
+                                part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+                            }
                         }
                         break;
 
@@ -9789,12 +9950,16 @@ namespace InWorldz.Phlox.Engine
                         if (remain < 1)
                             return;
                         float focus = rules.GetLSLFloatItem(idx++);
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            shape.ProjectionFocus = focus;
-                            part.ParentGroup.HasGroupChanged = true;
-                            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                shape.ProjectionFocus = focus;
+                                part.ParentGroup.HasGroupChanged = true;
+                                part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+                            }
                         }
                         break;
 
@@ -9802,12 +9967,16 @@ namespace InWorldz.Phlox.Engine
                         if (remain < 1)
                             return;
                         float amb = rules.GetLSLFloatItem(idx++);
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            shape.ProjectionAmbiance = amb;
-                            part.ParentGroup.HasGroupChanged = true;
-                            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                shape.ProjectionAmbiance = amb;
+                                part.ParentGroup.HasGroupChanged = true;
+                                part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
+                            }
                         }
                         break;
 
@@ -9816,8 +9985,14 @@ namespace InWorldz.Phlox.Engine
                             return;
                         face = rules.GetLSLIntegerItem(idx++);
                         float glow = (float)rules.GetLSLFloatItem(idx++);
-                        foreach (SceneObjectPart part in parts)
-                            SetGlow(part, face, glow);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetGlow(part, face, glow);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_BUMP_SHINY:
@@ -9826,8 +10001,14 @@ namespace InWorldz.Phlox.Engine
                         face = (int)rules.GetLSLIntegerItem(idx++);
                         int shiny = (int)rules.GetLSLIntegerItem(idx++);
                         Bumpiness bump = (Bumpiness)Convert.ToByte((int)rules.GetLSLIntegerItem(idx++));
-                        foreach (SceneObjectPart part in parts)
-                            SetShiny(part, face, shiny, bump);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetShiny(part, face, shiny, bump);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_FULLBRIGHT:
@@ -9835,8 +10016,14 @@ namespace InWorldz.Phlox.Engine
                             return;
                         face = rules.GetLSLIntegerItem(idx++);
                         bool st = rules.GetLSLIntegerItem(idx++) == 1;
-                        foreach (SceneObjectPart part in parts)
-                            SetFullBright(part, face, st);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetFullBright(part, face, st);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_MATERIAL:
@@ -9846,8 +10033,14 @@ namespace InWorldz.Phlox.Engine
                         if (mat < 0 || mat > 7)
                             return;
 
-                        foreach (SceneObjectPart part in parts)
-                            part.Material = Convert.ToByte(mat);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                part.Material = Convert.ToByte(mat);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_PHANTOM:
@@ -9864,10 +10057,7 @@ namespace InWorldz.Phlox.Engine
 
                         //no matter how many parts are selected, this physics change
                         //is applied to the group, so dont apply in a loop
-                        if (parts.Count > 0)
-                        {
-                            parts.First().ScriptSetPhantomStatus(phantom);
-                        }
+                        m_host.ParentGroup.ScriptSetPhantomStatus(phantom);
 
                         break;
 
@@ -9884,10 +10074,7 @@ namespace InWorldz.Phlox.Engine
 
                         //no matter how many parts are selected, this physics change
                         //is applied to the group, so dont apply in a loop
-                        if (parts.Count > 0)
-                        {
-                            parts.First().ScriptSetPhysicsStatus(physics);
-                        }
+                        m_host.ParentGroup.ScriptSetPhysicsStatus(physics);
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEMP_ON_REZ:
@@ -9901,8 +10088,14 @@ namespace InWorldz.Phlox.Engine
                         else
                             tempOnRez = false;
 
-                        foreach (SceneObjectPart part in parts)
-                            part.ScriptSetTemporaryStatus(tempOnRez);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                part.ScriptSetTemporaryStatus(tempOnRez);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEXGEN:
@@ -9911,8 +10104,14 @@ namespace InWorldz.Phlox.Engine
                         //face,type
                         face = rules.GetLSLIntegerItem(idx++);
                         int style = rules.GetLSLIntegerItem(idx++);
-                        foreach (SceneObjectPart part in parts)
-                            SetTexGen(part, face, style);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                SetTexGen(part, face, style);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEXT:
@@ -9921,24 +10120,42 @@ namespace InWorldz.Phlox.Engine
                         string primtext = rules.Data[idx++].ToString();
                         LSL_Vector primcolor = rules.GetVector3Item(idx++);
                         double primalpha = (double)rules.GetLSLFloatItem(idx++);
-                        foreach (SceneObjectPart part in parts)
-                            PrimSetText(part, primtext, primcolor, primalpha);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                PrimSetText(part, primtext, primcolor, primalpha);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_NAME:
                         if (remain < 1)
                             return;
                         string primname = rules.Data[idx++].ToString();
-                        foreach (SceneObjectPart part in parts)
-                            part.Name = LimitLength(primname, MAX_OBJ_NAME);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                part.Name = LimitLength(primname, MAX_OBJ_NAME);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_DESC:
                         if (remain < 1)
                             return;
                         string primdesc = rules.Data[idx++].ToString();
-                        foreach (SceneObjectPart part in parts)
-                            part.Description = LimitLength(primdesc, MAX_OBJ_DESC);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                part.Description = LimitLength(primdesc, MAX_OBJ_DESC);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_SPECULAR:
@@ -9962,20 +10179,24 @@ namespace InWorldz.Phlox.Engine
                         int specular_glossiness = rules.GetLSLIntegerItem(idx++);
                         int specular_environment = rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            if (face == ScriptBaseClass.ALL_SIDES)
+                            if (o is SceneObjectPart)
                             {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
+                                var part = o as SceneObjectPart;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    SetRenderMaterialSpecularData(part, face, specular_tex, specular_repeats, specular_offsets, specular_rotation, specular_color, specular_glossiness, specular_environment);
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        SetRenderMaterialSpecularData(part, face, specular_tex, specular_repeats, specular_offsets, specular_rotation, specular_color, specular_glossiness, specular_environment);
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                else
                                 {
-                                    SetRenderMaterialSpecularData(part, face, specular_tex, specular_repeats, specular_offsets, specular_rotation, specular_color, specular_glossiness, specular_environment);
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        SetRenderMaterialSpecularData(part, face, specular_tex, specular_repeats, specular_offsets, specular_rotation, specular_color, specular_glossiness, specular_environment);
+                                    }
                                 }
                             }
                         }
@@ -9999,20 +10220,24 @@ namespace InWorldz.Phlox.Engine
                         LSL_Vector normal_offsets = rules.GetVector3Item(idx++);
                         float normal_rotation = rules.GetLSLFloatItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            if (face == ScriptBaseClass.ALL_SIDES)
+                            if (o is SceneObjectPart)
                             {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
+                                var part = o as SceneObjectPart;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    SetRenderMaterialNormalData(part, face, normal_tex, normal_repeats, normal_offsets, normal_rotation);
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        SetRenderMaterialNormalData(part, face, normal_tex, normal_repeats, normal_offsets, normal_rotation);
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                else
                                 {
-                                    SetRenderMaterialNormalData(part, face, normal_tex, normal_repeats, normal_offsets, normal_rotation);
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        SetRenderMaterialNormalData(part, face, normal_tex, normal_repeats, normal_offsets, normal_rotation);
+                                    }
                                 }
                             }
                         }
@@ -10026,20 +10251,24 @@ namespace InWorldz.Phlox.Engine
                         int alpha_mode = rules.GetLSLIntegerItem(idx++);
                         int alpha_mask_cutoff = rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (var o in links)
                         {
-                            if (face == ScriptBaseClass.ALL_SIDES)
+                            if (o is SceneObjectPart)
                             {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
+                                var part = o as SceneObjectPart;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    SetRenderMaterialAlphaModeData(part, face, alpha_mode, alpha_mask_cutoff);
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        SetRenderMaterialAlphaModeData(part, face, alpha_mode, alpha_mask_cutoff);
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                else
                                 {
-                                    SetRenderMaterialAlphaModeData(part, face, alpha_mode, alpha_mask_cutoff);
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        SetRenderMaterialAlphaModeData(part, face, alpha_mode, alpha_mask_cutoff);
+                                    }
                                 }
                             }
                         }
@@ -10338,22 +10567,7 @@ namespace InWorldz.Phlox.Engine
 
         public int llGetNumberOfPrims()
         {
-            List<ScenePresence> presences = World.GetScenePresences();
-
-            int avatarCount = 0;
-            foreach (ScenePresence presence in presences)
-            {
-                ScenePresence.PositionInfo info = presence.GetPosInfo();
-                if (!presence.IsChildAgent && info.Parent != null)
-                {
-                    if (m_host.ParentGroup.HasChildPrim(info.Parent.UUID))
-                    {
-                        avatarCount++;
-                    }
-                }
-            }
-
-            return m_host.ParentGroup.PrimCount + avatarCount;
+            return m_host.ParentGroup.LinkCount;
         }
 
         public LSL_List GetBoundingBox(string obj, bool isRelative)
@@ -10451,39 +10665,145 @@ namespace InWorldz.Phlox.Engine
             return new LSL_Vector(m_host.GetGeometricCenter().X, m_host.GetGeometricCenter().Y, m_host.GetGeometricCenter().Z);
         }
 
+        private int GetAvatarAsPrimParam(ScenePresence sp, ref List<object> res, int rule)
+        {
+            int paramCount = 0;
+            switch (rule)
+            {
+                case ScriptBaseClass.PRIM_POSITION:
+                    res.Add(new LSL_Vector(sp.AbsolutePosition));
+                    break;
+                case ScriptBaseClass.PRIM_POS_LOCAL:
+                    res.Add(new LSL_Vector(sp.AbsolutePosition-m_host.ParentGroup.RootPart.AbsolutePosition));
+                    break;
+                case ScriptBaseClass.PRIM_NAME: // will return the avatar's legacy name.
+                    res.Add((sp != null) ? sp.Name : String.Empty);
+                    break;
+                case ScriptBaseClass.PRIM_DESC:
+                    res.Add(String.Empty);
+                    break;
+                case ScriptBaseClass.PRIM_TYPE:
+                    res.Add(ScriptBaseClass.PRIM_TYPE_BOX);
+                    res.Add(ScriptBaseClass.PRIM_HOLE_DEFAULT);
+                    res.Add(new LSL_Vector(0.0f, 1.0f, 0.0f));
+                    res.Add((float)0.0f);
+                    res.Add(new LSL_Vector(Vector3.Zero));
+                    res.Add(new LSL_Vector(1.0f, 1.0f, 0.0f));
+                    res.Add(new LSL_Vector(Vector3.Zero));
+                    break;
+                case ScriptBaseClass.PRIM_SLICE:
+                    res.Add(new LSL_Vector(0.0f, 1.0f, 0.0f));
+                    break;
+                case ScriptBaseClass.PRIM_MATERIAL:
+                    res.Add((int)ScriptBaseClass.PRIM_MATERIAL_FLESH);
+                    break;
+                case ScriptBaseClass.PRIM_TEMP_ON_REZ:
+                    res.Add(ScriptBaseClass.FALSE);
+                    break;
+                case ScriptBaseClass.PRIM_PHANTOM:
+                    res.Add(ScriptBaseClass.FALSE);
+                    break;
+                case ScriptBaseClass.PRIM_SIZE:
+                    res.Add(new LSL_Vector(llGetAgentSize(sp.UUID.ToString())));
+                    break;
+                case ScriptBaseClass.PRIM_TEXT:
+                    res.Add(String.Empty);
+                    res.Add(new LSL_Vector(Vector3.Zero));
+                    res.Add((float)1.0f);
+                    break;
+                case ScriptBaseClass.PRIM_POINT_LIGHT:
+                    res.Add(ScriptBaseClass.FALSE);
+                    res.Add(new LSL_Vector(Vector3.Zero));
+                    res.Add((float)0.0f);
+                    res.Add((float)0.0f);
+                    res.Add((float)0.0f);
+                    break;
+                case ScriptBaseClass.PRIM_FLEXIBLE:
+                    res.Add(ScriptBaseClass.FALSE);
+                    res.Add((int)0);
+                    res.Add((float)0.0f);
+                    res.Add((float)0.0f);
+                    res.Add((float)0.0f);
+                    res.Add((float)0.0f);
+                    res.Add(new LSL_Vector(Vector3.Zero));
+                    break;
+
+                // These all expect a single parameter in the params list:
+                case (int)ScriptBaseClass.PRIM_TEXTURE:
+                case (int)ScriptBaseClass.IW_PRIM_ALPHA:
+				case (int)ScriptBaseClass.PRIM_COLOR:
+				case (int)ScriptBaseClass.PRIM_BUMP_SHINY:
+				case (int)ScriptBaseClass.PRIM_FULLBRIGHT:
+				case (int)ScriptBaseClass.PRIM_TEXGEN:
+				case (int)ScriptBaseClass.PRIM_GLOW:
+				case (int)ScriptBaseClass.PRIM_SPECULAR:
+				case (int)ScriptBaseClass.PRIM_NORMAL:
+				case (int)ScriptBaseClass.PRIM_ALPHA_MODE:
+                    paramCount = 1;
+                    ScriptShoutError("texture info cannot be accessed for avatars.");
+                    break;
+            }
+
+            return paramCount;
+        }
+
+        private int GetAvatarAsPrimParam(int linknum, ref List<object> res, int rule)
+        {
+            ScenePresence sp = m_host.ParentGroup.GetSeatedAvatarByLink(linknum);
+            if (sp == null)
+                return 0;
+
+            return GetAvatarAsPrimParam(sp, ref res, rule);
+        }
+
         private LSL_List GetPrimParams(int linknumber, LSL_List rules)
         {
             List<object> res = new List<object>();
             int idx = 0;
             int face = 0;
             Primitive.TextureEntry tex;
-            var parts = GetLinkParts(linknumber);
+            List<object> parts = null;
+
+            // Support avatar-as-a-prim link number.
+            parts = GetLinkParts(linknumber, true);
 
             while (idx < rules.Length)
             {
                 int code = (int)rules.GetLSLIntegerItem(idx++);
                 int remain = rules.Length - idx;
 
+                // Handle changing target prim(s) and/or avatars.
+                if (code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
+                {
+                    if (remain < 1)
+                        return new LSL_List(res);
+                    linknumber = (int)rules.GetLSLIntegerItem(idx++);
+                    remain = rules.Length - idx;
+
+                    parts = GetLinkParts(linknumber, true);
+                    continue;
+                }
+
+                // Neither of the above, fall through to normal prim properties.
                 switch (code)
                 {
-                    case (int)ScriptBaseClass.PRIM_LINK_TARGET:
-                        if (remain < 1)
-                            return new LSL_List(res);
-                        linknumber = (int)rules.GetLSLIntegerItem(idx++);
-                        remain = rules.Length - idx;
-
-                        parts = GetLinkParts(linknumber);
-                        break;
-
                     case (int)ScriptBaseClass.PRIM_MATERIAL:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add((int)(part.Material));
+                        foreach (object o in parts)
+                        {
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add((int)((o as SceneObjectPart).Material));
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_PHYSICS:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            if ((part.GetEffectiveObjectFlags() & PrimFlags.Physics) != 0)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            if (((o as SceneObjectPart).GetEffectiveObjectFlags() & PrimFlags.Physics) != 0)
                                 res.Add((int)(1));
                             else
                                 res.Add((int)(0));
@@ -10491,9 +10811,12 @@ namespace InWorldz.Phlox.Engine
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEMP_ON_REZ:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            if ((part.GetEffectiveObjectFlags() & PrimFlags.TemporaryOnRez) != 0)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            if (((o as SceneObjectPart).GetEffectiveObjectFlags() & PrimFlags.TemporaryOnRez) != 0)
                                 res.Add((int)(1));
                             else
                                 res.Add((int)(0));
@@ -10501,9 +10824,12 @@ namespace InWorldz.Phlox.Engine
                         break;
 
                     case (int)ScriptBaseClass.PRIM_PHANTOM:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            if ((part.GetEffectiveObjectFlags() & PrimFlags.Phantom) != 0)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            if (((o as SceneObjectPart).GetEffectiveObjectFlags() & PrimFlags.Phantom) != 0)
                                 res.Add((int)(1));
                             else
                                 res.Add((int)(0));
@@ -10511,36 +10837,48 @@ namespace InWorldz.Phlox.Engine
                         break;
 
                     case (int)ScriptBaseClass.PRIM_POSITION:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            Vector3 pos = part.GetSLCompatiblePosition();
-                            res.Add(new LSL_Vector(pos.X, pos.Y, pos.Z));
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add(new LSL_Vector((o as SceneObjectPart).GetSLCompatiblePosition()));
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_SIZE:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add(new LSL_Vector(part.Scale.X,
-                                                      part.Scale.Y,
-                                                      part.Scale.Z));
+                        foreach (object o in parts)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add(new LSL_Vector((o as SceneObjectPart).Scale));
                         break;
 
                     case (int)ScriptBaseClass.PRIM_ROTATION:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add(GetPartRot(part));
+                        foreach (object o in parts)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add(GetPartRot(o as SceneObjectPart));
                         break;
 
                     case (int)ScriptBaseClass.PRIM_ROT_LOCAL:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add(GetPartLocalRot(part));
+                        foreach (object o in parts)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add(GetPartLocalRot(o as SceneObjectPart));
                         break;
 
                     case (int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_TYPE:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            if (part.Shape.PreferredPhysicsShape == PhysicsShapeType.Prim)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            if ((o as SceneObjectPart).Shape.PreferredPhysicsShape == PhysicsShapeType.Prim)
                                 res.Add((int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_PRIM);
-                            else if (part.Shape.PreferredPhysicsShape == PhysicsShapeType.None)
+                            else if ((o as SceneObjectPart).Shape.PreferredPhysicsShape == PhysicsShapeType.None)
                                 res.Add((int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_NONE);
                             else
                                 res.Add((int)ScriptBaseClass.PRIM_PHYSICS_SHAPE_CONVEX);
@@ -10550,88 +10888,105 @@ namespace InWorldz.Phlox.Engine
                     case (int)ScriptBaseClass.PRIM_OMEGA:
                         // This is probably correct in the 99% case.  It's stored in axis*spinrate (gain is ignored)
                         // and spinrate is often TWO_PI. So divide by that and hope for the best (for now).
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            res.Add(new LSL_Vector((float)(part.AngularVelocity.X / ScriptBaseClass.TWO_PI), (float)(part.AngularVelocity.Y / ScriptBaseClass.TWO_PI), (float)(part.AngularVelocity.Z / ScriptBaseClass.TWO_PI)));
-                            res.Add((float)ScriptBaseClass.TWO_PI);
-                            res.Add((float)1.0f);
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                res.Add(new LSL_Vector((float)(part.AngularVelocity.X / ScriptBaseClass.TWO_PI), (float)(part.AngularVelocity.Y / ScriptBaseClass.TWO_PI), (float)(part.AngularVelocity.Z / ScriptBaseClass.TWO_PI)));
+                                res.Add((float)ScriptBaseClass.TWO_PI);
+                                res.Add((float)1.0f);
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_POS_LOCAL:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add(new LSL_Vector(GetPartLocalPos(part)));
+                        foreach (object o in parts)
+                        {
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add(new LSL_Vector(GetPartLocalPos(o as SceneObjectPart)));
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TYPE:
                         // implementing box
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape Shape = part.Shape;
-                            int primType = getScriptPrimType(part.Shape);
-                            res.Add((int)(primType));
-                            switch (primType)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
                             {
-                                case ScriptBaseClass.PRIM_TYPE_BOX:
-                                case ScriptBaseClass.PRIM_TYPE_CYLINDER:
-                                case ScriptBaseClass.PRIM_TYPE_PRISM:
-                                    res.Add((int)(Shape.HollowShape));
-                                    res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
-                                    res.Add((float)(Shape.ProfileHollow / 50000.0));
-                                    res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
-                                    res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0));
-                                    res.Add(new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0));
-                                    break;
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape Shape = part.Shape;
+                                int primType = getScriptPrimType(part.Shape);
+                                res.Add((int)(primType));
+                                switch (primType)
+                                {
+                                    case ScriptBaseClass.PRIM_TYPE_BOX:
+                                    case ScriptBaseClass.PRIM_TYPE_CYLINDER:
+                                    case ScriptBaseClass.PRIM_TYPE_PRISM:
+                                        res.Add((int)(Shape.HollowShape));
+                                        res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
+                                        res.Add((float)(Shape.ProfileHollow / 50000.0));
+                                        res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
+                                        res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0));
+                                        res.Add(new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0));
+                                        break;
 
-                                case ScriptBaseClass.PRIM_TYPE_SPHERE:
-                                    res.Add((int)(Shape.HollowShape));
-                                    res.Add(new LSL_Vector(Shape.PathBegin / 50000.0f, 1 - Shape.PathEnd / 50000.0f, 0));
-                                    res.Add((float)(Shape.ProfileHollow / 50000.0f));
-                                    res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
-                                    res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
-                                    break;
+                                    case ScriptBaseClass.PRIM_TYPE_SPHERE:
+                                        res.Add((int)(Shape.HollowShape));
+                                        res.Add(new LSL_Vector(Shape.PathBegin / 50000.0f, 1 - Shape.PathEnd / 50000.0f, 0));
+                                        res.Add((float)(Shape.ProfileHollow / 50000.0f));
+                                        res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
+                                        res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
+                                        break;
 
-                                case ScriptBaseClass.PRIM_TYPE_SCULPT:
-                                    res.Add(ConditionalTextureNameOrUUID(part, Shape.SculptTexture));
-                                    res.Add((int)(Shape.SculptType));
-                                    break;
+                                    case ScriptBaseClass.PRIM_TYPE_SCULPT:
+                                        res.Add(ConditionalTextureNameOrUUID(part, Shape.SculptTexture));
+                                        res.Add((int)(Shape.SculptType));
+                                        break;
 
-                                case ScriptBaseClass.PRIM_TYPE_RING:
-                                case ScriptBaseClass.PRIM_TYPE_TUBE:
-                                case ScriptBaseClass.PRIM_TYPE_TORUS:
-                                    // holeshape
-                                    res.Add((int)(Shape.HollowShape));
+                                    case ScriptBaseClass.PRIM_TYPE_RING:
+                                    case ScriptBaseClass.PRIM_TYPE_TUBE:
+                                    case ScriptBaseClass.PRIM_TYPE_TORUS:
+                                        // holeshape
+                                        res.Add((int)(Shape.HollowShape));
 
-                                    // cut
-                                    res.Add(new LSL_Vector(Shape.PathBegin / 50000.0f, 1 - Shape.PathEnd / 50000.0f, 0));
+                                        // cut
+                                        res.Add(new LSL_Vector(Shape.PathBegin / 50000.0f, 1 - Shape.PathEnd / 50000.0f, 0));
 
-                                    // hollow
-                                    res.Add((float)(Shape.ProfileHollow / 50000.0));
+                                        // hollow
+                                        res.Add((float)(Shape.ProfileHollow / 50000.0));
 
-                                    // twist
-                                    res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
+                                        // twist
+                                        res.Add(new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0));
 
-                                    // vector holesize
-                                    res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0));
+                                        // vector holesize
+                                        res.Add(new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0));
 
-                                    // vector topshear
-                                    res.Add(new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0));
+                                        // vector topshear
+                                        res.Add(new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0));
 
-                                    // vector profilecut
-                                    res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
+                                        // vector profilecut
+                                        res.Add(new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0));
 
-                                    // vector tapera
-                                    res.Add(new LSL_Vector(Shape.PathTaperX / 100.0f, Shape.PathTaperY / 100.0f, 0));
+                                        // vector tapera
+                                        res.Add(new LSL_Vector(Shape.PathTaperX / 100.0f, Shape.PathTaperY / 100.0f, 0));
 
-                                    // float revolutions, 
-                                    res.Add((float)(Shape.PathRevolutions / 50.0)); // needs fixing :(
+                                        // float revolutions, 
+                                        res.Add((float)(Shape.PathRevolutions / 50.0)); // needs fixing :(
 
-                                    // float radiusoffset, 
-                                    res.Add((float)(Shape.PathRadiusOffset / 100.0));
+                                        // float radiusoffset, 
+                                        res.Add((float)(Shape.PathRadiusOffset / 100.0));
 
-                                    // float skew
-                                    res.Add((float)(Shape.PathSkew / 100.0));
-                                    break;
+                                        // float skew
+                                        res.Add((float)(Shape.PathSkew / 100.0));
+                                        break;
+                                }
                             }
                         }
                         break;
@@ -10641,37 +10996,43 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(ConditionalTextureNameOrUUID(part, texface.TextureID));
-                                    res.Add(new LSL_Vector(texface.RepeatU,
-                                                           texface.RepeatV,
-                                                           0));
-                                    res.Add(new LSL_Vector(texface.OffsetU,
-                                                           texface.OffsetV,
-                                                           0));
-                                    res.Add((float)(texface.Rotation));
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(ConditionalTextureNameOrUUID(part, texface.TextureID).ToString());
-                                    res.Add(new LSL_Vector(texface.RepeatU,
-                                                           texface.RepeatV,
-                                                           0));
-                                    res.Add(new LSL_Vector(texface.OffsetU,
-                                                           texface.OffsetV,
-                                                           0));
-                                    res.Add((float)(texface.Rotation));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(ConditionalTextureNameOrUUID(part, texface.TextureID));
+                                        res.Add(new LSL_Vector(texface.RepeatU,
+                                                               texface.RepeatV,
+                                                               0));
+                                        res.Add(new LSL_Vector(texface.OffsetU,
+                                                               texface.OffsetV,
+                                                               0));
+                                        res.Add((float)(texface.Rotation));
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(ConditionalTextureNameOrUUID(part, texface.TextureID).ToString());
+                                        res.Add(new LSL_Vector(texface.RepeatU,
+                                                               texface.RepeatV,
+                                                               0));
+                                        res.Add(new LSL_Vector(texface.OffsetU,
+                                                               texface.OffsetV,
+                                                               0));
+                                        res.Add((float)(texface.Rotation));
+                                    }
                                 }
                             }
                         }
@@ -10682,10 +11043,15 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            double alphaValue = GetAlpha(part, face);
-                            res.Add((float)alphaValue);
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                double alphaValue = GetAlpha(o as SceneObjectPart, face);
+                                res.Add((float)alphaValue);
+                            }
                         }
                         break;
 
@@ -10694,13 +11060,27 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            Color4 texcolor;
-                            if (face == ScriptBaseClass.ALL_SIDES)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
                             {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                Color4 texcolor;
+                                if (face == ScriptBaseClass.ALL_SIDES)
+                                {
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        texcolor = tex.GetFace((uint)face).RGBA;
+                                        res.Add(new LSL_Vector(texcolor.R,
+                                                               texcolor.G,
+                                                               texcolor.B));
+                                        res.Add((float)(texcolor.A));
+                                    }
+                                }
+                                else
                                 {
                                     texcolor = tex.GetFace((uint)face).RGBA;
                                     res.Add(new LSL_Vector(texcolor.R,
@@ -10708,14 +11088,6 @@ namespace InWorldz.Phlox.Engine
                                                            texcolor.B));
                                     res.Add((float)(texcolor.A));
                                 }
-                            }
-                            else
-                            {
-                                texcolor = tex.GetFace((uint)face).RGBA;
-                                res.Add(new LSL_Vector(texcolor.R,
-                                                       texcolor.G,
-                                                       texcolor.B));
-                                res.Add((float)(texcolor.A));
                             }
                         }
                         break;
@@ -10725,31 +11097,37 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            Primitive.TextureEntryFace texface;
-
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    texface = tex.GetFace((uint)face);
-                                    // Convert Shininess to PRIM_SHINY_*
-                                    res.Add((int)((uint)texface.Shiny >> 6));
-                                    // PRIM_BUMP_*
-                                    res.Add((int)texface.Bump);
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                Primitive.TextureEntryFace texface;
+
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    texface = tex.GetFace((uint)face);
-                                    // Convert Shininess to PRIM_SHINY_*
-                                    res.Add((int)((uint)texface.Shiny >> 6));
-                                    // PRIM_BUMP_*
-                                    res.Add((int)((int)texface.Bump));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        texface = tex.GetFace((uint)face);
+                                        // Convert Shininess to PRIM_SHINY_*
+                                        res.Add((int)((uint)texface.Shiny >> 6));
+                                        // PRIM_BUMP_*
+                                        res.Add((int)texface.Bump);
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        texface = tex.GetFace((uint)face);
+                                        // Convert Shininess to PRIM_SHINY_*
+                                        res.Add((int)((uint)texface.Shiny >> 6));
+                                        // PRIM_BUMP_*
+                                        res.Add((int)((int)texface.Bump));
+                                    }
                                 }
                             }
                         }
@@ -10760,45 +11138,57 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(texface.Fullbright ? 1 : 0);
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(texface.Fullbright ? 1 : 0);
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(texface.Fullbright ? 1 : 0);
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(texface.Fullbright ? 1 : 0);
+                                    }
                                 }
                             }
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_FLEXIBLE:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-
-                            if (shape.FlexiEntry)
-                                res.Add((int)(1));              // active
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
-                                res.Add((int)(0));
-                            res.Add((int)(shape.FlexiSoftness));// softness
-                            res.Add((float)(shape.FlexiGravity));   // gravity
-                            res.Add((float)(shape.FlexiDrag));      // friction
-                            res.Add((float)(shape.FlexiWind));      // wind
-                            res.Add((float)(shape.FlexiTension));   // tension
-                            res.Add(new LSL_Vector(shape.FlexiForceX,       // force
-                                                   shape.FlexiForceY,
-                                                   shape.FlexiForceZ));
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+
+                                if (shape.FlexiEntry)
+                                    res.Add((int)(1));              // active
+                                else
+                                    res.Add((int)(0));
+                                res.Add((int)(shape.FlexiSoftness));// softness
+                                res.Add((float)(shape.FlexiGravity));   // gravity
+                                res.Add((float)(shape.FlexiDrag));      // friction
+                                res.Add((float)(shape.FlexiWind));      // wind
+                                res.Add((float)(shape.FlexiTension));   // tension
+                                res.Add(new LSL_Vector(shape.FlexiForceX,       // force
+                                                       shape.FlexiForceY,
+                                                       shape.FlexiForceZ));
+                            }
                         }
                         break;
 
@@ -10807,101 +11197,149 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    MappingType texgen = tex.GetFace((uint)face).TexMapType;
-                                    // Convert MappingType to PRIM_TEXGEN_DEFAULT, PRIM_TEXGEN_PLANAR etc.
-                                    res.Add((int)((uint)texgen >> 1));
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    MappingType texgen = tex.GetFace((uint)face).TexMapType;
-                                    res.Add((int)((uint)texgen >> 1));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        MappingType texgen = tex.GetFace((uint)face).TexMapType;
+                                        // Convert MappingType to PRIM_TEXGEN_DEFAULT, PRIM_TEXGEN_PLANAR etc.
+                                        res.Add((int)((uint)texgen >> 1));
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        MappingType texgen = tex.GetFace((uint)face).TexMapType;
+                                        res.Add((int)((uint)texgen >> 1));
+                                    }
                                 }
                             }
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_POINT_LIGHT:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            if (shape.LightEntry)
-                                res.Add((int)(1));              // active
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
-                                res.Add((int)(0));
-                            res.Add(new LSL_Vector(shape.LightColorR,       // color
-                                                   shape.LightColorG,
-                                                   shape.LightColorB));
-                            res.Add((float)(shape.LightIntensity)); // intensity
-                            res.Add((float)(shape.LightRadius));    // radius
-                            res.Add((float)(shape.LightFalloff));   // falloff
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                if (shape.LightEntry)
+                                    res.Add((int)(1));              // active
+                                else
+                                    res.Add((int)(0));
+                                res.Add(new LSL_Vector(shape.LightColorR,       // color
+                                                       shape.LightColorG,
+                                                       shape.LightColorB));
+                                res.Add((float)(shape.LightIntensity)); // intensity
+                                res.Add((float)(shape.LightRadius));    // radius
+                                res.Add((float)(shape.LightFalloff));   // falloff
+                            }
                         }
                         break;
 
                     case ScriptBaseClass.IW_PRIM_PROJECTOR:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            if (shape.ProjectionEntry)
-                                res.Add((int)(1));              // active
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
-                                res.Add((int)(0));
-                            res.Add(ConditionalTextureNameOrUUID(part, shape.ProjectionTextureUUID));
-                            res.Add((float)(shape.ProjectionFOV));
-                            res.Add((float)(shape.ProjectionFocus));
-                            res.Add((float)(shape.ProjectionAmbiance));
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                if (shape.ProjectionEntry)
+                                    res.Add((int)(1));              // active
+                                else
+                                    res.Add((int)(0));
+                                res.Add(ConditionalTextureNameOrUUID(part, shape.ProjectionTextureUUID));
+                                res.Add((float)(shape.ProjectionFOV));
+                                res.Add((float)(shape.ProjectionFocus));
+                                res.Add((float)(shape.ProjectionAmbiance));
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_ENABLED:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            if (shape.ProjectionEntry)
-                                res.Add((int)(1));              // active
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
-                                res.Add((int)(0));
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                if (shape.ProjectionEntry)
+                                    res.Add((int)(1));              // active
+                                else
+                                    res.Add((int)(0));
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_TEXTURE:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            res.Add(ConditionalTextureNameOrUUID(part, shape.ProjectionTextureUUID));
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                res.Add(ConditionalTextureNameOrUUID(part, shape.ProjectionTextureUUID));
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_FOV:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            res.Add((float)(shape.ProjectionFOV));
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                res.Add((float)(shape.ProjectionFOV));
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_FOCUS:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            res.Add((float)(shape.ProjectionFocus));
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                res.Add((float)(shape.ProjectionFocus));
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.IW_PRIM_PROJECTOR_AMBIENCE:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape shape = part.Shape;
-                            res.Add((float)(shape.ProjectionAmbiance));
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape shape = part.Shape;
+                                res.Add((float)(shape.ProjectionAmbiance));
+                            }
                         }
                         break;
 
@@ -10910,75 +11348,103 @@ namespace InWorldz.Phlox.Engine
                             return new LSL_List(res);
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(texface.Glow);
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
-                                    res.Add(texface.Glow);
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(texface.Glow);
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        Primitive.TextureEntryFace texface = tex.GetFace((uint)face);
+                                        res.Add(texface.Glow);
+                                    }
                                 }
                             }
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEXT:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            res.Add((string)(part.Text));
-                            res.Add(new LSL_Vector(part.TextColor.R,
-                                                    part.TextColor.G,
-                                                    part.TextColor.B));
-                            res.Add((float)((255.0 - part.TextColor.A) / 255)); // see part.SetText()
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                res.Add((string)(part.Text));
+                                res.Add(new LSL_Vector(part.TextColor.R,
+                                                        part.TextColor.G,
+                                                        part.TextColor.B));
+                                res.Add((float)((255.0 - part.TextColor.A) / 255)); // see part.SetText()
+                            }
                         }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_NAME:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add((string)(part.Name));
+                        foreach (object o in parts)
+                        {
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add((string)((o as SceneObjectPart).Name));
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_DESC:
-                        foreach (SceneObjectPart part in parts)
-                            res.Add((string)(part.Description));
+                        foreach (object o in parts)
+                        {
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
+                                res.Add((string)((o as SceneObjectPart).Description));
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_SLICE:
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            PrimitiveBaseShape Shape = part.Shape;
-                            int primType = getScriptPrimType(part.Shape);
-
-                            int hollowShape = (int)(Shape.HollowShape);
-                            LSL_Vector profileCut = new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0.0f);
-                            float profileHollow = (float)(Shape.ProfileHollow / 50000.0);
-                            LSL_Vector pathTwist = new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0);
-                            LSL_Vector pathScale = new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0);
-                            LSL_Vector pathShear = new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0);
-
-                            float sliceBegin = Shape.PathBegin / 50000.0f;
-                            float sliceEnd = 1 - Shape.PathEnd / 50000.0f;
-
-                            switch (primType)
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
+                            else
                             {
-                                case ScriptBaseClass.PRIM_TYPE_BOX:
-                                case ScriptBaseClass.PRIM_TYPE_CYLINDER:
-                                case ScriptBaseClass.PRIM_TYPE_PRISM:
-                                    res.Add(new LSL_Vector(sliceBegin, sliceEnd, 0.0f));
-                                    break;
-                                default:    // anything else has full slice
-                                    res.Add(new LSL_Vector(0.0f, 1.0f, 0.0f));
-                                    break;
+                                SceneObjectPart part = o as SceneObjectPart;
+                                PrimitiveBaseShape Shape = part.Shape;
+                                int primType = getScriptPrimType(part.Shape);
+
+                                int hollowShape = (int)(Shape.HollowShape);
+                                LSL_Vector profileCut = new LSL_Vector(Shape.ProfileBegin / 50000.0f, 1 - Shape.ProfileEnd / 50000.0f, 0.0f);
+                                float profileHollow = (float)(Shape.ProfileHollow / 50000.0);
+                                LSL_Vector pathTwist = new LSL_Vector(Shape.PathTwistBegin / 100.0f, Shape.PathTwist / 100.0f, 0);
+                                LSL_Vector pathScale = new LSL_Vector(1 - (Shape.PathScaleX / 100.0f - 1), 1 - (Shape.PathScaleY / 100.0f - 1), 0);
+                                LSL_Vector pathShear = new LSL_Vector(Primitive.UnpackPathShear((sbyte)Shape.PathShearX), Primitive.UnpackPathShear((sbyte)Shape.PathShearY), 0);
+
+                                float sliceBegin = Shape.PathBegin / 50000.0f;
+                                float sliceEnd = 1 - Shape.PathEnd / 50000.0f;
+
+                                switch (primType)
+                                {
+                                    case ScriptBaseClass.PRIM_TYPE_BOX:
+                                    case ScriptBaseClass.PRIM_TYPE_CYLINDER:
+                                    case ScriptBaseClass.PRIM_TYPE_PRISM:
+                                        res.Add(new LSL_Vector(sliceBegin, sliceEnd, 0.0f));
+                                        break;
+                                    default:    // anything else has full slice
+                                        res.Add(new LSL_Vector(0.0f, 1.0f, 0.0f));
+                                        break;
+                                }
                             }
                         }
                         break;
@@ -10989,21 +11455,27 @@ namespace InWorldz.Phlox.Engine
 
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    res.AddRange(GetRenderMaterialSpecularData(part, face));
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    res.AddRange(GetRenderMaterialSpecularData(part, face));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        res.AddRange(GetRenderMaterialSpecularData(part, face));
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        res.AddRange(GetRenderMaterialSpecularData(part, face));
+                                    }
                                 }
                             }
                         }
@@ -11016,21 +11488,27 @@ namespace InWorldz.Phlox.Engine
 
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    res.AddRange(GetRenderMaterialNormalData(part, face));
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    res.AddRange(GetRenderMaterialNormalData(part, face));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        res.AddRange(GetRenderMaterialNormalData(part, face));
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        res.AddRange(GetRenderMaterialNormalData(part, face));
+                                    }
                                 }
                             }
                         }
@@ -11042,21 +11520,27 @@ namespace InWorldz.Phlox.Engine
 
                         face = (int)rules.GetLSLIntegerItem(idx++);
 
-                        foreach (SceneObjectPart part in parts)
+                        foreach (object o in parts)
                         {
-                            tex = part.Shape.Textures;
-                            if (face == ScriptBaseClass.ALL_SIDES)
-                            {
-                                for (face = 0; face < part.GetNumberOfSides(); face++)
-                                {
-                                    res.AddRange(GetRenderMaterialAlphaModeData(part, face));
-                                }
-                            }
+                            if (o is ScenePresence)
+                                GetAvatarAsPrimParam(o as ScenePresence, ref res, code);
                             else
                             {
-                                if (face >= 0 && face < part.GetNumberOfSides())
+                                SceneObjectPart part = o as SceneObjectPart;
+                                tex = part.Shape.Textures;
+                                if (face == ScriptBaseClass.ALL_SIDES)
                                 {
-                                    res.AddRange(GetRenderMaterialAlphaModeData(part, face));
+                                    for (face = 0; face < part.GetNumberOfSides(); face++)
+                                    {
+                                        res.AddRange(GetRenderMaterialAlphaModeData(part, face));
+                                    }
+                                }
+                                else
+                                {
+                                    if (face >= 0 && face < part.GetNumberOfSides())
+                                    {
+                                        res.AddRange(GetRenderMaterialAlphaModeData(part, face));
+                                    }
                                 }
                             }
                         }
@@ -12029,7 +12513,7 @@ namespace InWorldz.Phlox.Engine
         {
             int rc = -1;
 
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
                 rc &= GetInventoryPermMask(part, item, mask);
 
@@ -12067,12 +12551,11 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkInventoryCreator(int linknumber, string item)
         {
-            var parts = GetLinkParts(linknumber);
-
-            if (parts.Count != 1)
+            var part = GetLinkOnePrimOnly(linknumber);
+            if (part == null)
                 return UUID.Zero.ToString();
 
-            return GetInventoryCreator(parts.First(), item);
+            return GetInventoryCreator(part, item);
         }
 
         public void llOwnerSay(string msg)
@@ -12687,12 +13170,11 @@ namespace InWorldz.Phlox.Engine
         }
         public int iwGetLinkInventoryType(int linknumber, string name)
         {
-            var parts = GetLinkParts(linknumber);
-
-            if (parts.Count != 1)
+            var part = GetLinkOnePrimOnly(linknumber);
+            if (part == null)
                 return ScriptBaseClass.INVENTORY_NONE;
 
-            return GetInventoryType(parts.First(), name);
+            return GetInventoryType(part, name);
         }
 
         public void llSetPayPrice(int price, LSL_List quick_pay_buttons)
@@ -13384,7 +13866,7 @@ namespace InWorldz.Phlox.Engine
             {
                 SceneObjectPart part = World.GetSceneObjectPart(object_uuid);
                 if (part != null)
-                    return part.ParentGroup.PrimCount;
+                    return part.ParentGroup.PartCount;
             }
 
             return 0;
@@ -13920,7 +14402,7 @@ namespace InWorldz.Phlox.Engine
         }
         public string iwGetLinkNumberOfNotecardLines(int linknumber, string name)
         {
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
             if (parts.Count == 1)
             {
                 foreach (SceneObjectPart part in parts)
@@ -14005,7 +14487,7 @@ namespace InWorldz.Phlox.Engine
 
         public string iwGetLinkNotecardLine(int linknumber, string name, int line)
         {
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
                 // just return the first match
@@ -14017,7 +14499,7 @@ namespace InWorldz.Phlox.Engine
 
         public string iwGetLinkNotecardSegment(int linknumber, string name, int line, int startOffset, int maxLength)
         {
-            var parts = GetLinkParts(linknumber);
+            var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
                 // just return the first match
@@ -14221,7 +14703,7 @@ namespace InWorldz.Phlox.Engine
                 ScenePresence avatar = World.GetScenePresence(m_host.AttachedAvatar);
                 if (avatar == null)
                     return 0;
-                avatar.StandUp(null, false, true);
+                avatar.StandUp(false, true);
                 avatar.Teleport(position);
             }
             else
@@ -17478,7 +17960,7 @@ namespace InWorldz.Phlox.Engine
                         {
                             partItemID = item.ItemID;
                             int linkNumber = m_host.LinkNum;
-                            if (m_host.ParentGroup.PrimCount == 1)
+                            if (m_host.ParentGroup.LinkCount == 1)
                                 linkNumber = 0;
 
                             object[] resobj = new object[] { linkNumber, num, msg, id };
@@ -17839,3 +18321,36 @@ namespace InWorldz.Phlox.Engine
 
     }
 }
+
+/** @page lslfunc LSL Functions
+ * @brief A listing of most, if not all, functions available in Halcyon.
+ * 
+ * Please note that this is a work in progress, and not every function may be listed,
+ * nor is it likely that each has a solid description.
+ * In fact it's likely that most of what you'll find here are Halcyon-specific extentions to what LL has defined.
+ * 
+ * Please reference the <a href="http://wiki.secondlife.com/wiki/Category:LSL_Functions">SecondLife® Wiki's Functions listing</a> for the details on functions that may not be defined here.
+ */
+
+
+/** @page lslevent LSL Events
+ * @brief A listing of most, if not all, events available in Halcyon.
+ * 
+ * Please note that this is a work in progress, and not every event may be listed,
+ * nor is it likely that each has a solid description.
+ * In fact it's likely that most of what you'll find here are Halcyon-specific extentions to what LL has defined.
+ * 
+ * Please reference the <a href="http://wiki.secondlife.com/wiki/Category:LSL_Events">SecondLife® Wiki's Events listing</a> for the details on events that may not be defined here.
+ */
+
+
+/** @page lslerr LSL Errors
+ * @brief A listing of most, if not all, errors produced during the execution of LSL in Halcyon.
+ * 
+ * Please note that this is a work in progress, and not every error may be listed,
+ * nor is it likely that each has a solid description.
+ * In fact it's likely that most of what you'll find here are Halcyon-specific extentions to what LL has defined.
+ * 
+ * Please reference the <a href="http://wiki.secondlife.com/wiki/LSL_Errors">SecondLife® Wiki's Errors listing</a> for the details on erros that may not be defined here.
+ */
+

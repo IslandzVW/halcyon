@@ -212,7 +212,7 @@ DROP TABLE IF EXISTS `botappearance`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `botappearance` (
   `Owner` char(36) NOT NULL,
-  `OutfitName` varchar(36) NOT NULL,
+  `OutfitName` varchar(255) NOT NULL,
   `LastUsed` int(11) NOT NULL,
   `Serial` int(10) unsigned NOT NULL,
   `Visual_Params` blob NOT NULL,
@@ -263,7 +263,7 @@ DROP TABLE IF EXISTS `botattachments`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `botattachments` (
   `UUID` char(36) NOT NULL,
-  `outfitName` varchar(36) NOT NULL,
+  `outfitName` varchar(255) NOT NULL,
   `attachpoint` int(11) NOT NULL,
   `item` char(36) NOT NULL,
   `asset` char(36) NOT NULL,
@@ -507,7 +507,7 @@ CREATE TABLE `events` (
   `mature` enum('true','false') NOT NULL,
   PRIMARY KEY (`eventid`),
   KEY `IDX_DATE` (`dateUTC`)
-) ENGINE=InnoDB AUTO_INCREMENT=24408 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=24408 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1210,7 +1210,7 @@ CREATE TABLE `regions` (
   KEY `regionHandle` (`regionHandle`),
   KEY `overrideHandles` (`eastOverrideHandle`,`westOverrideHandle`,`southOverrideHandle`,`northOverrideHandle`),
   KEY `IDX_XY` (`locX`,`locY`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Rev. 3';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Rev. 3';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
