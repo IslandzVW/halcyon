@@ -894,6 +894,15 @@ namespace OpenSim.Region.Framework.Scenes
                 case "simulator_hostname":
                     ret = RegionInfo.ExternalHostName;
                     break;
+                case "region_size_x":
+                    ret = Constants.RegionSize.ToString();
+                    break;
+                case "region_size_y":
+                    ret = Constants.RegionSize.ToString();
+                    break;
+                case "region_size_z":
+                    ret = ((int)Constants.REGION_MAXIMUM_Z).ToString();
+                    break;
                 case "agent_limit":
                     ret = m_regInfo.RegionSettings.AgentLimit.ToString();
                     break;
@@ -2144,11 +2153,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                 group.ForEachPart(delegate(SceneObjectPart part)
                 {
-                    // SitTargetAvatar was persisted (for region crossings) after R2048 until
-                    // this line changed around R2106 so clear it when reloading a region.
-                    if (part.SitTargetAvatar != UUID.Zero)
-                        part.SitTargetAvatar = UUID.Zero;
-
                     /// This fixes inconsistencies between this part and the root part.
                     /// In the past, there was a bug in Link operations that did not force
                     /// these permissions on child prims when linking.
@@ -2524,22 +2528,14 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="silent">True when the database should be updated.</param>
         public void DeleteSceneObject(SceneObjectGroup group, bool silent, bool fromCrossing, bool persist)
         {
-            foreach (SceneObjectPart part in group.GetParts())
+            if (!group.IsAttachment)    // Optimization, can't sit on something you're wearing
             {
-                if (!group.IsAttachment)    // Optimization, can't sit on something you're wearing
+                // Unsit the avatars sitting on the parts
+                group.ForEachSittingAvatar((ScenePresence sp) =>
                 {
-                    // Unsit the avatars sitting on the parts
-                    UUID AgentID = part.GetAvatarOnSitTarget();
-                    if (AgentID != UUID.Zero)
-                    {
-                        ScenePresence sp;
-                        if (TryGetAvatar(AgentID, out sp))
-                        {
-                            if (!sp.IsChildAgent)
-                                sp.StandUp(part, fromCrossing, false);
-                        }
-                    }
-                }
+                    if (!sp.IsChildAgent)
+                        sp.StandUp(fromCrossing, false);
+                });
             }
 
             // Serialize calls to RemoveScriptInstances to avoid
@@ -2789,13 +2785,12 @@ namespace OpenSim.Region.Framework.Scenes
                 m_sceneGraph.RemoveGroupFromSceneGraph(grp.LocalId, false, true);
                 SceneGraph.RemoveFromUpdateList(grp);
 
-                grp.AvatarsToExpect = grp.NumAvatarsSeated();
-                List<ScenePresence> avatars = grp.GetSittingAvatars();
+                grp.AvatarsToExpect = grp.AvatarCount;
                 List<UUID> avatarIDs = new List<UUID>();
-                foreach (var avatar in avatars)
+                grp.ForEachSittingAvatar(delegate (ScenePresence avatar)
                 {
                     avatarIDs.Add(avatar.UUID);
-                }
+                });
 
                 //marks the sitting avatars in transit, and waits for this group to be sent
                 //before sending the avatars over to the neighbor region
@@ -2818,10 +2813,10 @@ namespace OpenSim.Region.Framework.Scenes
                     }
 
                     //we sent the object over, let the transit avatars know so that they can proceed
-                    foreach (var avatar in avatars)
+                    grp.ForEachSittingAvatar((ScenePresence avatar) =>
                     {
                         m_transitController.HandleObjectSendResult(avatar.UUID, true);
-                    }
+                    });
 
                     WaitReportCrossingErrors(avSendTask);
 
@@ -2853,10 +2848,10 @@ namespace OpenSim.Region.Framework.Scenes
                     grp.CrossingFailure();
 
                     //the object failed to send. let the transit controller know so it can stop trying to send the avatars
-                    foreach (var avatar in avatars)
+                    grp.ForEachSittingAvatar((ScenePresence avatar) =>
                     {
                         m_transitController.HandleObjectSendResult(avatar.UUID, false);
-                    }
+                    });
 
                     WaitReportCrossingErrors(avSendTask);
                 }
@@ -3628,7 +3623,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (avatar != null)
             {
                 isChildAgent = avatar.IsChildAgent;
-                avatar.StandUp(null, false, true);
+                avatar.StandUp(false, true);
             }
 
             try
@@ -4435,7 +4430,7 @@ namespace OpenSim.Region.Framework.Scenes
                 uint tRegionX = RegionInfo.RegionLocX;
                 uint tRegionY = RegionInfo.RegionLocY;
                 //Send Data to ScenePresence
-                childAgentUpdate.ChildAgentDataUpdate(cAgentData, tRegionX, tRegionY, rRegionX, rRegionY);
+                childAgentUpdate.ChildAgentPositionUpdate(cAgentData, tRegionX, tRegionY, rRegionX, rRegionY);
                 // Not Implemented:
                 //TODO: Do we need to pass the message on to one of our neighbors?
             }
@@ -4833,7 +4828,7 @@ namespace OpenSim.Region.Framework.Scenes
                     position.Z = newPosZ;
                 }
 
-                avatar.StandUp(null, false, true);
+                avatar.StandUp(false, true);
                 avatar.ControllingClient.SendLocalTeleport(position, lookAt, (uint)teleportFlags);
                 avatar.Teleport(position);
 
@@ -4849,7 +4844,7 @@ namespace OpenSim.Region.Framework.Scenes
                     "[SCENE COMMUNICATION SERVICE]: RequestTeleportToLocation to {0} in {1}",
                     position, destRegionName);
 
-                avatar.StandUp(null, false, true);
+                avatar.StandUp(false, true);
 
                 AvatarTransit.TransitArguments args = new AvatarTransit.TransitArguments
                 {

@@ -1,0 +1,286 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Halcyon Remote Console",
+		"_postman_id": "69440ce8-1eda-63a2-6644-4c9c800e50e6",
+		"description": "Remote console access is only enabled if in the Halcyon.ini [Startup]::console is \"rest\" and either [Startup]::gui is false or [Startup]::background is true.\n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get JWT Auth Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": "var jsonObject = {};\n\ntry\n{\n    jsonObject = JSON.parse(responseBody);\n    \n    tests[\"body: \" + responseBody] = true;\n    \n    if (jsonObject.hasOwnProperty(\"token\"))\n    {\n        tests[\"Parameter 'token' in response object\"] = jsonObject.hasOwnProperty(\"token\");\n        tests[\"Parameter 'token' is a string\"] = Object.prototype.toString.call(jsonObject.token) === \"[object String]\";\n        tests[\"Token: \" + jsonObject.token] = true;\n        postman.setEnvironmentVariable(\"restconsole_jwt_token\", jsonObject.token);\n    }\n    else\n    {\n        tests[\"Parameter 'denied' in response object\"] = jsonObject.hasOwnProperty(\"denied\");\n        tests[\"Parameter 'denied' is a string\"] = Object.prototype.toString.call(jsonObject.denied) === \"[object String]\";\n        tests[\"Denial reason: \" + jsonObject.denied] = false; // Fail the test so the user knows that something's amiss.\n    }\n}\ncatch(e)\n{\n    tests[\"parserr: \" + JSON.stringify(e)] = false;\n    tests[\"data: \" + JSON.stringify(jsonObject)] = false;\n}\n"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": "postman.clearEnvironmentVariable(\"restconsole_jwt_token\");"
+					}
+				}
+			],
+			"request": {
+				"url": "{{PROTOCOL}}://{{USERSERVER_URL}}:{{USERSERVER_PORT}}/auth/jwt/remote-console",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{USER}}\",\n    \"password\": \"{{PASS}}\"\n}"
+				},
+				"description": "Gets a JWT token that can be used to access the remote console endpoints.\n"
+			},
+			"response": []
+		},
+		{
+			"name": "StartSession JWT",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": "var jsonObject = {};\n\ntry {\n    jsonObject = xml2Json(responseBody);\n    \n    if (jsonObject.hasOwnProperty(\"ConsoleSession\") && jsonObject.ConsoleSession.hasOwnProperty(\"SessionID\")) {\n        postman.setEnvironmentVariable(\"restconsole_session\", jsonObject.ConsoleSession.SessionID);\n    }\n}\ncatch(e) {\n    tests[\"parserr: \" + JSON.stringify(e)] = false;\n    tests[\"data: \" + JSON.stringify(jsonObject)] = false;\n}\n\ntests[\"restconsole_login_key: \" + environment.restconsole_session] = environment.restconsole_session !== null && environment.restconsole_session.length > 0;"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": "postman.clearEnvironmentVariable(\"restconsole_session\");"
+					}
+				}
+			],
+			"request": {
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/StartSession/",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{restconsole_jwt_token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
+				"description": "Logs the user into the API. See RemoteConsole::HandleHttpStartSession()\n"
+			},
+			"response": []
+		},
+		{
+			"name": "CloseSession JWT",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": "postman.clearEnvironmentVariable(\"restconsole_session\");"
+					}
+				}
+			],
+			"request": {
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/CloseSession/",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{restconsole_jwt_token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "ID",
+							"value": "{{restconsole_session}}",
+							"type": "text",
+							"enabled": true
+						}
+					]
+				},
+				"description": "Disconnects the user and logs them out of the remote console.\n"
+			},
+			"response": []
+		},
+		{
+			"name": "SessionCommand JWT",
+			"request": {
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/SessionCommand/",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{restconsole_jwt_token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "ID",
+							"value": "{{restconsole_session}}",
+							"type": "text",
+							"enabled": true
+						},
+						{
+							"key": "COMMAND",
+							"value": "alert general This is a ping from remote!",
+							"type": "text",
+							"enabled": true
+						}
+					]
+				},
+				"description": "Sends a command to the remote console.\n"
+			},
+			"response": []
+		},
+		{
+			"name": "ReadResponses JWT",
+			"request": {
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/ReadResponses/{{restconsole_session}}/",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{restconsole_jwt_token}}",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
+				"description": "Reads out any reponses to input. See RemoteConsole::AsyncReadResponses()\n"
+			},
+			"response": []
+		},
+		{
+			"name": "StartSession Legacy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": "var jsonObject = {};\n\ntry {\n    jsonObject = xml2Json(responseBody);\n    \n    if (jsonObject.hasOwnProperty(\"ConsoleSession\") && jsonObject.ConsoleSession.hasOwnProperty(\"SessionID\")) {\n        postman.setEnvironmentVariable(\"restconsole_login_key\", jsonObject.ConsoleSession.SessionID);\n    }\n}\ncatch(e) {\n    tests[\"parserr: \" + JSON.stringify(e)] = false;\n    tests[\"data: \" + JSON.stringify(jsonObject)] = false;\n}\n\ntests[\"restconsole_login_key: \" + environment.restconsole_login_key] = environment.restconsole_login_key !== null && environment.restconsole_login_key.length > 0;"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": "postman.clearEnvironmentVariable(\"restconsole_login_key\");"
+					}
+				}
+			],
+			"request": {
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/StartSession/",
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "USER",
+							"value": "{{USER}}",
+							"type": "text",
+							"enabled": true
+						},
+						{
+							"key": "PASS",
+							"value": "{{PASS}}",
+							"type": "text",
+							"enabled": true
+						}
+					]
+				},
+				"description": "Logs the user into the API. See RemoteConsole::HandleHttpStartSession()\n"
+			},
+			"response": []
+		},
+		{
+			"name": "CloseSession Legacy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": "postman.clearEnvironmentVariable(\"restconsole_login_key\");"
+					}
+				}
+			],
+			"request": {
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/CloseSession/",
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "ID",
+							"value": "{{restconsole_login_key}}",
+							"type": "text",
+							"enabled": true
+						}
+					]
+				},
+				"description": "Disconnects the user and logs them out of the remote console.\n"
+			},
+			"response": []
+		},
+		{
+			"name": "SessionCommand Legacy",
+			"request": {
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/SessionCommand/",
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "ID",
+							"value": "{{restconsole_login_key}}",
+							"type": "text",
+							"enabled": true
+						},
+						{
+							"key": "COMMAND",
+							"value": "alert general This is a ping from remote!",
+							"type": "text",
+							"enabled": true
+						}
+					]
+				},
+				"description": "Sends a command to the remote console.\n"
+			},
+			"response": []
+		},
+		{
+			"name": "ReadResponses Legacy",
+			"request": {
+				"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/ReadResponses/{{restconsole_login_key}}/",
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
+				"description": "Reads out any reponses to input. See RemoteConsole::AsyncReadResponses()\n"
+			},
+			"response": []
+		}
+	]
+}

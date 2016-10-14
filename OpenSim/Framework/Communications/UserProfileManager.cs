@@ -332,6 +332,7 @@ namespace OpenSim.Framework.Communications
                                     profile = m_storage.GetUserProfileData(uuid);
                                     if (profile != null)
                                     {
+                                        // Refresh agent data (possibly forced refresh)
                                         profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
                                         ReplaceUserData(profile);
                                     }
@@ -344,6 +345,12 @@ namespace OpenSim.Framework.Communications
                                             RemoveUserData(uuid);
                                         }
                                     }
+                                }
+                                else
+                                {
+                                    // Refresh agent data (possibly forced refresh)
+                                    profile.CurrentAgent = GetUserAgent(uuid, forceRefresh);
+                                    ReplaceUserData(profile);
                                 }
                             }
 
@@ -507,19 +514,6 @@ namespace OpenSim.Framework.Communications
             return firstName;
         }
 
-        // This one always just invokes the XMLRPC call.
-        public UserProfileData GetUserProfile(Uri uri)
-        {
-            UserProfileData profile = m_storage.GetUserProfileData(uri);
-            if (profile != null)
-            {
-                profile.CurrentAgent = GetUserAgent(profile.ID);
-                ReplaceUserData(profile);
-            }
-
-            return profile;
-        }
-
         #endregion
 
         #region GetUserAgentData
@@ -606,11 +600,6 @@ namespace OpenSim.Framework.Communications
         }
 
         #endregion
-
-        public Uri GetUserUri(UserProfileData userProfile)
-        {
-            throw new NotImplementedException();
-        }
 
         #region CachedUserInfo
 

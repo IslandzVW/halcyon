@@ -176,6 +176,11 @@ namespace InWorldz.Data.Inventory.Cassandra
             _impl.deleteInventoryFolder(folder);
         }
 
+        public void PurgeEmptyFolder(InventoryFolderBase folder)
+        {
+            PurgeFolder(folder);    // no optimization for this in the legacy implementation
+        }
+
         public void PurgeFolders(IEnumerable<InventoryFolderBase> folders)
         {
             foreach (InventoryFolderBase folder in folders)

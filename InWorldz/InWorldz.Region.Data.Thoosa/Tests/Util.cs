@@ -196,8 +196,6 @@ namespace InWorldz.Region.Data.Thoosa.Tests
             part.ServerWeight = 3.0f;
             part.StreamingCost = 2.0f;
             part.SitName = "Sitting";
-            part.SitTargetOrientation = Util.RandomQuat();
-            part.SitTargetPosition = Util.RandomVector();
             part.Sound = UUID.Random();
             part.SoundGain = 3.4f;
             part.SoundOptions = 9;
@@ -209,6 +207,8 @@ namespace InWorldz.Region.Data.Thoosa.Tests
             part.UUID = UUID.Random();
             part.Velocity = Util.RandomVector();
             part.FromItemID = UUID.Random();
+
+            part.SetSitTarget(Util.RandomVector(), Util.RandomQuat());
 
             return part;
         }

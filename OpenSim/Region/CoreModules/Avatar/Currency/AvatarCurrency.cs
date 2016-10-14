@@ -483,7 +483,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
 
         public bool ObjectGiveMoney(UUID objectID, UUID sourceAvatarID, UUID destAvatarID, int amount)
         {
-            if (amount < 0) return false;
+            if (amount <= 0) return false;
 
             SceneObjectPart part = findPrim(objectID);
             if (part == null)

@@ -223,7 +223,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public void Teleport(ScenePresence botPresence, Vector3 pos)
         {
-            botPresence.StandUp(null, false, true);
+            botPresence.StandUp(false, true);
             botPresence.Teleport(pos);
         }
 

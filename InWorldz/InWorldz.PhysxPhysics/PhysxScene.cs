@@ -278,7 +278,7 @@ namespace InWorldz.PhysxPhysics
 
             Nini.Config.IConfig startupcfg = config.Configs["Startup"];
             if (startupcfg != null)
-                _gridmode = startupcfg.GetBoolean("gridmode", true);
+                _gridmode = startupcfg.GetBoolean("gridmode", false);
 
             if (_foundation == null)
             {

@@ -337,7 +337,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (entityAdded)
                 {
-                    m_numPrim += sceneObject.PrimCount;
+                    m_numPrim += sceneObject.PartCount;
                     m_parentScene.EventManager.TriggerParcelPrimCountTainted();
 
                     if (attachToBackup)
@@ -394,7 +394,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (!resultOfObjectLinked)
                     {
-                        m_numPrim -= group.PrimCount;
+                        m_numPrim -= group.PartCount;
 
                         if ((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                         {
@@ -2107,6 +2107,9 @@ namespace OpenSim.Region.Framework.Scenes
                     parentGroup.LinkOtherGroupPrimsToThisGroup(child);
                 }
 
+                // Now fix avatar link numbers
+                parentGroup.RecalcSeatedAvatarLinks();
+
                 // We need to explicitly resend the newly link prim's object properties since no other actions
                 // occur on link to invoke this elsewhere (such as object selection)
                 parentGroup.RootPart.AddFlag(PrimFlags.CreateSelected);
@@ -2150,6 +2153,7 @@ namespace OpenSim.Region.Framework.Scenes
                             continue;
                         if ((part.ParentGroup.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                             continue;
+
                         if (part.LinkNum < 2) // Root or single
                             rootParts.Add(part);
                         else
@@ -2241,6 +2245,12 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
+                // Now fix avatar link numbers
+                foreach (SceneObjectGroup g in affectedGroups)
+                {
+                    g.RecalcSeatedAvatarLinks();
+                }
+
                 // Finally, trigger events in the roots
                 //
                 foreach (SceneObjectGroup g in affectedGroups)
@@ -2329,7 +2339,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup original = GetGroupByPrim(originalPrimID);
             if (original != null)
             {
-                if (m_parentScene.Permissions.CanDuplicateObject(original.PrimCount, original.UUID, AgentID, original.AbsolutePosition))
+                if (m_parentScene.Permissions.CanDuplicateObject(original.PartCount, original.UUID, AgentID, original.AbsolutePosition))
                 {
                     ScenePresence sp;
                     if (!TryGetAvatar(AgentID, out sp)) sp = null;
@@ -2365,7 +2375,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // think it's selected, so it will never send a deselect...
                     copy.SetUnselectedForCopy();
 
-                    m_numPrim += copy.PrimCount;
+                    m_numPrim += copy.PartCount;
 
                     if (copy.OwnerID != AgentID)
                         copy.ChangeOwner(AgentID, GroupID);
