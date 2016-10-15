@@ -985,7 +985,7 @@ namespace OpenSim.Region.Framework.Scenes
             return _surroundingRegions.HasKnownNeighborAt(x, y);
         }
 
-        public bool HasNeighborAtPosition(float x, float y)
+        public SimpleRegionInfo GetNeighborAtPosition(float x, float y)
         {
             uint neighborX = RegionInfo.RegionLocX;
             uint neighborY = RegionInfo.RegionLocY;
@@ -1000,7 +1000,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (y >= Constants.RegionSize)
                     neighborY++;
 
-            return HasNeighbor(neighborX, neighborY);
+            return _surroundingRegions.GetKnownNeighborAt(neighborX, neighborY);
+        }
+
+        public bool HasNeighborAtPosition(float x, float y)
+        {
+            return GetNeighborAtPosition(x, y) != null;
         }
 
         /// <summary>
@@ -2714,9 +2719,13 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Offset the positions for the new region across the border
             Vector3 oldGroupPosition = grp.RootPart.GroupPosition;
+            ulong started = Util.GetLongTickCount();
+
+            bool crossed = CrossPrimGroupIntoNewRegion(newRegionHandle, grp, silent, pos, false);
+            m_log.InfoFormat("[SCENE]: Crossing for object took {0}ms: {1}", Util.GetLongTickCount()-started, grp.Name);
 
             // If we fail to cross the border, then reset the position of the scene object on that border.
-            if (!CrossPrimGroupIntoNewRegion(newRegionHandle, grp, silent, pos, false))
+            if (!crossed)
             {
                 //physics will reset the prim position itself
                 if (grp.RootPart.PhysActor == null)
@@ -2729,6 +2738,47 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             return true;
+        }
+
+        public bool PrecheckAvatarCrossing(ScenePresence avatar, out String result)
+        {
+            //assert that this avatar is fully in this region before beginning a send
+            if (avatar.Connection.State != OpenSim.Framework.AvatarConnectionState.Established)
+            {
+                result = "Can not begin transition to a new region while already in transit";
+                return false;
+            }
+
+            //assert that this avatar is ready to leave the region
+            if (!avatar.IsFullyInRegion)
+            {
+                result = "Can not move to a new region, until established in the current region";
+                return false;
+            }
+
+            //assert that the dest region is available and this avatar has an established connection to that region
+            if (avatar.RemotePresences.HasConnectionsEstablishing())
+            {
+                result = "Can not move to a new region, connections are still being established";
+                return false;
+            }
+
+            result = String.Empty;
+            return true;
+        }
+
+        public bool PrecheckCrossing(SceneObjectGroup grp, out String result)
+        {
+            bool rc = true;
+            string result_msg = String.Empty;
+            grp.ForEachSittingAvatar(delegate (ScenePresence avatar)
+                {
+                    // result is effectively an AND of all avatar prechecks.
+                    if (rc)
+                        rc = PrecheckAvatarCrossing(avatar, out result_msg);
+                });
+            result = result_msg;
+            return rc;
         }
 
         /// <summary>
@@ -2748,6 +2798,14 @@ namespace OpenSim.Region.Framework.Scenes
             if (newRegionHandle != 0)
             {
                 bool wasPersisted = grp.IsPersisted;
+
+                string result = String.Empty;
+                if (!PrecheckCrossing(grp, out result))
+                {
+                    m_log.WarnFormat("[CROSSING]: {0} {1}", grp.Name, result);
+                    grp.ForcePositionInRegion();
+                    return false;
+                }
 
                 m_sceneGraph.RemoveGroupFromSceneGraph(grp.LocalId, false, true);
                 SceneGraph.RemoveFromUpdateList(grp);
@@ -4450,6 +4508,11 @@ namespace OpenSim.Region.Framework.Scenes
 
                 reason = "authorized";
                 SP.ChildAgentDataUpdate2(data);
+
+                Util.FireAndForget((o) =>
+                {
+                    SP.ConfirmHandoff(false);
+                });
                 return ChildAgentUpdate2Response.Ok;
             }
             finally

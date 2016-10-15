@@ -756,7 +756,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void TestForAndBeginCrossing(Vector3 val, bool physicsTriggered)
         {
-            if (!Scene.HasNeighborAtPosition(val.X, val.Y))
+            SimpleRegionInfo destRegion = this.Scene.GetNeighborAtPosition(val.X, val.Y);
+            if (destRegion == null)
             {
                 ForcePositionInRegion();
                 Scene.CheckDieAtEdge(this);
@@ -767,6 +768,14 @@ namespace OpenSim.Region.Framework.Scenes
             //still have connections establishing, fail the crossing and let them establish
             this.ForEachSittingAvatar(delegate (ScenePresence avatar)
             {
+                if (!avatar.IsFullyInRegion)
+                {
+                    // avatar.ControllingClient.SendAlertMessage("Can not move to a new region, still entering this one");
+                    ForcePositionInRegion();
+                    return;
+                }
+
+
                 if (avatar.RemotePresences.HasConnectionsEstablishing())
                 {
                     // avatar.ControllingClient.SendAlertMessage("Can not move to a new region, connections are still being established");
