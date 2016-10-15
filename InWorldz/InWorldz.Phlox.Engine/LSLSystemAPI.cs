@@ -4496,8 +4496,9 @@ namespace InWorldz.Phlox.Engine
             }
             PermsChange(item, UUID.Zero, 0);
 
-            if (m_waitingForScriptAnswer != presence)
+            if (m_waitingForScriptAnswer != presence.ControllingClient)
             {
+                ClearWaitingForScriptAnswer(m_waitingForScriptAnswer);
                 presence.ControllingClient.OnScriptAnswer += handleScriptAnswer;
                 presence.ControllingClient.OnConnectionClosed += handleConnectionClosed;
                 m_waitingForScriptAnswer = presence.ControllingClient;
