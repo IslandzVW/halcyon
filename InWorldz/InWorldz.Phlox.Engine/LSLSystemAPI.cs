@@ -8577,7 +8577,7 @@ namespace InWorldz.Phlox.Engine
             var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
-                part.SetSitTarget(sitPos, sitRot);
+                part.SetSitTarget(sitPos, sitRot, true);
             }
         }
 
