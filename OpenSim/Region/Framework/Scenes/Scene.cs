@@ -3907,7 +3907,8 @@ namespace OpenSim.Region.Framework.Scenes
                     if (land != null)
                     {
                         ParcelPropertiesStatus denyReason;
-                        if ((agent.startpos.Z < LandChannel.GetBanHeight()) && (land.DenyParcelAccess(agent.AgentID, out denyReason)))
+                        float minZ;
+                        if (TestBelowHeightLimit(agent.AgentID, agent.startpos, land, out minZ, out denyReason))
                         {
                             switch (denyReason)
                             {
@@ -3994,6 +3995,27 @@ namespace OpenSim.Region.Framework.Scenes
                 reason = String.Format("Failed to authenticate user {0} {1}, access denied.", agent.FirstName, agent.LastName);
 
             return result;
+        }
+
+        // Returns false and minZ==non-zero if avatar is not allowed at this height, otherwise min height.
+        public bool TestBelowHeightLimit(UUID agentID, Vector3 pos, ILandObject parcel, out float minZ, out ParcelPropertiesStatus reason)
+        {
+            float groundZ = (float)this.Heightmap.CalculateHeightAt(pos.X, pos.Y);
+
+            minZ = groundZ;
+            reason = ParcelPropertiesStatus.ParcelSelected;   // we can treat this as the no error case.
+
+            // Optimization: Quick precheck with more restrictive ban height before checking reason.
+            if (pos.Z > LandChannel.GetBanHeight(true))
+                return false;   // not restricted
+
+            // Okay now we need to know if they are restricted from entering, and why.
+            if (!parcel.DenyParcelAccess(agentID, out reason))
+                return false;   // not restricted
+
+            // Finally, check if below their specific minimum Z position.
+            minZ = groundZ + LandChannel.GetBanHeight(reason == ParcelPropertiesStatus.CollisionBanned);
+            return (pos.Z < minZ);   // below restricted level?
         }
 
         private class UserMembershipInfo
@@ -4327,7 +4349,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (land != null)
             {
                 ParcelPropertiesStatus denyReason;
-                if ((pos.Z < LandChannel.GetBanHeight()) && (land.DenyParcelAccess(agentID, out denyReason)))
+                float minZ;
+                if (TestBelowHeightLimit(agentID, pos, land, out minZ, out denyReason))
                 {
                     string who;
                     if ((firstName != null) && (lastName != null))

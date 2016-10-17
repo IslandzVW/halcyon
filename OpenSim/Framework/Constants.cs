@@ -54,6 +54,9 @@ namespace OpenSim.Framework
 
         public const string DefaultTexture = "89556747-24cb-43ed-920b-47caed15465f";
 
+        // Avatar "bounce" when descending into a no-entry parcel (e.g. banned)
+        public const float AVATAR_BOUNCE = 10.0f;
+
         // Summary:
         //     Used by EstateOwnerMessage packets
         public enum EstateAccessDeltaCommands

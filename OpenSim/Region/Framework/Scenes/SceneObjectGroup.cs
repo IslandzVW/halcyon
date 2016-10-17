@@ -641,7 +641,8 @@ namespace OpenSim.Region.Framework.Scenes
                 if (NewParcel == null)
                     return; // Just don't allow it to change to something invalid
 
-                if ((NewParcel != null) && (val.Z < m_scene.LandChannel.GetBanHeight()))
+                // Optimization: Precheck with more restrictive general ban height before checking if the avatar is banned.
+                if ((NewParcel != null) && (val.Z < m_scene.LandChannel.GetBanHeight(false)))
                 {
                     // Possibly entering a restricted parcel.
                     ParcelPropertiesStatus reason;
@@ -651,7 +652,8 @@ namespace OpenSim.Region.Framework.Scenes
                         // First, let's check each rider to see if we need to eject them.
                         this.ForEachSittingAvatar(delegate (ScenePresence sitter)
                         {
-                            if (NewParcel.DenyParcelAccess(sitter.UUID, out reason))
+                            float minZ;
+                            if (m_scene.TestBelowHeightLimit(sitter.UUID, val, NewParcel, out minZ, out reason))
                             {
                                 Util.FireAndForget((o) =>
                                 {
