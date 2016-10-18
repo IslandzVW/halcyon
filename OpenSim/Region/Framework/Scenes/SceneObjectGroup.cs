@@ -209,7 +209,13 @@ namespace OpenSim.Region.Framework.Scenes
                     return String.Empty;
                 return RootPart.Name;
             }
-            set { RootPart.Name = value; }
+            set {
+                RootPart.Name = value;
+                // Also update the object name to keep it in sync with the root part name.
+                // This mostly only affects debugging since the Name getter override above
+                // pulls the name from the root part.
+                this.Name = value;
+            }
         }
 
         // when a prim enters a new region, this is the number of avatars that must be seated (waited for) before the prim can exit the region
