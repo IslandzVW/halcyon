@@ -553,8 +553,11 @@ namespace OpenSim.Region.Framework.Scenes
                     if (parcel != null)
                     {
                         ParcelPropertiesStatus reason;
-                        if (agentPos.Z < Scene.LandChannel.GetBanHeight() && parcel.DenyParcelAccess(this.UUID, out reason))
+                        float minZ;
+                        // Returns false and minZ==non-zero if avatar is not allowed at this height, otherwise min height.
+                        if (Scene.TestBelowHeightLimit(this.UUID, agentPos, parcel, out minZ, out reason))
                         {
+                            // not a valid position for this avatar
                             if (!forced)
                                 return; // illegal position
                         }
@@ -634,7 +637,9 @@ namespace OpenSim.Region.Framework.Scenes
                     if (parcel != null)
                     {
                         ParcelPropertiesStatus reason;
-                        if ((ppos.Z < Scene.LandChannel.GetBanHeight()) && (parcel.DenyParcelAccess(this.UUID, out reason)))
+                        float minZ;
+                        // Returns false and minZ==non-zero if avatar is not allowed at this height, otherwise min height.
+                        if (Scene.TestBelowHeightLimit(this.UUID, ppos, parcel, out minZ, out reason))
                         {
                             bool enforce = false;
                             if (parent == null)   // not seated
@@ -650,17 +655,17 @@ namespace OpenSim.Region.Framework.Scenes
                             if (enforce)
                             {
                                 Vector3 newpos = this.lastKnownAllowedPosition;   // force back into valid location
-                                Vector3 newvel = physActor.Velocity;
                                 // If not retreating from the parcel, bounce them on top of it.
                                 ILandObject parcel2 = Scene.LandChannel.GetLandObject(newpos.X, newpos.Y);
                                 if ((parcel2 != null) && (parcel2.landData.LocalID == parcel.landData.LocalID))
                                 {
                                     // New parcel is the same parcel, still illegal
-                                    newpos.Z = Scene.LandChannel.GetBanHeight() + 20.0f;    // bounce
-                                    newvel.Z = -newvel.Z;
+                                    newpos.Z = minZ + Constants.AVATAR_BOUNCE;
+                                    Vector3 vel = physActor.Velocity;
+                                    vel.Z = 0.0f;
+                                    physActor.Velocity = vel;
                                 }
                                 ppos = newpos;
-                                physActor.Velocity = newvel;
                                 posForced = true;
                             }
                         }
