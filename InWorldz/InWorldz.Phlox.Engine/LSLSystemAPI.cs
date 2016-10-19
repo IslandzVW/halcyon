@@ -4466,13 +4466,13 @@ namespace InWorldz.Phlox.Engine
             if (RequestImplicitPermissions(perm, item, agentID))
                 return; // all done, only implicit perms were requested
 
-            // We have a new perms request, not answered yet...
-            PermsChange(item, UUID.Zero, 0);
-
             // Otherwise we need to prompt the user for permission.
             ScenePresence presence = World.GetScenePresence(agentID);
             if (presence == null)
             {
+                // We have a new perms request, not answered, and no one to answer it.
+                PermsChange(item, UUID.Zero, 0);
+
                 // Requested agent is not in range, refuse perms, or muted
                 ScriptSleep(200);
                 m_ScriptEngine.PostScriptEvent(
@@ -4483,7 +4483,11 @@ namespace InWorldz.Phlox.Engine
             }
             // Only do the mute check if we're going to present the permissions dialog.
             if (IsScriptMuted(agentID))
+            {
+                // We have a new perms request, not answered, and no one to answer it.
+                PermsChange(item, UUID.Zero, 0);
                 return;
+            }
 
             // Okay, now we need to ask the user for permission.
             string ownerName = resolveName(m_host.ParentGroup.RootPart.OwnerID);
@@ -4494,7 +4498,6 @@ namespace InWorldz.Phlox.Engine
             {
                 item = m_host.TaskInventory[invItemID];
             }
-            PermsChange(item, UUID.Zero, 0);
 
             if (m_waitingForScriptAnswer != presence)
             {
