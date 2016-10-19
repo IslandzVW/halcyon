@@ -419,7 +419,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 return true; // never deny the master avatar
             if (avatar == m_scene.RegionInfo.EstateSettings.EstateOwner)
                 return true; // never deny the estate owner
-            if (m_scene.IsEstateOwner(avatar))
+            if (m_scene.IsEstateManager(avatar))    // includes Estate Owner
                 return true;
             if (m_scene.IsEstateOwnerPartner(avatar))
                 return true;
