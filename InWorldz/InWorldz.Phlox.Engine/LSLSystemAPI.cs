@@ -3016,7 +3016,7 @@ namespace InWorldz.Phlox.Engine
         }
 
         // If sendEvent is true, returns the transaction_result event key, event has error status.
-        // If sendEvent is false, no event, no key, it returns the actual transaction ID or "" on error.
+        // If sendEvent is false, no event, no key, it returns the actual transaction ID, or error tag on error.
         private string GiveMoney(string destination, int amount, bool sendEvent)
         {
             UUID eventID = UUID.Random();           // transaction_result event key
@@ -3030,7 +3030,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     LSLError("No item found from which to give money");
                     data = "SERVICE_ERROR";
-                    return sendEvent ? eventID.ToString() : String.Empty;
+                    return sendEvent ? eventID.ToString() : data;
                 }
 
                 TaskInventoryItem item;
@@ -3043,7 +3043,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     LSLError("No permissions to give money");
                     data = "MISSING_PERMISSION_DEBIT";
-                    return sendEvent ? eventID.ToString() : String.Empty;
+                    return sendEvent ? eventID.ToString() : data;
                 }
 
                 UUID toID = new UUID();
@@ -3051,7 +3051,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     LSLError("Bad key in llGiveMoney");
                     data = "INVALID_DESTINATION";
-                    return sendEvent ? eventID.ToString() : String.Empty;
+                    return sendEvent ? eventID.ToString() : data;
                 }
 
                 IMoneyModule money = World.RequestModuleInterface<IMoneyModule>();
@@ -3059,7 +3059,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     NotImplemented("llGiveMoney");
                     data = "SERVICE_ERROR";
-                    return sendEvent ? eventID.ToString() : String.Empty;
+                    return sendEvent ? eventID.ToString() : data;
                 }
 
                 string reason;
@@ -3075,7 +3075,7 @@ namespace InWorldz.Phlox.Engine
             {
                 m_log.ErrorFormat("[SCRIPT]: llTransferLindenDollars exception: {0}", e.ToString());
                 data = "SERVICE_ERROR";
-                return sendEvent ? eventID.ToString() : String.Empty;
+                return sendEvent ? eventID.ToString() : data;
             }
             finally
             {
@@ -3093,7 +3093,7 @@ namespace InWorldz.Phlox.Engine
             return GiveMoney(destination, amount, true);
         }
 
-        // Returns the actual currency transaction ID.
+        // There is no event, so no event key, instead it returns the actual transaction ID, or error tag on error.
         public string iwGiveMoney(string destination, int amount)
         {
             return GiveMoney(destination, amount, false);
