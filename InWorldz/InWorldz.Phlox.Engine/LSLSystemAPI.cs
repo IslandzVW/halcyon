@@ -18232,7 +18232,9 @@ namespace InWorldz.Phlox.Engine
 
             if (sp.IsChildAgent)
             {
-                res.Add("NOT ON REGION");
+                // res.Add("NOT ON REGION");
+                // This case is documented as "NOT ON REGION" but testing in SL shows it also returning "NOT FOUND".
+                res.Add("NOT FOUND");
                 return new LSL_List(res);
             }
 
