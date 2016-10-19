@@ -4597,6 +4597,22 @@ namespace OpenSim.Region.Framework.Scenes
             return itemIds;
         }
 
+        public IEnumerable<UUID> CollectVisibleAttachmentItemIds()
+        {
+            List<UUID> itemIds = new List<UUID>();
+            lock (m_attachments)
+            {
+                foreach (SceneObjectGroup grp in m_attachments)
+                {
+                    if (!grp.IsAttachedHUD)
+                        itemIds.Add(grp.GetFromItemID());
+                }
+            }
+
+            return itemIds;
+        }
+
+
         /// <summary>
         /// Thread safe getting of attachments
         /// </summary>

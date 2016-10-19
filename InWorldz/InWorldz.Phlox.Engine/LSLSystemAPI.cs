@@ -18148,6 +18148,7 @@ namespace InWorldz.Phlox.Engine
                 m_ScriptEngine.SysReturn(m_itemID, null, delay);
             }
         }
+        #endregion
 
         public LSL_List iwSearchLinksByName(string pattern, int matchType, int linksOnly)
         {
@@ -18214,6 +18215,14 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List llGetAttachedList(string avatar)
         {
+            UUID agentID;
+            if (UUID.TryParse(avatar, out agentID))
+            {
+                ScenePresence sp = World.GetScenePresence(agentID);
+                if (sp != null)
+                    return new LSL_List(sp.CollectVisibleAttachmentItemIds());
+            }
+
             return new LSL_List();
         }
 
@@ -18235,7 +18244,6 @@ namespace InWorldz.Phlox.Engine
         {
         }
 
-        #endregion
     }
 
 
