@@ -18238,10 +18238,19 @@ namespace InWorldz.Phlox.Engine
 
         public void iwStandTarget(Vector3 offset, Quaternion rot)
         {
+            iwLinkStandTarget(m_host.LinkNum, offset, rot);
         }
 
-        public void iwLinkStandTarget(int link, Vector3 offset, Quaternion rot)
+        public void iwLinkStandTarget(int linknumber, Vector3 offset, Quaternion rot)
         {
+            Quaternion qrot = Rot2Quaternion(rot);
+
+            var parts = GetLinkPrimsOnly(linknumber);
+            foreach (SceneObjectPart part in parts)
+            {
+                part.StandTargetPos = offset;
+                part.StandTargetRot = qrot;
+            }
         }
 
     }

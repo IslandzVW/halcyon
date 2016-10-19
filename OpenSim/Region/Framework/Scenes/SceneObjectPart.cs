@@ -707,6 +707,8 @@ namespace OpenSim.Region.Framework.Scenes
         private byte _prevAttPt= (byte)0;
         private Vector3 _prevAttPos = Vector3.Zero;
         private Quaternion _prevAttRot = Quaternion.Identity;
+        private Vector3 _standTargetPos = Vector3.Zero;
+        private Quaternion _standTargetRot = Quaternion.Identity;
 
         [XmlIgnore]
         public bool IsInTransaction
@@ -1623,6 +1625,18 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get { return _prevAttRot; }
             set { _prevAttRot = value; }
+        }
+
+        public Vector3 StandTargetPos
+        {
+            get { return _standTargetPos; }
+            set { _standTargetPos = value; }
+        }
+
+        public Quaternion StandTargetRot
+        {
+            get { return _standTargetRot; }
+            set { _standTargetRot = value; }
         }
 
         public PrimFlags Flags
