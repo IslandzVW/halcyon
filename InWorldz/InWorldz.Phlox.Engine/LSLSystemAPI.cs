@@ -18223,13 +18223,13 @@ namespace InWorldz.Phlox.Engine
                 ScenePresence sp = World.GetScenePresence(agentID);
                 if ((sp != null) && (!sp.IsChildAgent))
                 {
-                    foreach (UUID id in sp.CollectVisibleAttachmentItemIds())
+                    foreach (UUID id in sp.CollectVisibleAttachmentIds())
                         ret = ret.Append(id.ToString());
                     return ret;
                 }
             }
 
-            ret.Append("NOT FOUND");
+            ret = ret.Append("NOT FOUND");
             return ret;
         }
 
