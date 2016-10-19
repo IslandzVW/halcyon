@@ -1763,6 +1763,7 @@ namespace OpenSim.Region.Framework.Scenes
             // from this location from time to time.
 
             bool doCullingCheck = false;
+            bool update_rotation = false;
             if (m_sceneView != null && m_sceneView.UseCulling)
             {
                 if (!m_sceneView.NeedsFullSceneUpdate && (Environment.TickCount - m_lastCullCheckMS) > 0 &&
@@ -1808,6 +1809,8 @@ namespace OpenSim.Region.Framework.Scenes
             if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_STAND_UP) != 0)
             {
                 StandUp(false, true);
+                bodyRotation = m_bodyRot;   // if standing, preserve the current rotation
+                update_rotation = true;
             }
 
             m_mouseLook = (flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_MOUSELOOK) != 0;
@@ -1850,7 +1853,6 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_allowMovement)
             {
                 bool update_movementflag = false;
-                bool update_rotation = false;
                 bool DCFlagKeyPressed = false;
                 Vector3 agent_control_v3 = Vector3.Zero;
 
@@ -2384,47 +2386,59 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
+                        Quaternion targetRot = this.Rotation;
                         if (part != null)
                         {
-                            Vector3 partPos = part.GetWorldPosition();
-                            SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
-
-                            // Otherwise, we have a lot to do, it's a real stand up operation.
-                            // if there is a part with a sit target
-
-                            if (sitInfo.IsSet)
-                            {   // prim not found, or has a sit target (just use that offset)
-                                info.Position = AbsolutePosition;   // don't change it from where we are now, but update with the current absolute position
+                            if ((part.StandTargetPos != Vector3.Zero) || (part.StandTargetRot != Quaternion.Identity))
+                            {
+                                // Stand target defined
+                                Quaternion partRot = part.GetWorldRotation();
+                                info.Position = part.AbsolutePosition + (part.StandTargetPos * partRot);
+                                targetRot = partRot * part.StandTargetRot;
                             }
                             else
-                            {   // no prim, or prim does not have a sit target beyond the teleporter threshold
-                                Vector3 newpos;
-                                if (partTop != 0.0f)
-                                {
-                                    // Let's position the avatar on top of the prim they were on.
-                                    newpos = info.Position + partPos;   // original position but...
-                                    newpos.Z = partTop;             // but on the top of it
+                            {
+                                Vector3 partPos = part.GetWorldPosition();
+
+                                SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
+
+                                // Otherwise, we have a lot to do, it's a real stand up operation.
+                                // if there is a part with a sit target
+
+                                if (sitInfo.IsSet)
+                                {   // prim not found, or has a sit target (just use that offset)
+                                    info.Position = AbsolutePosition;   // don't change it from where we are now, but update with the current absolute position
                                 }
                                 else
-                                {
-                                    // Can't find the prim they were on so put them back where they
-                                    // were with the sit target on the poseball set with the offset.
-                                    newpos = partPos - (info.Position - m_sitTargetCorrectionOffset);
+                                {   // no prim, or prim does not have a sit target beyond the teleporter threshold
+                                    Vector3 newpos;
+                                    if (partTop != 0.0f)
+                                    {
+                                        // Let's position the avatar on top of the prim they were on.
+                                        newpos = info.Position + partPos;   // original position but...
+                                        newpos.Z = partTop;             // but on the top of it
+                                    }
+                                    else
+                                    {
+                                        // Can't find the prim they were on so put them back where they
+                                        // were with the sit target on the poseball set with the offset.
+                                        newpos = partPos - (info.Position - m_sitTargetCorrectionOffset);
+                                    }
+
+                                    // And let's assume that the sit pos is roughly at vertical center of the avatar, and that when standing,
+                                    // we should add roughtly half the height of the avatar to put their feet at the target location, not their center.
+                                    newpos.Z += (m_avHeight / 2.0f);
+
+                                    // now finally update it
+                                    info.Position = newpos;
                                 }
-
-                                // And let's assume that the sit pos is roughly at vertical center of the avatar, and that when standing,
-                                // we should add roughtly half the height of the avatar to put their feet at the target location, not their center.
-                                newpos.Z += (m_avHeight / 2.0f);
-
-                                // now finally update it
-                                info.Position = newpos;
                             }
                         }
 
                         // Now finally update the actual SP position
                         info.Parent = null;
                         m_posInfo.Set(info);
-
+                        this.Rotation = targetRot;
                         bool needsSetHeight = true;
                         if (PhysicsActor == null)
                         {
