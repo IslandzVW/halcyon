@@ -3015,10 +3015,12 @@ namespace InWorldz.Phlox.Engine
             return String.IsNullOrEmpty(transactionID) ? 0 : 1;
         }
 
-        public string llTransferLindenDollars(string destination, int amount)
+        // If sendEvent is true, returns the transaction_result event key, event has error status.
+        // If sendEvent is false, no event, no key, it returns the actual transaction ID or "" on error.
+        private string GiveMoney(string destination, int amount, bool sendEvent)
         {
-            UUID eventID = UUID.Random();
-            string transactionID = String.Empty;    // ID for transaction_result event
+            UUID eventID = UUID.Random();           // transaction_result event key
+            string transactionID = String.Empty;    // actual currency transaction ID
             UUID invItemID = InventorySelf();
             int success = 0;
             string data = String.Empty;
@@ -3028,7 +3030,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     LSLError("No item found from which to give money");
                     data = "SERVICE_ERROR";
-                    return eventID.ToString();
+                    return sendEvent ? eventID.ToString() : String.Empty;
                 }
 
                 TaskInventoryItem item;
@@ -3041,7 +3043,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     LSLError("No permissions to give money");
                     data = "MISSING_PERMISSION_DEBIT";
-                    return eventID.ToString();
+                    return sendEvent ? eventID.ToString() : String.Empty;
                 }
 
                 UUID toID = new UUID();
@@ -3049,7 +3051,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     LSLError("Bad key in llGiveMoney");
                     data = "INVALID_DESTINATION";
-                    return eventID.ToString();
+                    return sendEvent ? eventID.ToString() : String.Empty;
                 }
 
                 IMoneyModule money = World.RequestModuleInterface<IMoneyModule>();
@@ -3057,7 +3059,7 @@ namespace InWorldz.Phlox.Engine
                 {
                     NotImplemented("llGiveMoney");
                     data = "SERVICE_ERROR";
-                    return eventID.ToString();
+                    return sendEvent ? eventID.ToString() : String.Empty;
                 }
 
                 string reason;
@@ -3067,24 +3069,34 @@ namespace InWorldz.Phlox.Engine
                     data = String.Format("{0},{1}", transactionID, amount);
                 else
                     data = reason;
-                return eventID.ToString();
+                return sendEvent ? eventID.ToString() : transactionID;
             }
             catch (Exception e)
             {
                 m_log.ErrorFormat("[SCRIPT]: llTransferLindenDollars exception: {0}", e.ToString());
                 data = "SERVICE_ERROR";
-                return eventID.ToString();
+                return sendEvent ? eventID.ToString() : String.Empty;
             }
             finally
             {
-                object[] resobj = new object[] { eventID.ToString(), success, data };
-                m_ScriptEngine.PostScriptEvent(m_itemID, new EventParams("transaction_result", resobj, new DetectParams[0]));
+                if (sendEvent)
+                {
+                    object[] resobj = new object[] { eventID.ToString(), success, data };
+                    m_ScriptEngine.PostScriptEvent(m_itemID, new EventParams("transaction_result", resobj, new DetectParams[0]));
+                }
             }
         }
 
+        // Returns the key for the transaction_result event and triggers the event (either way).
+        public string llTransferLindenDollars(string destination, int amount)
+        {
+            return GiveMoney(destination, amount, true);
+        }
+
+        // Returns the actual currency transaction ID.
         public string iwGiveMoney(string destination, int amount)
         {
-            return String.Empty;
+            return GiveMoney(destination, amount, false);
         }
 
         public void llMakeExplosion(int particles, float scale, float vel, float lifetime, float arc, string texture, LSL_Vector offset)
