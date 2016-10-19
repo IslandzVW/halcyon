@@ -209,7 +209,13 @@ namespace OpenSim.Region.Framework.Scenes
                     return String.Empty;
                 return RootPart.Name;
             }
-            set { RootPart.Name = value; }
+            set {
+                RootPart.Name = value;
+                // Also update the object name to keep it in sync with the root part name.
+                // This mostly only affects debugging since the Name getter override above
+                // pulls the name from the root part.
+                this.Name = value;
+            }
         }
 
         // when a prim enters a new region, this is the number of avatars that must be seated (waited for) before the prim can exit the region
@@ -2071,7 +2077,18 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup dupe = (SceneObjectGroup)MemberwiseClone();
             dupe.m_InTransition = 0;
             dupe.m_isBackedUp = false;
+
+            // The MemberwiseClone() above is a shallow copy. All of the object references from the old SOG need new instances.
             dupe.m_childParts = new GroupPartsCollection();
+            dupe.m_childAvatars = new AvatarPartsCollection();
+            dupe.m_sitTargets = new Dictionary<UUID, SitTargetInfo>();
+            dupe.m_targets = new List<ScriptPosTarget>(MAX_TARGETS);
+            dupe.m_rotTargets = new List<ScriptRotTarget>(MAX_TARGETS);
+            dupe.m_targetsLock = new object();
+            dupe._bbLock = new object();
+
+            dupe.m_targets.InsertRange(0, m_targets);
+            dupe.m_rotTargets.InsertRange(0, m_rotTargets);
 
             dupe.CopyRootPart(m_rootPart, OwnerID, GroupID, userExposed, serializePhysicsState);
 
