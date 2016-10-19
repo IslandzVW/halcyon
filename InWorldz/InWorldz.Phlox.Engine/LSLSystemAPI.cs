@@ -4499,8 +4499,9 @@ namespace InWorldz.Phlox.Engine
                 item = m_host.TaskInventory[invItemID];
             }
 
-            if (m_waitingForScriptAnswer != presence)
+            if (m_waitingForScriptAnswer != presence.ControllingClient)
             {
+                ClearWaitingForScriptAnswer(m_waitingForScriptAnswer);
                 presence.ControllingClient.OnScriptAnswer += handleScriptAnswer;
                 presence.ControllingClient.OnConnectionClosed += handleConnectionClosed;
                 m_waitingForScriptAnswer = presence.ControllingClient;
