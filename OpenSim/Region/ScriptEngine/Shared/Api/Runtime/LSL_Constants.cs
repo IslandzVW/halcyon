@@ -81,6 +81,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int PERMISSION_TELEPORT = 4096;                    // 0x1000
         public const int PERMISSION_SILENT_ESTATE_MANAGEMENT = 16384;   // 0x4000
         public const int PERMISSION_OVERRIDE_ANIMATIONS = 32768;        // 0x8000
+        public const int PERMISSION_RETURN_OBJECTS = 65536;             //0x10000
 
         public const int AGENT_FLYING = 1;
         public const int AGENT_ATTACHMENTS = 2;
