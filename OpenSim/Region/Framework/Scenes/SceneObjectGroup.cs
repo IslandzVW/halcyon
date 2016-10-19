@@ -1337,9 +1337,16 @@ namespace OpenSim.Region.Framework.Scenes
             });
         }
 
-        public void SetSitTarget(SceneObjectPart part, Vector3 pos, Quaternion rot)
+        public void SetSitTarget(SceneObjectPart part, Vector3 pos, Quaternion rot, bool preserveSitter)
         {
             SitTargetInfo sitInfo = new SitTargetInfo(part, pos, rot);
+            if (preserveSitter)
+            {
+                SitTargetInfo oldInfo;
+                if (m_sitTargets.TryGetValue(part.UUID, out oldInfo))
+                    sitInfo.Sitter = oldInfo.Sitter;
+            }
+
             if (sitInfo.IsSet)
             {
                 m_sitTargets[part.UUID] = sitInfo;
@@ -2537,7 +2544,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_childParts.RemovePart(part); // the old IDs are changing
                 part.ResetIDs(part.LinkNum); // Don't change link nums
                 m_childParts.AddPart(part); // update the part lists with new IDs
-                SetSitTarget(part, part.SitTargetPosition, part.SitTargetOrientation);
+                SetSitTarget(part, part.SitTargetPosition, part.SitTargetOrientation, false);
             }
         }
 
