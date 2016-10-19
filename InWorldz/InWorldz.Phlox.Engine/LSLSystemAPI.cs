@@ -18215,15 +18215,20 @@ namespace InWorldz.Phlox.Engine
 
         public LSL_List llGetAttachedList(string avatar)
         {
+            LSL_List ret = new LSL_List();
+
             UUID agentID;
             if (UUID.TryParse(avatar, out agentID))
             {
                 ScenePresence sp = World.GetScenePresence(agentID);
                 if ((sp != null) && (!sp.IsChildAgent))
-                    return new LSL_List(sp.CollectVisibleAttachmentItemIds());
+                {
+                    foreach (UUID id in sp.CollectVisibleAttachmentItemIds())
+                        ret = ret.Append(id.ToString());
+                    return ret;
+                }
             }
 
-            LSL_List ret = new LSL_List();
             ret.Append("NOT FOUND");
             return ret;
         }
