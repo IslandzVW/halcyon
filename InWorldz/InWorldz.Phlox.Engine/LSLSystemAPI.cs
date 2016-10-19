@@ -18216,14 +18216,27 @@ namespace InWorldz.Phlox.Engine
         public LSL_List llGetAttachedList(string avatar)
         {
             UUID agentID;
-            if (UUID.TryParse(avatar, out agentID))
+            List<object> res = new List<object>();
+            if (!UUID.TryParse(avatar, out agentID))
             {
-                ScenePresence sp = World.GetScenePresence(agentID);
-                if (sp != null)
-                    return new LSL_List(sp.CollectVisibleAttachmentItemIds());
+                res.Add("NOT FOUND");
+                return new LSL_List(res);
             }
 
-            return new LSL_List();
+            ScenePresence sp = World.GetScenePresence(agentID);
+            if (sp == null)
+            {
+                res.Add("NOT FOUND");
+                return new LSL_List(res);
+            }
+
+            if (sp.IsChildAgent)
+            {
+                res.Add("NOT ON REGION");
+                return new LSL_List(res);
+            }
+
+            return new LSL_List(sp.CollectVisibleAttachmentItemIds());
         }
 
         public int llReturnObjectsByOwner(string owner, int scope)
