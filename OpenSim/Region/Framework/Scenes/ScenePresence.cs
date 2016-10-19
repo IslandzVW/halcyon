@@ -4611,7 +4611,7 @@ namespace OpenSim.Region.Framework.Scenes
             return itemIds;
         }
 
-        public IEnumerable<UUID> CollectVisibleAttachmentItemIds()
+        public IEnumerable<UUID> CollectVisibleAttachmentIds()
         {
             List<UUID> itemIds = new List<UUID>();
             lock (m_attachments)
@@ -4619,7 +4619,7 @@ namespace OpenSim.Region.Framework.Scenes
                 foreach (SceneObjectGroup grp in m_attachments)
                 {
                     if (!grp.IsAttachedHUD)
-                        itemIds.Add(grp.GetFromItemID());
+                        itemIds.Add(grp.UUID);
                 }
             }
 
