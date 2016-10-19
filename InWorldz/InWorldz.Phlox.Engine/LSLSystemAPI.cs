@@ -460,6 +460,9 @@ namespace InWorldz.Phlox.Engine
 
                 case Types.SupportedEventList.Events.CHANGED:
                     return (int)OpenSim.Region.Framework.Scenes.ScriptEvents.changed;
+
+                case Types.SupportedEventList.Events.TRANSACTION_RESULT:
+                    return (int)OpenSim.Region.Framework.Scenes.ScriptEvents.transaction_result;
             }
 
             return 0;
@@ -3001,21 +3004,87 @@ namespace InWorldz.Phlox.Engine
             }
 
             IMoneyModule money = World.RequestModuleInterface<IMoneyModule>();
-
             if (money == null)
             {
                 NotImplemented("llGiveMoney");
                 return 0;
             }
 
-            bool result
-                = money.ObjectGiveMoney(
-                    m_host.ParentGroup.RootPart.UUID, m_host.ParentGroup.RootPart.OwnerID, toID, amount);
+            string reason;
+            string transactionID = money.ObjectGiveMoney(m_host.ParentGroup.RootPart.UUID, m_host.ParentGroup.RootPart.OwnerID, toID, amount, out reason);
+            return String.IsNullOrEmpty(transactionID) ? 0 : 1;
+        }
 
-            if (result)
-                return 1;
+        public string llTransferLindenDollars(string destination, int amount)
+        {
+            UUID eventID = UUID.Random();
+            string transactionID = String.Empty;    // ID for transaction_result event
+            UUID invItemID = InventorySelf();
+            int success = 0;
+            string data = String.Empty;
+            try
+            {
+                if (invItemID == UUID.Zero)
+                {
+                    LSLError("No item found from which to give money");
+                    data = "SERVICE_ERROR";
+                    return eventID.ToString();
+                }
 
-            return 0;
+                TaskInventoryItem item;
+                lock (m_host.TaskInventory)
+                {
+                    item = m_host.TaskInventory[invItemID];
+                }
+
+                if (!CheckRuntimePerms(item, item.OwnerID, ScriptBaseClass.PERMISSION_DEBIT))
+                {
+                    LSLError("No permissions to give money");
+                    data = "MISSING_PERMISSION_DEBIT";
+                    return eventID.ToString();
+                }
+
+                UUID toID = new UUID();
+                if (!UUID.TryParse(destination, out toID))
+                {
+                    LSLError("Bad key in llGiveMoney");
+                    data = "INVALID_DESTINATION";
+                    return eventID.ToString();
+                }
+
+                IMoneyModule money = World.RequestModuleInterface<IMoneyModule>();
+                if (money == null)
+                {
+                    NotImplemented("llGiveMoney");
+                    data = "SERVICE_ERROR";
+                    return eventID.ToString();
+                }
+
+                string reason;
+                transactionID = money.ObjectGiveMoney(m_host.ParentGroup.RootPart.UUID, m_host.ParentGroup.RootPart.OwnerID, toID, amount, out reason);
+                success = String.IsNullOrEmpty(transactionID) ? 0 : 1;
+                if (success != 0)
+                    data = String.Format("{0},{1}", transactionID, amount);
+                else
+                    data = reason;
+                return eventID.ToString();
+            }
+            catch (Exception e)
+            {
+                m_log.ErrorFormat("[SCRIPT]: llTransferLindenDollars exception: {0}", e.ToString());
+                data = "SERVICE_ERROR";
+                return eventID.ToString();
+            }
+            finally
+            {
+                object[] resobj = new object[] { eventID.ToString(), success, data };
+                m_ScriptEngine.PostScriptEvent(m_itemID, new EventParams("transaction_result", resobj, new DetectParams[0]));
+            }
+        }
+
+        public string iwGiveMoney(string destination, int amount)
+        {
+            return String.Empty;
         }
 
         public void llMakeExplosion(int particles, float scale, float vel, float lifetime, float arc, string texture, LSL_Vector offset)
@@ -18129,6 +18198,29 @@ namespace InWorldz.Phlox.Engine
             }
 
             return new LSL_List(ret);
+        }
+
+        public LSL_List llGetAttachedList(string avatar)
+        {
+            return new LSL_List();
+        }
+
+        public int llReturnObjectsByOwner(string owner, int scope)
+        {
+            return 0;
+        }
+
+        public int llReturnObjectsByID(LSL_List objects)
+        {
+            return 0;
+        }
+
+        public void iwStandTarget(Vector3 offset, Quaternion rot)
+        {
+        }
+
+        public void iwLinkStandTarget(int link, Vector3 offset, Quaternion rot)
+        {
         }
 
         #endregion

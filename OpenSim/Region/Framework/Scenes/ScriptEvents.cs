@@ -68,6 +68,7 @@ namespace OpenSim.Region.Framework.Scenes
         touch_end =             1 << 29,
         state_entry =           1 << 30,
         at_rot_target =         1 << 31,
-        bot_update =            1 << 32
+        bot_update =            1 << 32,
+        transaction_result =    1 << 33,
     }
 }
