@@ -18235,12 +18235,12 @@ namespace InWorldz.Phlox.Engine
 
         public int llReturnObjectsByOwner(string owner, int scope)
         {
-            return 0;
+            return ScriptBaseClass.ERR_GENERIC;
         }
 
         public int llReturnObjectsByID(LSL_List objects)
         {
-            return 0;
+            return ScriptBaseClass.ERR_GENERIC;
         }
 
         public void iwStandTarget(Vector3 offset, Quaternion rot)
