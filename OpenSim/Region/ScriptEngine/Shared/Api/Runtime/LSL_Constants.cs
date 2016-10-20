@@ -815,6 +815,18 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int IW_DELIVER_USER = 5;
         public const int IW_DELIVER_PERM = 6;
         public const int IW_DELIVER_NONE = 7;
+
+        // Used by llReturnObjectsByOwner
+        public const int OBJECT_RETURN_PARCEL = 1;
+        public const int OBJECT_RETURN_PARCEL_OWNER = 2;
+        public const int OBJECT_RETURN_REGION = 4;
+
+        // Returned by llReturnObjectsByOwner and llReturnObjectsByID
+        public const int ERR_GENERIC = -1;
+        public const int ERR_PARCEL_PERMISSION = -2;
+        public const int ERR_MALFORMED_PARAMS = -3;
+        public const int ERR_RUNTIME_PERMISSIONS = -4;
+        public const int ERR_THROTTLED = -5;
     }
 }
 
