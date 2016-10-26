@@ -1143,7 +1143,7 @@ namespace OpenSim.Framework.Communications
         /// <returns>The UUID of the created user profile.  On failure, returns UUID.Zero</returns>
         public virtual UUID AddUser(string firstName, string lastName, string password, string email, uint regX, uint regY, UUID uuid)
         {
-            string salt = Util.RandomString(64);
+            string salt = Util.RandomString(32);
             string md5PasswdHash = Util.Md5Hash(Util.Md5Hash(password) + ":" + salt);
 
             UserProfileData userProf = GetUserProfile(firstName, lastName);
@@ -1335,7 +1335,7 @@ namespace OpenSim.Framework.Communications
         /// <returns>true if the update was successful, false otherwise</returns>
         public virtual bool ResetUserPassword(string firstName, string lastName, string newPassword)
         {
-            string salt = Util.RandomString(64);
+            string salt = Util.RandomString(32);
             string md5PasswdHash = Util.Md5Hash(Util.Md5Hash(newPassword) + ":" + salt);
 
             UserProfileData profile = GetUserProfile(firstName, lastName);
