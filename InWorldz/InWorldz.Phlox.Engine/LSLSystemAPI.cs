@@ -11630,6 +11630,29 @@ namespace InWorldz.Phlox.Engine
                             }
                         }
                         break;
+
+                    case (int)ScriptBaseClass.PRIM_SIT_TARGET:
+                        foreach (object o in parts)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                SceneObjectPart part = (o as SceneObjectPart);
+                                SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
+                                if (sitInfo != null)
+                                {
+                                    res.Add((int)(sitInfo.IsSet ? 1 : 0));
+                                    res.Add(new LSL_Vector(sitInfo.Offset));
+                                    res.Add(new LSL_Rotation(sitInfo.Rotation));
+                                    continue;
+                                }
+                            }
+
+                            // No sit target info, or it's a ScenePresence.
+                            res.Add((int)0);
+                            res.Add(new LSL_Vector(Vector3.Zero));
+                            res.Add(new LSL_Rotation(Quaternion.Identity));
+                        }
+                        break;
                 }
             }
 
