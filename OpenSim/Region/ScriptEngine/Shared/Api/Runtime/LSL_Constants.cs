@@ -346,6 +346,10 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int PRIM_SPECULAR = 36;
         public const int PRIM_NORMAL = 37;
         public const int PRIM_ALPHA_MODE = 38;
+        public const int PRIM_ALLOW_UNSIT = 39;
+        public const int PRIM_SCRIPTED_SIT_ONLY = 40;
+        public const int PRIM_SIT_TARGET = 41;
+
         // large out of normal range value unlikely to conflict with future LL values
         /// \xrefitem lslconst "IW_PRIM_ALPHA" ""
         /// <tt>[ IW_PRIM_ALPHA, integer face, float alpha ]</tt>\n\n
