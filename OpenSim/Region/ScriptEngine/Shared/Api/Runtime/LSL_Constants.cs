@@ -81,6 +81,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int PERMISSION_TELEPORT = 4096;                    // 0x1000
         public const int PERMISSION_SILENT_ESTATE_MANAGEMENT = 16384;   // 0x4000
         public const int PERMISSION_OVERRIDE_ANIMATIONS = 32768;        // 0x8000
+        public const int PERMISSION_RETURN_OBJECTS = 65536;             //0x10000
 
         public const int AGENT_FLYING = 1;
         public const int AGENT_ATTACHMENTS = 2;
@@ -814,6 +815,18 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
         public const int IW_DELIVER_USER = 5;
         public const int IW_DELIVER_PERM = 6;
         public const int IW_DELIVER_NONE = 7;
+
+        // Used by llReturnObjectsByOwner
+        public const int OBJECT_RETURN_PARCEL = 1;
+        public const int OBJECT_RETURN_PARCEL_OWNER = 2;
+        public const int OBJECT_RETURN_REGION = 4;
+
+        // Returned by llReturnObjectsByOwner and llReturnObjectsByID
+        public const int ERR_GENERIC = -1;
+        public const int ERR_PARCEL_PERMISSION = -2;
+        public const int ERR_MALFORMED_PARAMS = -3;
+        public const int ERR_RUNTIME_PERMISSIONS = -4;
+        public const int ERR_THROTTLED = -5;
     }
 }
 
