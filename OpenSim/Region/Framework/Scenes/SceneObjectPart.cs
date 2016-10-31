@@ -2046,8 +2046,7 @@ namespace OpenSim.Region.Framework.Scenes
         // part.ParentGroup must be initialized for this.
         public void CopySitTarget(SceneObjectPart part)
         {
-            SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
-            this.SetSitTarget(sitInfo.Offset, sitInfo.Rotation, false);
+            this.SetSitTarget(part.SitTargetPosition, part.SitTargetOrientation, false);
         }
 
         /// <summary>

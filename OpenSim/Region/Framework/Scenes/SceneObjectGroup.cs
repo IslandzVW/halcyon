@@ -1033,6 +1033,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_sitTargets.Clear();   // new UUIDs have been assigned, need to refresh
             m_childParts.ForEachPart((SceneObjectPart part) => {
                 part.ResetInstance(isNewInstance, isScriptReset, itemId);
+                this.SetSitTarget(part, part.SitTargetPosition, part.SitTargetOrientation, false);
             });
         }
 
