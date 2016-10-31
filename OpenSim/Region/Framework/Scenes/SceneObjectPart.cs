@@ -2043,6 +2043,13 @@ namespace OpenSim.Region.Framework.Scenes
             return outdata;
         }
 
+        // part.ParentGroup must be initialized for this.
+        public void CopySitTarget(SceneObjectPart part)
+        {
+            SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
+            this.SetSitTarget(sitInfo.Offset, sitInfo.Rotation, false);
+        }
+
         /// <summary>
         /// Duplicates this part.
         /// </summary>
@@ -3588,23 +3595,18 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        ///
+        /// Returns true if the parent has changed.
         /// </summary>
-        public void SetParent(SceneObjectGroup parent, bool isDuplicate)
+        public bool SetParent(SceneObjectGroup parent)
         {
             bool hasChanged = (m_parentGroup != parent);
             m_parentGroup = parent;
-
-            // If this is being called from CopyPart, as part of the persistence backup, 
-            // then it is a duplicate copy of the SOP/SOG that has UUID/LocalID that 
-            // matches the in-world copy, so don't change the in-world SOG/SOP.
-            if (hasChanged && !isDuplicate)
-                parent.SetSitTarget(this, SitTargetPosition, SitTargetOrientation, false);
+            return hasChanged;
         }
 
         public void SetParentAndUpdatePhysics(SceneObjectGroup parent)
         {
-            this.SetParent(parent, false);
+            this.SetParent(parent);
 
             PhysicsActor physActor = PhysActor;
             if (physActor != null)

@@ -1366,6 +1366,12 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void RemoveSitTarget(UUID partID)
+        {
+            if (m_sitTargets.ContainsKey(partID))
+                m_sitTargets.Remove(partID);
+        }
+
         public SitTargetInfo SitTargetForPart(UUID partID)
         {
             SitTargetInfo info;
@@ -1559,7 +1565,7 @@ namespace OpenSim.Region.Framework.Scenes
         public void SetRootPart(SceneObjectPart part)
         {
             m_rootPart = part;
-            part.SetParent(this, false);
+            part.SetParent(this);
 
             if (!IsAttachment)
                 part.ParentID = 0;
@@ -1568,6 +1574,12 @@ namespace OpenSim.Region.Framework.Scenes
             // SOG should not be in the scene yet - one can't change root parts after
             // the scene object has been attached to the scene
             m_childParts.AddPart(m_rootPart);
+
+            // If this is being called from CopyPart, as part of the persistence backup, 
+            // then be aware it is a duplicate copy of the SOP/SOG that has UUID/LocalID
+            // that matches the in-world copy. But also has its own sit target dictionary,
+            // so even if the IDs match, the SOP references are different.
+            SetSitTarget(part, part.SitTargetPosition, part.SitTargetOrientation, false);
 
             //Rebuild the bounding box
             ClearBoundingBoxCache();
@@ -1600,6 +1612,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             //Rebuild the bounding box
             ClearBoundingBoxCache();
+
+            SetSitTarget(part, part.SitTargetPosition, part.SitTargetOrientation, false);
 
             // Update the ServerWeight/LandImpact
             RecalcPrimWeights();
@@ -2091,6 +2105,8 @@ namespace OpenSim.Region.Framework.Scenes
             dupe.m_rotTargets.InsertRange(0, m_rotTargets);
 
             dupe.CopyRootPart(m_rootPart, OwnerID, GroupID, userExposed, serializePhysicsState);
+            // dupe.ParentGroup is set now.
+            dupe.RootPart.CopySitTarget(m_rootPart);
 
             //before setting the position, clear the physactor from the root prim this prevents
             //the physactor of the original part from being affected
@@ -2519,18 +2535,21 @@ namespace OpenSim.Region.Framework.Scenes
         {
             SceneObjectPart newPart = part.Copy(m_scene.AllocateLocalId(), OwnerID, GroupID, m_childParts.Count, userExposed, serializePhysicsState);
 
+            // This is always called with the new duplicate SOG as the 'this', so newPart.SetParent(this) is assigning the dup parent to the dup part.
             if (userExposed)
             {
                 newPart.SetParentAndUpdatePhysics(this);
             }
             else
             {
-                newPart.SetParent(this, true);
+                newPart.SetParent(this);
             }
             
             m_childParts.AddPart(newPart);
 
             SetPartAsNonRoot(newPart);
+
+            newPart.CopySitTarget(part);
 
             return newPart;
         }
@@ -2812,6 +2831,8 @@ namespace OpenSim.Region.Framework.Scenes
             otherGroupRoot.ClearUndoState();
             otherGroupRoot.AddFlag(PrimFlags.CreateSelected);
 
+            SetSitTarget(otherGroupRoot, otherGroupRoot.SitTargetPosition, otherGroupRoot.SitTargetOrientation, false);
+
             // rest of parts
             int linkNum = 3;
             otherGroup.m_childParts.ForEachPart((SceneObjectPart part) =>
@@ -2830,8 +2851,9 @@ namespace OpenSim.Region.Framework.Scenes
                 part.EveryoneMask = m_rootPart.EveryoneMask & part.BaseMask;
 
                 part.ClearUndoState();
-            });
-            
+
+                SetSitTarget(part, part.SitTargetPosition, part.SitTargetOrientation, false);
+            });            
 
             otherGroup.m_childParts.Clear();
 
@@ -2896,6 +2918,8 @@ namespace OpenSim.Region.Framework.Scenes
             //                    linkPart.Name, linkPart.UUID, RootPart.Name, RootPart.UUID);
 
             Quaternion worldRot = linkPart.GetWorldRotation();
+
+            this.RemoveSitTarget(linkPart.UUID);
 
             // Remove the part from this object
             m_childParts.RemovePart(linkPart);
@@ -3010,6 +3034,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             part.ParentID = m_rootPart.LocalId;
             part.SetParentAndUpdatePhysics(this);
+            SetSitTarget(part, part.SitTargetPosition, part.SitTargetOrientation, false);
         }
 
         public bool GetBlockGrab()
