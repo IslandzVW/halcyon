@@ -707,6 +707,8 @@ namespace OpenSim.Region.Framework.Scenes
         private byte _prevAttPt= (byte)0;
         private Vector3 _prevAttPos = Vector3.Zero;
         private Quaternion _prevAttRot = Quaternion.Identity;
+        private Vector3 _standTargetPos = Vector3.Zero;
+        private Quaternion _standTargetRot = Quaternion.Identity;
 
         [XmlIgnore]
         public bool IsInTransaction
@@ -1625,6 +1627,18 @@ namespace OpenSim.Region.Framework.Scenes
             set { _prevAttRot = value; }
         }
 
+        public Vector3 StandTargetPos
+        {
+            get { return _standTargetPos; }
+            set { _standTargetPos = value; }
+        }
+
+        public Quaternion StandTargetRot
+        {
+            get { return _standTargetRot; }
+            set { _standTargetRot = value; }
+        }
+
         public PrimFlags Flags
         {
             get { return _flags; }
@@ -2027,6 +2041,12 @@ namespace OpenSim.Region.Framework.Scenes
             if ((indata & 32) != 0) outdata |= (byte)TextureAnimFlags.ROTATE;
             if ((indata & 64) != 0) outdata |= (byte)TextureAnimFlags.SCALE;
             return outdata;
+        }
+
+        // part.ParentGroup must be initialized for this.
+        public void CopySitTarget(SceneObjectPart part)
+        {
+            this.SetSitTarget(part.SitTargetPosition, part.SitTargetOrientation, false);
         }
 
         /// <summary>
@@ -3574,23 +3594,18 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        ///
+        /// Returns true if the parent has changed.
         /// </summary>
-        public void SetParent(SceneObjectGroup parent, bool isDuplicate)
+        public bool SetParent(SceneObjectGroup parent)
         {
             bool hasChanged = (m_parentGroup != parent);
             m_parentGroup = parent;
-
-            // If this is being called from CopyPart, as part of the persistence backup, 
-            // then it is a duplicate copy of the SOP/SOG that has UUID/LocalID that 
-            // matches the in-world copy, so don't change the in-world SOG/SOP.
-            if (hasChanged && !isDuplicate)
-                parent.SetSitTarget(this, SitTargetPosition, SitTargetOrientation, false);
+            return hasChanged;
         }
 
         public void SetParentAndUpdatePhysics(SceneObjectGroup parent)
         {
-            this.SetParent(parent, false);
+            this.SetParent(parent);
 
             PhysicsActor physActor = PhysActor;
             if (physActor != null)
