@@ -1719,12 +1719,12 @@ namespace OpenSim.Region.Framework.Scenes
             return (m_parentGroup.RootPart == this);    // matches?
         }
 
-        public void SetSitTarget(Vector3 pos, Quaternion rot)
+        public void SetSitTarget(Vector3 pos, Quaternion rot, bool preserveSitter)
         {
             SitTargetPosition = pos;
             SitTargetOrientation = rot;
             if (ParentGroup != null)
-                ParentGroup.SetSitTarget(this, pos, rot);
+                ParentGroup.SetSitTarget(this, pos, rot, preserveSitter);
         }
 
         public static readonly uint LEGACY_BASEMASK = 0x7FFFFFF0;
@@ -3585,7 +3585,7 @@ namespace OpenSim.Region.Framework.Scenes
             // then it is a duplicate copy of the SOP/SOG that has UUID/LocalID that 
             // matches the in-world copy, so don't change the in-world SOG/SOP.
             if (hasChanged && !isDuplicate)
-                parent.SetSitTarget(this, SitTargetPosition, SitTargetOrientation);
+                parent.SetSitTarget(this, SitTargetPosition, SitTargetOrientation, false);
         }
 
         public void SetParentAndUpdatePhysics(SceneObjectGroup parent)

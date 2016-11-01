@@ -4371,8 +4371,8 @@ namespace InWorldz.Phlox.Engine
                     }
                     else
                     {
-                        ScenePresence.PositionInfo info = presence.GetPosInfo();
-                        if(info.Parent != null && info.Parent.ObjectOwner == m_host.OwnerID)
+                        SceneObjectPart parent = presence.GetSitTargetPart();
+                        if(parent != null && parent.ObjectOwner == m_host.OwnerID)
                         {
                             implicitPerms = ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION;
                         }
@@ -4466,13 +4466,13 @@ namespace InWorldz.Phlox.Engine
             if (RequestImplicitPermissions(perm, item, agentID))
                 return; // all done, only implicit perms were requested
 
-            // We have a new perms request, not answered yet...
-            PermsChange(item, UUID.Zero, 0);
-
             // Otherwise we need to prompt the user for permission.
             ScenePresence presence = World.GetScenePresence(agentID);
             if (presence == null)
             {
+                // We have a new perms request, not answered, and no one to answer it.
+                PermsChange(item, UUID.Zero, 0);
+
                 // Requested agent is not in range, refuse perms, or muted
                 ScriptSleep(200);
                 m_ScriptEngine.PostScriptEvent(
@@ -4483,7 +4483,11 @@ namespace InWorldz.Phlox.Engine
             }
             // Only do the mute check if we're going to present the permissions dialog.
             if (IsScriptMuted(agentID))
+            {
+                // We have a new perms request, not answered, and no one to answer it.
+                PermsChange(item, UUID.Zero, 0);
                 return;
+            }
 
             // Okay, now we need to ask the user for permission.
             string ownerName = resolveName(m_host.ParentGroup.RootPart.OwnerID);
@@ -4494,10 +4498,10 @@ namespace InWorldz.Phlox.Engine
             {
                 item = m_host.TaskInventory[invItemID];
             }
-            PermsChange(item, UUID.Zero, 0);
 
-            if (m_waitingForScriptAnswer != presence)
+            if (m_waitingForScriptAnswer != presence.ControllingClient)
             {
+                ClearWaitingForScriptAnswer(m_waitingForScriptAnswer);
                 presence.ControllingClient.OnScriptAnswer += handleScriptAnswer;
                 presence.ControllingClient.OnConnectionClosed += handleConnectionClosed;
                 m_waitingForScriptAnswer = presence.ControllingClient;
@@ -5857,18 +5861,10 @@ namespace InWorldz.Phlox.Engine
 
                 // Find pushee position
                 // Pushee Linked?
-                ScenePresence.PositionInfo info = pusheeav.GetPosInfo();
-                if (info.Parent != null)
+                SceneObjectPart parentobj = pusheeav.GetSitTargetPart();
+                if (parentobj != null)
                 {
-                    SceneObjectPart parentobj = info.Parent;
-                    if (parentobj != null)
-                    {
-                        PusheePos = parentobj.AbsolutePosition;
-                    }
-                    else
-                    {
-                        PusheePos = pusheeav.AbsolutePosition;
-                    }
+                    PusheePos = parentobj.AbsolutePosition;
                 }
                 else
                 {
@@ -7133,8 +7129,8 @@ namespace InWorldz.Phlox.Engine
                 flags |= ScriptBaseClass.AGENT_WALKING;
             }
 
-            ScenePresence.PositionInfo info = agent.GetPosInfo();
-            if (info.Parent != null)
+            SceneObjectPart parent = agent.GetSitTargetPart();
+            if (parent != null)
             {
                 flags |= ScriptBaseClass.AGENT_ON_OBJECT;
                 flags |= ScriptBaseClass.AGENT_SITTING;
@@ -7891,8 +7887,8 @@ namespace InWorldz.Phlox.Engine
 
                 if (av != null)
                 {
-                    SceneObjectPart part = FindAvatarOnObject(key);
-                    if (part.ParentGroup == m_host.ParentGroup)
+                    SceneObjectPart part = av.GetSitTargetPart();
+                    if ((part != null) && (part.ParentGroup == m_host.ParentGroup))
                     {
                         // if the avatar is sitting on this object, then
                         // we can unsit them.  We don't want random scripts unsitting random people
@@ -8585,20 +8581,13 @@ namespace InWorldz.Phlox.Engine
             var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
-                part.SetSitTarget(sitPos, sitRot);
+                part.SetSitTarget(sitPos, sitRot, true);
             }
         }
 
         public void llSitTarget(LSL_Vector offset, LSL_Rotation rot)
         {
             llLinkSitTarget(m_host.LinkNum, offset, rot);
-        }
-
-        private SceneObjectPart FindAvatarOnObject(UUID agentId)
-        {
-            ScenePresence sp = m_host.ParentGroup.Scene.GetScenePresence(agentId);
-            ScenePresence.PositionInfo posInfo = (sp == null) ? null : sp.GetPosInfo();
-            return (posInfo == null) ? null : posInfo.Parent;
         }
 
         private string AvatarOnSitTarget(int linknumber, bool IncludeSitTargetOnly)

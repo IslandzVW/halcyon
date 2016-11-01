@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using OpenSim.Region.Physics.Manager;
+using OpenSim.Region.Framework.Scenes;
 using System.Threading;
 
 namespace InWorldz.PhysxPhysics.Commands
@@ -95,6 +96,10 @@ namespace InWorldz.PhysxPhysics.Commands
                 foreach (BulkShapeData shape in _shapes)
                 {
                     BulkShapeData thisShape = shape;
+                    SceneObjectPart thisPart = (SceneObjectPart)thisShape.Part;
+                    String primName = String.Empty;
+                    if (thisPart != null)
+                        primName = thisPart.Name;
                     if (first)
                     {
                         _primaryShapeData = thisShape;
@@ -106,7 +111,7 @@ namespace InWorldz.PhysxPhysics.Commands
                             isPhysical = false;
                         }
 
-                        scene.MeshingStageImpl.QueueForMeshing(String.Empty, shape.Pbs, shape.Size, Meshing.MeshingStage.SCULPT_MESH_LOD, 
+                        scene.MeshingStageImpl.QueueForMeshing(primName, shape.Pbs, shape.Size, Meshing.MeshingStage.SCULPT_MESH_LOD, 
                             isPhysical || _rootHasVdSet, shape.SerializedShapes, 
                             (_flags & PhysxScene.AddPrimShapeFlags.FromCrossing) == PhysicsScene.AddPrimShapeFlags.FromCrossing,
                                 delegate(PhysicsShape meshedShape)
@@ -124,7 +129,7 @@ namespace InWorldz.PhysxPhysics.Commands
                     }
                     else
                     {
-                        scene.MeshingStageImpl.QueueForMeshing(String.Empty, shape.Pbs, shape.Size, Meshing.MeshingStage.SCULPT_MESH_LOD, 
+                        scene.MeshingStageImpl.QueueForMeshing(primName, shape.Pbs, shape.Size, Meshing.MeshingStage.SCULPT_MESH_LOD, 
                             isPhysical || _rootHasVdSet, shape.SerializedShapes,
                             (_flags & PhysxScene.AddPrimShapeFlags.FromCrossing) == PhysicsScene.AddPrimShapeFlags.FromCrossing,
                                 delegate(PhysicsShape meshedShape)

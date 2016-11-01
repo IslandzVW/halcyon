@@ -450,6 +450,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             set { }
         }
 
+        public bool DebugCrossings
+        {
+            get { return false; }
+            set { }
+        }
+
         public uint CircuitCode
         {
             get { return m_circuitCode; }

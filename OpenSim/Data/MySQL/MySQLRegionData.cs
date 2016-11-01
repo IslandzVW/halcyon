@@ -1767,7 +1767,8 @@ namespace OpenSim.Data.MySQL
                                 Convert.ToSingle(row["SitTargetOrientY"]),
                                 Convert.ToSingle(row["SitTargetOrientZ"]),
                                 Convert.ToSingle(row["SitTargetOrientW"])
-                             ));
+                             ), 
+                             false);
 
             prim.PayPrice[0] = Convert.ToInt32(row["PayPrice"]);
             prim.PayPrice[1] = Convert.ToInt32(row["PayButton1"]);

@@ -209,7 +209,13 @@ namespace OpenSim.Region.Framework.Scenes
                     return String.Empty;
                 return RootPart.Name;
             }
-            set { RootPart.Name = value; }
+            set {
+                RootPart.Name = value;
+                // Also update the object name to keep it in sync with the root part name.
+                // This mostly only affects debugging since the Name getter override above
+                // pulls the name from the root part.
+                this.Name = value;
+            }
         }
 
         // when a prim enters a new region, this is the number of avatars that must be seated (waited for) before the prim can exit the region
@@ -641,7 +647,8 @@ namespace OpenSim.Region.Framework.Scenes
                 if (NewParcel == null)
                     return; // Just don't allow it to change to something invalid
 
-                if ((NewParcel != null) && (val.Z < m_scene.LandChannel.GetBanHeight()))
+                // Optimization: Precheck with more restrictive general ban height before checking if the avatar is banned.
+                if ((NewParcel != null) && (val.Z < m_scene.LandChannel.GetBanHeight(false)))
                 {
                     // Possibly entering a restricted parcel.
                     ParcelPropertiesStatus reason;
@@ -651,7 +658,8 @@ namespace OpenSim.Region.Framework.Scenes
                         // First, let's check each rider to see if we need to eject them.
                         this.ForEachSittingAvatar(delegate (ScenePresence sitter)
                         {
-                            if (NewParcel.DenyParcelAccess(sitter.UUID, out reason))
+                            float minZ;
+                            if (m_scene.TestBelowHeightLimit(sitter.UUID, val, NewParcel, out minZ, out reason))
                             {
                                 Util.FireAndForget((o) =>
                                 {
@@ -756,7 +764,8 @@ namespace OpenSim.Region.Framework.Scenes
 
         private void TestForAndBeginCrossing(Vector3 val, bool physicsTriggered)
         {
-            if (!Scene.HasNeighborAtPosition(val.X, val.Y))
+            SimpleRegionInfo destRegion = this.Scene.GetNeighborAtPosition(val.X, val.Y);
+            if (destRegion == null)
             {
                 ForcePositionInRegion();
                 Scene.CheckDieAtEdge(this);
@@ -767,6 +776,14 @@ namespace OpenSim.Region.Framework.Scenes
             //still have connections establishing, fail the crossing and let them establish
             this.ForEachSittingAvatar(delegate (ScenePresence avatar)
             {
+                if (!avatar.IsFullyInRegion)
+                {
+                    // avatar.ControllingClient.SendAlertMessage("Can not move to a new region, still entering this one");
+                    ForcePositionInRegion();
+                    return;
+                }
+
+
                 if (avatar.RemotePresences.HasConnectionsEstablishing())
                 {
                     // avatar.ControllingClient.SendAlertMessage("Can not move to a new region, connections are still being established");
@@ -1328,9 +1345,16 @@ namespace OpenSim.Region.Framework.Scenes
             });
         }
 
-        public void SetSitTarget(SceneObjectPart part, Vector3 pos, Quaternion rot)
+        public void SetSitTarget(SceneObjectPart part, Vector3 pos, Quaternion rot, bool preserveSitter)
         {
             SitTargetInfo sitInfo = new SitTargetInfo(part, pos, rot);
+            if (preserveSitter)
+            {
+                SitTargetInfo oldInfo;
+                if (m_sitTargets.TryGetValue(part.UUID, out oldInfo))
+                    sitInfo.Sitter = oldInfo.Sitter;
+            }
+
             if (sitInfo.IsSet)
             {
                 m_sitTargets[part.UUID] = sitInfo;
@@ -1781,23 +1805,42 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="m_physicalPrim"></param>
         public void ApplyPhysics(bool allowPhysicalPrims, bool fromStorage)
         {
+            // Some diagnostic thresholds for reporting slow/inefficient operations.
+            const int SLOW_CALC_THRESHOLD = 1000;   // > this in ms considered slow calc
+            const int PHYS_PRIMS_THRESHOLD = 16; // > this reports many physical prims
+
             if (!m_rootPart.PhysicsSummary.NeedsPhysicsShape)
                 return;
 
             if (m_childParts.Count > 1)
             {
                 List<BulkShapeData> allParts = new List<BulkShapeData>();
-                allParts.Add(m_rootPart.GenerateBulkShapeData());
-
-                m_childParts.ForEachPart((SceneObjectPart part) => {
-                    if (part.LocalId != m_rootPart.LocalId)
+                int count = 1;
+                Vector3 pos = this.AbsolutePosition;
+                string prefix = String.Format("[SCENE]: Slow GenerateBulkShapeData for '{0}' at {1}/{2}/{3} ", this.Name, (int)pos.X, (int)pos.Y, (int)pos.Z);
+                Util.ReportIfSlow(prefix+"(object)", SLOW_CALC_THRESHOLD, () => 
+                {
+                    Util.ReportIfSlow(prefix+"(root)", SLOW_CALC_THRESHOLD, () => 
                     {
-                        if (part.RequiresPhysicalShape)
+                        allParts.Add(m_rootPart.GenerateBulkShapeData());
+                    });
+
+                    m_childParts.ForEachPart((SceneObjectPart part) => {
+                        if (part.LocalId != m_rootPart.LocalId)
                         {
-                            allParts.Add(part.GenerateBulkShapeData());
+                            if (part.RequiresPhysicalShape)
+                            {
+                                count++;
+                                Util.ReportIfSlow(prefix+"(#"+part.LinkNum.ToString()+")", SLOW_CALC_THRESHOLD, () =>
+                                {
+                                    allParts.Add(part.GenerateBulkShapeData());
+                                });
+                            }
                         }
-                    }
+                    });
                 });
+                if (count > PHYS_PRIMS_THRESHOLD)
+                    m_log.WarnFormat("[SCENE]: ApplyPhysics object included {0} physical prims.", count);
 
                 m_scene.PhysicsScene.BulkAddPrimShapes(allParts, m_rootPart.GeneratePhysicsAddPrimShapeFlags(allowPhysicalPrims, fromStorage));
 
@@ -2034,7 +2077,18 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup dupe = (SceneObjectGroup)MemberwiseClone();
             dupe.m_InTransition = 0;
             dupe.m_isBackedUp = false;
+
+            // The MemberwiseClone() above is a shallow copy. All of the object references from the old SOG need new instances.
             dupe.m_childParts = new GroupPartsCollection();
+            dupe.m_childAvatars = new AvatarPartsCollection();
+            dupe.m_sitTargets = new Dictionary<UUID, SitTargetInfo>();
+            dupe.m_targets = new List<ScriptPosTarget>(MAX_TARGETS);
+            dupe.m_rotTargets = new List<ScriptRotTarget>(MAX_TARGETS);
+            dupe.m_targetsLock = new object();
+            dupe._bbLock = new object();
+
+            dupe.m_targets.InsertRange(0, m_targets);
+            dupe.m_rotTargets.InsertRange(0, m_rotTargets);
 
             dupe.CopyRootPart(m_rootPart, OwnerID, GroupID, userExposed, serializePhysicsState);
 
@@ -2509,7 +2563,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_childParts.RemovePart(part); // the old IDs are changing
                 part.ResetIDs(part.LinkNum); // Don't change link nums
                 m_childParts.AddPart(part); // update the part lists with new IDs
-                SetSitTarget(part, part.SitTargetPosition, part.SitTargetOrientation);
+                SetSitTarget(part, part.SitTargetPosition, part.SitTargetOrientation, false);
             }
         }
 

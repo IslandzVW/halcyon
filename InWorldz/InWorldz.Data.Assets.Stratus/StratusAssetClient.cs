@@ -120,6 +120,7 @@ namespace InWorldz.Data.Assets.Stratus
                 if (Config.Settings.Instance.LegacySupport)
                 {
                     _whipAssetClient = new Whip.Client.AssetClient(Config.Settings.Instance.WhipURL);
+                    _whipAssetClient.Initialize(settings);
 
                     if (Config.Settings.Instance.CFSupport)
                     {

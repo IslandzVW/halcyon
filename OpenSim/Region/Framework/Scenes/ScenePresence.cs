@@ -282,8 +282,10 @@ namespace OpenSim.Region.Framework.Scenes
         private Vector3 posLastCullCheck;
 
         // For teleports and crossings callbacks
+        object m_callbackLock = new object();
         string m_callbackURI;
         ulong m_rootRegionHandle;
+        ulong m_callbackTime;
 
         private IScriptModule[] m_scriptEngines;
 
@@ -551,8 +553,11 @@ namespace OpenSim.Region.Framework.Scenes
                     if (parcel != null)
                     {
                         ParcelPropertiesStatus reason;
-                        if (agentPos.Z < Scene.LandChannel.GetBanHeight() && parcel.DenyParcelAccess(this.UUID, out reason))
+                        float minZ;
+                        // Returns false and minZ==non-zero if avatar is not allowed at this height, otherwise min height.
+                        if (Scene.TestBelowHeightLimit(this.UUID, agentPos, parcel, out minZ, out reason))
                         {
+                            // not a valid position for this avatar
                             if (!forced)
                                 return; // illegal position
                         }
@@ -632,7 +637,9 @@ namespace OpenSim.Region.Framework.Scenes
                     if (parcel != null)
                     {
                         ParcelPropertiesStatus reason;
-                        if ((ppos.Z < Scene.LandChannel.GetBanHeight()) && (parcel.DenyParcelAccess(this.UUID, out reason)))
+                        float minZ;
+                        // Returns false and minZ==non-zero if avatar is not allowed at this height, otherwise min height.
+                        if (Scene.TestBelowHeightLimit(this.UUID, ppos, parcel, out minZ, out reason))
                         {
                             bool enforce = false;
                             if (parent == null)   // not seated
@@ -648,17 +655,17 @@ namespace OpenSim.Region.Framework.Scenes
                             if (enforce)
                             {
                                 Vector3 newpos = this.lastKnownAllowedPosition;   // force back into valid location
-                                Vector3 newvel = physActor.Velocity;
                                 // If not retreating from the parcel, bounce them on top of it.
                                 ILandObject parcel2 = Scene.LandChannel.GetLandObject(newpos.X, newpos.Y);
                                 if ((parcel2 != null) && (parcel2.landData.LocalID == parcel.landData.LocalID))
                                 {
                                     // New parcel is the same parcel, still illegal
-                                    newpos.Z = Scene.LandChannel.GetBanHeight() + 20.0f;    // bounce
-                                    newvel.Z = -newvel.Z;
+                                    newpos.Z = minZ + Constants.AVATAR_BOUNCE;
+                                    Vector3 vel = physActor.Velocity;
+                                    vel.Z = 0.0f;
+                                    physActor.Velocity = vel;
                                 }
                                 ppos = newpos;
-                                physActor.Velocity = newvel;
                                 posForced = true;
                             }
                         }
@@ -1114,6 +1121,15 @@ namespace OpenSim.Region.Framework.Scenes
 
 #region Status Methods
 
+        public SceneObjectPart GetSitTargetPart()
+        {
+            SceneObjectPart part = null;
+            if (m_requestedSitTargetUUID != UUID.Zero)
+                part = m_scene.GetSceneObjectPart(m_requestedSitTargetUUID);
+
+            return part;
+        }
+
         /// <summary>
         /// This turns a child agent, into a root agent
         /// This is called when an agent teleports into a region, or if an
@@ -1122,9 +1138,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public SceneObjectPart MakeRootAgent(Vector3 pos)
         {
-            SceneObjectPart part = null;
-            if (m_requestedSitTargetUUID != UUID.Zero)
-                part = m_scene.GetSceneObjectPart(m_requestedSitTargetUUID);
+            SceneObjectPart part = GetSitTargetPart();
 
             DumpDebug("MakeRootAgent", "n/a");
             m_log.DebugFormat(
@@ -1321,6 +1335,14 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!part.ParentGroup.IsAttachment)
                     if (avatarsRemainingOnPrim == 0)
                         part.ParentGroup.TriggerScriptChangedEvent(Changed.REGION);
+
+                if (ControllingClient.DebugCrossings)
+                {
+                    ulong elapsedMs = (Util.GetLongTickCount() - part.ParentGroup.TimeReceived);
+                    string msg = (elapsedMs / 1000.0f).ToString("0.000") + " seconds to confirm seated on object  for " + this.Name;
+                    m_log.Info("[CROSSING]: " + msg);
+                    MessageToUserFromServer(msg);
+                }
             }
             else
             {
@@ -1462,6 +1484,40 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void MessageToUserFromServer(string msg)
+        {
+            Scene.SimChat(msg, ChatTypeEnum.Direct, 0, Vector3.Zero, this.Scene.RegionInfo.RegionName, UUID.Zero, this.UUID, UUID.Zero, false);
+        }
+
+        public void ConfirmHandoff(bool fromViewer)
+        {
+            ulong elapsedMs = (Util.GetLongTickCount() - m_callbackTime);
+            string callbackURI;
+            //m_log.Error(">>>>>>>>>> CONFIRM HANDOFF of "+this.Name+" fromViewer="+fromViewer.ToString());
+
+            // There's a race between a fast viewer response and the server response. 
+            // Server will almost always come in first but on a local test server it might not.
+            lock (m_callbackLock)
+            {
+                // only send the release from one thread.
+                callbackURI = m_callbackURI;
+                m_callbackURI = null;
+            }
+
+            if (!String.IsNullOrEmpty(callbackURI))
+            {
+                m_log.WarnFormat("[SCENE PRESENCE]: Releasing agent for {0} in URI {1}", this.Name, callbackURI);
+                Scene.SendReleaseAgent(m_rootRegionHandle, UUID, callbackURI);
+            }
+            if (ControllingClient.DebugCrossings && fromViewer && (m_callbackTime != 0))
+            {
+                string elapsed = (elapsedMs / 1000.0).ToString("0.000");
+                string msg = elapsed + " seconds to confirm crossing complete for " + this.Name;
+                m_log.Info("[CROSSING]: "+msg);
+                MessageToUserFromServer(msg);
+            }
+        }
+
         /// <summary>
         /// Complete Avatar's movement into the region
         /// </summary>
@@ -1479,6 +1535,8 @@ namespace OpenSim.Region.Framework.Scenes
                     Vector3 pos;
                     bool flying;
                     SceneObjectPart parent = null;
+                    if (m_requestedSitTargetID != 0)
+                        parent = Scene.GetSceneObjectPart(m_requestedSitTargetID);
 
                     lock (m_posInfo)
                     {
@@ -1493,25 +1551,17 @@ namespace OpenSim.Region.Framework.Scenes
                             // not already marked seated, check for sitting
                             if (AvatarMovesWithPart && (m_requestedSitTargetID != 0))
                             {
-                                parent = Scene.GetSceneObjectPart(m_requestedSitTargetID);
                                 // now make it all consistent with updated parent ID while inside the lock
                                 SetAgentPositionInfo(null, true, m_sitTargetCorrectionOffset, parent, pos, m_velocity);
                             }
                         }
-
-                        parent = MakeRootAgent(pos);
                     }
+
+                    parent = MakeRootAgent(pos);
 
                     // Release the lock before calling PostProcessMakeRootAgent, it calls functions that use lock
                     PostProcessMakeRootAgent(parent, flying);
-
-                    if (!String.IsNullOrEmpty(m_callbackURI))
-                    {
-                        m_log.DebugFormat("[SCENE PRESENCE]: Releasing agent in URI {0}", m_callbackURI);
-                        Scene.SendReleaseAgent(m_rootRegionHandle, UUID, m_callbackURI);
-                        m_callbackURI = null;
-                    }
-
+                    ConfirmHandoff(true);
                     //m_log.DebugFormat("[SCENE PRESENCE]: Completed movement");
                 }
 
@@ -2152,7 +2202,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 if (m_sitAtAutoTarget)
                 {
-                    SceneObjectPart part = m_scene.GetSceneObjectPart(m_requestedSitTargetUUID);
+                    SceneObjectPart part = GetSitTargetPart();
                     if (part != null)
                     {
                         lock (m_posInfo)
@@ -3826,6 +3876,8 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         protected void CrossToNewRegion(ulong neighborHandle, SimpleRegionInfo neighborInfo, Vector3 positionInNewRegion)
         {
+            ulong started = Util.GetLongTickCount();
+
             lock (m_posInfo)    // SetInTransit and AbsolutePosition will grab this
             {
                 if (PhysicsActor == null)
@@ -3838,6 +3890,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             m_scene.CrossWalkingOrFlyingAgentToNewRegion(this, neighborHandle, neighborInfo, positionInNewRegion);
+
+            m_log.InfoFormat("[SCENE]: Crossing for avatar took {0} ms for {1}.", Util.GetLongTickCount()-started, this.Name);
         }
 
         public Task CrossIntoNewRegionWithGroup(SceneObjectGroup sceneObjectGroup, SceneObjectPart part, ulong newRegionHandle)
@@ -4073,6 +4127,9 @@ namespace OpenSim.Region.Framework.Scenes
             // Throttles
             cAgent.Throttles = ControllingClient.GetThrottlesPacked(1.0f);
 
+            cAgent.PresenceFlags = 0;
+            if (ControllingClient.DebugCrossings)
+                cAgent.PresenceFlags |= (ulong)PresenceFlags.DebugCrossings;
             if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
                 cAgent.GodLevel = (byte)m_godlevel;
             else 
@@ -4122,6 +4179,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             m_rootRegionHandle = cAgent.RegionHandle;
             m_callbackURI = cAgent.CallbackURI;
+            m_callbackTime = Util.GetLongTickCount();
 
             lock(m_posInfo)
             {
@@ -4169,6 +4227,8 @@ namespace OpenSim.Region.Framework.Scenes
             }
             if ((cAgent.Throttles != null) && cAgent.Throttles.Length > 0)
                 ControllingClient.SetChildAgentThrottle(cAgent.Throttles);
+
+            ControllingClient.DebugCrossings = (cAgent.PresenceFlags & (ulong)PresenceFlags.DebugCrossings) != 0;
 
             if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
                 m_godlevel = cAgent.GodLevel;

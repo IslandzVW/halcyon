@@ -419,7 +419,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 return true; // never deny the master avatar
             if (avatar == m_scene.RegionInfo.EstateSettings.EstateOwner)
                 return true; // never deny the estate owner
-            if (m_scene.IsEstateOwner(avatar))
+            if (m_scene.IsEstateManager(avatar))    // includes Estate Owner
                 return true;
             if (m_scene.IsEstateOwnerPartner(avatar))
                 return true;
@@ -546,7 +546,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             return true;
         }
 
-        private readonly float AVATAR_BOUNCE = 10.0f;
         public void RemoveAvatarFromParcel(UUID userID)
         {
             ScenePresence sp = m_scene.GetScenePresence(userID);
@@ -580,11 +579,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
 
             ILandObject parcel = m_scene.LandChannel.GetLandObject(pos.X, pos.Y);
-            if ((parcel != null) && parcel.DenyParcelAccess(sp.UUID, out reason2))
+            float minZ;
+            if ((parcel != null) && m_scene.TestBelowHeightLimit(sp.UUID, pos, parcel, out minZ, out reason2))
             {
-                float minZ = LandChannel.BAN_LINE_SAFETY_HEIGHT + AVATAR_BOUNCE;
                 if (pos.Z < minZ)
-                    pos.Z = minZ;
+                    pos.Z = minZ + Constants.AVATAR_BOUNCE;
             }
 
             // Now force the non-sitting avatar to a position above the parcel

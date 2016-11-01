@@ -114,7 +114,7 @@ namespace OpenSim.Region.FrameworkTests
             part.Velocity = SceneUtil.RandomVector();
             part.FromItemID = UUID.Random();
 
-            part.SetSitTarget(SceneUtil.RandomVector(), SceneUtil.RandomQuat());
+            part.SetSitTarget(SceneUtil.RandomVector(), SceneUtil.RandomQuat(), false);
 
             return part;
         }

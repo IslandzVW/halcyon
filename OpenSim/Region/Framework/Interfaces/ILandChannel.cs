@@ -76,7 +76,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void setSimulatorObjectMaxOverride(overrideSimulatorMaxPrimCountDelegate overrideDel);
         void SetParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime);
         void RefreshParcelInfo(IClientAPI remoteClient, bool force);
-        float GetBanHeight();
+        float GetBanHeight(bool isBanned);
         void RemoveAvatarFromParcel(UUID userID);
 
         // Region support for Plus parcel web updates

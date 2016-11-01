@@ -160,6 +160,9 @@ namespace OpenSim.Framework.Communications.Messages
         public bool ConstantForcesAreLocal;
 
         [ProtoMember(37)]
+        public ulong PresenceFlags;
+
+        [ProtoMember(38)]
         public bool AvatarAsAPrim;
 
         static AgentPutMessage()
@@ -207,6 +210,7 @@ namespace OpenSim.Framework.Communications.Messages
                 RemoteAgents = data.RemoteAgents,
                 ConstantForces = data.ConstantForces,
                 ConstantForcesAreLocal = data.ConstantForcesAreLocal,
+                PresenceFlags = data.PresenceFlags,
                 AvatarAsAPrim = data.AvatarAsAPrim
             };
 
@@ -256,6 +260,7 @@ namespace OpenSim.Framework.Communications.Messages
                 RemoteAgents = this.RemoteAgents,
                 ConstantForces = this.ConstantForces,
                 ConstantForcesAreLocal = this.ConstantForcesAreLocal,
+                PresenceFlags = this.PresenceFlags,
                 AvatarAsAPrim = this.AvatarAsAPrim
             };
 

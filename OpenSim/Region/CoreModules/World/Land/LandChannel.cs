@@ -39,7 +39,8 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         //Land types set with flags in ParcelOverlay.
         //Only one of these can be used.
-        public const float BAN_LINE_SAFETY_HEIGHT = 100;
+        public const float BAN_LINE_SAFETY_HEIGHT = 5000;   // min height over land if explicitly banned
+        public const float NON_PUBLIC_SAFETY_HEIGHT = 50;   // min height over land for non-public parcels
         public const byte LAND_FLAG_PROPERTY_BORDER_SOUTH = 128; //Equals 10000000
         public const byte LAND_FLAG_PROPERTY_BORDER_WEST = 64; //Equals 01000000
 
@@ -162,11 +163,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             return false;
         }
 
-        public float GetBanHeight()
+        public float GetBanHeight(bool isBanned)
         {
             if (m_landManagementModule != null)
             {
-                return m_landManagementModule.BanHeight;
+                return isBanned ? m_landManagementModule.BanHeight : m_landManagementModule.NonPublicHeight;
             }
 
             return 0.0f;

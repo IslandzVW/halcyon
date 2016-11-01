@@ -648,6 +648,8 @@ namespace OpenSim.Framework
 
         bool SendLogoutPacketWhenClosing { set; }
 
+        bool DebugCrossings { get; set; }
+
         // [Obsolete("LLClientView Specific - Circuits are unique to LLClientView")]
         uint CircuitCode { get; }
 
