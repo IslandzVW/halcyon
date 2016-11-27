@@ -9431,6 +9431,7 @@ namespace InWorldz.Phlox.Engine
         private void SetPrimParams(int linknumber, LSL_List rules, SceneObjectPart newPart)
         {
             IReadOnlyCollection<object> links;
+            SceneObjectGroup group = null;
 
             if (newPart == null) // normal SetPrimParams
                 links = GetLinkParts(linknumber, true);
@@ -9565,7 +9566,7 @@ namespace InWorldz.Phlox.Engine
                                 else
                                 {
                                     // we are a child. The rotation values will be set to the one of root modified by rot, as in SL. Don't ask.
-                                    SceneObjectGroup group = part.ParentGroup;
+                                    group = part.ParentGroup;
                                     if (group != null) // a bit paranoid, maybe
                                     {
                                         SceneObjectPart rootPart = group.RootPart;
@@ -10140,10 +10141,27 @@ namespace InWorldz.Phlox.Engine
                         else
                             phantom = false;
 
-                        //no matter how many parts are selected, this physics change
-                        //is applied to the group, so dont apply in a loop
-                        m_host.ParentGroup.ScriptSetPhantomStatus(phantom);
-
+                        group = null;
+                        foreach (var o in links)
+                        {
+                            if (o is ScenePresence)     // avatar-as-a-prim 'part'?
+                            {
+                                // seated avatars can't change to/from phantom
+                                // assume the group that the script is in
+                                group = m_host.ParentGroup;
+                            }
+                            else
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                group = part.ParentGroup;
+                            }
+                            //no matter how many parts are selected, this physics change
+                            //is applied to the group, so dont apply in a part loop.
+                            if (group != null) break;
+                        }
+                        if (group != null)
+                            group.ScriptSetPhantomStatus(phantom);
                         break;
 
                     case (int)ScriptBaseClass.PRIM_PHYSICS:
