@@ -29,7 +29,7 @@ using log4net;
 using System.Reflection;
 using System.Collections;
  
-namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
+namespace MOSES.FreeSwitchVoice
 {
     public class FreeSwitchDialplan 
     {

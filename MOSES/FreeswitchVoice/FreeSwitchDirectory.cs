@@ -31,7 +31,7 @@ using System.Reflection;
 using System.Text;
 using System.Collections;
  
-namespace OpenSim.Region.OptionalModules.Avatar.Voice.FreeSwitchVoice
+namespace MOSES.FreeSwitchVoice
 {
     public class FreeSwitchDirectory 
     {

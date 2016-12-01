@@ -2242,7 +2242,7 @@
       </Files>
     </Project>
     
-    <Project frameworkVersion="v4_5" name="MOSES.FreeswitchVoice" path="MOSES/FreeswitchVoice" type="Library">
+    <Project frameworkVersion="v4_5" name="MOSES.FreeSwitchVoice" path="MOSES/FreeSwitchVoice" type="Library">
       <Configuration name="Debug" platform="x64">
         <Options>
           <OutputPath>../../bin/</OutputPath>
@@ -2259,6 +2259,7 @@
       <Reference name="System.Data"/>
       <Reference name="System.Drawing"/>
       <Reference name="System.Xml"/>
+      <Reference name="System.Web"/>
       <Reference name="System.Runtime.Remoting"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>

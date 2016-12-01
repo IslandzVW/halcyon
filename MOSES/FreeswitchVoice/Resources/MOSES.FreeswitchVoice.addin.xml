@@ -1,6 +1,6 @@
-﻿<Addin id="MOSES.FreeswitchVoice" version="0.1">
+﻿<Addin id="MOSES.FreeSwitchVoice" version="0.1">
   <Runtime>
-    <Import assembly="MOSES.FreeswitchVoice.dll"/>
+    <Import assembly="MOSES.FreeSwitchVoice.dll"/>
   </Runtime>
 
   <Dependencies>
@@ -8,6 +8,6 @@
   </Dependencies>
 
   <Extension path = "/OpenSim/RegionModules">
-    <RegionModule id="MOSESFreeswitchVoice" type="MOSES.FreeswitchVoice.FreeswitchVoiceModule" />
+    <RegionModule id="MOSESFreeSwitchVoice" type="MOSES.FreeSwitchVoice.FreeSwitchVoiceModule" />
   </Extension>
 </Addin>
