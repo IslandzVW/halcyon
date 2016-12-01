@@ -2241,6 +2241,52 @@
         <Match pattern="*.cs" recurse="false"/>
       </Files>
     </Project>
+    
+    <Project frameworkVersion="v4_5" name="MOSES.FreeswitchVoice" path="MOSES/FreeswitchVoice" type="Library">
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Drawing"/>
+      <Reference name="System.Xml"/>
+      <Reference name="System.Runtime.Remoting"/>
+      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
+      <Reference name="OpenSim.Data" />
+      <Reference name="OpenSim.Framework"/>
+      <Reference name="OpenSim.Framework.Communications"/>
+      <Reference name="OpenSim.Framework.Console"/>
+      <Reference name="OpenSim.Region.CoreModules" />
+      <Reference name="OpenSim.Region.Framework" />
+      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
+      <!--
+      <Reference name="Microsoft.JScript"/>
+      -->
+      <Reference name="Nini" path="../../bin/"/>
+      <Reference name="log4net" path="../../bin/"/>
+      <Reference name="Tools" path="../../bin/"/>
+      <Reference name="C5" path="../../bin/"/>
+      <Reference name="nunit.framework" path="../../bin/"/>
+      <Reference name="SmartThreadPool" path="../../bin/"/>
+      <Reference name="nunit.framework" path="../../bin/"/>
+      <Reference name="XmlRpcCS" path="../../bin/"/>
+
+      <Files>
+        <Match pattern="*.addin.xml" path="Resources" buildAction="EmbeddedResource" recurse="true"/>
+        <Match pattern="*.cs" recurse="false"/>
+      </Files>
+    </Project>
 
     <Project frameworkVersion="v4_5" name="InWorldz.ApplicationPlugins" path="InWorldz/InWorldz.ApplicationPlugins" type="Library">
       <Configuration name="Debug" platform="x64">
