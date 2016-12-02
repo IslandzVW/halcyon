@@ -53,9 +53,67 @@ using System.Text.RegularExpressions;
 
 namespace MOSES.FreeSwitchVoice
 {
-    public class FreeSwitchVoiceModule : IRegionModule
+    public class FreeSwitchVoiceModule : ISharedRegionModule
     {
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        private static bool m_pluginEnabled = false;
+
+
+
+        private IConfig m_config;
+
+        public void Initialize(IConfigSource config)
+        {
+            m_config = config.Configs["FreeSwitchVoice"];
+
+            if (null == m_config || !m_config.GetBoolean("enabled", false))
+            {
+                m_log.Info("[FreeSwitchVoice] config missing or disabled, disabling");
+                return;
+            }
+
+            m_log.DebugFormat("[FreeSwitchVoice] Enabled, but not implemented");
+        }
+
+        public void PostInitialize()
+        {
+            // Do nothing.
+        }
+
+        public void AddRegion(Scene scene)
+        {
+
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+        }
+
+        public void RegionLoaded(Scene scene)
+        {
+            // Do nothing.
+        }
+
+        public Type ReplaceableInterface
+        {
+            get { return null; }
+        }
+
+        public string Name
+        {
+            get { return "FreeSwitchVoiceModule"; }
+        }
+
+        public void Close()
+        {
+            //if (m_pluginEnabled)
+            //    VivoxLogout();
+        }
+
+        /*private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private bool UseProxy = false;
 
@@ -622,11 +680,11 @@ namespace MOSES.FreeSwitchVoice
                         <auth_token>{0}</auth_token>
                         <body>
                             <buddies>", auth_token));
-            /*
-                        <cookie_name>lib_session</cookie_name>
-                        <cookie>{0}:{1}:9303959503950::</cookie>
-                        <auth_token>{0}:{1}:9303959503950::</auth_token>
-            */
+            
+            //            <cookie_name>lib_session</cookie_name>
+            //            <cookie>{0}:{1}:9303959503950::</cookie>
+            //            <auth_token>{0}:{1}:9303959503950::</auth_token>
+            
             for (int i = 0; i < ids.Length; i++)
             {
                 DateTime currenttime = DateTime.Now;
@@ -704,15 +762,15 @@ namespace MOSES.FreeSwitchVoice
 
             response["int_response_code"] = 200;
             return response;
-            /*
-            <level0>
-               <status>OK</status><body><status>Ok</status><cookie_name>lib_session</cookie_name>
-             * <cookie>xMj1QJSc7TA-G7XqcW6QXAg==:1290551700:050d35c6fef96f132f780d8039ff7592::</cookie>
-             * <auth_token>xMj1QJSc7TA-G7XqcW6QXAg==:1290551700:050d35c6fef96f132f780d8039ff7592::</auth_token>
-             * <primary>1</primary>
-             * <account_id>7449</account_id>
-             * <displayname>Teravus Ousley</displayname></body></level0>
-            */
+            
+            //<level0>
+            //   <status>OK</status><body><status>Ok</status><cookie_name>lib_session</cookie_name>
+            //   <cookie>xMj1QJSc7TA-G7XqcW6QXAg==:1290551700:050d35c6fef96f132f780d8039ff7592::</cookie>
+            //   <auth_token>xMj1QJSc7TA-G7XqcW6QXAg==:1290551700:050d35c6fef96f132f780d8039ff7592::</auth_token>
+            //   <primary>1</primary>
+            //   <account_id>7449</account_id>
+            //   <displayname>Teravus Ousley</displayname></body></level0>
+            
         }
 
         public Hashtable FreeSwitchConfigHTTPHandler(Hashtable request)
@@ -807,9 +865,9 @@ namespace MOSES.FreeSwitchVoice
             //}
 
             //return false;
-        }
+        }*/
     }
-    public class MonoCert : ICertificatePolicy
+    /*public class MonoCert : ICertificatePolicy
     {
         #region ICertificatePolicy Members
 
@@ -819,5 +877,5 @@ namespace MOSES.FreeSwitchVoice
         }
 
         #endregion
-    }
+    }*/
 }
