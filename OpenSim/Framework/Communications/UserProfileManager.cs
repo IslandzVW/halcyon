@@ -1258,7 +1258,7 @@ namespace OpenSim.Framework.Communications
             folder.Owner = user;
             folder.ID = UUID.Random();
             folder.Name = "Lost And Found";
-            folder.Type = (short)AssetType.LostAndFoundFolder;
+            folder.Type = (short)FolderType.LostAndFound;
             folder.Version = 1;
             storage.CreateFolder(folder);
 
@@ -1285,7 +1285,7 @@ namespace OpenSim.Framework.Communications
             folder.Owner = user;
             folder.ID = UUID.Random();
             folder.Name = "Photo Album";
-            folder.Type = (short)AssetType.SnapshotFolder;
+            folder.Type = (short)FolderType.Snapshot;
             folder.Version = 1;
             storage.CreateFolder(folder);
 
@@ -1321,7 +1321,7 @@ namespace OpenSim.Framework.Communications
             folder.Owner = user;
             folder.ID = UUID.Random();
             folder.Name = "Trash";
-            folder.Type = (short)AssetType.TrashFolder;
+            folder.Type = (short)FolderType.Trash;
             folder.Version = 1;
             storage.CreateFolder(folder);
         }

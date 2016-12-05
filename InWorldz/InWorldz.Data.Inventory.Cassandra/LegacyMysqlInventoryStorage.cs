@@ -135,7 +135,7 @@ namespace InWorldz.Data.Inventory.Cassandra
 
         public UUID SendFolderToTrash(InventoryFolderBase folder, UUID trashFolderHint)
         {
-            InventoryFolderBase trashFolder = _impl.findUserFolderForType(folder.Owner, (int)AssetType.TrashFolder);
+            InventoryFolderBase trashFolder = _impl.findUserFolderForType(folder.Owner, (int)FolderType.Trash);
             this.MoveFolder(folder, trashFolder.ID);
 
             return trashFolder.ID;
@@ -149,7 +149,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             {
                 return folder;
             }
-            else if (type == AssetType.RootFolder)
+            else if (type == (AssetType)FolderType.Root)
             {
                 //this is a special case for the legacy inventory services.
                 //the root folder type may be incorrectly set to folder instead of RootFolder
@@ -221,7 +221,7 @@ namespace InWorldz.Data.Inventory.Cassandra
 
         public UUID SendItemToTrash(InventoryItemBase item, UUID trashFolderHint)
         {
-            InventoryFolderBase trashFolder = _impl.findUserFolderForType(item.Owner, (int)AssetType.TrashFolder);
+            InventoryFolderBase trashFolder = _impl.findUserFolderForType(item.Owner, (int)FolderType.Trash);
             this.MoveItem(item, trashFolder);
 
             return trashFolder.ID;

@@ -118,13 +118,13 @@ namespace OpenSim.Region.CoreModules.Avatar.AvatarFactory
 
                 try
                 {
-                    currentOutfitFolder = userInfo.FindFolderForType((int)AssetType.CurrentOutfitFolder);
+                    currentOutfitFolder = userInfo.FindFolderForType((int)FolderType.CurrentOutfit);
                 }
                 catch (InventoryStorageException)
                 {
                     // could not find it by type. load root and try to find it by name.
                     InventorySubFolderBase foundFolder = null;
-                    InventoryFolderBase rootFolder = userInfo.FindFolderForType((int)AssetType.RootFolder);
+                    InventoryFolderBase rootFolder = userInfo.FindFolderForType((int)FolderType.Root);
                     foreach (var subfolder in rootFolder.SubFolders)
                     {
                         if (subfolder.Name == COF_NAME)

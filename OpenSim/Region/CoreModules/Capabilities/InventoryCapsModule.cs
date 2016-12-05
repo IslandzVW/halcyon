@@ -945,7 +945,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         if (folderId == UUID.Zero)
                         {
                             //indicates the client wants the root for this user
-                            folder = m_checkedStorageProvider.FindFolderForType(m_Caps.AgentID, AssetType.RootFolder);
+                            folder = m_checkedStorageProvider.FindFolderForType(m_Caps.AgentID, (AssetType)FolderType.Root);
                             folderId = folder.ID;
                         }
                         else
@@ -1363,7 +1363,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                             if (item != null)
                             {
                                 m_Scene.AddInventoryItem(m_Caps.AgentID, item);
-                                // m_log.InfoFormat("[CAPS]: CopyInventoryFromNotecard, ItemID:{0}, FolderID:{1}", copyItem.ID, copyItem.Folder);
+                                // m_log.InfoFormat("[CAPS]: SendInventoryItemCreateUpdate ItemID:{0}, AssetID:{1}", item.ID, item.AssetID);
                                 client.SendInventoryItemCreateUpdate(item,0);
                                 response["int_response_code"] = 200;
                                 return LLSDHelpers.SerializeLLSDReply(response);

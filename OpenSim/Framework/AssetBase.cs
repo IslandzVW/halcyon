@@ -95,10 +95,10 @@ namespace OpenSim.Framework
                      Type == (sbyte)AssetType.Texture ||
                      Type == (sbyte)AssetType.TextureTGA ||
                      Type == (sbyte)AssetType.Folder ||
-                     Type == (sbyte)AssetType.RootFolder ||
-                     Type == (sbyte)AssetType.LostAndFoundFolder ||
-                     Type == (sbyte)AssetType.SnapshotFolder ||
-                     Type == (sbyte)AssetType.TrashFolder ||
+                     Type == (sbyte)FolderType.Root ||
+                     Type == (sbyte)FolderType.LostAndFound ||
+                     Type == (sbyte)FolderType.Snapshot ||
+                     Type == (sbyte)FolderType.Trash ||
                      Type == (sbyte)AssetType.ImageJPEG ||
                      Type == (sbyte) AssetType.ImageTGA ||
                      Type == (sbyte) AssetType.LSLBytecode);
