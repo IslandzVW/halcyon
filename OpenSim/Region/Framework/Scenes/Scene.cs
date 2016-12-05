@@ -4380,10 +4380,14 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (RegionSecret == loggingOffUser.ControllingClient.SecureSessionId || (parsedsecret && RegionSecret == localRegionSecret))
                 {
-                    loggingOffUser.ControllingClient.Kick(message);
-                    // Give them a second to receive the message!
-                    Thread.Sleep(1000);
-                    loggingOffUser.ControllingClient.Close();
+                    if (loggingOffUser.ControllingClient != null)   // may have been cleaned up
+                    {
+                        loggingOffUser.ControllingClient.Kick(message);
+                        // Give them a second to receive the message!
+                        Thread.Sleep(1000);
+                        if (loggingOffUser.ControllingClient != null)   // may have been cleaned up
+                            loggingOffUser.ControllingClient.Close();
+                    }
                 }
                 else
                 {
