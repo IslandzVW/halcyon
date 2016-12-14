@@ -482,11 +482,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
                 //check the queue
                 //Dont drop resends this can mess up the buffer pool as well as make the connection situation much worse
-                if (_currentOutboundQueueSize > MAX_TOTAL_QUEUE_SIZE && (packet.Buffer[0] & Helpers.MSG_RESENT) == 0)
+                if (_currentOutboundQueueSize > MAX_TOTAL_QUEUE_SIZE && (packet.Buffer.Data[0] & Helpers.MSG_RESENT) == 0)
                 {
                     //queue already has too much data in it..
                     //can we drop this packet?
-                    byte flags = packet.Buffer[0];
+                    byte flags = packet.Buffer.Data[0];
                     bool isReliable = (flags & Helpers.MSG_RELIABLE) != 0;
 
                     if (!isReliable 

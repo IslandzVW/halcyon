@@ -196,7 +196,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                             //wrappedBuffer.Instance.Data,
                             buf.Data,
                             0,
-                            UDPPacketBuffer.BUFFER_SIZE,
+                            UDPPacketBuffer.DEFAULT_BUFFER_SIZE,
                             SocketFlags.None,
                             ref buf.RemoteEndPoint,
                             AsyncEndReceive,
@@ -281,7 +281,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     packet.AddRef();
 
                     m_udpSocket.BeginSendTo(
-                        packet.Buffer,
+                        packet.Buffer.Data,
                         0,
                         packet.DataSize,
                         SocketFlags.None,
