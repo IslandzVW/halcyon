@@ -10140,10 +10140,16 @@ namespace InWorldz.Phlox.Engine
                         else
                             phantom = false;
 
-                        //no matter how many parts are selected, this physics change
-                        //is applied to the group, so dont apply in a loop
-                        m_host.ParentGroup.ScriptSetPhantomStatus(phantom);
-
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                //no matter how many parts are selected, this physics change
+                                //is applied to the group, so dont apply in a loop
+                                part.ParentGroup.ScriptSetPhantomStatus(phantom);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_PHYSICS:
@@ -10157,9 +10163,16 @@ namespace InWorldz.Phlox.Engine
                         else
                             physics = false;
 
-                        //no matter how many parts are selected, this physics change
-                        //is applied to the group, so dont apply in a loop
-                        m_host.ParentGroup.ScriptSetPhysicsStatus(physics);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                //no matter how many parts are selected, this physics change
+                                //is applied to the group, so dont apply in a loop
+                                part.ParentGroup.ScriptSetPhysicsStatus(physics);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEMP_ON_REZ:
