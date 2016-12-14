@@ -155,7 +155,7 @@ namespace InWorldz.Data.Inventory.Cassandra
                 //the root folder type asset type may have been incorrectly saved
                 //as the old AssetType.RootFolder (which is 9),
                 //rather than AssetType.Folder (which is 8) with FolderType.Root (which is also 8).
-                folder = _impl.findUserFolderForType(owner, 9);
+                folder = _impl.findUserFolderForType(owner, (int)FolderType.OldRoot);
                 if (folder == null)
                 {
                     //this is another special case for the legacy inventory services.

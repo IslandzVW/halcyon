@@ -1015,7 +1015,7 @@ namespace InWorldz.Data.Inventory.Cassandra
                 {
                     if ((short)type == indexInfo.Value.Type)
                         return indexInfo.Value;
-                    if (((short)type == (short)FolderType.Root) && (indexInfo.Value.Type == (short)9)) // old AssetType.RootFolder == 9
+                    if (((short)type == (short)FolderType.Root) && (indexInfo.Value.Type == (short)FolderType.OldRoot)) // old AssetType.RootFolder == 9
                         return indexInfo.Value; // consider 9 to be FolderType.Root too
                 }
             }
