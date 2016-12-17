@@ -481,13 +481,22 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             SendMoneyBalanceTransaction(client, UUID.Zero, true, String.Empty, null);
         }
 
-        public bool ObjectGiveMoney(UUID objectID, UUID sourceAvatarID, UUID destAvatarID, int amount)
+        // Returns the transaction ID that shows up in the transaction history.
+        public string ObjectGiveMoney(UUID objectID, UUID sourceAvatarID, UUID destAvatarID, int amount, out string reason)
         {
-            if (amount < 0) return false;
+            reason = String.Empty;
+            if (amount <= 0)
+            {
+                reason = "INVALID_AMOUNT";
+                return String.Empty;
+            }
 
             SceneObjectPart part = findPrim(objectID);
             if (part == null)
-                return false;
+            {
+                reason = "MISSING_PERMISSION_DEBIT";    // if you can't find it, no perms either
+                return String.Empty;
+            }
 
             string objName = part.ParentGroup.Name;
             string description = String.Format("{0} paid {1}", objName, resolveAgentName(destAvatarID));
@@ -498,11 +507,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 int sourceAvatarFunds = getCurrentBalance(sourceAvatarID);
                 if (sourceAvatarFunds < amount)
                 {
-                    return false;
+                    reason = "LINDENDOLLAR_INSUFFICIENTFUNDS";
+                    return String.Empty;
                 }
             }
 
             UUID transID = doMoneyTransfer(sourceAvatarID, destAvatarID, amount, transType, description);
+            // the transID UUID is actually a ulong stored in a UUID.
+            string result = transID.GetULong().ToString();
+            reason = String.Empty;
 
             TransactionInfoBlock transInfo = new TransactionInfoBlock();
             transInfo.Amount = amount;
@@ -536,7 +549,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 SendMoneyBalanceTransaction(destAvatarClient, transID, true, destText, transInfo);
             }
 
-            return true;
+            return result;
         }
 
         private bool CheckPayObjectAmount(SceneObjectPart part, int amount)

@@ -102,8 +102,6 @@ namespace OpenSim.Region.FrameworkTests
             part.ServerWeight = 3.0f;
             part.StreamingCost = 2.0f;
             part.SitName = "Sitting";
-            part.SitTargetOrientation = SceneUtil.RandomQuat();
-            part.SitTargetPosition = SceneUtil.RandomVector();
             part.Sound = UUID.Random();
             part.SoundGain = 3.4f;
             part.SoundOptions = 9;
@@ -115,6 +113,8 @@ namespace OpenSim.Region.FrameworkTests
             part.UUID = UUID.Random();
             part.Velocity = SceneUtil.RandomVector();
             part.FromItemID = UUID.Random();
+
+            part.SetSitTarget(SceneUtil.RandomVector(), SceneUtil.RandomQuat(), false);
 
             return part;
         }

@@ -30,6 +30,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using OpenSim.Framework;
 using log4net;
@@ -113,9 +114,26 @@ namespace InWorldz.Whip.Client
         public virtual void LoadDefaultAssets(string pAssetSetsXml)
         {
             _log.Info("[ASSET SERVER]: Setting up asset database");
-            _loadingDefaultAssets = true;
-            assetLoader.ForEachDefaultXmlAsset(pAssetSetsXml, StoreAsset);
-            _loadingDefaultAssets = false;
+            var signpostMarkerFilename = $"{pAssetSetsXml}.loaded";
+
+            if (File.Exists(signpostMarkerFilename))
+            {
+                _log.Info("[ASSET SERVER]: Asset database marked as already set up. Not reloading default assets.");
+            }
+            else
+            {
+                _loadingDefaultAssets = true;
+                assetLoader.ForEachDefaultXmlAsset(pAssetSetsXml, StoreAsset);
+                _loadingDefaultAssets = false;
+                try
+                {
+                    File.CreateText(signpostMarkerFilename).Close();
+                }
+                catch(Exception e)
+                {
+                    _log.Error($"Unable to create file '{signpostMarkerFilename}' to mark default assets as having been already loaded.", e);
+                }
+            }
         }
 
         private List<string[]> ParseReadWriteWhipURL(string url)
@@ -362,6 +380,11 @@ namespace InWorldz.Whip.Client
         {
             _log.WarnFormat("[WHIP.AssetClient]: UpdateAsset called for {0}  Assets are immutable.", asset.FullID);
             this.StoreAsset(asset);
+        }
+
+        public AssetStats GetStats(bool resetStats)
+        {
+            return new AssetStats("WHIP");
         }
 
         #endregion

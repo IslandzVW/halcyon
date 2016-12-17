@@ -120,6 +120,7 @@ namespace InWorldz.Data.Assets.Stratus
                 if (Config.Settings.Instance.LegacySupport)
                 {
                     _whipAssetClient = new Whip.Client.AssetClient(Config.Settings.Instance.WhipURL);
+                    _whipAssetClient.Initialize(settings);
 
                     if (Config.Settings.Instance.CFSupport)
                     {
@@ -310,6 +311,12 @@ namespace InWorldz.Data.Assets.Stratus
                     _assetReceiver.AssetError(assetID, error, data);
                 }
             }
+        }
+
+        public AssetStats GetStats(bool resetStats)
+        {
+            // This only supports CF stats (otherwise we could return _whipAssetClient.GetStats() instead)
+            return _cfAssetClient.GetStats(resetStats);
         }
     }
 }

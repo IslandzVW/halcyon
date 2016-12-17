@@ -112,22 +112,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             client.OnChatFromClient += OnChatFromClient;
         }
 
-        protected OSChatMessage FixPositionOfChatMessage(OSChatMessage c)
-        {
-            if (c.SenderUUID == UUID.Zero)
-            {
-                //this is from a dialog, dont adjust the pos
-                return c;
-            }
-
-            ScenePresence avatar;
-            Scene scene = (Scene)c.Scene;
-            if (scene.TryGetAvatar(c.SenderUUID, out avatar))
-                c.Position = avatar.AbsolutePosition;
-
-            return c;
-        }
-
         private bool PrefilterChat(Object sender, OSChatMessage c)
         {
             if (c.Type != ChatTypeEnum.Say)
@@ -154,8 +138,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
 
         public virtual void OnChatFromClient(Object sender, OSChatMessage c)
         {
-            c = FixPositionOfChatMessage(c);
-
             if (PrefilterChat(sender, c))
                 return;
 
@@ -641,6 +623,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             SendSystemChat(client, "{0} off-sim objects found:", count);
         }
 
+        private void DebugCrossings(IClientAPI client)
+        {
+            bool newValue = !client.DebugCrossings;
+            client.DebugCrossings = newValue;
+            SendSystemChat(client, "Crossing debug messages are now: {0}", newValue ? "enabled" : "disabled");
+        }
+
         private void ShowUpdates(IClientAPI client, string[] args)
         {
             string[] inArgs = { String.Empty, args[2] };
@@ -680,8 +669,20 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                     }
                     break;
 
+                case "/!debug":
+                    if (args.Length > 1)
+                    {
+                        if ((args[1] == "crossings") || (args[1] == "cross"))
+                        {
+                            DebugCrossings(client);
+                            return;
+                        }
+                    }
+                    SendSystemChat(client, "Region chat command was not recognized. Did you intend? /!debug crossings");
+                    break;
+
                 default:
-                    client.SendAlertMessage("Region chat command was not recognized.");
+                    SendSystemChat(client, "Region chat command was not recognized.");
                     break;
             }
         }

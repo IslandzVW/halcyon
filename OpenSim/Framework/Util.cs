@@ -329,6 +329,16 @@ namespace OpenSim.Framework
             get { return randomClass; }
         }
 
+        public static string RandomString(uint length, string alphabet = "abcdefghijklmnopqrstuvwyxzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+        {
+            var chars = new char[length];
+            for (var i = 0u; i < length; i++)
+            {
+                chars[i] = alphabet[RandomClass.Next(alphabet.Length)];
+            }
+            return new string(chars);
+        }
+
         public static ulong UIntsToLong(uint X, uint Y)
         {
             return Utils.UIntsToLong(X, Y);
@@ -2500,7 +2510,19 @@ namespace OpenSim.Framework
 
                 m_log.Info(m_context + ": " + elapsed.ToString());
             }
-            
+        }
+
+        public static void ReportIfSlow(string prefix, int millis, System.Action action)
+        {
+            Util.SlowTimeReporter slowCheck = new Util.SlowTimeReporter(prefix, new TimeSpan(0, 0, 0, 0, millis));
+            try
+            {
+                action();
+            }
+            finally
+            {
+                slowCheck.Complete();
+            }
         }
     }
 }

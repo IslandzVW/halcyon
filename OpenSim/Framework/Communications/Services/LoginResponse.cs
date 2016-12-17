@@ -165,7 +165,7 @@ namespace OpenSim.Framework.Communications.Services
             lookAt = "[r0.99949799999999999756,r0.03166859999999999814,r0]";
             RegionX = (uint) 255232;
             RegionY = (uint) 254976;
-            CofVersion = "0";
+            CofVersion = AvatarAppearance.VERSION_INITIAL.ToString();
 
             // Classifieds;
             AddClassifiedCategory((Int32) 1, "Shopping");
@@ -245,6 +245,15 @@ namespace OpenSim.Framework.Communications.Services
                 (GenerateFailureResponse("key",
                                          "The viewer you are using is not allowed to connect to the InWorldz grid. Please use a different viewer.",
                                          "false"));
+        }
+
+        public XmlRpcResponse CreateIPBannedResponseLLSD()
+        {
+            // We'll obfuscate the reason for failure, however make it different so that we know when it is reported to Support.
+            return GenerateFailureResponse(
+                        "key",
+                        "You are not permitted to log in at this time.",
+                        "false");
         }
 
         public OSD CreateLoginFailedResponseLLSD()

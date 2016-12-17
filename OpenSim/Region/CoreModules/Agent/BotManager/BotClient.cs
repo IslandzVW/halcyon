@@ -41,6 +41,7 @@ using System.Xml;
 using OpenSim.Region.Framework.Interfaces;
 using log4net;
 using System.Reflection;
+using OpenMetaverse.StructuredData;
 
 namespace OpenSim.Region.CoreModules.Agent.BotManager
 {
@@ -62,7 +63,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         #endregion
 
         #region Constructor
-
         public BotClient(string firstName, string lastName, Scene scene, Vector3 startPos, UUID ownerID)
         {
             m_circuitCode = (uint)Util.RandomClass.Next(0, int.MaxValue);
@@ -79,7 +79,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
             InitDefaultAnimations();
         }
-
         #endregion
 
         #region IBot Properties
@@ -145,7 +144,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             if (sp == null)
                 return false;
 
-            sp.StandUp(null, false, true);
+            sp.StandUp(false, true);
             return true;
         }
 
@@ -255,6 +254,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             chatFromClient.Scene = m_scene;
             chatFromClient.SenderUUID = AgentId;
             chatFromClient.Type = sourceType;
+
+            // Force avatar position to be server-known avatar position. (Former contents of FixPositionOfChatMessage.)
+            ScenePresence avatar;
+            if (m_scene.TryGetAvatar(m_UUID, out avatar))
+                chatFromClient.Position = avatar.AbsolutePosition;
 
             OnChatFromClient(this, chatFromClient);
         }
@@ -443,6 +447,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public bool SendLogoutPacketWhenClosing
         {
+            set { }
+        }
+
+        public bool DebugCrossings
+        {
+            get { return false; }
             set { }
         }
 
@@ -1119,6 +1129,11 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public void SendAlertMessage(string message)
         {
+        }
+
+        public void SendAlertMessage(string message, string infoMessage, OSD extraParams)
+        {
+            /* no op */
         }
 
         public void SendAgentAlertMessage(string message, bool modal)

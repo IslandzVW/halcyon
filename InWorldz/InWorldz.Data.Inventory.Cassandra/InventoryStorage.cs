@@ -1010,11 +1010,13 @@ namespace InWorldz.Data.Inventory.Cassandra
 
             foreach (KeyValuePair<Guid, InventoryFolderBase> indexInfo in folderIndex)
             {
-                if (indexInfo.Value.Type == (short)type &&
-                    (indexInfo.Value.Level == InventoryFolderBase.FolderLevel.TopLevel ||
-                    indexInfo.Value.Level == InventoryFolderBase.FolderLevel.Root))
+                if (indexInfo.Value.Level == InventoryFolderBase.FolderLevel.TopLevel ||
+                    indexInfo.Value.Level == InventoryFolderBase.FolderLevel.Root)
                 {
-                    return indexInfo.Value;
+                    if ((short)type == indexInfo.Value.Type)
+                        return indexInfo.Value;
+                    if (((short)type == (short)FolderType.Root) && (indexInfo.Value.Type == (short)FolderType.OldRoot)) // old AssetType.RootFolder == 9
+                        return indexInfo.Value; // consider 9 to be FolderType.Root too
                 }
             }
 
@@ -1056,7 +1058,7 @@ namespace InWorldz.Data.Inventory.Cassandra
 
                 try
                 {
-                    trashFolder = this.FindFolderForType(folder.Owner, OpenMetaverse.AssetType.TrashFolder);
+                    trashFolder = this.FindFolderForType(folder.Owner, (AssetType)FolderType.Trash);
                 }
                 catch (Exception e)
                 {
@@ -1195,7 +1197,7 @@ namespace InWorldz.Data.Inventory.Cassandra
 
         private void DebugFolderPurge(string method, InventoryFolderBase folder, StringBuilder debugFolderList)
         {
-            _log.DebugFormat("[Inworldz.Data.Inventory.Cassandra] About to purge from {0}{1}\n Objects:\n{2}",
+            _log.DebugFormat("[Inworldz.Data.Inventory.Cassandra] About to purge from {0} {1}\n Objects:\n{2}",
                 folder.Name, folder.ID, debugFolderList.ToString());
         }
 
@@ -1307,6 +1309,81 @@ namespace InWorldz.Data.Inventory.Cassandra
                 return null;
 
             }), KEYSPACE);
+        }
+
+        // This is an optimized PurgeFolderInternal that does not refetch the tree
+        // but assumes the caller knows that the ID specified has no items or subfolders.
+        private void PurgeEmptyFolderInternal(UUID ownerID, long timeStamp, UUID folderID, UUID parentID)
+        {
+            //block all deletion requests for a folder with a 0 id
+            if (folderID == UUID.Zero)
+            {
+                throw new UnrecoverableInventoryStorageException("Refusing to allow the deletion of the inventory ZERO root folder");
+            }
+
+            Dictionary<byte[], Dictionary<string, List<Mutation>>> muts = new Dictionary<byte[], Dictionary<string, List<Mutation>>>();
+
+            byte[] folderIdBytes = ByteEncoderHelper.GuidEncoder.ToByteArray(folderID.Guid);
+            byte[] parentFolderIdBytes = ByteEncoderHelper.GuidEncoder.ToByteArray(parentID.Guid);
+
+            //we have all the contents, so delete the actual folders and their versions...
+            //this will wipe out the folders and in turn all items in subfolders
+            byte[] ownerIdBytes = ByteEncoderHelper.GuidEncoder.ToByteArray(ownerID.Guid);
+            //delete this actual folder
+            this.GetSingleFolderDeletionMutations(ownerIdBytes, folderIdBytes, timeStamp, muts);
+            //and remove the subfolder reference from this folders parent
+            this.GetSubfolderEntryDeletionMutations(folderIdBytes, parentFolderIdBytes, timeStamp, muts);
+
+            //increment the version of the parent of the purged folder
+            if (parentID != UUID.Zero)
+            {
+                this.GetFolderVersionIncrementMutations(muts, parentFolderIdBytes);
+            }
+
+            ICluster cluster = AquilesHelper.RetrieveCluster(_clusterName);
+            cluster.Execute(new ExecutionBlock(delegate(Apache.Cassandra.Cassandra.Client client)
+            {
+                client.batch_mutate(muts, DEFAULT_CONSISTENCY_LEVEL);
+
+                return null;
+
+            }), KEYSPACE);
+        }
+
+        // This is an optimized PurgeFolderInternal that does not refetch the tree
+        // but assumes the caller knows that the ID specified has no items or subfolders.
+        public void PurgeEmptyFolder(InventoryFolderBase folder)
+        {
+            long timeStamp = Util.UnixTimeSinceEpochInMicroseconds();
+
+            try
+            {
+                if ((folder.Items.Count != 0) || (folder.SubFolders.Count != 0))
+                    throw new UnrecoverableInventoryStorageException("Refusing to PurgeEmptyFolder for folder that is not empty");
+
+                PurgeEmptyFolderInternal(folder.Owner, timeStamp, folder.ID, folder.ParentID);
+            }
+            catch (UnrecoverableInventoryStorageException e)
+            {
+                _log.ErrorFormat("[Inworldz.Data.Inventory.Cassandra] Unrecoverable error while purging empty folder {0} for {1}: {2}",
+                    folder.ID, folder.Owner, e);
+                throw;
+            }
+            catch (Exception e)
+            {
+                _log.ErrorFormat("[Inworldz.Data.Inventory.Cassandra] Exception caught while purging empty folder {0} for {1}: {2}",
+                    folder.ID, folder.Owner, e);
+
+                if (_delayedMutationMgr != null)
+                {
+                    DelayedMutation.DelayedMutationDelegate delayedDelegate = delegate() { this.PurgeFolderInternal(folder, timeStamp); };
+                    _delayedMutationMgr.AddMutationForRetry(delayedDelegate, "PurgeEmptyFolder(" + folder.ID.ToString() + ")");
+                }
+                else
+                {
+                    throw new InventoryStorageException("Could not purge empty folder " + folder.ID.ToString() + ": " + e.Message, e);
+                }
+            }
         }
 
         public void PurgeFolders(IEnumerable<InventoryFolderBase> folders)
@@ -1841,7 +1918,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             if (item.Folder == UUID.Zero)
             {
                 _log.WarnFormat("[Inworldz.Data.Inventory.Cassandra] Repairing parent folder ID for item {0} for {1}: Folder set to UUID.Zero", item.ID, item.Owner);
-                item.Folder = this.FindFolderForType(item.Owner, AssetType.RootFolder).ID;
+                item.Folder = this.FindFolderForType(item.Owner, (AssetType)FolderType.Root).ID;
             }
         }
 
@@ -2279,7 +2356,7 @@ namespace InWorldz.Data.Inventory.Cassandra
 
                 try
                 {
-                    trashFolder = this.FindFolderForType(item.Owner, OpenMetaverse.AssetType.TrashFolder);
+                    trashFolder = this.FindFolderForType(item.Owner, (AssetType)FolderType.Trash);
                 }
                 catch (Exception e)
                 {

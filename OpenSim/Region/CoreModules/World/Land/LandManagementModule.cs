@@ -117,7 +117,21 @@ namespace OpenSim.Region.CoreModules.World.Land
             IConfig myConfig = config.Configs["Startup"];
             string connstr = myConfig.GetString("core_connection_string", String.Empty);
             _rdbConnectionTemplate = myConfig.GetString("rdb_connection_template", String.Empty);
+            if (!String.IsNullOrWhiteSpace(_rdbConnectionTemplate))
+            {
+                if (!_rdbConnectionTemplate.ToLower().Contains("data source"))
+                {
+                    _rdbConnectionTemplate = "Data Source={0};" + _rdbConnectionTemplate;
+                }
+            }
             _rdbConnectionTemplateDebug = myConfig.GetString("rdb_connection_template_debug", String.Empty);
+            if (!String.IsNullOrWhiteSpace(_rdbConnectionTemplateDebug))
+            {
+                if (!_rdbConnectionTemplateDebug.ToLower().Contains("data source"))
+                {
+                    _rdbConnectionTemplateDebug = "Data Source={0};" + _rdbConnectionTemplateDebug;
+                }
+            }
             _connFactory = new ConnectionFactory("MySQL", connstr);
 
             CacheRdbHosts();
@@ -266,6 +280,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             get { return LandChannel.BAN_LINE_SAFETY_HEIGHT; }
         }
 
+        public float NonPublicHeight
+        {
+            get { return LandChannel.NON_PUBLIC_SAFETY_HEIGHT; }
+        }
+
         public void UpdateLandObject(int local_id, LandData data)
         {
             LandData newData = data.Copy();
@@ -369,7 +388,6 @@ namespace OpenSim.Region.CoreModules.World.Land
         }
 
         // Bounce constants are how far above a no-entry parcel we'll place an object or avatar.
-        private readonly float AVATAR_BOUNCE = 10.0f;
         public void RemoveAvatarFromParcel(ScenePresence avatar)
         {
             EntityBase.PositionInfo posInfo = avatar.GetPosInfo();
@@ -377,12 +395,15 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (posInfo.Parent != null)
             {
                 // can't find the prim seated on, stand up
-                avatar.StandUp(null, false, true);
+                avatar.StandUp(false, true);
 
                 // fall through to unseated avatar code.
             }
 
             // If they are moving, stop them.  This updates the physics object as well.
+            // The avatar needs to be stopped before entering the parcel otherwise there
+            // are timing windows where the avatar can just pound away at the parcel border
+            // and get across it due to physics placing them there.
             avatar.Velocity = Vector3.Zero;
 
             Vector3 pos = avatar.AbsolutePosition;  // may have changed from posInfo by StandUp above.
@@ -392,21 +413,17 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 pos = avatar.lastKnownAllowedPosition;
             }
-            else
-            {
-                // Still a forbidden parcel, they must have been above the limit or entering region for the first time.
-                // Let's put them up higher, over the restricted parcel.
-                // We could add 50m to avatar.Scene.Heightmap[x,y] but then we need subscript checks, etc.
-                // For now, this is simple and safer than TPing them home.
-                pos.Z += 50.0f;
-            }
 
             ILandObject parcel = landChannel.GetLandObject(pos.X, pos.Y);
-            if ((parcel != null) && parcel.DenyParcelAccess(avatar.UUID, out reason2))
+            float minZ;
+            if ((parcel != null) && m_scene.TestBelowHeightLimit(avatar.UUID, pos, parcel, out minZ, out reason2))
             {
-                float minZ = LandChannel.BAN_LINE_SAFETY_HEIGHT + AVATAR_BOUNCE;
+                float groundZ = (float)m_scene.Heightmap.CalculateHeightAt(pos.X, pos.Y);
+                minZ += groundZ;
+
+                // make them bounce above the banned parcel if being removed
                 if (pos.Z < minZ)
-                    pos.Z = minZ;
+                    pos.Z = minZ + Constants.AVATAR_BOUNCE;
             }
 
             // Now force the non-sitting avatar to a position above the parcel
@@ -520,6 +537,10 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public void RefreshParcelInfo(IClientAPI remote_client, bool force)
         {
+            // remote_client can be null on botRemoveBot (or if the agent disconnects)
+            // because CompleteMovement calls RefreshParcelInfo from an async thread.
+            if (remote_client == null) return;
+
             ScenePresence avatar = m_scene.GetScenePresence(remote_client.AgentId);
             if (avatar != null)
             {
@@ -531,7 +552,8 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                     // Possibly entering the restricted zone of the parcel.
                     ParcelPropertiesStatus reason;
-                    if ((pos.Z >= LandChannel.BAN_LINE_SAFETY_HEIGHT) || !parcel.DenyParcelAccess(avatar.UUID, out reason))
+                    float minZ;
+                    if (!m_scene.TestBelowHeightLimit(avatar.UUID, pos, parcel, out minZ, out reason))
                     {
                         avatar.lastKnownAllowedPosition = pos;
                     }

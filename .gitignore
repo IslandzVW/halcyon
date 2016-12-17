@@ -218,6 +218,7 @@ bin/trustednetworks.txt
 bin/addin-db-001/
 bin/addin-db-002/
 bin/ScriptEngines/Phlox/states/script_states.db3
+bin/assets/AssetSets.xml.loaded
 
 # Other files that need to be created per-installation
 bin/Halcyon.ini

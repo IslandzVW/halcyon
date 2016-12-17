@@ -340,7 +340,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Inventory.Transfer
             CachedUserInfo userInfo = scene.CommsManager.UserService.GetUserDetails(client.AgentId);
             if (userInfo != null)
             {
-                InventoryFolderBase trashFolder = userInfo.FindFolderForType((int)AssetType.TrashFolder);
+                InventoryFolderBase trashFolder = userInfo.FindFolderForType((int)FolderType.Trash);
                 if (null == trashFolder)
                 {
                     client.SendAgentAlertMessage("Unable to decline received inventory: Trash folder not found.", false);

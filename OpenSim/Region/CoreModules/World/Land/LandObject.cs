@@ -419,7 +419,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 return true; // never deny the master avatar
             if (avatar == m_scene.RegionInfo.EstateSettings.EstateOwner)
                 return true; // never deny the estate owner
-            if (m_scene.IsEstateOwner(avatar))
+            if (m_scene.IsEstateManager(avatar))    // includes Estate Owner
                 return true;
             if (m_scene.IsEstateOwnerPartner(avatar))
                 return true;
@@ -447,18 +447,31 @@ namespace OpenSim.Region.CoreModules.World.Land
             return false;
         }
 
+
         // Returns false and reason == ParcelPropertiesStatus.ParcelSelected if access is allowed, otherwise reason enum.
         public bool DenyParcelAccess(SceneObjectGroup group, bool checkSitters, out ParcelPropertiesStatus reason)
         {
             if (checkSitters)
             {
-                List<ScenePresence> sitters = group.GetSittingAvatars();
-                foreach (ScenePresence sp in sitters)
+                // some voodo with reason variables to avoid compiler problems.
+                ParcelPropertiesStatus reason2;
+                ParcelPropertiesStatus sitterReason = 0;
+                bool result = true;
+                group.ForEachSittingAvatar((ScenePresence sp) =>
                 {
-                    if (sp.UUID == group.OwnerID)
-                        continue;   // checked separately below
-                    if (DenyParcelAccess(sp.UUID, out reason))
-                        return false;
+                    if (sp.UUID != group.OwnerID)   // checked separately below
+                    {
+                        if (DenyParcelAccess(sp.UUID, out reason2))
+                        {
+                            sitterReason = reason2;
+                            result = false;
+                        }
+                    }
+                });
+                if (!result)
+                {
+                    reason = sitterReason;
+                    return false;
                 }
             }
 
@@ -533,7 +546,6 @@ namespace OpenSim.Region.CoreModules.World.Land
             return true;
         }
 
-        private readonly float AVATAR_BOUNCE = 10.0f;
         public void RemoveAvatarFromParcel(UUID userID)
         {
             ScenePresence sp = m_scene.GetScenePresence(userID);
@@ -542,7 +554,7 @@ namespace OpenSim.Region.CoreModules.World.Land
             if (posInfo.Parent != null)
             {
                 // can't find the prim seated on, stand up
-                sp.StandUp(null, false, true);
+                sp.StandUp(false, true);
 
                 // fall through to unseated avatar code.
             }
@@ -567,11 +579,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
 
             ILandObject parcel = m_scene.LandChannel.GetLandObject(pos.X, pos.Y);
-            if ((parcel != null) && parcel.DenyParcelAccess(sp.UUID, out reason2))
+            float minZ;
+            if ((parcel != null) && m_scene.TestBelowHeightLimit(sp.UUID, pos, parcel, out minZ, out reason2))
             {
-                float minZ = LandChannel.BAN_LINE_SAFETY_HEIGHT + AVATAR_BOUNCE;
                 if (pos.Z < minZ)
-                    pos.Z = minZ;
+                    pos.Z = minZ + Constants.AVATAR_BOUNCE;
             }
 
             // Now force the non-sitting avatar to a position above the parcel

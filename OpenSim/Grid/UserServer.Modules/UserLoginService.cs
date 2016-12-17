@@ -310,7 +310,8 @@ namespace OpenSim.Grid.UserServer.Modules
         private bool PrepareLoginToRegion(RegionProfileData regionInfo, UserProfileData user, LoginResponse response, string clientVersion)
         {
             string regionName = regionInfo.regionName;
-            bool success = false;
+            bool regionSuccess = false; // region communication result
+            bool userSuccess = true;    // user login succeeded result, for now
 
             try
             {
@@ -376,7 +377,7 @@ namespace OpenSim.Grid.UserServer.Modules
                 if (appearance != null)
                 {
                     loginParams["appearance"] = appearance.ToHashTable();
-                    m_log.DebugFormat("[LOGIN]: Found appearance for {0} {1}", user.FirstName, user.SurName);
+                    m_log.DebugFormat("[LOGIN]: Found appearance version {0} for {1} {2}", appearance.Serial, user.FirstName, user.SurName);
                 }
                 else
                 {
@@ -399,7 +400,10 @@ namespace OpenSim.Grid.UserServer.Modules
 
                 if (!GridResp.IsFault)
                 {
-                    bool responseSuccess = true;
+                    // We've received a successful response from the region.
+                    // From the perspective of communicating with the region, we were able to get a response.
+                    // Do not mark the region down if it responds, even if it doesn't allow the user into the region.
+                    regionSuccess = true;
 
                     if (GridResp.Value != null)
                     {
@@ -408,10 +412,11 @@ namespace OpenSim.Grid.UserServer.Modules
                         {
                             if ((string)resp["success"] == "FALSE")
                             {
-                                responseSuccess = false;
+                                // Tell the user their login failed.
+                                userSuccess = false;
                             }
                         }
-                        if (!responseSuccess)
+                        if (!userSuccess)
                         {
                             if (resp.ContainsKey("reason"))
                             {
@@ -420,7 +425,7 @@ namespace OpenSim.Grid.UserServer.Modules
                         }
                     }
                     
-                    if (responseSuccess)
+                    if (userSuccess)
                     {
                         handlerUserLoggedInAtLocation = OnUserLoggedInAtLocation;
                         if (handlerUserLoggedInAtLocation != null)
@@ -433,11 +438,10 @@ namespace OpenSim.Grid.UserServer.Modules
                                                           user.CurrentAgent.Position.Z,
                                                           user.FirstName, user.SurName);
                         }
-                        success = true;
                     }
                     else
                     {
-                        m_log.ErrorFormat("[LOGIN]: Region responded that it is not available to receive clients");
+                        m_log.ErrorFormat("[LOGIN]: Region responded that it is not available to accept a login from {0} at this time.", user.Name);
                     }
                 }
                 else
@@ -455,7 +459,7 @@ namespace OpenSim.Grid.UserServer.Modules
                 if (_LastRegionFailure.ContainsKey(regionName))
                 {
                     RegionLoginFailure failure = _LastRegionFailure[regionName];
-                    if (success)
+                    if (regionSuccess)
                     {   // Success, so if we've been storing this as a failed region, remove that from the failed list.
                         m_log.WarnFormat("[LOGIN]: Region '{0}' recently down, is available again.", regionName);
                         _LastRegionFailure.Remove(regionName);
@@ -469,7 +473,7 @@ namespace OpenSim.Grid.UserServer.Modules
                 }
                 else
                 {
-                    if (!success)
+                    if (!regionSuccess)
                     {
                         // Region not available, cache that temporarily.
                         m_log.WarnFormat("[LOGIN]: Region '{0}' is down, marking.", regionName);
@@ -477,7 +481,7 @@ namespace OpenSim.Grid.UserServer.Modules
                     }
                 }
             }
-            return success;
+            return regionSuccess && userSuccess;
         }
 
         public XmlRpcResponse XmlRPCSetLoginParams(XmlRpcRequest request, IPEndPoint remoteClient)

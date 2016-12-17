@@ -34,6 +34,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OpenSim.Framework;
+using OpenMetaverse.StructuredData;
 
 namespace InWorldz.Testing
 {
@@ -118,6 +119,12 @@ namespace InWorldz.Testing
         public bool SendLogoutPacketWhenClosing
         {
             set {  }
+        }
+
+        public bool DebugCrossings
+        {
+            get { return false; }
+            set { }
         }
 
         public uint CircuitCode { get; set; }
@@ -855,6 +862,11 @@ namespace InWorldz.Testing
         public void SendAlertMessage(string message)
         {
             
+        }
+
+        public void SendAlertMessage(string message, string infoMessage, OSD extraParams)
+        {
+            /* no op */
         }
 
         public void SendAgentAlertMessage(string message, bool modal)

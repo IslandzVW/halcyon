@@ -391,7 +391,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
         {
             try
             {
-                return storage.FindFolderForType(groupId, AssetType.RootFolder);
+                return storage.FindFolderForType(groupId, (AssetType)FolderType.Root);
             }
             catch (InventoryStorageException)
             {
@@ -409,7 +409,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 {
                     rootFolder = new InventoryFolderBase();
                     rootFolder.Level = InventoryFolderBase.FolderLevel.Root;
-                    rootFolder.Type = (short)AssetType.RootFolder;
+                    rootFolder.Type = (short)FolderType.Root;
                     rootFolder.Owner = groupId;
                     rootFolder.ID = UUID.Random();
                     storage.CreateFolder(groupId, rootFolder);

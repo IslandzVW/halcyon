@@ -334,7 +334,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (entityAdded)
                 {
-                    m_numPrim += sceneObject.PrimCount;
+                    m_numPrim += sceneObject.PartCount;
                     m_parentScene.EventManager.TriggerParcelPrimCountTainted();
 
                     if (attachToBackup)
@@ -391,7 +391,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (!resultOfObjectLinked)
                     {
-                        m_numPrim -= group.PrimCount;
+                        m_numPrim -= group.PartCount;
 
                         if ((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                         {
@@ -2018,6 +2018,9 @@ namespace OpenSim.Region.Framework.Scenes
                     parentGroup.LinkOtherGroupPrimsToThisGroup(child);
                 }
 
+                // Now fix avatar link numbers
+                parentGroup.RecalcSeatedAvatarLinks();
+
                 // We need to explicitly resend the newly link prim's object properties since no other actions
                 // occur on link to invoke this elsewhere (such as object selection)
                 parentGroup.RootPart.AddFlag(PrimFlags.CreateSelected);
@@ -2061,6 +2064,7 @@ namespace OpenSim.Region.Framework.Scenes
                             continue;
                         if ((part.ParentGroup.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                             continue;
+
                         if (part.LinkNum < 2) // Root or single
                             rootParts.Add(part);
                         else
@@ -2152,6 +2156,12 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
+                // Now fix avatar link numbers
+                foreach (SceneObjectGroup g in affectedGroups)
+                {
+                    g.RecalcSeatedAvatarLinks();
+                }
+
                 // Finally, trigger events in the roots
                 //
                 foreach (SceneObjectGroup g in affectedGroups)
@@ -2240,9 +2250,19 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup original = GetGroupByPrim(originalPrimID);
             if (original != null)
             {
-                if (m_parentScene.Permissions.CanDuplicateObject(original.PrimCount, original.UUID, AgentID, original.AbsolutePosition))
+                if (m_parentScene.Permissions.CanDuplicateObject(original.PartCount, original.UUID, AgentID, original.AbsolutePosition))
                 {
-                    SceneObjectGroup copy = original.Copy(AgentID, GroupID, true);
+                    ScenePresence sp;
+                    if (!TryGetAvatar(AgentID, out sp)) sp = null;
+                    UUID ActiveGroupID = UUID.Zero;
+                    IClientAPI remoteClient = null;
+                    if (sp != null)
+                        remoteClient = sp.ControllingClient;
+                    if (remoteClient  != null)
+                        ActiveGroupID = remoteClient.ActiveGroupId;
+
+                    // Clone it but don't change owner yet (if required).
+                    SceneObjectGroup copy = original.Copy(original.OwnerID, original.GroupID, true);
                     copy.AbsolutePosition = copy.AbsolutePosition + offset;
                     copy.ResetInstance(true, true, UUID.Zero);
 
@@ -2266,7 +2286,10 @@ namespace OpenSim.Region.Framework.Scenes
                     // think it's selected, so it will never send a deselect...
                     copy.SetUnselectedForCopy();
 
-                    m_numPrim += copy.PrimCount;
+                    m_numPrim += copy.PartCount;
+
+                    if (copy.OwnerID != AgentID)
+                        copy.ChangeOwner(AgentID, GroupID);
 
                     if (rot != Quaternion.Identity)
                     {
@@ -2275,6 +2298,8 @@ namespace OpenSim.Region.Framework.Scenes
 
                     copy.CreateScriptInstances(0, ScriptStartFlags.None, m_parentScene.DefaultScriptEngine, 0, null);
                     copy.HasGroupChanged = true;
+                    if (remoteClient != null)
+                        copy.GetProperties(remoteClient);
                     copy.ScheduleGroupForFullUpdate(PrimUpdateFlags.ForcedFullUpdate);
 
                     if (OnObjectDuplicate != null)

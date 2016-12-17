@@ -94,6 +94,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private bool _receivedCompleteAgentMovement = false;
 
+        private Vector3 m_grabStartPos = Vector3.Zero;
+
         private class AvatarUpdateComparer : IEqualityComparer<ImprovedTerseObjectUpdatePacket.ObjectDataBlock>
         {
             #region IEqualityComparer<ObjectDataBlock> Members
@@ -168,6 +170,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private static readonly Dictionary<string, UUID> s_defaultAnimations = new Dictionary<string, UUID>();
 
         private bool m_SendLogoutPacketWhenClosing = true;
+
+        private bool m_DebugCrossings = false;
 
         // Used to adjust Sun Orbit values so Linden based viewers properly position sun
         private const float m_sunPainDaHalfOrbitalCutoff = 4.712388980384689858f;
@@ -530,6 +534,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             set { m_SendLogoutPacketWhenClosing = value; }
         }
 
+        public bool DebugCrossings
+        {
+            get { return m_DebugCrossings; }
+            set { m_DebugCrossings = value;  }
+        }
+
         public IPEndPoint RemoteEndPoint 
         {
             get
@@ -730,6 +740,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 //we have to do the actual close work in another thread because otherwise
                 //this one will stay on the active jobs list and deadlock the closure
                 Util.FireAndForget(this.CloseWorker);
+                m_clientInterfaces.Clear();
             }
         }
 
@@ -1786,6 +1797,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             mapReply.AgentData.AgentID = AgentId;
             mapReply.Data = new MapBlockReplyPacket.DataBlock[mapBlocks2.Length];
+            mapReply.Size = new MapBlockReplyPacket.SizeBlock[mapBlocks2.Length];
             mapReply.AgentData.Flags = flag;
 
             for (int i = 0; i < mapBlocks2.Length; i++)
@@ -1800,6 +1812,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 mapReply.Data[i].RegionFlags = mapBlocks2[i].RegionFlags;
                 mapReply.Data[i].Access = mapBlocks2[i].Access;
                 mapReply.Data[i].Agents = mapBlocks2[i].Agents;
+
+                mapReply.Size[i] = new MapBlockReplyPacket.SizeBlock();
+                mapReply.Size[i].SizeX = (ushort)Constants.RegionSize;
+                mapReply.Size[i].SizeY = (ushort)Constants.RegionSize;
             }
             OutPacket(mapReply, ThrottleOutPacketType.Land);
         }
@@ -2721,18 +2737,33 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             sendAgentDataUpdate.AgentData.LastName = Util.StringToBytes256(lastname);
             OutPacket(sendAgentDataUpdate, ThrottleOutPacketType.Task);
         }
+           
+        /// <summary>
+        /// A convenience function for sending simple alert messages to the client.
+        /// </summary>
+        /// <param name="message">Message</param>
+        public void SendAlertMessage(string message)
+        {
+            SendAlertMessage(message, String.Empty, new OSD());
+        }
 
         /// <summary>
-        /// Send an alert message to the client.  On the Linden client (tested 1.19.1.4), this pops up a brief duration
-        /// blue information box in the bottom right hand corner.
+        /// Send an alert message to the client.
         /// </summary>
-        /// <param name="message"></param>
-        public void SendAlertMessage(string message)
+        /// <param name="message"></param>        
+        /// <param name="infoMessage">Info message</param>
+        /// <param name="extraParams">Extra parameters</param>
+        public void SendAlertMessage(string message, string infoMessage, OSD extraParams)
+
         {
             AlertMessagePacket alertPack = (AlertMessagePacket)PacketPool.Instance.GetPacket(PacketType.AlertMessage);
             alertPack.AlertData = new AlertMessagePacket.AlertDataBlock();
             alertPack.AlertData.Message = Util.StringToBytes256(message);
-            alertPack.AlertInfo = new AlertMessagePacket.AlertInfoBlock[0];
+            alertPack.AlertInfo = new AlertMessagePacket.AlertInfoBlock[1];
+            alertPack.AlertInfo[0] = new AlertMessagePacket.AlertInfoBlock();
+            alertPack.AlertInfo[0].Message = Util.StringToBytes256(infoMessage);
+            alertPack.AlertInfo[0].ExtraParams = OSDParser.SerializeLLSDXmlBytes(extraParams);
+
             OutPacket(alertPack, ThrottleOutPacketType.Task);
         }
 
@@ -2756,6 +2787,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <returns></returns>
         protected AgentAlertMessagePacket BuildAgentAlertPacket(string message, bool modal)
         {
+            if (!modal && !message.StartsWith("ALERT: ") && !message.StartsWith("NOTIFY: ")
+                && message != "Home position set." && message != "You died and have been teleported to your home location")
+            {
+                message = "/" + message;
+            }
             AgentAlertMessagePacket alertPack = (AgentAlertMessagePacket)PacketPool.Instance.GetPacket(PacketType.AgentAlertMessage);
             alertPack.AgentData.AgentID = AgentId;
             alertPack.AlertData.Message = Util.StringToBytes256(message);
@@ -7478,6 +7514,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
             #endregion
 
+            m_grabStartPos = Vector3.Zero;  // grab no longer active
+
             DeGrabObject handlerDeGrabObject = OnDeGrabObject;
             if (handlerDeGrabObject != null)
             {
@@ -7566,6 +7604,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 args.Scene = Scene;
                 args.SenderUUID = this.AgentId;
                 args.DestinationUUID = UUID.Zero;
+
+                // Force avatar position to be server-known avatar position. (Former contents of FixPositionOfChatMessage.)
+                ScenePresence avatar;
+                if (((Scene)Scene).TryGetAvatar(args.SenderUUID, out avatar))
+                    args.Position = avatar.AbsolutePosition;
 
                 ChatMessage handlerChatFromClient = OnChatFromClient;
                 if (handlerChatFromClient != null)
@@ -7664,7 +7707,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 if (msgpack.MessageBlock.ToAgentID != m_frozenBy)
                 {
-                    // determin if we should report that the IM was blocked
+                    // determine if we should report that the IM was blocked
                     if ((msgpack.MessageBlock.Dialog == (byte)InstantMessageDialog.MessageFromAgent) ||
                         (msgpack.MessageBlock.Dialog == (byte)InstantMessageDialog.InventoryOffered))
                         SendAlertMessage("You have been frozen by " + m_frozenByName + ". You are only allowed to send IMs to " + m_frozenByName + " while frozen.");
@@ -8026,6 +8069,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
 
                     uint serial = appear.AgentData.SerialNum;
+
+                    m_log.InfoFormat("[LLCV]: Avatar appearance update ({0}) for user {1}", serial, this.Name);
 
                     handlerSetAppearance(appear.ObjectData.TextureEntry, visualparams, items, serial);
                 }
@@ -9072,6 +9117,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         arg.STCoord = surfaceInfo.STCoord;
                         arg.UVCoord = surfaceInfo.UVCoord;
                         touchArgs.Add(arg);
+
+                        // Store the start of grab position for relative offsets from future updates (llDetectedGrab).
+                        this.m_grabStartPos = surfaceInfo.Position;
                     }
                 }
                 handlerGrabObject(grab.ObjectData.LocalID, grab.ObjectData.GrabOffset, this, touchArgs);
@@ -9113,49 +9161,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         touchArgs.Add(arg);
                     }
                 }
-                handlerGrabUpdate(grabUpdate.ObjectData.ObjectID, grabUpdate.ObjectData.GrabOffsetInitial,
+                handlerGrabUpdate(grabUpdate.ObjectData.ObjectID, m_grabStartPos,
                                   grabUpdate.ObjectData.GrabPosition, this, touchArgs);
             }
             return true;
         }
-
-        /*
-        private bool HandleObjectDeGrab(IClientAPI sender, Packet Pack)
-        {
-            ObjectDeGrabPacket deGrab = (ObjectDeGrabPacket)Pack;
-
-            #region Packet Session and User Check
-            if (m_checkPackets)
-            {
-                if (deGrab.AgentData.SessionID != SessionId ||
-                    deGrab.AgentData.AgentID != AgentId)
-                    return true;
-            }
-            #endregion
-
-            DeGrabObject handlerDeGrabObject = OnDeGrabObject;
-            if (handlerDeGrabObject != null)
-            {
-                List<SurfaceTouchEventArgs> touchArgs = new List<SurfaceTouchEventArgs>();
-                if ((deGrab.SurfaceInfo != null) && (deGrab.SurfaceInfo.Length > 0))
-                {
-                    foreach (ObjectDeGrabPacket.SurfaceInfoBlock surfaceInfo in deGrab.SurfaceInfo)
-                    {
-                        SurfaceTouchEventArgs arg = new SurfaceTouchEventArgs();
-                        arg.Binormal = surfaceInfo.Binormal;
-                        arg.FaceIndex = surfaceInfo.FaceIndex;
-                        arg.Normal = surfaceInfo.Normal;
-                        arg.Position = surfaceInfo.Position;
-                        arg.STCoord = surfaceInfo.STCoord;
-                        arg.UVCoord = surfaceInfo.UVCoord;
-                        touchArgs.Add(arg);
-                    }
-                }
-                handlerDeGrabObject(deGrab.ObjectData.LocalID, this, touchArgs);
-           }
-            return true;
-        }
-        */
 
         private bool HandleObjectSpinStart(IClientAPI sender, Packet Pack)
         {

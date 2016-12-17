@@ -174,7 +174,7 @@ namespace OpenSim.Framework.Servers
                         "Quit the application", HandleQuit);
 
                 m_console.Commands.AddCommand("base", false, "forcegc",
-                        "forcegc",
+                        "forcegc [ 0|1|2|*|now ]",
                         "Forces an immediate full garbage collection (testing/dev only)", HandleForceGC);
 
                 m_console.Commands.AddCommand("base", false, "set log level",
@@ -326,7 +326,32 @@ namespace OpenSim.Framework.Servers
 
         private void HandleForceGC(string module, string[] args)
         {
-            GC.Collect();
+            // Default is an full (gen2) but NON-forced GC.
+            int gen = 2;
+            GCCollectionMode mode = GCCollectionMode.Optimized;
+
+            if (args.Length > 1)
+            {
+                // Any argument implies forced GC.
+                mode = GCCollectionMode.Forced;
+                switch (args[1].ToLower())
+                {
+                    case "now":
+                    case "*":
+                        gen = GC.MaxGeneration;
+                        break;
+                    case "0":
+                    case "1":
+                    case "2":
+                        gen = Convert.ToInt32(args[1]);
+                        break;
+                    default:
+                        m_log.Warn("Usage: forcegc [ 0|1|2|*|now ]");
+                        return;
+                }
+            }
+
+            GC.Collect(gen, mode, true);
         }
 
         private void HandleLogLevel(string module, string[] cmd)

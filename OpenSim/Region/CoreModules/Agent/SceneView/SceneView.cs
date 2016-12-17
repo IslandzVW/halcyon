@@ -153,7 +153,6 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         #endregion
 
         #region Constructor
-
         public SceneView(ScenePresence presence, bool useCulling)
         {
             UseCulling = useCulling;
@@ -164,7 +163,6 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             //Update every 1/4th a draw distance
             DistanceBeforeCullingRequired = _MINIMUM_DRAW_DISTANCE / 8;
         }
-
         #endregion
 
         #region Culler Methods
@@ -327,6 +325,8 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             // 2 stage check is needed.
             if (otherClient == null)
                 return;
+            if (otherClient.IsBot)
+                return;
             if (otherClient.ControllingClient == null)
                 return;
             if (m_presence.Appearance.Texture == null)
@@ -341,10 +341,6 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// </summary>
         public void SendInitialFullUpdateToAllClients()
         {
-            //Bots don't get to check for updates
-            if (m_presence.IsBot)
-                return;
-
             m_perfMonMS = Environment.TickCount;
 
             List<ScenePresence> avatars = m_presence.Scene.GetScenePresences();
@@ -408,10 +404,6 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
         /// </summary>
         public void SendFullUpdateToAllClients()
         {
-            //Bots don't get to check for updates
-            if (m_presence.IsBot)
-                return;
-
             m_perfMonMS = Environment.TickCount;
 
             // only send update from root agents to other clients; children are only "listening posts"

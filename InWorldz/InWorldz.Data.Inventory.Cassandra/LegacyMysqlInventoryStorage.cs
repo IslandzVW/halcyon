@@ -135,7 +135,7 @@ namespace InWorldz.Data.Inventory.Cassandra
 
         public UUID SendFolderToTrash(InventoryFolderBase folder, UUID trashFolderHint)
         {
-            InventoryFolderBase trashFolder = _impl.findUserFolderForType(folder.Owner, (int)AssetType.TrashFolder);
+            InventoryFolderBase trashFolder = _impl.findUserFolderForType(folder.Owner, (int)FolderType.Trash);
             this.MoveFolder(folder, trashFolder.ID);
 
             return trashFolder.ID;
@@ -149,12 +149,20 @@ namespace InWorldz.Data.Inventory.Cassandra
             {
                 return folder;
             }
-            else if (type == AssetType.RootFolder)
+            else if (type == (AssetType)FolderType.Root)
             {
-                //this is a special case for the legacy inventory services.
-                //the root folder type may be incorrectly set to folder instead of RootFolder
-                //we must find it a different way in this case
-                return _impl.getUserRootFolder(owner);
+                //this is a special case for the legacy inventory services. 
+                //the root folder type asset type may have been incorrectly saved
+                //as the old AssetType.RootFolder (which is 9),
+                //rather than AssetType.Folder (which is 8) with FolderType.Root (which is also 8).
+                folder = _impl.findUserFolderForType(owner, (int)FolderType.OldRoot);
+                if (folder == null)
+                {
+                    //this is another special case for the legacy inventory services.
+                    //the root folder type may be incorrectly set to folder instead of RootFolder
+                    //we must find it a different way in this case
+                    return _impl.getUserRootFolder(owner);
+                }
             }
 
             return null;
@@ -174,6 +182,11 @@ namespace InWorldz.Data.Inventory.Cassandra
         public void PurgeFolder(InventoryFolderBase folder)
         {
             _impl.deleteInventoryFolder(folder);
+        }
+
+        public void PurgeEmptyFolder(InventoryFolderBase folder)
+        {
+            PurgeFolder(folder);    // no optimization for this in the legacy implementation
         }
 
         public void PurgeFolders(IEnumerable<InventoryFolderBase> folders)
@@ -216,7 +229,7 @@ namespace InWorldz.Data.Inventory.Cassandra
 
         public UUID SendItemToTrash(InventoryItemBase item, UUID trashFolderHint)
         {
-            InventoryFolderBase trashFolder = _impl.findUserFolderForType(item.Owner, (int)AssetType.TrashFolder);
+            InventoryFolderBase trashFolder = _impl.findUserFolderForType(item.Owner, (int)FolderType.Trash);
             this.MoveItem(item, trashFolder);
 
             return trashFolder.ID;

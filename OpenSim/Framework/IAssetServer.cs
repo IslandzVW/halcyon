@@ -29,6 +29,43 @@ using OpenMetaverse;
 
 namespace OpenSim.Framework
 {
+    ///
+    public class AssetStats
+    {
+        public string Provider;
+        // Asset FetchStore counters
+        public ulong nTotal;
+        // Reads/Fetches
+        public ulong nGet;
+        public ulong nGetInit;
+        public ulong nGetHit;
+        public ulong nGetFetches;
+        public ulong nGetNotFound;
+        // Writes/Stores
+        public ulong nPut;
+        public ulong nPutInit;
+        public ulong nPutCached;
+        public ulong nPutExists;
+        public ulong nPutTO;     // timeout
+        public ulong nPutNTO;    // .NET conn timeout
+        public ulong nPutExceptWeb;
+        public ulong nPutExceptIO;
+        public ulong nPutExcept; // other exceptions
+        // Update stats (ignored by CacheAssetIfAppropriate)
+        public ulong nBigAsset;  // 
+        public ulong nBigStream;
+        public ulong nDupUpdate;
+
+
+        public float[] allGets;
+        public float[] allPuts;
+
+        public AssetStats(string provider)
+        {
+            Provider = provider;
+        }
+    }
+
     /// <summary>
     /// Description of IAssetServer.
     /// </summary>
@@ -64,6 +101,8 @@ namespace OpenSim.Framework
 
         void StoreAsset(AssetBase asset);
         void UpdateAsset(AssetBase asset);
+
+        AssetStats GetStats(bool resetStats);
     }
 
     public class AssetClientPluginInitializer : PluginInitializerBase

@@ -748,14 +748,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool CheckFolderHeirarchyIsAppropriateForPurge(InventoryFolderBase folder, CachedUserInfo userProfile)
         {
-            if (folder.Type == (short)AssetType.TrashFolder ||
-                folder.Type == (short)AssetType.LostAndFoundFolder)
+            if (folder.Type == (short)FolderType.Trash||
+                folder.Type == (short)FolderType.LostAndFound)
             {
                 return true;
             }
 
             if (folder.ParentID == UUID.Zero ||
-                folder.Type == (short)AssetType.RootFolder)
+                folder.Type == (short)FolderType.Root)
             {
                 //got to the top, didnt find squat
                 return false;
@@ -765,7 +765,7 @@ namespace OpenSim.Region.Framework.Scenes
             return CheckFolderHeirarchyIsAppropriateForPurge(parent, userProfile);
         }
 
-        protected void GrabUpdate(UUID objectID, Vector3 offset, Vector3 pos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
+        protected void GrabUpdate(UUID objectID, Vector3 startPos, Vector3 pos, IClientAPI remoteClient, List<SurfaceTouchEventArgs> surfaceArgs)
         {
             SceneObjectGroup group = m_sceneGraph.GetGroupByPrim(objectID);
             if (group != null)
@@ -775,24 +775,31 @@ namespace OpenSim.Region.Framework.Scenes
                 if (part != null)
                 {
                     SurfaceTouchEventArgs surfaceArg = null;
+                    Vector3 grabOffset = Vector3.Zero;
                     if (surfaceArgs != null && surfaceArgs.Count > 0)
+                    {
                         surfaceArg = surfaceArgs[0];
+                        if (surfaceArg.FaceIndex >= 0)
+                            grabOffset = surfaceArg.Position - startPos;
+                        else
+                            grabOffset = pos - startPos;
+                    }
 
                     // If the touched prim handles touches, deliver it
                     // If not, deliver to root prim,if the root prim doesnt
                     // handle it, deliver a grab to the scene graph
                     if ((part.ScriptEvents & ScriptEvents.touch) != 0)
                     {
-                        EventManager.TriggerObjectGrabUpdate(part.LocalId, 0, part.OffsetPosition, remoteClient, surfaceArg);
+                        EventManager.TriggerObjectGrabUpdate(part.LocalId, 0, grabOffset, remoteClient, surfaceArg);
                     }
                     else if ((group.RootPart.ScriptEvents & ScriptEvents.touch) != 0)
                     {
-                        EventManager.TriggerObjectGrabUpdate(group.RootPart.LocalId, part.LocalId, part.OffsetPosition, remoteClient, surfaceArg);
+                        EventManager.TriggerObjectGrabUpdate(group.RootPart.LocalId, part.LocalId, grabOffset, remoteClient, surfaceArg);
                     }
                     else
                     {
                         //no one can handle it, send a grab
-                        m_sceneGraph.MoveObject(objectID, offset, pos, remoteClient, surfaceArgs);
+                        m_sceneGraph.MoveObject(objectID, startPos, pos, remoteClient, surfaceArgs);
                     }
                 }
                 

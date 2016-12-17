@@ -169,6 +169,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             StopManagingPresences();
 
+            _sp = null; // release the SP reference
+
             _scene.EventManager.OnMakeRootAgent -= EventManager_OnMakeRootAgent;
             _scene.EventManager.OnMakeChildAgent -= EventManager_OnMakeChildAgent;
         }
@@ -652,6 +654,20 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         return true;
                     }
+                }
+            }
+
+            return false;
+        }
+
+        public bool HasEstablishedConnection(SimpleRegionInfo region)
+        {
+            AvatarRemotePresence pres;
+            lock (_remotePresences)
+            {
+                if (_remotePresences.TryGetValue(region.RegionHandle, out pres))
+                {
+                    return (pres.State == RemotePresenceState.Established);
                 }
             }
 
