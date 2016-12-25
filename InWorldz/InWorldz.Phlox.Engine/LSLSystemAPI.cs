@@ -14694,7 +14694,7 @@ namespace InWorldz.Phlox.Engine
                     }
                 }
 
-                int textLength = notecardData.Length;
+                int textLength = Encoding.UTF8.GetByteCount(notecardData.ToString());
                 string sNotecardData = "Linden text version 2\n{\nLLEmbeddedItems version 1\n{\ncount 0\n}\nText length "
                     + textLength.ToString() + "\n" + notecardData.ToString() + "}\n";
 
