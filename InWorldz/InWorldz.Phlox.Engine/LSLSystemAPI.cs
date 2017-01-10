@@ -12040,16 +12040,25 @@ namespace InWorldz.Phlox.Engine
 
         private int ClearPrimMedia(SceneObjectPart part, int face)
         {
+            IMoapModule module = m_ScriptEngine.World.RequestModuleInterface<IMoapModule>();
+            if (null == module)
+                return ScriptBaseClass.LSL_STATUS_NOT_SUPPORTED;
+
+            if (face == ScriptBaseClass.ALL_SIDES)
+            {
+                for (uint i = 0; i < part.GetNumberOfSides(); i++)
+                {
+                    module.ClearMediaEntry(part, face);
+                }
+                return ScriptBaseClass.LSL_STATUS_OK;
+            }
+
             // LSL Spec http://wiki.secondlife.com/wiki/LlClearPrimMedia says to fail silently if face is invalid
             // Assuming silently fail means sending back LSL_STATUS_OK.  Ideally, need to check this.
             // FIXME: Don't perform the media check directly
             if (face < 0 || face > part.GetNumberOfSides() - 1)
                 return ScriptBaseClass.LSL_STATUS_NOT_FOUND;
-
-            IMoapModule module = m_ScriptEngine.World.RequestModuleInterface<IMoapModule>();
-            if (null == module)
-                return ScriptBaseClass.LSL_STATUS_NOT_SUPPORTED;
-
+            
             module.ClearMediaEntry(part, face);
 
             return ScriptBaseClass.LSL_STATUS_OK;

@@ -227,13 +227,13 @@ namespace InWorldz.Phlox.Engine
 
                     rc = true;
                 }
+            }
 
-                // Callback here because if the Item ID was not found, the callback would be meaningless
-                if (unloadReq.PostUnloadCallback != null)
-                {
-                    // Now call the completion callback (e.g. now that it is safe for the script to be removed in the delete case).
-                    unloadReq.PostUnloadCallback(unloadReq.Prim, unloadReq.ItemId, unloadReq.CallbackParams.AllowedDrop, unloadReq.CallbackParams.FireEvents, unloadReq.CallbackParams.ReplaceArgs);
-                }
+            // Callback here because if the Item ID was not found, the callback would be meaningless
+            if (unloadReq.PostUnloadCallback != null)
+            {
+                // Now call the completion callback (e.g. now that it is safe for the script to be removed in the delete case).
+                unloadReq.PostUnloadCallback(unloadReq.Prim, unloadReq.ItemId, unloadReq.CallbackParams.AllowedDrop, unloadReq.CallbackParams.FireEvents, unloadReq.CallbackParams.ReplaceArgs);
             }
 
             return rc;
