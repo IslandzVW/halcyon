@@ -41,6 +41,7 @@ using Caps = OpenSim.Framework.Communications.Capabilities.Caps;
 using OpenSim.Framework;
 using System.Text;
 using System.Collections;
+using System.Net;
 
 namespace MOSES.FreeSwitchVoice
 {
@@ -55,9 +56,10 @@ namespace MOSES.FreeSwitchVoice
         private static readonly string m_chatSessionRequestPath = "0009/";
 
         private static bool m_enabled = false;
+        private static string m_accountService; // http://ip:port/fsapi
 
         // FreeSwitch Variables
-        private static string m_freeSwitchIP;
+        /*private static string m_freeSwitchIP;
         private static string m_apiPrefix;
         private static string m_realm;
         private static string m_sipProxy;
@@ -67,13 +69,18 @@ namespace MOSES.FreeSwitchVoice
         private static int m_default_timeout;
 
         private static string m_accountService;
-        private static int m_accountServicePort;
+        private static int m_accountServicePort;*/
 
         private static string m_forcedChannelName = String.Empty;
         private static readonly string EMPTY_RESPONSE = "<llsd><undef /></llsd>";
 
-        private Dictionary<string, string> uuid_to_name = new Dictionary<string, string>();
-        private Dictionary<string, string> m_ParcelAddress = new Dictionary<string, string>();
+        //private Dictionary<string, string> uuid_to_name = new Dictionary<string, string>();
+        //private Dictionary<string, string> m_ParcelAddress = new Dictionary<string, string>();
+
+        // not sure why vivox module locks.  serialize calls? no shared stucture used in half of requests
+        private static readonly Object vlock = new Object();
+
+        private static Dictionary<string, string> m_parents = new Dictionary<string, string>();
 
         private IConfig m_config;
 
@@ -89,7 +96,7 @@ namespace MOSES.FreeSwitchVoice
 
             try
             {
-                m_freeSwitchIP = m_config.GetString("freeswitch_well_known_ip", String.Empty);
+                /*m_freeSwitchIP = m_config.GetString("freeswitch_well_known_ip", String.Empty);
                 m_apiPrefix = m_config.GetString("api_prefix", "/fsapi");
                 m_realm = m_config.GetString("realm", m_freeSwitchIP);
                 m_sipProxy = m_config.GetString("sip_proxy", m_freeSwitchIP + ":5060");
@@ -104,15 +111,20 @@ namespace MOSES.FreeSwitchVoice
                 if (String.IsNullOrEmpty(m_freeSwitchIP) || String.IsNullOrEmpty(m_accountService))
                 {
                     m_log.Error("[FreeSwitchVoice] plugin mis-configured");
-                    m_log.Info("[FreeSwitchVoice] plugin disabled: incomplete configuration, freeswitch_well_known_ip is empty or missing");
                     return;
+                }*/
+
+                m_accountService = m_config.GetString("account_service", String.Empty);
+                m_enabled = m_config.GetBoolean("enabled", false);
+
+                if (m_enabled)
+                {
+                    m_log.InfoFormat("[FreeSwitchVoice] using FreeSwitch server {0}", m_accountService);
                 }
-
-                m_log.InfoFormat("[FreeSwitchVoice] using FreeSwitch server {0}", m_freeSwitchIP);
-
-                m_enabled = true;
-
-                m_log.Info("[FreeSwitchVoice] plugin enabled");
+                else
+                {
+                    m_log.Info("[FreeSwitchVoice] plugin enabled");
+                }
             }
             catch (Exception e)
             {
@@ -129,28 +141,48 @@ namespace MOSES.FreeSwitchVoice
 
         public void AddRegion(Scene scene)
         {
-            if (m_enabled)
+            if (!m_enabled)
             {
-                //string channelId;
-
-                //string sceneUUID = String.IsNullOrEmpty(m_forcedChannelName) ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
-                //string sceneName = scene.RegionInfo.RegionName;
-
-                scene.EventManager.OnRegisterCaps += delegate (UUID agentID, Caps caps)
-                {
-                    OnRegisterCaps(scene, agentID, caps);
-                };
+                return;
             }
-        }
+            string channelId;
 
-        public void RemoveRegion(Scene scene)
-        {
+            string sceneUUID = String.IsNullOrEmpty(m_forcedChannelName) ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
+            string sceneName = scene.RegionInfo.RegionName;
+
+            // get region directory and wipe out all children
+            // create directory if not exists
+            if(TryGetDirectory(sceneUUID + "D", out channelId))
+            {
+                // TODO: Are we using children??
+                //FreeSwitchDialplan.ListChildren(directory);
+
+                // delete all children, we wont be re-using them
+            }
+            else
+            {
+                TryCreateDirectory(sceneUUID + "D", sceneName, out channelId);
+
+                // TODO: handle errors
+            }
+
+            scene.EventManager.OnRegisterCaps += delegate (UUID agentID, Caps caps)
+            {
+                OnRegisterCaps(scene, agentID, caps);
+            };
 
         }
 
         public void RegionLoaded(Scene scene)
         {
             // Do nothing.
+        }
+
+        public void RemoveRegion(Scene scene)
+        {
+
+            // get region directory and wipe out all children
+
         }
 
         public Type ReplaceableInterface
@@ -241,32 +273,28 @@ namespace MOSES.FreeSwitchVoice
                                   request, path, param);
 
                 string agentname = "x" + Convert.ToBase64String(agentID.GetBytes());
-                string password = new UUID(Guid.NewGuid()).ToString().Replace('-', 'Z').Substring(0, 16);
+                //string password = new UUID(Guid.NewGuid()).ToString().Replace('-', 'Z').Substring(0, 16);
                 string code = String.Empty;
 
                 agentname = agentname.Replace('+', '-').Replace('/', '_');
 
-                lock (uuid_to_name)
+                UserAccount account = null;
+                
+                if(GetVoiceAccountInfo(agentname, out account))
                 {
-                    if (uuid_to_name.ContainsKey(agentname))
-                    {
-                        uuid_to_name[agentname] = avatarName;
-                    }
-                    else
-                    {
-                        uuid_to_name.Add(agentname, avatarName);
-                    }
+                    LLSDVoiceAccountResponse voiceAccountResponse =
+                    new LLSDVoiceAccountResponse(agentname, account.password, account.realm, m_accountService);
+
+                    string r = LLSDHelpers.SerializeLLSDReply(voiceAccountResponse);
+
+                    m_log.DebugFormat("[FreeSwitchVoice][PROVISIONVOICE]: avatar \"{0}\": {1}", avatarName, r);
+
+                    return r;
                 }
 
-                LLSDVoiceAccountResponse voiceAccountResponse =
-                    new LLSDVoiceAccountResponse(agentname, password, m_realm, String.Format("http://{0}:{1}{2}/", m_accountService,
-                                                              m_accountServicePort, m_apiPrefix));
-
-                string r = LLSDHelpers.SerializeLLSDReply(voiceAccountResponse);
-
-                m_log.DebugFormat("[FreeSwitchVoice][PROVISIONVOICE]: avatar \"{0}\": {1}", avatarName, r);
-
-                return r;
+                m_log.DebugFormat("[VivoxVoice][PROVISIONVOICE]: Get Account Request failed for \"{0}\"", avatarName);
+                throw new Exception("Unable to execute request");
+                
             }
             catch (Exception e)
             {
@@ -338,7 +366,7 @@ namespace MOSES.FreeSwitchVoice
                 }
                 else
                 {
-                    channel_uri = ChannelUri(scene, land);
+                    channel_uri = RegionGetOrCreateChannel(scene, land);
                 }
 
                 // fill in our response to the client
@@ -367,54 +395,130 @@ namespace MOSES.FreeSwitchVoice
             return "<llsd>true</llsd>";
         }
 
-        private string ChannelUri(Scene scene, LandData land)
+        private bool TryGetDirectory(string DirectoryName, out string directoryId)
+        {
+            m_log.InfoFormat("[FreeSwitchVoice][TryGetDirectory]: name \"{0}\"", DirectoryName);
+            directoryId = "";
+            return false;
+        }
+
+        private bool TryCreateDirectory(string directoryId, string description, out string channelid)
+        {
+            m_log.InfoFormat("[FreeSwitchVoice][TryCreateDirectory]: name \"{0}\", description: \"{1}\"", directoryId, description);
+            channelid = "";
+            return false;
+        }
+
+        private bool TryGetChannel(string channelParent, string channelName, out string channelId, out string channelUri)
+        {
+            m_log.InfoFormat("[FreeSwitchVoice][TryGetChannel]: parent \"{0}\", name: \"{1}\"", channelParent, channelName);
+            channelId = "";
+            channelUri = "";
+            return false;
+        }
+
+        private bool TryCreateChannel(string parent, string channelId, string description, out string channelUri)
+        {
+            m_log.InfoFormat("[FreeSwitchVoice][TryCreateChannel]: parent \"{0}\", channel: \"{1}\", description: \"{2}\"", parent, channelId, description);
+            channelUri = "";
+            return false;
+        }
+
+        private bool GetVoiceAccountInfo(string user, out UserAccount account)
+        {
+            m_log.InfoFormat("[FreeSwitchVoice][GetVoiceAccountInfo]: user \"{0}\"", user);
+            account = null;
+            return false;
+        }
+
+        private string RegionGetOrCreateChannel(Scene scene, LandData land)
         {
             string channelUri = null;
+            string channelId = null;
 
             string landUUID;
             string landName;
+            string parentId;
+
+            lock (m_parents) parentId = String.IsNullOrEmpty(m_forcedChannelName) ? m_parents[scene.RegionInfo.RegionID.ToString()] : m_parents[m_forcedChannelName];
 
             // Create parcel voice channel. If no parcel exists, then the voice channel ID is the same
             // as the directory ID. Otherwise, it reflects the parcel's ID.
-
-            lock (m_ParcelAddress)
-            {
-                if (m_ParcelAddress.ContainsKey(land.GlobalID.ToString()))
-                {
-                    m_log.DebugFormat("[FreeSwitchVoice]: parcel id {0}: using sip address {1}",
-                                      land.GlobalID, m_ParcelAddress[land.GlobalID.ToString()]);
-                    return m_ParcelAddress[land.GlobalID.ToString()];
-                }
-            }
 
             if (land.LocalID != 1 && (land.Flags & (uint)ParcelFlags.UseEstateVoiceChan) == 0)
             {
                 landName = String.Format("{0}:{1}", scene.RegionInfo.RegionName, land.Name);
                 landUUID = land.GlobalID.ToString();
-                m_log.DebugFormat("[FreeSwitchVoice]: Region:Parcel \"{0}\": parcel id {1}: using channel name {2}",
-                                  landName, land.LocalID, landUUID);
+                //m_log.DebugFormat("[FreeSwitchVoice]: Region:Parcel \"{0}\": parcel id {1}: using channel name {2}", 
+                //                  landName, land.LocalID, landUUID);
             }
             else
             {
                 landName = String.Format("{0}:{1}", scene.RegionInfo.RegionName, scene.RegionInfo.RegionName);
-                landUUID = scene.RegionInfo.RegionID.ToString();
-                m_log.DebugFormat("[FreeSwitchVoice]: Region:Parcel \"{0}\": parcel id {1}: using channel name {2}",
-                                  landName, land.LocalID, landUUID);
+                landUUID = String.IsNullOrEmpty(m_forcedChannelName) ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
+                //m_log.DebugFormat("[FreeSwitchVoice]: Region:Parcel \"{0}\": parcel id {1}: using channel name {2}", 
+                //                  landName, land.LocalID, landUUID);
             }
 
-            // slvoice handles the sip address differently if it begins with confctl, hiding it from the user in the friends list. however it also disables
-            // the personal speech indicators as well unless some siren14-3d codec magic happens. we dont have siren143d so we'll settle for the personal speech indicator.
-            channelUri = String.Format("sip:conf-{0}@{1}", "x" + Convert.ToBase64String(Encoding.ASCII.GetBytes(landUUID)), m_realm);
-
-            lock (m_ParcelAddress)
+            lock (vlock)
             {
-                if (!m_ParcelAddress.ContainsKey(land.GlobalID.ToString()))
+                // Added by Adam to help debug channel not availible errors.
+                if (!TryGetChannel(parentId, landUUID, out channelId, out channelUri))
                 {
-                    m_ParcelAddress.Add(land.GlobalID.ToString(), channelUri);
+                    if (!TryCreateChannel(parentId, landUUID, landName, out channelUri))
+                        throw new Exception("freeswitch channel uri not available");
+                    //else
+                    //    m_log.DebugFormat("[FreeSwitchVoice] Created new channel at " + channelUri);
                 }
+                //else 
+                //    m_log.DebugFormat("[FreeSwitchVoice] Found existing channel at " + channelUri);
+
+                //m_log.DebugFormat("[FreeSwitchVoice]: Region:Parcel \"{0}\": parent channel id {1}: retrieved parcel channel_uri {2} ", 
+                //                  landName, parentId, channelUri);
+
+
             }
 
             return channelUri;
         }
+
+        private XmlElement NetworkCall(string requrl)
+        {
+
+            XmlDocument doc = null;
+
+            doc = new XmlDocument();
+
+            try
+            {
+                // Otherwise prepare the request
+                // m_log.DebugFormat("[FreeSwitchVoice] Sending request <{0}>", requrl);
+
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(requrl);
+                HttpWebResponse rsp = null;
+
+                // We are sending just parameters, no content
+                req.ContentLength = 0;
+
+                // Send request and retrieve the response
+                rsp = (HttpWebResponse)req.GetResponse();
+
+                XmlTextReader rdr = new XmlTextReader(rsp.GetResponseStream());
+                doc.Load(rdr);
+                rdr.Close();
+            }
+            catch (Exception e)
+            {
+                m_log.ErrorFormat("[FreeSwitchVoice] Error in network call : {0}", e.Message);
+            }
+
+            return doc.DocumentElement;
+        }
+    }
+
+    public class UserAccount
+    {
+        public string password { get; private set; }
+        public string realm { get; private set;  }
     }
 }
