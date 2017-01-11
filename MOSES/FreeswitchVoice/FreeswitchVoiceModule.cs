@@ -395,17 +395,88 @@ namespace MOSES.FreeSwitchVoice
             return "<llsd>true</llsd>";
         }
 
-        private bool TryGetDirectory(string DirectoryName, out string directoryId)
+        private bool TryGetDirectory(string directoryName, out string directoryId)
         {
-            m_log.InfoFormat("[FreeSwitchVoice][TryGetDirectory]: name \"{0}\"", DirectoryName);
-            directoryId = "";
+            m_log.DebugFormat(
+                "[FreeSwitchVoice][TryGetDirectory]: directoryName: {0}", directoryName);
+
+            string requrl = String.Format("{0}/getDirectory?channame={1}", m_accountService, directoryName);
+            XmlElement resp = NetworkCall(requrl);
+
+            /*
+                expected XML response:
+                <Result>
+                    <Directory>
+                        ...
+                    </Directory>
+                </Result>
+            */
+            XmlNodeList dirs = resp.GetElementsByTagName("Directory");
+            if(dirs.Count == 0)
+            {
+                directoryId = String.Empty;
+                m_log.DebugFormat(
+                           "[FreeSwitchVoice][TryGetDirectory]: Directory not found");
+                return false;
+            }
+            XmlNode directory = dirs.Item(0);
+            foreach ( XmlNode node in directory.ChildNodes)
+            {
+                switch (node.Name)
+                {
+                    case "ID":
+                        directoryId = node.Value;
+                        m_log.DebugFormat(
+                            "[FreeSwitchVoice][TryGetDirectory]: Directory found: {0}", directoryId);
+                        return true;
+                }
+            }
+
+            // not there, return negative
+            m_log.DebugFormat(
+                            "[FreeSwitchVoice][TryGetDirectory]: Directory not found");
+            directoryId = String.Empty;
             return false;
         }
 
-        private bool TryCreateDirectory(string directoryId, string description, out string channelid)
+        private bool TryCreateDirectory(string directoryId, string description, out string channelId)
         {
             m_log.InfoFormat("[FreeSwitchVoice][TryCreateDirectory]: name \"{0}\", description: \"{1}\"", directoryId, description);
-            channelid = "";
+            string requrl = String.Format("{0}/createDirectory?dirid={1}", m_accountService, directoryId);
+
+            if (!String.IsNullOrEmpty(description))
+            {
+                requrl = String.Format("{0}&chan_desc={1}", requrl, description);
+            }
+            requrl = String.Format("{0}&chan_type={1}", requrl, "dir");
+
+            XmlElement resp = NetworkCall(requrl);
+            XmlNodeList dirs = resp.GetElementsByTagName("Directory");
+            if (dirs.Count == 0)
+            {
+                channelId = String.Empty;
+                m_log.DebugFormat(
+                           "[FreeSwitchVoice][TryCreateDirectory]: Directory not created");
+                return false;
+            }
+
+            XmlNode directory = dirs.Item(0);
+            foreach (XmlNode node in directory.ChildNodes)
+            {
+                switch (node.Name)
+                {
+                    case "ID":
+                        channelId = node.Value;
+                        m_log.DebugFormat(
+                            "[FreeSwitchVoice][TryCreateDirectory]: Directory created: {0}", directoryId);
+                        return true;
+                }
+            }
+
+            m_log.DebugFormat(
+                            "[FreeSwitchVoice][TryCreateDirectory]: Directory not created...");
+
+            channelId = String.Empty;
             return false;
         }
 
