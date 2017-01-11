@@ -292,7 +292,7 @@ namespace MOSES.FreeSwitchVoice
                     return r;
                 }
 
-                m_log.DebugFormat("[VivoxVoice][PROVISIONVOICE]: Get Account Request failed for \"{0}\"", avatarName);
+                m_log.DebugFormat("[FreeSwitchVoice][PROVISIONVOICE]: Get Account Request failed for \"{0}\"", avatarName);
                 throw new Exception("Unable to execute request");
                 
             }
@@ -425,7 +425,7 @@ namespace MOSES.FreeSwitchVoice
                 switch (node.Name)
                 {
                     case "ID":
-                        directoryId = node.Value;
+                        directoryId = node.InnerText;
                         m_log.DebugFormat(
                             "[FreeSwitchVoice][TryGetDirectory]: Directory found: {0}", directoryId);
                         return true;
@@ -466,7 +466,7 @@ namespace MOSES.FreeSwitchVoice
                 switch (node.Name)
                 {
                     case "ID":
-                        channelId = node.Value;
+                        channelId = node.InnerText;
                         m_log.DebugFormat(
                             "[FreeSwitchVoice][TryCreateDirectory]: Directory created: {0}", directoryId);
                         return true;
@@ -498,7 +498,56 @@ namespace MOSES.FreeSwitchVoice
         private bool GetVoiceAccountInfo(string user, out UserAccount account)
         {
             m_log.InfoFormat("[FreeSwitchVoice][GetVoiceAccountInfo]: user \"{0}\"", user);
+            string requrl = String.Format("{0}/getAccountInfo?user={1}", m_accountService, user);
+
+            /*
+            <Result>
+                <Account>
+                    <UserID> </UserID>
+                    <Password> </Password>
+                    <Realm> </Realm>
+                </Account>
+            </Result>    
+            */
+            XmlElement resp = NetworkCall(requrl);
+            m_log.DebugFormat("[FreeSwitchVoice][GetVoiceAccountInfo]: {0}", resp.OuterXml);
+            XmlNodeList accounts = resp.GetElementsByTagName("Account");
+            if (accounts.Count == 0)
+            {
+                account = null;
+                m_log.DebugFormat(
+                           "[FreeSwitchVoice][GetVoiceAccountInfo]: No Accounts found");
+                return false;
+            }
+
+            XmlNode acc = accounts.Item(0);
+            string realm = String.Empty;
+            string password = String.Empty;
+            foreach (XmlNode node in acc.ChildNodes)
+            {
+                m_log.DebugFormat(
+                           "[FreeSwitchVoice][GetVoiceAccountInfo]: node: {0}:{1}", node.Name, node.InnerText);
+
+                switch (node.Name)
+                {
+                    case "Password":
+                        password = node.InnerText;
+                        break;
+                    case "Realm":
+                        realm = node.InnerText;
+                        break;
+                }
+            }
+
+            if(!String.IsNullOrEmpty(realm) || !String.IsNullOrEmpty(password))
+            {
+                account = new UserAccount(user, password, realm);
+                return true;
+            }
+
             account = null;
+            m_log.DebugFormat(
+                       "[FreeSwitchVoice][GetVoiceAccountInfo]: Account missing or incomplete. Password: {0}, Realm: {1}", password, realm);
             return false;
         }
 
@@ -589,7 +638,15 @@ namespace MOSES.FreeSwitchVoice
 
     public class UserAccount
     {
+        public string userID { get; private set; }
         public string password { get; private set; }
         public string realm { get; private set;  }
+
+        public UserAccount(string userID, string password, string realm)
+        {
+            this.userID = userID;
+            this.password = password;
+            this.realm = realm;
+        }
     }
 }
