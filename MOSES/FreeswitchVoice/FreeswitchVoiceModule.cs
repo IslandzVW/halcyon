@@ -497,15 +497,106 @@ namespace MOSES.FreeSwitchVoice
         private bool TryGetChannel(string channelParent, string channelName, out string channelId, out string channelUri)
         {
             m_log.InfoFormat("[FreeSwitchVoice][TryGetChannel]: parent \"{0}\", name: \"{1}\"", channelParent, channelName);
-            channelId = "";
-            channelUri = "";
+
+            string requrl = String.Format("{0}/getChannel?parent={1}&name={2}", m_accountService, channelParent, channelName);
+            XmlElement resp = NetworkCall(requrl);
+
+            /*
+                expected XML response:
+                <Result>
+                    <Channel>
+                        <ID></ID>
+                        <URI></URI>
+                        <Name></Name>
+                        <Parent></Parent>
+                    </Channel>
+                </Result>
+            */
+            XmlNodeList chans = resp.GetElementsByTagName("Channel");
+            if (chans.Count == 0)
+            {
+                channelId = String.Empty;
+                m_log.DebugFormat(
+                           "[FreeSwitchVoice][TryGetChannel]: Channel not found");
+                channelId = String.Empty;
+                channelUri = String.Empty;
+                return false;
+            }
+
+            string id = String.Empty;
+            string uri = String.Empty;
+
+            XmlNode channel = chans.Item(0);
+            foreach (XmlNode node in channel.ChildNodes)
+            {
+                switch (node.Name)
+                {
+                    case "ID":
+                        id = node.InnerText;
+                        break;
+                    case "URI":
+                        uri = node.InnerText;
+                        break;
+                }
+            }
+
+            if( !String.IsNullOrEmpty(id) && !String.IsNullOrEmpty(uri))
+            {
+                m_log.DebugFormat("[FreeSwitchVoice][TryGetChannel]: Channel found: {0}: {1}", id, uri);
+                channelId = id;
+                channelUri = uri;
+                return true;
+            }
+
+            m_log.DebugFormat("[FreeSwitchVoice][TryGetChannel]: Channel not found");
+            channelId = String.Empty;
+            channelUri = String.Empty;
             return false;
         }
 
-        private bool TryCreateChannel(string parent, string channelId, string description, out string channelUri)
+        private bool TryCreateChannel(string parent, string channelId, string name, out string channelUri)
         {
-            m_log.InfoFormat("[FreeSwitchVoice][TryCreateChannel]: parent \"{0}\", channel: \"{1}\", description: \"{2}\"", parent, channelId, description);
-            channelUri = "";
+            m_log.InfoFormat("[FreeSwitchVoice][TryCreateChannel]: parent \"{0}\", id: \"{1}\", name: \"{2}\"", parent, channelId, name);
+
+            string requrl = String.Format("{0}/createChannel?parent={1}&name={2}&id={3}", m_accountService, parent, name, channelId);
+            XmlElement resp = NetworkCall(requrl);
+
+            /*
+                expected XML response:
+                <Result>
+                    <Channel>
+                        <ID></ID>
+                        <URI></URI>
+                        <Name></Name>
+                        <Parent></Parent>
+                    </Channel>
+                </Result>
+            */
+            XmlNodeList chans = resp.GetElementsByTagName("Channel");
+            if (chans.Count == 0)
+            {
+                channelId = String.Empty;
+                m_log.DebugFormat("[FreeSwitchVoice][TryCreateChannel]: Channel not created");
+                channelId = String.Empty;
+                channelUri = String.Empty;
+                return false;
+            }
+
+            XmlNode channel = chans.Item(0);
+            foreach (XmlNode node in channel.ChildNodes)
+            {
+                switch (node.Name)
+                {
+                    case "URI":
+                        m_log.DebugFormat("[FreeSwitchVoice][TryCreateChannel]: Channel found: {0}", node.InnerText);
+                        channelUri = node.InnerText;
+                        return true;
+                }
+            }
+
+
+            m_log.DebugFormat("[FreeSwitchVoice][TryCreateChannel]: Channel not created");
+            channelUri = String.Empty;
             return false;
         }
 
