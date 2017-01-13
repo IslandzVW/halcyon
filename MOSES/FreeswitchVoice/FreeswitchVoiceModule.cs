@@ -166,6 +166,20 @@ namespace MOSES.FreeSwitchVoice
                 // TODO: handle errors
             }
 
+            lock (m_parents)
+            {
+                if (m_parents.ContainsKey(sceneUUID))
+                {
+                    RemoveRegion(scene);
+                    m_parents.Add(sceneUUID, channelId);
+                }
+                else
+                {
+                    m_parents.Add(sceneUUID, channelId);
+                }
+            }
+
+
             scene.EventManager.OnRegisterCaps += delegate (UUID agentID, Caps caps)
             {
                 OnRegisterCaps(scene, agentID, caps);
