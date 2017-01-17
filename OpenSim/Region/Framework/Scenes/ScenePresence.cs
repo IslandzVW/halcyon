@@ -2459,11 +2459,8 @@ namespace OpenSim.Region.Framework.Scenes
                             SetHeight(m_avHeight);
                         }
 
-                        if (!fromCrossing)
-                        {
-                            m_animPersistUntil = 0;    // abort any timed animation
-                            TrySetMovementAnimation("STAND");
-                        }
+                        m_animPersistUntil = 0;    // abort any timed animation
+                        TrySetMovementAnimation("STAND");
                     }
                 }
             }

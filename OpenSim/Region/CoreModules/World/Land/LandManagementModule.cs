@@ -454,8 +454,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                         if (parcelAvatarIsEntering.DenyParcelAccess(avatar.UUID, out reason))
                         {
                             EntityBase.PositionInfo avatarPos = avatar.GetPosInfo();
-                            if (avatarPos.Parent == null)   // not seated
-                                RemoveAvatarFromParcel(avatar);
+                            RemoveAvatarFromParcel(avatar);
                             SendNoEntryNotice(avatar, reason);
                             return;
                         }
