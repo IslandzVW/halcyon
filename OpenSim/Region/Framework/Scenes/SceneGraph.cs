@@ -1967,6 +1967,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if ((parentGroup.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                     return;
 
+                if (parentGroup.IsAttachment)
+                {
+                    client.SendAlertMessage("Cannot link objects while attached: nothing to link.");
+                    return;
+                }
+
                 foreach (uint id in childPrimIds)
                 {
                     SceneObjectGroup group = this.GetGroupByPrim(id);
@@ -1976,6 +1982,11 @@ namespace OpenSim.Region.Framework.Scenes
                         return;
                     if ((group.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                         return;
+                    if (group.IsAttachment)
+                    {
+                        client.SendAlertMessage("Cannot link objects while attached: nothing to link.");
+                        return;
+                    }
 
                     if (group.RootPart.LocalId != parentPrimId)
                     {
