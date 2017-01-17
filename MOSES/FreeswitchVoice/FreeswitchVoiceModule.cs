@@ -209,6 +209,11 @@ namespace MOSES.FreeSwitchVoice
             get { return "FreeSwitchVoiceModule"; }
         }
 
+        public bool IsSharedModule
+        {
+            get { return true; }
+        }
+
         public void Close()
         {
             //if (m_pluginEnabled)
