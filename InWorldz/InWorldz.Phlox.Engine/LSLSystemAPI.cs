@@ -13446,18 +13446,31 @@ namespace InWorldz.Phlox.Engine
 
         public void llMapDestination(string simname, LSL_Vector pos, LSL_Vector lookAt)
         {
-
+            UUID targetAvatar = UUID.Zero;
             VM.DetectVariables detectedParams = _thisScript.ScriptState.GetDetectVariables(0);
-            if (detectedParams == null) return; // only works on the first detected avatar
 
-            ScenePresence avatar = World.GetScenePresence(UUID.Parse(detectedParams.Key));
-            if (avatar != null)
+            // Figure out who to apply this to.
+            if (detectedParams != null) // e.g. touch_start, someone clicked
             {
-                avatar.ControllingClient.SendScriptTeleportRequest(m_host.Name, simname,
-                                                                   new Vector3(pos.X, pos.Y, pos.Z),
-                                                                   new Vector3(lookAt.X, lookAt.Y, lookAt.Z));
+                targetAvatar = UUID.Parse(detectedParams.Key);
             }
-            
+            else
+            {
+                if (m_host.IsAttachment)
+                    targetAvatar = m_host.OwnerID;
+            }
+
+            if (targetAvatar != UUID.Zero)
+            {
+                ScenePresence avatar = World.GetScenePresence(targetAvatar);
+                if (avatar != null)
+                {
+                    avatar.ControllingClient.SendScriptTeleportRequest(m_host.Name, simname,
+                        new Vector3(pos.X, pos.Y, pos.Z),
+                        new Vector3(lookAt.X, lookAt.Y, lookAt.Z));
+                }
+            }
+
             ScriptSleep(1000);
         }
 
