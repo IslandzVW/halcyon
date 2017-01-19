@@ -267,6 +267,24 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_appearance = value; }
         }
 
+        public AgentPreferencesData m_agentPrefs;
+
+        public AgentPreferencesData AgentPrefs
+        {
+            get { return m_agentPrefs; }
+            set
+            {
+                bool updatedHover = (this.Appearance.HoverHeight != (float)value.HoverHeight);
+                m_agentPrefs = value;
+                if (updatedHover)
+                {
+                    // keep Appearance and other viewers in sync
+                    this.Appearance.HoverHeight = (float)value.HoverHeight;
+                    SendAppearanceToAllOtherAgents();
+                }
+            }
+        }
+
         protected List<SceneObjectGroup> m_attachments = new List<SceneObjectGroup>();
 
         protected List<UUID> m_groupsRegisteredForCollisionEvents = new List<UUID>();
