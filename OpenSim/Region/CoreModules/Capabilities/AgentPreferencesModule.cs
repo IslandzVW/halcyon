@@ -96,16 +96,14 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         #region AgentPrefs Storage
 
-        private Dictionary<UUID,AgentPreferencesData> m_agentPrefs = new Dictionary<UUID, AgentPreferencesData>();
-
         private AgentPreferencesData FetchAgentPrefs(UUID agent)
         {
             AgentPreferencesData data = null;
             if (agent != UUID.Zero)
             {
-                // data = m_scene.AgentPreferencesService.GetAgentPreferences(agent);
-                if (m_agentPrefs.ContainsKey(agent))
-                    data = m_agentPrefs[agent];
+                ScenePresence sp = m_scene.GetScenePresence(agent);
+                if (sp != null)
+                    data = sp.AgentPrefs;
             }
 
             if (data == null)
@@ -116,7 +114,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
         private void StoreAgentPrefs(UUID agent, AgentPreferencesData data)
         {
-            m_agentPrefs[agent] = data;            
+            ScenePresence sp = m_scene.GetScenePresence(agent);
+            if (sp != null)
+                sp.AgentPrefs = data;
         }
 
         #endregion
@@ -152,11 +152,8 @@ namespace OpenSim.Region.CoreModules.Capabilities
         public string UpdateAgentPreferences(string request, string path, string param, UUID agent)
         {
             OSDMap resp = new OSDMap();
-            // The viewer doesn't do much with the return value, so for now, if there is no preference service,
-            // we'll return a null llsd block for debugging purposes. This may change if someone knows what the
-            // correct server response would be here.
-
-            // if (m_scene.AgentPreferencesService == null) return OSDParser.SerializeLLSDXmlString(resp);
+            // The viewer doesn't do anything with the return value. It never fetches these, so there's no need to persist them.
+            // We'll store them for the session with the SP so that the values are available, e.g. to llGetAgentLanguage
 
             m_log.DebugFormat("[AgentPrefs]: UpdateAgentPreferences for {0}", agent.ToString());
             OSDMap req = (OSDMap)OSDParser.DeserializeLLSDXml(request);
@@ -177,14 +174,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             }
             if (req.ContainsKey("hover_height"))
             {
-                float hover = (float)req["hover_height"].AsReal();
-                if (hover != (float)data.HoverHeight) // has it changed?
-                {
-                    ScenePresence sp = m_scene.GetScenePresence(agent);
-                    if ((sp != null) && (sp.Appearance != null))
-                        sp.Appearance.HoverHeight = hover;
-                }
-                data.HoverHeight = hover;
+                data.HoverHeight = (float)req["hover_height"].AsReal();
             }
             if (req.ContainsKey("language"))
             {
@@ -195,7 +185,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 data.LanguageIsPublic = req["language_is_public"].AsBoolean();
             }
 
-            // m_scene.AgentPreferencesService.StoreAgentPreferences(data);
             StoreAgentPrefs(agent, data);
 
             OSDMap respAccessPrefs = new OSDMap();
