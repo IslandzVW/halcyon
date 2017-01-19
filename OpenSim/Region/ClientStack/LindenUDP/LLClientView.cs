@@ -3047,15 +3047,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 limit = AvatarWearable.MAX_WEARABLES;
             return System.Math.Min(limit, actual);
         }
-        // This one is required, otherwise the viewer may not draw the avatar at all (cloud).
-        public int MaxVisualParams()
-        {
-            if (_clientVersion.Contains("InWorldz Release 1.") || _clientVersion.Contains("Imprudence"))
-                return AvatarAppearance.VISUALPARAM_COUNT_1X;    // 15 out of 16, 1.x does not support physics layers
-            
-            // Assume anything else can handle everything we support.
-            return AvatarAppearance.VISUALPARAM_COUNT;
-        }
 
         public void SendWearables(AvatarWearable[] wearables, int serial)
         {
@@ -3096,12 +3087,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             }
 
             AvatarAppearancePacket avp = (AvatarAppearancePacket)PacketPool.Instance.GetPacket(PacketType.AvatarAppearance);
-            // TODO: don't create new blocks if recycling an old packet
-            int clientParamsLength = MaxVisualParams();
-
-            if (clientParamsLength > app.VisualParams.Length)
-                clientParamsLength = app.VisualParams.Length;
-
+            int clientParamsLength = app.VisualParams.Length;
             avp.VisualParam = new AvatarAppearancePacket.VisualParamBlock[clientParamsLength];
             avp.ObjectData.TextureEntry = app.Texture.GetBytes();
 
@@ -3125,7 +3111,9 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     }
                 };
 
-            // TODO Add AvatarHoverPacket block here 
+            avp.AppearanceHover = new AvatarAppearancePacket.AppearanceHoverBlock[1];
+            avp.AppearanceHover[0] = new AvatarAppearancePacket.AppearanceHoverBlock();
+            avp.AppearanceHover[0].HoverHeight = new Vector3(0.0f, 0.0f, app.HoverHeight);
 
             avp.Sender.IsTrial = false;
             avp.Sender.ID = app.Owner;
