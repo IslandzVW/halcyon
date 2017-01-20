@@ -3074,7 +3074,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(aw, ThrottleOutPacketType.Task);
         }
 
-        public void SendAppearance(AvatarAppearance app)
+        public void SendAppearance(AvatarAppearance app, Vector3 hover)
         {
             // UUID agentID, byte[] visualParams, byte[] textureEntry)
             // m_appearance.Owner, m_appearance.VisualParams, m_appearance.Texture.GetBytes()
@@ -3113,7 +3113,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
             avp.AppearanceHover = new AvatarAppearancePacket.AppearanceHoverBlock[1];
             avp.AppearanceHover[0] = new AvatarAppearancePacket.AppearanceHoverBlock();
-            avp.AppearanceHover[0].HoverHeight = new Vector3(0.0f, 0.0f, app.HoverHeight);
+            avp.AppearanceHover[0].HoverHeight = hover;
 
             avp.Sender.IsTrial = false;
             avp.Sender.ID = app.Owner;

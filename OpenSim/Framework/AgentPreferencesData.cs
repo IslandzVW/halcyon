@@ -56,6 +56,21 @@ namespace OpenSim.Framework
             this.FromOSDMap(map);
         }
 
+        public AgentPreferencesData(AgentPreferencesData data)
+        {
+            if (data != null)
+            {
+                this.HoverHeight = data.HoverHeight;
+                this.AccessPrefs = data.AccessPrefs;
+                this.Language = data.Language;
+                this.LanguageIsPublic = data.LanguageIsPublic;
+                this.PermEveryone = data.PermEveryone;
+                this.PermGroup = data.PermGroup;
+                this.PermNextOwner = data.PermNextOwner;
+                this.PrincipalID = data.PrincipalID;
+            }
+        }
+
         public OSDMap ToOSDMap()
         {
             OSDMap result = new OSDMap();

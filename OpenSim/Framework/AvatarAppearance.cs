@@ -61,7 +61,6 @@ namespace OpenSim.Framework
         protected Dictionary<int, List<AvatarAttachment>> m_attachments;
         protected float m_avatarHeight = 0;
         protected float m_hipOffset = 0;
-        protected float m_hoverHeight = 0.0f;
 
         public bool IsBotAppearance { get; set; }
 
@@ -98,12 +97,6 @@ namespace OpenSim.Framework
         public virtual float HipOffset
         {
             get { return m_hipOffset; }
-        }
-
-        public virtual float HoverHeight
-        {
-            get { return m_hoverHeight; }
-            set { m_hoverHeight = value; }
         }
 
         public static byte[] GetDefaultVisualParams()

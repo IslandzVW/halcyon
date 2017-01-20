@@ -944,10 +944,9 @@ namespace OpenSim.Framework
         /// <summary>
         /// Send information about the given agent's appearance to another client.
         /// </summary>
-        /// <param name="agentID">The id of the agent associated with the appearance</param>
-        /// <param name="visualParams"></param>
-        /// <param name="textureEntry"></param>        
-        void SendAppearance(AvatarAppearance app);
+        /// <param name="app">Appearance to send</param>
+        /// <param name="hover">A vector representing the AgentPreferences hover height.</param>
+        void SendAppearance(AvatarAppearance app, Vector3 hover);
 
         void SendStartPingCheck(byte seq);
 

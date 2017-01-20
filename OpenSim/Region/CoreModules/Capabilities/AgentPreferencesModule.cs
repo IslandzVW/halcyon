@@ -103,7 +103,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
             {
                 ScenePresence sp = m_scene.GetScenePresence(agent);
                 if (sp != null)
-                    data = sp.AgentPrefs;
+                    data = new AgentPreferencesData(sp.AgentPrefs);
             }
 
             if (data == null)
