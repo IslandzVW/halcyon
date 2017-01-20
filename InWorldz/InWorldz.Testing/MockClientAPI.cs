@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OpenMetaverse;
 using OpenSim.Framework;
 using OpenMetaverse.StructuredData;
 
@@ -607,7 +608,7 @@ namespace InWorldz.Testing
             
         }
 
-        public void SendAppearance(AvatarAppearance app)
+        public void SendAppearance(AvatarAppearance app, Vector3 hover)
         {
             
         }

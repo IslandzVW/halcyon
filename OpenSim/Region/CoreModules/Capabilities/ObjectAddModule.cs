@@ -319,7 +319,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 // rez ON the ground, not IN the ground
                 pos.Z += 0.25F;
 
-                obj = m_scene.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs, false);
+                obj = m_scene.AddNewPrim(avatar.UUID, group_id, pos, rotation, pbs, false, true);
             }
 
 

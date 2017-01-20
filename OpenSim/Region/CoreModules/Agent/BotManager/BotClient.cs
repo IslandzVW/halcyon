@@ -920,7 +920,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
         }
 
-        public void SendAppearance(AvatarAppearance app)
+        public void SendAppearance(AvatarAppearance app, Vector3 hover)
         {
         }
 

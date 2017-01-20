@@ -66,7 +66,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Vegetation
             treeShape.Scale = scale;
             treeShape.State = (byte)treeType;
             
-            return m_scene.AddNewPrim(uuid, groupID, position, rotation, treeShape, false);
+            return m_scene.AddNewPrim(uuid, groupID, position, rotation, treeShape, false, true);
         }
         
         public SceneObjectGroup CreateEntity(
