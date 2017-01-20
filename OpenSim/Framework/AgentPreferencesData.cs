@@ -43,9 +43,9 @@ namespace OpenSim.Framework
         public string Language = "en-us";
         public bool LanguageIsPublic = true;
         // DefaultObjectPermMasks
-        public int PermEveryone = 0;
-        public int PermGroup = 0;
-        public int PermNextOwner = 0; // Illegal value by design
+        public uint PermEveryone = 0;
+        public uint PermGroup = 0;
+        public uint PermNextOwner = 0; // Illegal value by design
 
         public AgentPreferencesData()
         {
@@ -98,11 +98,11 @@ namespace OpenSim.Framework
             if (map.ContainsKey("LanguageIsPublic"))
                 LanguageIsPublic = bool.Parse(map["LanguageIsPublic"].ToString());
             if (map.ContainsKey("PermEveryone"))
-                PermEveryone = int.Parse(map["PermEveryone"].ToString());
+                PermEveryone = uint.Parse(map["PermEveryone"].ToString());
             if (map.ContainsKey("PermGroup"))
-                PermGroup = int.Parse(map["PermGroup"].ToString());
+                PermGroup = uint.Parse(map["PermGroup"].ToString());
             if (map.ContainsKey("PermNextOwner"))
-                PermNextOwner = int.Parse(map["PermNextOwner"].ToString());            
+                PermNextOwner = uint.Parse(map["PermNextOwner"].ToString());            
         }
     }
 }

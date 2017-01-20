@@ -57,11 +57,11 @@ namespace OpenSim.Framework.Communications.Messages
 
         // Default permissions for object creates
         [ProtoMember(5)]
-        public int PermEveryone;
+        public uint PermEveryone;
         [ProtoMember(6)]
-        public int PermGroup;
+        public uint PermGroup;
         [ProtoMember(7)]
-        public int PermNextOwner;
+        public uint PermNextOwner;
 
 
         internal static PackedAgentPrefs FromAgentPrefs(AgentPreferencesData agentPreferences)

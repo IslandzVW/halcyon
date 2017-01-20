@@ -168,9 +168,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
             if (req.ContainsKey("default_object_perm_masks"))
             {
                 OSDMap permsMap = (OSDMap)req["default_object_perm_masks"];
-                data.PermEveryone = permsMap["Everyone"].AsInteger();
-                data.PermGroup = permsMap["Group"].AsInteger();
-                data.PermNextOwner = permsMap["NextOwner"].AsInteger();
+                data.PermEveryone = permsMap["Everyone"].AsUInteger();
+                data.PermGroup = permsMap["Group"].AsUInteger();
+                data.PermNextOwner = permsMap["NextOwner"].AsUInteger();
             }
             if (req.ContainsKey("hover_height"))
             {
