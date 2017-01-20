@@ -7256,12 +7256,18 @@ namespace InWorldz.Phlox.Engine
 
         public string llGetAgentLanguage(string id)
         {
-            // This should only return a value if the avatar is in the same region
-            //ckrinke 1-30-09 : This needs to parse the XMLRPC language field supplied
-            //by the client at login. Currently returning only en-us until our I18N
-            //effort gains momentum
-            
-            return "en-us";
+            UUID agent = new UUID();
+            if (!UUID.TryParse(id, out agent)) return String.Empty;
+
+            ScenePresence presence = World.GetScenePresence(agent);
+            if (presence == null) return String.Empty;
+            if (presence.IsChildAgent) return String.Empty;
+
+            AgentPreferencesData prefs = presence.AgentPrefs;
+            if (prefs == null) return String.Empty;
+            if (!prefs.LanguageIsPublic) return String.Empty;
+
+            return prefs.Language;
         }
 
         public void llAdjustSoundVolume(float volume)
