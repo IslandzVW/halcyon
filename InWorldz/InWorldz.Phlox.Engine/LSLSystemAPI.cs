@@ -18324,6 +18324,21 @@ namespace InWorldz.Phlox.Engine
             }
         }
 
+        public string llGetAnimationOverride(string anim_state)
+        {
+            NotImplemented("llGetAnimationOverride - NOT IMPLEMENTED");
+            return String.Empty;
+        }
+
+        public void llSetAnimationOverride(string anim_state, string anim)
+        {
+            NotImplemented("llSetAnimationOverride - NOT IMPLEMENTED");
+        }
+
+        public void llResetAnimationOverride(string anim_state)
+        {
+            NotImplemented("llResetAnimationOverride - NOT IMPLEMENTED");
+        }
     }
 
 
