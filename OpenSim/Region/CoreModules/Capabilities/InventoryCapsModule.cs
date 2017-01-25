@@ -638,6 +638,11 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 item.NextPermissions = (uint)nextOwnerPerm;
 
                 m_Scene.AddInventoryItem(m_Caps.AgentID, item);
+
+                IClientAPI client = null;
+                m_Scene.TryGetClient(m_Caps.AgentID, out client); 
+                if (client != null)
+                    client.SendInventoryItemCreateUpdate(item,0);
             }
 
             private byte[] ObjectUploadComplete(string assetName, byte[] data)
