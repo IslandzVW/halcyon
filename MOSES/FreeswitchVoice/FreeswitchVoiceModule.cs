@@ -58,24 +58,8 @@ namespace MOSES.FreeSwitchVoice
         private static bool m_enabled = false;
         private static string m_accountService; // http://ip:port/fsapi
 
-        // FreeSwitch Variables
-        /*private static string m_freeSwitchIP;
-        private static string m_apiPrefix;
-        private static string m_realm;
-        private static string m_sipProxy;
-        private static bool m_attempt_stun;
-        private static string m_echo_server;
-        private static int m_echo_port;
-        private static int m_default_timeout;
-
-        private static string m_accountService;
-        private static int m_accountServicePort;*/
-
         private static string m_forcedChannelName = String.Empty;
         private static readonly string EMPTY_RESPONSE = "<llsd><undef /></llsd>";
-
-        //private Dictionary<string, string> uuid_to_name = new Dictionary<string, string>();
-        //private Dictionary<string, string> m_ParcelAddress = new Dictionary<string, string>();
 
         // not sure why vivox module locks.  serialize calls? no shared stucture used in half of requests
         private static readonly Object vlock = new Object();
@@ -96,24 +80,6 @@ namespace MOSES.FreeSwitchVoice
 
             try
             {
-                /*m_freeSwitchIP = m_config.GetString("freeswitch_well_known_ip", String.Empty);
-                m_apiPrefix = m_config.GetString("api_prefix", "/fsapi");
-                m_realm = m_config.GetString("realm", m_freeSwitchIP);
-                m_sipProxy = m_config.GetString("sip_proxy", m_freeSwitchIP + ":5060");
-                m_attempt_stun = m_config.GetBoolean("use_stun", false);
-                m_echo_server = m_config.GetString("echo_server", m_freeSwitchIP);
-                m_echo_port = m_config.GetInt("echo_port", 50505);
-                m_default_timeout = m_config.GetInt("default_timeout", 5000);
-
-                m_accountService = m_config.GetString("account_service", String.Empty);
-                m_accountServicePort = m_config.GetInt("account_service_port", 3000);
-
-                if (String.IsNullOrEmpty(m_freeSwitchIP) || String.IsNullOrEmpty(m_accountService))
-                {
-                    m_log.Error("[FreeSwitchVoice] plugin mis-configured");
-                    return;
-                }*/
-
                 m_accountService = m_config.GetString("account_service", String.Empty);
                 m_enabled = m_config.GetBoolean("enabled", false);
 
@@ -154,7 +120,7 @@ namespace MOSES.FreeSwitchVoice
             // create directory if not exists
             if(TryGetDirectory(sceneUUID + "D", out channelId))
             {
-                // TODO: Are we using children??
+                // TODO: Are we using children?? delete if we are
                 //FreeSwitchDialplan.ListChildren(directory);
 
                 // delete all children, we wont be re-using them
@@ -194,9 +160,7 @@ namespace MOSES.FreeSwitchVoice
 
         public void RemoveRegion(Scene scene)
         {
-
             // get region directory and wipe out all children
-
         }
 
         public Type ReplaceableInterface
@@ -216,8 +180,7 @@ namespace MOSES.FreeSwitchVoice
 
         public void Close()
         {
-            //if (m_pluginEnabled)
-            //    VivoxLogout();
+
         }
 
         private void OnRegisterCaps(Scene scene, UUID agentID, Caps caps)
@@ -292,7 +255,6 @@ namespace MOSES.FreeSwitchVoice
                                   request, path, param);
 
                 string agentname = "x" + Convert.ToBase64String(agentID.GetBytes());
-                //string password = new UUID(Guid.NewGuid()).ToString().Replace('-', 'Z').Substring(0, 16);
                 string code = String.Empty;
 
                 agentname = agentname.Replace('+', '-').Replace('/', '_');
