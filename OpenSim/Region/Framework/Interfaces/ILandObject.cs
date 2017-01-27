@@ -75,6 +75,8 @@ namespace OpenSim.Region.Framework.Interfaces
         void sendLandObjectOwners(IClientAPI remote_client);
         void returnObject(SceneObjectGroup obj);
         void returnLandObjects(uint type, UUID[] owners, UUID[] tasks, IClientAPI remote_client);
+        int scriptedReturnLandObjectsByOwner(UUID scriptOwnerID, UUID targetOwnerID);
+        int scriptedReturnLandObjectsByIDs(UUID scriptOwnerID, List<UUID> IDs);
         void InspectParcelForAutoReturn();
         void resetLandPrimCounts();
         void addPrimToCount(SceneObjectGroup obj);

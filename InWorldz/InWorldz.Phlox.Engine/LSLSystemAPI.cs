@@ -18299,12 +18299,128 @@ namespace InWorldz.Phlox.Engine
 
         public int llReturnObjectsByOwner(string owner, int scope)
         {
-            return ScriptBaseClass.ERR_GENERIC;
+            try
+            {
+                UUID targetAgentID;
+                if (!UUID.TryParse(owner, out targetAgentID))
+                    return ScriptBaseClass.ERR_MALFORMED_PARAMS;
+
+                if (targetAgentID == UUID.Zero)
+                    return 0;
+
+                UUID invItemID = InventorySelf();
+                if (invItemID == UUID.Zero)
+                {
+                    LSLError("No item found from which to run script");
+                    return ScriptBaseClass.ERR_GENERIC;
+                }
+
+                TaskInventoryItem item;
+                lock (m_host.TaskInventory)
+                {
+                    item = m_host.TaskInventory[invItemID];
+                }
+
+                if (!CheckRuntimePerms(item, item.PermsGranter, ScriptBaseClass.PERMISSION_RETURN_OBJECTS))
+                {
+                    LSLError("No permissions to return objects");
+                    return ScriptBaseClass.ERR_RUNTIME_PERMISSIONS;
+                }
+
+                Vector3 currentPos = m_host.ParentGroup.AbsolutePosition;
+                ILandObject currentParcel = World.LandChannel.GetLandObject(currentPos.X, currentPos.Y);
+                if ((currentParcel == null) && (scope == ScriptBaseClass.OBJECT_RETURN_REGION))
+                    return ScriptBaseClass.ERR_GENERIC;
+
+                LandData patternParcel = null;
+                bool sameOwner;
+                switch (scope)
+                {
+                    case ScriptBaseClass.OBJECT_RETURN_PARCEL:
+                        patternParcel = currentParcel.landData;
+                        sameOwner = false;
+                        break;
+                    case ScriptBaseClass.OBJECT_RETURN_PARCEL_OWNER:
+                        patternParcel = currentParcel.landData;
+                        sameOwner = true;
+                        break;
+                    case ScriptBaseClass.OBJECT_RETURN_REGION:
+                        patternParcel = null;  // wildcard for all parcels
+                        sameOwner = false;
+                        break;
+                    default:
+                        return ScriptBaseClass.ERR_MALFORMED_PARAMS;
+                }
+                return World.LandChannel.ScriptedReturnObjectsInParcel(item.PermsGranter, targetAgentID, patternParcel, sameOwner);
+            }
+            catch (Exception e)
+            {
+                return ScriptBaseClass.ERR_GENERIC;
+            }
         }
 
         public int llReturnObjectsByID(LSL_List objects)
         {
-            return ScriptBaseClass.ERR_GENERIC;
+            try
+            {
+                UUID invItemID = InventorySelf();
+                if (invItemID == UUID.Zero)
+                {
+                    LSLError("No item found from which to run script");
+                    return ScriptBaseClass.ERR_GENERIC;
+                }
+
+                TaskInventoryItem item;
+                lock (m_host.TaskInventory)
+                {
+                    item = m_host.TaskInventory[invItemID];
+                }
+
+                if (!CheckRuntimePerms(item, item.PermsGranter, ScriptBaseClass.PERMISSION_RETURN_OBJECTS))
+                {
+                    LSLError("No permissions to return objects");
+                    return ScriptBaseClass.ERR_RUNTIME_PERMISSIONS;
+                }
+
+                Vector3 currentPos = m_host.ParentGroup.AbsolutePosition;
+
+                // Validate the list of IDs and sort into parcel buckets.
+                Dictionary<int, List<UUID>> objectsByParcel = new Dictionary<int, List<UUID>>();
+                foreach (object o in objects.Data)
+                {
+                    UUID targetId = UUID.Zero;
+                    if (!UUID.TryParse(o.ToString(), out targetId))
+                        return ScriptBaseClass.ERR_MALFORMED_PARAMS;
+
+                    if (targetId != UUID.Zero)
+                    {
+                        SceneObjectPart part = World.GetSceneObjectPart(targetId);
+                        if (part == null) continue; // invalid ID
+
+                        Vector3 pos = part.AbsolutePosition;
+                        ILandObject parcel = World.LandChannel.GetNearestLandObjectInRegion(pos.X, pos.Y);
+                        if (parcel == null) continue;
+
+                        // Now added it to the bucket for that parcel.
+                        if (!objectsByParcel.ContainsKey(parcel.landData.LocalID))
+                            objectsByParcel[parcel.landData.LocalID] = new List<UUID>();
+                        objectsByParcel[parcel.landData.LocalID].Add(part.UUID);
+                    }
+                }
+
+                // Now check and return the objects in each bucket.
+                int count = 0;
+                foreach (KeyValuePair<int, List<UUID>> bucket in objectsByParcel)
+                {
+                    count += World.LandChannel.ScriptedReturnObjectsInParcelByIDs(item.PermsGranter, bucket.Value, bucket.Key);
+                    
+                }
+                return count;
+            }
+            catch (Exception e)
+            {
+                return ScriptBaseClass.ERR_GENERIC;
+            }
         }
 
         public void iwStandTarget(Vector3 offset, Quaternion rot)

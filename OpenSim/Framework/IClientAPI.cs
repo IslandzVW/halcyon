@@ -122,7 +122,7 @@ namespace OpenSim.Framework
     // really don't want to be passing packets in these events, so this is very temporary.
     public delegate void GenericCall4(Packet packet, IClientAPI remoteClient);
 
-    public delegate void DeRezObjects(
+    public delegate int DeRezObjects(
         IClientAPI remoteClient, ICollection<uint> objects, UUID groupId, DeRezAction action, UUID destinationID);
 
     public delegate void GenericCall5(IClientAPI remoteClient, bool status);
@@ -610,6 +610,7 @@ namespace OpenSim.Framework
         ulong ActiveGroupPowers { get; }
 
         ulong GetGroupPowers(UUID groupID);
+        ulong? GetGroupPowersOrNull(UUID groupID);
 
         bool IsGroupMember(UUID GroupID);
 
