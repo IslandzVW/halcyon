@@ -645,6 +645,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             if (sourceAvatarClient == null)
             {
                 m_log.Debug("[CURRENCY]: Source Avatar not found!");
+                return;
             }
 
             if (transType == (int)MoneyTransactionType.PayObject)
