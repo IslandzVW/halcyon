@@ -861,11 +861,19 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            // it's a HUD and someone else's...
-            if (SceneObjectPart.IsAttachmentPointOnHUD(AttachmentPt) && (group.OwnerID != remoteClient.AgentId))
+            if ((group.OwnerID != remoteClient.AgentId))
             {
-                m_log.WarnFormat("[SCENE] Invalid wear HUD owned by {0} on {1} attachment point {2} object '{3}'.",
-                    group.UUID, remoteClient.AgentId, AttachmentPt, group.Name);
+                // Even for bots, the group.OwnerID will be set to the bot ID, so this is a safe check.
+                m_log.WarnFormat(
+                    "[SCENE] Invalid wear attachment owned by {0} on {1} object '{2}'.",
+                    group.UUID, remoteClient.AgentId, group.Name);
+                return;
+            }
+
+            if (!SceneObjectPart.IsValidAttachmentPoint(AttachmentPt))
+            {
+                m_log.WarnFormat("[SCENE] Invalid wear attachment owned by {0} attachment point {1} object '{2}'.",
+                    remoteClient.AgentId, AttachmentPt, group.Name);
                 return;
             }
 
