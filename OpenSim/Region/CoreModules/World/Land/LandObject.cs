@@ -1251,9 +1251,67 @@ namespace OpenSim.Region.CoreModules.World.Land
 
             foreach (List<SceneObjectGroup> ol in returns.Values)
             {
-                if (m_scene.Permissions.CanUseObjectReturn(this, type, remote_client, ol))
+                if (m_scene.Permissions.CanUseObjectReturn(this, type, remote_client, remote_client.AgentId, ol))
                     m_scene.returnObjects(ol.ToArray());
             }
+        }
+
+        public int scriptedReturnLandObjectsByOwner(UUID scriptOwnerID, UUID targetOwnerID)
+        {
+            int count = 0;
+            m_log.InfoFormat("[LAND]: Object return by {0} for {1}", scriptOwnerID, targetOwnerID);
+
+            List<SceneObjectGroup> returns = new List<SceneObjectGroup>();
+
+            lock (primsOverMe)
+            {
+                foreach (SceneObjectGroup obj in primsOverMe)
+                {
+                    if (obj.OwnerID == targetOwnerID)
+                    {
+                        returns.Add(obj);
+                    }
+                }
+            }
+
+            if (m_scene.Permissions.CanUseObjectReturn(this, (uint)ObjectReturnType.Owner, null, scriptOwnerID, returns))
+                count += m_scene.returnObjects(returns.ToArray());
+
+            return count;
+        }
+
+        public int scriptedReturnLandObjectsByIDs(UUID scriptOwnerID, List<UUID> IDs)
+        {
+            int count = 0;
+            m_log.InfoFormat("[LAND]: Object return by {0} for list", scriptOwnerID);
+
+            List<SceneObjectGroup> returns = new List<SceneObjectGroup>();
+
+            lock (primsOverMe)
+            {
+                foreach (UUID id in IDs)
+                {
+                    SceneObjectPart part = m_scene.GetSceneObjectPart(id);
+                    SceneObjectGroup grp = part == null ? null : part.ParentGroup;
+
+                    if (primsOverMe.Contains(grp))
+                    {
+                        returns.Add(grp);
+                    }
+                }
+            }
+
+            foreach (var grp in returns)
+            {
+                // the returns list by ID could be a variety of owners and group settings, need to check each one separately.
+                List<SceneObjectGroup> singleList = new List<SceneObjectGroup>();
+                singleList.Add(grp);
+                if (m_scene.Permissions.CanUseObjectReturn(this, (uint) ObjectReturnType.Owner, null, scriptOwnerID, singleList))
+                    if (singleList.Count > 0)
+                        count += m_scene.returnObjects(singleList.ToArray());
+            }
+
+            return count;
         }
 
         public void InspectParcelForAutoReturn()

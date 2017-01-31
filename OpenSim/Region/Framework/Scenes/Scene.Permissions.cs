@@ -80,7 +80,7 @@ namespace OpenSim.Region.Framework.Scenes
     public delegate bool CopyUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool DeleteUserInventoryHandler(UUID itemID, UUID userID);
     public delegate bool TeleportHandler(UUID userID, Scene scene);
-    public delegate bool UseObjectReturnHandler(ILandObject landData, uint type, IClientAPI client, List<SceneObjectGroup> retlist, Scene scene);
+    public delegate bool UseObjectReturnHandler(ILandObject parcel, uint type, IClientAPI client, UUID scriptOwnerID, List<SceneObjectGroup> retlist, Scene scene);
     public delegate bool ControlPrimMediaHandler(UUID userID, UUID primID, int face);
     public delegate bool InteractWithPrimMediaHandler(UUID userID, UUID primID, int face);
 
@@ -923,7 +923,7 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        public bool CanUseObjectReturn(ILandObject landData, uint type , IClientAPI client, List<SceneObjectGroup> retlist)
+        public bool CanUseObjectReturn(ILandObject parcel, uint type, IClientAPI client, UUID scriptOwnerID, List<SceneObjectGroup> retlist)
         {
             UseObjectReturnHandler handler = OnUseObjectReturn;
             if (handler != null)
@@ -931,7 +931,7 @@ namespace OpenSim.Region.Framework.Scenes
                 Delegate[] list = handler.GetInvocationList();
                 foreach (UseObjectReturnHandler h in list)
                 {
-                    if (h(landData, type, client, retlist, m_scene) == false)
+                    if (h(parcel, type, client, scriptOwnerID, retlist, m_scene) == false)
                         return false;
                 }
             }

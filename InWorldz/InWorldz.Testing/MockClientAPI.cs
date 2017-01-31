@@ -81,6 +81,10 @@ namespace InWorldz.Testing
         {
             return 0;
         }
+        public ulong? GetGroupPowersOrNull(OpenMetaverse.UUID groupID)
+        {
+            return null;
+        }
 
         public bool IsGroupMember(OpenMetaverse.UUID GroupID)
         {

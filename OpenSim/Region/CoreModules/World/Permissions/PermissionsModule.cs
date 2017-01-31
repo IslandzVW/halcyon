@@ -184,7 +184,8 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             m_scene.Permissions.OnDeleteUserInventory += CanDeleteUserInventory; //NOT YET IMPLEMENTED
             
             m_scene.Permissions.OnTeleport += CanTeleport; //NOT YET IMPLEMENTED
-            m_scene.Permissions.OnUseObjectReturn += CanUseObjectReturn; //NOT YET IMPLEMENTED
+
+            m_scene.Permissions.OnUseObjectReturn += CanUseObjectReturn;
 
             m_scene.Permissions.OnStartScript += CanStartScript;
             m_scene.Permissions.OnStopScript += CanStopScript;
@@ -335,77 +336,81 @@ namespace OpenSim.Region.CoreModules.World.Permissions
         private LRUCache<Tuple<UUID, UUID>, TimestampedItem<ulong?>> m_cachedGroupPowers
             = new LRUCache<Tuple<UUID, UUID>, TimestampedItem<ulong?>>(MAX_POWER_CACHE_SIZE);
 
+        // client can be null here, but it's more costly to look it up then (so use the cache)
+        // returns null if the user isn't in the group at all (or other error)
+        protected ulong? GetGroupPowersOrNull(IClientAPI client, UUID userID, UUID groupID)
+        {
+            // First use the client group powers if there's an agent.
+            if (client == null)
+            {
+                ScenePresence sp = m_scene.GetScenePresence(userID);
+                if (sp != null)
+                {
+                    client = sp.ControllingClient;
+                }
+            }
+            if (client != null)
+            {
+                return client.GetGroupPowersOrNull(groupID);
+            }
+
+            // If no agent available, try the cache.
+            ulong? cachedPowers;
+            if (TryFindCachedGroupPowers(groupID, userID, out cachedPowers))
+            {
+                if (cachedPowers.HasValue)
+                {
+                    return cachedPowers.Value;
+                }
+            }
+
+            IGroupsModule groupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
+            if (groupsModule == null)
+                return 0;
+
+            GroupMembershipData[] groupMembership = groupsModule.GetMembershipData(userID);
+            if (groupMembership == null)
+                return 0;
+
+            //Make sure they are in the group
+            foreach(var grp in groupMembership)
+            {
+                if (grp.GroupID == groupID)
+                {
+                    CacheGroupPower(ref groupID, ref userID, grp.GroupPowers);
+                    return grp.GroupPowers;
+                }
+            }
+
+            //negative cache
+            CacheGroupPower(ref groupID, ref userID, null);
+            return 0;
+        }
+        // This variant should only be used when comparing against a specific group ability (see HasGroupPower below).
+        protected ulong GetGroupPowers(IClientAPI client, UUID userID, UUID groupID)
+        {
+            return GetGroupPowersOrNull(client, userID, groupID) ?? 0;
+        }
+
+        // This returns false if the user does not have the power or is not a group member.
+        // Pass 0 for power if you only want to check group membership.
+        protected bool HasGroupPower(IClientAPI client, UUID userID, UUID groupID, ulong power)
+        {
+            ulong? powers = GetGroupPowersOrNull(client, userID, groupID);
+            if (!powers.HasValue)
+                return false;   // not even a group member
+
+            if (power == 0) // group membership
+                return true;
+
+            return (powers.Value & power) != 0;
+        }
+
         // Same as above but where the group doesn't need to be active
         // The user must still be visible to this region as a ScenePresence.
         protected bool IsAgentInGroupRole(UUID groupID, UUID userID, ulong powers)
         {
-            ScenePresence sp = m_scene.GetScenePresence(userID);
-            if (sp == null)
-            {
-                ulong? cachedPowers;
-                if (TryFindCachedGroupPowers(groupID, userID, out cachedPowers))
-                {
-                    if (!cachedPowers.HasValue) return false;
-
-                    if (powers == 0)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return (cachedPowers.Value & powers) == powers;
-                    }
-                }
-
-                IGroupsModule groupsModule = m_scene.RequestModuleInterface<IGroupsModule>();
-                if (groupsModule != null)
-                {
-                    GroupMembershipData[] groupMembership = groupsModule.GetMembershipData(userID);
-                    if (groupMembership != null)
-                    {
-                        if (powers == 0)
-                        {
-                            //Make sure they are in the group
-                            foreach(var grp in groupMembership)
-                            {
-                                if (grp.GroupID == groupID)
-                                {
-                                    CacheGroupPower(ref groupID, ref userID, grp.GroupPowers);
-                                    return true;
-                                }
-                            }
-
-                            //negative cache
-                            CacheGroupPower(ref groupID, ref userID, null);
-                        }
-                        else
-                        {
-                            //Make sure that they are in the group and have the proper group powers
-                            foreach(var grp in groupMembership)
-                            {
-                                if (grp.GroupID == groupID)
-                                {
-                                    CacheGroupPower(ref groupID, ref userID, grp.GroupPowers);
-                                    return ((grp.GroupPowers & powers) == powers);
-                                }
-                            }
-
-                            //negative cache
-                            CacheGroupPower(ref groupID, ref userID, null);
-                        }
-                    }
-                }
-                return false;
-            }
-
-            IClientAPI client = sp.ControllingClient;
-            if (client == null)
-                return false;
-
-            if (powers == 0)
-                return client.IsGroupMember(groupID);
-            else
-                return ((client.GetGroupPowers(groupID) & powers) == powers);
+            return HasGroupPower(null, userID, groupID, powers);
         }
 
         private void CacheGroupPower(ref UUID groupID, ref UUID userID, ulong? grpPower)
@@ -2161,14 +2166,18 @@ namespace OpenSim.Region.CoreModules.World.Permissions
             return GenericObjectPermission(agentID, prim, false, 0).Success;
         }
 
-        private bool CanUseObjectReturn(ILandObject parcel, uint type, IClientAPI client, List<SceneObjectGroup> retlist, Scene scene)
+        // if client == null, it's being done by an object, owned by scriptOwnerID.
+        private bool CanUseObjectReturn(ILandObject parcel, uint type, IClientAPI client, UUID scriptOwnerID, List<SceneObjectGroup> retlist, Scene scene)
         {
             DebugPermissionInformation(MethodInfo.GetCurrentMethod().Name);
             if (m_bypassPermissions) return m_bypassPermissionsValue;
 
-            ulong powers = 0;
-            if (parcel.landData.GroupID != UUID.Zero)
-                powers = client.GetGroupPowers(parcel.landData.GroupID);
+            UUID agentId = scriptOwnerID;
+            UUID landGroupId = parcel.landData.GroupID;
+            if (client != null)
+                agentId = client.AgentId;
+
+            ulong? powers = null;   // defer possibly costly initialization to actual powers until needed
 
             switch (type)
             {
@@ -2177,21 +2186,29 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                 //
                 if (parcel.landData.IsGroupOwned)
                 {
-                    if ((powers & (ulong)GroupPowers.ReturnGroupOwned) != 0)
+                    if (HasGroupPower(client, agentId, landGroupId, (long)GroupPowers.ReturnGroupOwned))
                         return true;
                 }
                 else
                 {
-                    if (parcel.landData.OwnerID != client.AgentId)
+                    if (parcel.landData.OwnerID != agentId)
                         return false;
                 }
-        return GenericParcelOwnerPermission(client.AgentId, parcel, (ulong)GroupPowers.ReturnGroupOwned);
+                return GenericParcelOwnerPermission(agentId, parcel, (ulong)GroupPowers.ReturnGroupOwned);
+
             case (uint)ObjectReturnType.Group:
-                if (parcel.landData.OwnerID != client.AgentId)
+                bool hasGroupSet = GenericParcelOwnerPermission(agentId, parcel, (ulong)GroupPowers.ReturnGroupSet);
+                bool hasGroupOwned = GenericParcelOwnerPermission(agentId, parcel, (ulong)GroupPowers.ReturnGroupOwned);
+                bool hasNonGroup = GenericParcelOwnerPermission(agentId, parcel, (ulong)GroupPowers.ReturnNonGroup);
+                if (parcel.landData.OwnerID != agentId)
                 {
                     // If permissionis granted through a group...
-                    //
-                    if ((powers & (long)GroupPowers.ReturnGroupSet) != 0)
+                    if (landGroupId != UUID.Zero)
+                    {
+                        powers = GetGroupPowers(null, agentId, landGroupId);
+                    }
+
+                    if ((powers != null) && ((powers & (long)GroupPowers.ReturnGroupSet) != 0))
                     {
                         foreach (SceneObjectGroup g in new List<SceneObjectGroup>(retlist))
                         {
@@ -2209,15 +2226,21 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                         return true;
                     }
                 }
-                return GenericParcelOwnerPermission(client.AgentId, parcel, (ulong)GroupPowers.ReturnNonGroup);
+                return GenericParcelOwnerPermission(agentId, parcel, (ulong)GroupPowers.ReturnNonGroup);
+
             case (uint)ObjectReturnType.Other:
-                if ((powers & (long)GroupPowers.ReturnNonGroup) != 0)
+                if (landGroupId != UUID.Zero)
+                {
+                    powers = GetGroupPowers(null, agentId, landGroupId);
+                }
+                if ((powers != null) && ((powers & (long)GroupPowers.ReturnNonGroup) != 0))
                     return true;
-                return GenericParcelOwnerPermission(client.AgentId, parcel, (ulong)GroupPowers.ReturnNonGroup);
+                return GenericParcelOwnerPermission(agentId, parcel, (ulong)GroupPowers.ReturnNonGroup);
+
             case (uint)ObjectReturnType.List:
                     foreach (SceneObjectGroup g in new List<SceneObjectGroup>(retlist))
                     {
-                        if (!CanReturnObject(g.UUID, client.AgentId, scene))
+                        if (!CanReturnObject(g.UUID, agentId, scene))
                         {
                             retlist.Remove(g);
                         }
@@ -2227,7 +2250,7 @@ namespace OpenSim.Region.CoreModules.World.Permissions
                     return true;
             }
 
-            return GenericParcelPermission(client.AgentId, parcel, 0);
+            return GenericParcelPermission(agentId, parcel, 0);
         }
     }
 }

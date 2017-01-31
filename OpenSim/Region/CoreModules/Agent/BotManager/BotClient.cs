@@ -411,6 +411,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         }
 
         public ulong GetGroupPowers(OpenMetaverse.UUID groupID) { return 0; }
+        public ulong? GetGroupPowersOrNull(OpenMetaverse.UUID groupID) { return null; }
 
         public bool IsGroupMember(OpenMetaverse.UUID GroupID) { return false; }
 

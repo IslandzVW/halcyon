@@ -419,7 +419,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return false;
         }
 
-        public ulong GetGroupPowers(UUID groupID)
+        // Returns null if not in the group at all.
+        public ulong? GetGroupPowersOrNull(UUID groupID)
         {
             if (m_groupPowers != null)
             {
@@ -433,7 +434,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-            return 0;
+            return null;
+        }
+        public ulong GetGroupPowers(UUID groupID)
+        {
+            return GetGroupPowersOrNull(groupID) ?? 0;
         }
 
         public void SetGroupPowers(IEnumerable<AgentGroupData> groupPowers)
