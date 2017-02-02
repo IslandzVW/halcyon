@@ -249,16 +249,6 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                                 presence.SceneView.CheckWhetherAttachmentsHaveChanged(m_presence);
                         }
                     }
-                    else
-                    {
-                        //Send a kill update for that avatar then
-                        if (m_presencesInView.Contains(presence.UUID))
-                        {
-                            m_presencesInView.Remove(presence.UUID);
-                            m_presence.ControllingClient.SendNonPermanentKillObject(m_presence.Scene.RegionInfo.RegionHandle,
-                                presence.LocalId);
-                        }
-                    }
                 }
             }
         }
