@@ -1947,11 +1947,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 FlushExpiredKills();
             }
 
-            SendNonPermanentKillObject(regionHandle, localID);
-        }
-
-        public void SendNonPermanentKillObject(ulong regionHandle, uint localID)
-        {
             KillObjectPacket kill = (KillObjectPacket)PacketPool.Instance.GetPacket(PacketType.KillObject);
             // TODO: don't create new blocks if recycling an old packet
             kill.ObjectData = new KillObjectPacket.ObjectDataBlock[1];
@@ -1962,8 +1957,17 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(kill, ThrottleOutPacketType.Task);
         }
 
-        public void SendNonPermanentKillObjects(ulong regionHandle, uint[] localIDs)
+        public void SendKillObjects(ulong regionHandle, uint[] localIDs)
         {
+            lock (m_primUpdatesLock)
+            {
+                for (int i = 0; i < localIDs.Length; i++)
+                {
+                    _pastKills[localIDs[i]] = new KillRecord(localIDs[i]);
+                }
+                FlushExpiredKills();
+            }
+
             for (int i = 0; i < localIDs.Length; i += 10)
             {
                 int amt = Math.Min(localIDs.Length - i, 10);
@@ -1979,20 +1983,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 kill.Header.Zerocoded = true;
                 OutPacket(kill, ThrottleOutPacketType.Task);
             }
-        }
-
-        public void SendKillObjects(ulong regionHandle, uint[] localIDs)
-        {
-            lock (m_primUpdatesLock)
-            {
-                for (int i = 0; i < localIDs.Length; i++)
-                {
-                    _pastKills[localIDs[i]] = new KillRecord(localIDs[i]);
-                }
-                FlushExpiredKills();
-            }
-
-            SendNonPermanentKillObjects(regionHandle, localIDs);
         }
 
         private void FlushExpiredKills()

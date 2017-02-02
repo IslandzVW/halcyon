@@ -747,7 +747,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
             int time = Environment.TickCount;
 
             SceneObjectGroup lastSog = null;
-            bool lastParentObjectWasCulled = false;
+            bool condition1 = false;
             IReadOnlyCollection<SceneObjectPart> lastParentGroupParts = null;
 
             while (m_partsUpdateQueue.Count > 0 && HasFinishedInitialUpdate)
@@ -768,31 +768,30 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                 double distance;
 
                 // Cull part updates based on the position of the SOP.
-                if ((lastSog == part.ParentGroup && lastParentObjectWasCulled) ||
+                if ((lastSog == part.ParentGroup && condition1) ||
                     (lastSog != part.ParentGroup &&
                                     UseCulling && !ShowEntityToClient(clientAbsPosition, part.ParentGroup, out distance) &&
                                     !ShowEntityToClient(m_presence.CameraPosition, part.ParentGroup, out distance)))
                 {
-                    lastParentObjectWasCulled = true;
+                    condition1 = true;
 
                     lock (m_updateTimes)
                     {
-                        if (m_updateTimes.ContainsKey(part.LocalId))
-                        {
-                            m_updateTimes.Remove(part.LocalId);
-                        }
+                        ScenePartUpdate newUpdate;
+                        if (!m_updateTimes.TryGetValue(part.LocalId, out newUpdate))
+                            newUpdate = new ScenePartUpdate();
+                        //Update this, so that we know to resend it later once it comes back into view
+                        newUpdate.LastFullUpdateTimeRequested = part.FullUpdateCounter;
+                        newUpdate.LastTerseUpdateTimeRequested = part.TerseUpdateCounter;
+                        m_updateTimes[part.LocalId] = newUpdate;
                     }
-
-                    //Only send the kill object packet if we have seen this object
-                    m_presence.ControllingClient.SendNonPermanentKillObject(m_presence.Scene.RegionInfo.RegionHandle,
-                        part.ParentGroup.RootPart.LocalId);
 
                     lastSog = part.ParentGroup;
                     continue;
                 }
                 else
                 {
-                    lastParentObjectWasCulled = false;
+                    condition1 = false;
                 }
 
                 IReadOnlyCollection<SceneObjectPart> parentGroupParts = null;

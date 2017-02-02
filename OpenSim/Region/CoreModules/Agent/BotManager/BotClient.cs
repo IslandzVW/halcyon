@@ -932,15 +932,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
         }
 
-        public void SendKillObjects(ulong regionHandle, uint[] localIDs)
-        {
-        }
-
-        public void SendNonPermanentKillObject(ulong regionHandle, uint localID)
-        {
-        }
-
-        public void SendNonPermanentKillObjects(ulong regionHandle, uint[] localIDs)
+        public void SendKillObjects(ulong regionHandle, uint[] localID)
         {
         }
 
