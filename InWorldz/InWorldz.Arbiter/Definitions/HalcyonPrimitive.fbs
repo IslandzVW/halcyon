@@ -1,0 +1,26 @@
+﻿include "Vector3.fbs";
+include "Quaternion.fbs";
+include "HalcyonPrimitiveBaseShape.fbs";
+
+namespace InWorldz.Arbiter.Serialization;
+
+table HalcyonPrimitive {
+	id:[byte];
+	name:string;
+	description:string;
+	sound:[byte];
+	sound_flags:byte;
+	sound_gain:float;
+	sound_radius:float;
+	creator_id:[byte];
+	object_flags:int;
+	local_id:uint;
+	texture_animation:[byte];
+	group_position:Vector3;
+	offset_position:Vector3;
+	rotation_offset:Quaternion;
+	velocity:Vector3;
+	angular_velocity_target:Vector3;
+	angular_velocity:Vector3;
+	shape:HalcyonPrimitiveBaseShape;
+}
