@@ -1,7 +1,8 @@
-﻿namespace InWorldz.Arbiter;
+﻿include "Vector3.fbs";
 
-enum ProfileShape : byte
-{
+namespace InWorldz.Arbiter.Serialization;
+
+enum ProfileShape : byte {
     Circle = 0,
     Square = 1,
     IsometricTriangle = 2,
@@ -10,8 +11,7 @@ enum ProfileShape : byte
     HalfCircle = 5
 }
 
-enum HollowShape : byte
-{
+enum HollowShape : byte {
     Same = 0,
     Circle = 16,
     Square = 32,
@@ -25,14 +25,14 @@ table HalcyonPrimitiveBaseShape {
 	path_begin:ushort;
 	path_curve:byte;
 	path_end:ushort;
-	path_radius_offset:sbyte;
+	path_radius_offset:byte;
 	path_revolutions:byte;
 	path_scale_x:byte;
 	path_scale_y:byte;
 	path_shear_x:byte;
 	path_shear_y:byte;
-	path_twist:sbyte;
-	path_twist_begin:sbyte;
+	path_twist:byte;
+	path_twist_begin:byte;
 	pcode:byte;
 	profile_begin:ushort;
 	profile_end:ushort;
@@ -43,10 +43,6 @@ table HalcyonPrimitiveBaseShape {
 	hollow_shape:HollowShape;
 	sculpt_texture:[byte];
 	sculpt_type:byte;
-	flexi_softness:int;
-	flexi_tension:float;
-	flexi_drag:float;
-	flexi_gravity:float;
 	flexi_softness:int;
 	flexi_tension:float;
 	flexi_drag:float;
@@ -67,12 +63,14 @@ table HalcyonPrimitiveBaseShape {
 	projection_fov:float;
 	projection_focus:float;
 	projection_ambiance:float;
-	path_skew:sbyte;
-	path_taper_x:sbyte
-	path_taper_y:sbyte
+	path_skew:byte;
+	path_taper_x:byte;
+	path_taper_y:byte;
 	vertex_count:int;
 	high_lod_bytes:int;
 	mid_lod_bytes:int;
 	low_lod_bytes:int;
 	lowest_lod_bytes:int;
 }
+
+root_type HalcyonPrimitiveBaseShape;

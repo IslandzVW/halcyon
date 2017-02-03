@@ -1,7 +1,8 @@
 ﻿include "Vector3.fbs";
 include "Quaternion.fbs";
+include "HalcyonPrimitiveBaseShape.fbs";
 
-namespace InWorldz.Arbiter;
+namespace InWorldz.Arbiter.Serialization;
 
 table HalcyonPrimitive {
 	id:[byte];
@@ -21,4 +22,5 @@ table HalcyonPrimitive {
 	velocity:Vector3;
 	angular_velocity_target:Vector3;
 	angular_velocity:Vector3;
+	shape:HalcyonPrimitiveBaseShape;
 }
