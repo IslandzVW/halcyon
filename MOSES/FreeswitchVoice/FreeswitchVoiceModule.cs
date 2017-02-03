@@ -68,6 +68,9 @@ namespace MOSES.FreeSwitchVoice
 
         private IConfig m_config;
 
+        // Freeswitch Config pieces
+        private string m_realm = String.Empty;
+
         public void Initialize(IConfigSource config)
         {
             m_config = config.Configs["FreeSwitchVoice"];
@@ -98,6 +101,23 @@ namespace MOSES.FreeSwitchVoice
                 m_log.DebugFormat("[FreeSwitchVoice] plugin initialization failed: {0}", e.ToString());
                 return;
             }
+
+            try
+            {
+                XmlElement resp = NetworkCall(m_accountService);
+                XmlNodeList dirs = resp.GetElementsByTagName("Realm");
+                XmlNode node = dirs[0];
+                m_log.InfoFormat("[FreeSwitchVoice] using FreeSwitch realm {0}", node.InnerText);
+                m_realm = node.InnerText;
+            }
+            catch (Exception e)
+            {
+                m_enabled = false;
+                m_log.ErrorFormat("[FreeSwitchVoice] plugin initialization failed: {0}", e.Message);
+                
+
+            }
+            
         }
 
         public void PostInitialize()
@@ -111,28 +131,28 @@ namespace MOSES.FreeSwitchVoice
             {
                 return;
             }
-            string channelId;
+            //string channelId;
 
             string sceneUUID = String.IsNullOrEmpty(m_forcedChannelName) ? scene.RegionInfo.RegionID.ToString() : m_forcedChannelName;
             string sceneName = scene.RegionInfo.RegionName;
 
             // get region directory and wipe out all children
             // create directory if not exists
-            if(TryGetDirectory(sceneUUID + "D", out channelId))
-            {
+            //if(TryGetDirectory(sceneUUID + "D", out channelId))
+            //{
                 // TODO: Are we using children?? delete if we are
                 //FreeSwitchDialplan.ListChildren(directory);
 
                 // delete all children, we wont be re-using them
-            }
-            else
-            {
-                TryCreateDirectory(sceneUUID + "D", sceneName, out channelId);
+            //}
+            //else
+            //{
+            //    TryCreateDirectory(sceneUUID + "D", sceneName, out channelId);
 
                 // TODO: handle errors
-            }
+            //}
 
-            lock (m_parents)
+            /*lock (m_parents)
             {
                 if (m_parents.ContainsKey(sceneUUID))
                 {
@@ -143,8 +163,7 @@ namespace MOSES.FreeSwitchVoice
                 {
                     m_parents.Add(sceneUUID, channelId);
                 }
-            }
-
+            }*/
 
             scene.EventManager.OnRegisterCaps += delegate (UUID agentID, Caps caps)
             {
@@ -261,10 +280,10 @@ namespace MOSES.FreeSwitchVoice
 
                 UserAccount account = null;
                 
-                if(GetVoiceAccountInfo(agentname, out account))
+                if(GetVoiceAccountInfo(agentname, avatarName, out account))
                 {
                     LLSDVoiceAccountResponse voiceAccountResponse =
-                    new LLSDVoiceAccountResponse(agentname, account.password, account.realm, m_accountService);
+                    new LLSDVoiceAccountResponse(agentname, account.password, account.realm, String.Format("http://{0}/fsapi", m_realm));
 
                     string r = LLSDHelpers.SerializeLLSDReply(voiceAccountResponse);
 
@@ -567,10 +586,10 @@ namespace MOSES.FreeSwitchVoice
             return false;
         }
 
-        private bool GetVoiceAccountInfo(string user, out UserAccount account)
+        private bool GetVoiceAccountInfo(string user, string name, out UserAccount account)
         {
             m_log.InfoFormat("[FreeSwitchVoice][GetVoiceAccountInfo]: user \"{0}\"", user);
-            string requrl = String.Format("{0}/getAccountInfo?user={1}", m_accountService, user);
+            string requrl = String.Format("{0}/getAccountInfo?user={1}&name={2}", m_accountService, user, name.Replace(' ','_'));
 
             /*
             <Result>
@@ -626,13 +645,13 @@ namespace MOSES.FreeSwitchVoice
         private string RegionGetOrCreateChannel(Scene scene, LandData land)
         {
             string channelUri = null;
-            string channelId = null;
+            //string channelId = null;
 
             string landUUID;
             string landName;
-            string parentId;
+            //string parentId;
 
-            lock (m_parents) parentId = String.IsNullOrEmpty(m_forcedChannelName) ? m_parents[scene.RegionInfo.RegionID.ToString()] : m_parents[m_forcedChannelName];
+            //lock (m_parents) parentId = String.IsNullOrEmpty(m_forcedChannelName) ? m_parents[scene.RegionInfo.RegionID.ToString()] : m_parents[m_forcedChannelName];
 
             // Create parcel voice channel. If no parcel exists, then the voice channel ID is the same
             // as the directory ID. Otherwise, it reflects the parcel's ID.
@@ -652,25 +671,27 @@ namespace MOSES.FreeSwitchVoice
                 //                  landName, land.LocalID, landUUID);
             }
 
-            lock (vlock)
-            {
-                // Added by Adam to help debug channel not availible errors.
-                if (!TryGetChannel(parentId, landUUID, out channelId, out channelUri))
-                {
-                    if (!TryCreateChannel(parentId, landUUID, landName, out channelUri))
-                        throw new Exception("freeswitch channel uri not available");
-                    //else
-                    //    m_log.DebugFormat("[FreeSwitchVoice] Created new channel at " + channelUri);
-                }
-                //else 
-                //    m_log.DebugFormat("[FreeSwitchVoice] Found existing channel at " + channelUri);
+            // abandon this for now.  We can try to fix it up once we have a partial solution
+            // MGM does not persist channel settings anyways at this point.
+            //lock (vlock)
+            //{
+            // Added by Adam to help debug channel not availible errors.
+            //    if (!TryGetChannel(parentId, landUUID, out channelId, out channelUri))
+            //    {
+            //        if (!TryCreateChannel(parentId, landUUID, landName, out channelUri))
+            //            throw new Exception("freeswitch channel uri not available");
+            //else
+            //    m_log.DebugFormat("[FreeSwitchVoice] Created new channel at " + channelUri);
+            //    }
+            //else 
+            //    m_log.DebugFormat("[FreeSwitchVoice] Found existing channel at " + channelUri);
 
-                //m_log.DebugFormat("[FreeSwitchVoice]: Region:Parcel \"{0}\": parent channel id {1}: retrieved parcel channel_uri {2} ", 
-                //                  landName, parentId, channelUri);
+            //m_log.DebugFormat("[FreeSwitchVoice]: Region:Parcel \"{0}\": parent channel id {1}: retrieved parcel channel_uri {2} ", 
+            //                  landName, parentId, channelUri);
 
 
-            }
-
+            //}
+            channelUri = String.Format("sip:conf-{0}@{1}", "x" + Convert.ToBase64String(Encoding.ASCII.GetBytes(landUUID)), m_realm);
             return channelUri;
         }
 
@@ -701,7 +722,7 @@ namespace MOSES.FreeSwitchVoice
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[FreeSwitchVoice] Error in network call : {0}", e.Message);
+                m_log.ErrorFormat("[FreeSwitchVoice] Error in network call to {1}: {0}", e.Message, requrl);
             }
 
             return doc.DocumentElement;
