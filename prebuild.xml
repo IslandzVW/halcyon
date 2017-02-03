@@ -2443,6 +2443,7 @@
       <Reference name="System.Xml"/>
       <Reference name="System.Runtime.Remoting"/>
       <Reference name="System.Web"/>
+      <Reference name="FlatBuffers"/>
       <Reference name="OpenMetaverseTypes" path="../../bin/"/>
       <Reference name="OpenMetaverse" path="../../bin/"/>
       <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
