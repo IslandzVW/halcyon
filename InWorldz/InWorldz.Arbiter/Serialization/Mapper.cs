@@ -38,7 +38,7 @@ namespace InWorldz.Arbiter.Serialization
         /// <summary>
         /// Converts from a flatbuffer quaternion to an OMV quaternion
         /// </summary>
-        /// <param name="flatVector3"></param>
+        /// <param name="flatQuat"></param>
         /// <returns></returns>
         public static OpenMetaverse.Quaternion ToOmvQuat(Quaternion? flatQuat)
         {
@@ -65,7 +65,7 @@ namespace InWorldz.Arbiter.Serialization
         /// <summary>
         /// Maps the flatbuffer primshape object to a halcyon primitivebaseshape
         /// </summary>
-        /// <param name="primBaseShape">The flat</param>
+        /// <param name="flatPrimBaseShape">The flat</param>
         /// <returns></returns>
         public static PrimitiveBaseShape MapFlatbufferPrimBaseShapeToBaseShape(HalcyonPrimitiveBaseShape? flatPrimBaseShape)
         {
