@@ -31,8 +31,8 @@ public struct HalcyonPrimitiveBaseShape : IFlatbufferObject
   public byte PathScaleY { get { int o = __p.__offset(22); return o != 0 ? __p.bb.Get(o + __p.bb_pos) : (byte)0; } }
   public byte PathShearX { get { int o = __p.__offset(24); return o != 0 ? __p.bb.Get(o + __p.bb_pos) : (byte)0; } }
   public byte PathShearY { get { int o = __p.__offset(26); return o != 0 ? __p.bb.Get(o + __p.bb_pos) : (byte)0; } }
-  public byte PathTwist { get { int o = __p.__offset(28); return o != 0 ? __p.bb.Get(o + __p.bb_pos) : (byte)0; } }
-  public byte PathTwistBegin { get { int o = __p.__offset(30); return o != 0 ? __p.bb.Get(o + __p.bb_pos) : (byte)0; } }
+  public sbyte PathTwist { get { int o = __p.__offset(28); return o != 0 ? __p.bb.GetSbyte(o + __p.bb_pos) : (sbyte)0; } }
+  public sbyte PathTwistBegin { get { int o = __p.__offset(30); return o != 0 ? __p.bb.GetSbyte(o + __p.bb_pos) : (sbyte)0; } }
   public byte Pcode { get { int o = __p.__offset(32); return o != 0 ? __p.bb.Get(o + __p.bb_pos) : (byte)0; } }
   public ushort ProfileBegin { get { int o = __p.__offset(34); return o != 0 ? __p.bb.GetUshort(o + __p.bb_pos) : (ushort)0; } }
   public ushort ProfileEnd { get { int o = __p.__offset(36); return o != 0 ? __p.bb.GetUshort(o + __p.bb_pos) : (ushort)0; } }
@@ -69,9 +69,9 @@ public struct HalcyonPrimitiveBaseShape : IFlatbufferObject
   public float ProjectionFov { get { int o = __p.__offset(86); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
   public float ProjectionFocus { get { int o = __p.__offset(88); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
   public float ProjectionAmbiance { get { int o = __p.__offset(90); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
-  public byte PathSkew { get { int o = __p.__offset(92); return o != 0 ? __p.bb.Get(o + __p.bb_pos) : (byte)0; } }
-  public byte PathTaperX { get { int o = __p.__offset(94); return o != 0 ? __p.bb.Get(o + __p.bb_pos) : (byte)0; } }
-  public byte PathTaperY { get { int o = __p.__offset(96); return o != 0 ? __p.bb.Get(o + __p.bb_pos) : (byte)0; } }
+  public sbyte PathSkew { get { int o = __p.__offset(92); return o != 0 ? __p.bb.GetSbyte(o + __p.bb_pos) : (sbyte)0; } }
+  public sbyte PathTaperX { get { int o = __p.__offset(94); return o != 0 ? __p.bb.GetSbyte(o + __p.bb_pos) : (sbyte)0; } }
+  public sbyte PathTaperY { get { int o = __p.__offset(96); return o != 0 ? __p.bb.GetSbyte(o + __p.bb_pos) : (sbyte)0; } }
   public int VertexCount { get { int o = __p.__offset(98); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
   public int HighLodBytes { get { int o = __p.__offset(100); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
   public int MidLodBytes { get { int o = __p.__offset(102); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
@@ -95,8 +95,8 @@ public struct HalcyonPrimitiveBaseShape : IFlatbufferObject
   public static void AddPathScaleY(FlatBufferBuilder builder, byte pathScaleY) { builder.AddByte(9, pathScaleY, 0); }
   public static void AddPathShearX(FlatBufferBuilder builder, byte pathShearX) { builder.AddByte(10, pathShearX, 0); }
   public static void AddPathShearY(FlatBufferBuilder builder, byte pathShearY) { builder.AddByte(11, pathShearY, 0); }
-  public static void AddPathTwist(FlatBufferBuilder builder, byte pathTwist) { builder.AddByte(12, pathTwist, 0); }
-  public static void AddPathTwistBegin(FlatBufferBuilder builder, byte pathTwistBegin) { builder.AddByte(13, pathTwistBegin, 0); }
+  public static void AddPathTwist(FlatBufferBuilder builder, sbyte pathTwist) { builder.AddSbyte(12, pathTwist, 0); }
+  public static void AddPathTwistBegin(FlatBufferBuilder builder, sbyte pathTwistBegin) { builder.AddSbyte(13, pathTwistBegin, 0); }
   public static void AddPcode(FlatBufferBuilder builder, byte pcode) { builder.AddByte(14, pcode, 0); }
   public static void AddProfileBegin(FlatBufferBuilder builder, ushort profileBegin) { builder.AddUshort(15, profileBegin, 0); }
   public static void AddProfileEnd(FlatBufferBuilder builder, ushort profileEnd) { builder.AddUshort(16, profileEnd, 0); }
@@ -133,9 +133,9 @@ public struct HalcyonPrimitiveBaseShape : IFlatbufferObject
   public static void AddProjectionFov(FlatBufferBuilder builder, float projectionFov) { builder.AddFloat(41, projectionFov, 0.0f); }
   public static void AddProjectionFocus(FlatBufferBuilder builder, float projectionFocus) { builder.AddFloat(42, projectionFocus, 0.0f); }
   public static void AddProjectionAmbiance(FlatBufferBuilder builder, float projectionAmbiance) { builder.AddFloat(43, projectionAmbiance, 0.0f); }
-  public static void AddPathSkew(FlatBufferBuilder builder, byte pathSkew) { builder.AddByte(44, pathSkew, 0); }
-  public static void AddPathTaperX(FlatBufferBuilder builder, byte pathTaperX) { builder.AddByte(45, pathTaperX, 0); }
-  public static void AddPathTaperY(FlatBufferBuilder builder, byte pathTaperY) { builder.AddByte(46, pathTaperY, 0); }
+  public static void AddPathSkew(FlatBufferBuilder builder, sbyte pathSkew) { builder.AddSbyte(44, pathSkew, 0); }
+  public static void AddPathTaperX(FlatBufferBuilder builder, sbyte pathTaperX) { builder.AddSbyte(45, pathTaperX, 0); }
+  public static void AddPathTaperY(FlatBufferBuilder builder, sbyte pathTaperY) { builder.AddSbyte(46, pathTaperY, 0); }
   public static void AddVertexCount(FlatBufferBuilder builder, int vertexCount) { builder.AddInt(47, vertexCount, 0); }
   public static void AddHighLodBytes(FlatBufferBuilder builder, int highLodBytes) { builder.AddInt(48, highLodBytes, 0); }
   public static void AddMidLodBytes(FlatBufferBuilder builder, int midLodBytes) { builder.AddInt(49, midLodBytes, 0); }
