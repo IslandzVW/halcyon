@@ -15,25 +15,25 @@ public struct HalcyonPrimitive : IFlatbufferObject
   public void __init(int _i, ByteBuffer _bb) { __p.bb_pos = _i; __p.bb = _bb; }
   public HalcyonPrimitive __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
-  public sbyte Id(int j) { int o = __p.__offset(4); return o != 0 ? __p.bb.GetSbyte(__p.__vector(o) + j * 1) : (sbyte)0; }
+  public byte Id(int j) { int o = __p.__offset(4); return o != 0 ? __p.bb.Get(__p.__vector(o) + j * 1) : (byte)0; }
   public int IdLength { get { int o = __p.__offset(4); return o != 0 ? __p.__vector_len(o) : 0; } }
   public ArraySegment<byte>? GetIdBytes() { return __p.__vector_as_arraysegment(4); }
   public string Name { get { int o = __p.__offset(6); return o != 0 ? __p.__string(o + __p.bb_pos) : null; } }
   public ArraySegment<byte>? GetNameBytes() { return __p.__vector_as_arraysegment(6); }
   public string Description { get { int o = __p.__offset(8); return o != 0 ? __p.__string(o + __p.bb_pos) : null; } }
   public ArraySegment<byte>? GetDescriptionBytes() { return __p.__vector_as_arraysegment(8); }
-  public sbyte Sound(int j) { int o = __p.__offset(10); return o != 0 ? __p.bb.GetSbyte(__p.__vector(o) + j * 1) : (sbyte)0; }
+  public byte Sound(int j) { int o = __p.__offset(10); return o != 0 ? __p.bb.Get(__p.__vector(o) + j * 1) : (byte)0; }
   public int SoundLength { get { int o = __p.__offset(10); return o != 0 ? __p.__vector_len(o) : 0; } }
   public ArraySegment<byte>? GetSoundBytes() { return __p.__vector_as_arraysegment(10); }
   public byte SoundFlags { get { int o = __p.__offset(12); return o != 0 ? __p.bb.Get(o + __p.bb_pos) : (byte)0; } }
   public float SoundGain { get { int o = __p.__offset(14); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
   public float SoundRadius { get { int o = __p.__offset(16); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
-  public sbyte CreatorId(int j) { int o = __p.__offset(18); return o != 0 ? __p.bb.GetSbyte(__p.__vector(o) + j * 1) : (sbyte)0; }
+  public byte CreatorId(int j) { int o = __p.__offset(18); return o != 0 ? __p.bb.Get(__p.__vector(o) + j * 1) : (byte)0; }
   public int CreatorIdLength { get { int o = __p.__offset(18); return o != 0 ? __p.__vector_len(o) : 0; } }
   public ArraySegment<byte>? GetCreatorIdBytes() { return __p.__vector_as_arraysegment(18); }
-  public int ObjectFlags { get { int o = __p.__offset(20); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
+  public uint ObjectFlags { get { int o = __p.__offset(20); return o != 0 ? __p.bb.GetUint(o + __p.bb_pos) : (uint)0; } }
   public uint LocalId { get { int o = __p.__offset(22); return o != 0 ? __p.bb.GetUint(o + __p.bb_pos) : (uint)0; } }
-  public sbyte TextureAnimation(int j) { int o = __p.__offset(24); return o != 0 ? __p.bb.GetSbyte(__p.__vector(o) + j * 1) : (sbyte)0; }
+  public byte TextureAnimation(int j) { int o = __p.__offset(24); return o != 0 ? __p.bb.Get(__p.__vector(o) + j * 1) : (byte)0; }
   public int TextureAnimationLength { get { int o = __p.__offset(24); return o != 0 ? __p.__vector_len(o) : 0; } }
   public ArraySegment<byte>? GetTextureAnimationBytes() { return __p.__vector_as_arraysegment(24); }
   public InWorldz.Arbiter.Serialization.Vector3? GroupPosition { get { int o = __p.__offset(26); return o != 0 ? (InWorldz.Arbiter.Serialization.Vector3?)(new InWorldz.Arbiter.Serialization.Vector3()).__assign(o + __p.bb_pos, __p.bb) : null; } }
@@ -49,23 +49,23 @@ public struct HalcyonPrimitive : IFlatbufferObject
 
   public static void StartHalcyonPrimitive(FlatBufferBuilder builder) { builder.StartObject(21); }
   public static void AddId(FlatBufferBuilder builder, VectorOffset idOffset) { builder.AddOffset(0, idOffset.Value, 0); }
-  public static VectorOffset CreateIdVector(FlatBufferBuilder builder, sbyte[] data) { builder.StartVector(1, data.Length, 1); for (int i = data.Length - 1; i >= 0; i--) builder.AddSbyte(data[i]); return builder.EndVector(); }
+  public static VectorOffset CreateIdVector(FlatBufferBuilder builder, byte[] data) { builder.StartVector(1, data.Length, 1); for (int i = data.Length - 1; i >= 0; i--) builder.AddByte(data[i]); return builder.EndVector(); }
   public static void StartIdVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(1, numElems, 1); }
   public static void AddName(FlatBufferBuilder builder, StringOffset nameOffset) { builder.AddOffset(1, nameOffset.Value, 0); }
   public static void AddDescription(FlatBufferBuilder builder, StringOffset descriptionOffset) { builder.AddOffset(2, descriptionOffset.Value, 0); }
   public static void AddSound(FlatBufferBuilder builder, VectorOffset soundOffset) { builder.AddOffset(3, soundOffset.Value, 0); }
-  public static VectorOffset CreateSoundVector(FlatBufferBuilder builder, sbyte[] data) { builder.StartVector(1, data.Length, 1); for (int i = data.Length - 1; i >= 0; i--) builder.AddSbyte(data[i]); return builder.EndVector(); }
+  public static VectorOffset CreateSoundVector(FlatBufferBuilder builder, byte[] data) { builder.StartVector(1, data.Length, 1); for (int i = data.Length - 1; i >= 0; i--) builder.AddByte(data[i]); return builder.EndVector(); }
   public static void StartSoundVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(1, numElems, 1); }
   public static void AddSoundFlags(FlatBufferBuilder builder, byte soundFlags) { builder.AddByte(4, soundFlags, 0); }
   public static void AddSoundGain(FlatBufferBuilder builder, float soundGain) { builder.AddFloat(5, soundGain, 0.0f); }
   public static void AddSoundRadius(FlatBufferBuilder builder, float soundRadius) { builder.AddFloat(6, soundRadius, 0.0f); }
   public static void AddCreatorId(FlatBufferBuilder builder, VectorOffset creatorIdOffset) { builder.AddOffset(7, creatorIdOffset.Value, 0); }
-  public static VectorOffset CreateCreatorIdVector(FlatBufferBuilder builder, sbyte[] data) { builder.StartVector(1, data.Length, 1); for (int i = data.Length - 1; i >= 0; i--) builder.AddSbyte(data[i]); return builder.EndVector(); }
+  public static VectorOffset CreateCreatorIdVector(FlatBufferBuilder builder, byte[] data) { builder.StartVector(1, data.Length, 1); for (int i = data.Length - 1; i >= 0; i--) builder.AddByte(data[i]); return builder.EndVector(); }
   public static void StartCreatorIdVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(1, numElems, 1); }
-  public static void AddObjectFlags(FlatBufferBuilder builder, int objectFlags) { builder.AddInt(8, objectFlags, 0); }
+  public static void AddObjectFlags(FlatBufferBuilder builder, uint objectFlags) { builder.AddUint(8, objectFlags, 0); }
   public static void AddLocalId(FlatBufferBuilder builder, uint localId) { builder.AddUint(9, localId, 0); }
   public static void AddTextureAnimation(FlatBufferBuilder builder, VectorOffset textureAnimationOffset) { builder.AddOffset(10, textureAnimationOffset.Value, 0); }
-  public static VectorOffset CreateTextureAnimationVector(FlatBufferBuilder builder, sbyte[] data) { builder.StartVector(1, data.Length, 1); for (int i = data.Length - 1; i >= 0; i--) builder.AddSbyte(data[i]); return builder.EndVector(); }
+  public static VectorOffset CreateTextureAnimationVector(FlatBufferBuilder builder, byte[] data) { builder.StartVector(1, data.Length, 1); for (int i = data.Length - 1; i >= 0; i--) builder.AddByte(data[i]); return builder.EndVector(); }
   public static void StartTextureAnimationVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(1, numElems, 1); }
   public static void AddGroupPosition(FlatBufferBuilder builder, Offset<InWorldz.Arbiter.Serialization.Vector3> groupPositionOffset) { builder.AddStruct(11, groupPositionOffset.Value, 0); }
   public static void AddOffsetPosition(FlatBufferBuilder builder, Offset<InWorldz.Arbiter.Serialization.Vector3> offsetPositionOffset) { builder.AddStruct(12, offsetPositionOffset.Value, 0); }
@@ -81,6 +81,7 @@ public struct HalcyonPrimitive : IFlatbufferObject
     int o = builder.EndObject();
     return new Offset<HalcyonPrimitive>(o);
   }
+  public static void FinishHalcyonPrimitiveBuffer(FlatBufferBuilder builder, Offset<HalcyonPrimitive> offset) { builder.Finish(offset.Value); }
 };
 
 

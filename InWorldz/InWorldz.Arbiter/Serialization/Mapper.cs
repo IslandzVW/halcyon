@@ -1,4 +1,5 @@
 ﻿using System;
+using FlatBuffers;
 using OpenMetaverse;
 using OpenSim.Framework;
 using OpenSim.Region.Framework.Scenes;
@@ -152,7 +153,7 @@ namespace InWorldz.Arbiter.Serialization
                 LinkNum = prim.LinkNumber,
                 LocalId = prim.LocalId,
                 Name = prim.Name,
-                ObjectFlags = (uint) prim.ObjectFlags,
+                ObjectFlags = prim.ObjectFlags,
                 OffsetPosition = ToOmvVec3(prim.OffsetPosition),
                 ParentID = prim.ParentId,
                 RotationOffset = ToOmvQuat(prim.RotationOffset),
@@ -165,6 +166,77 @@ namespace InWorldz.Arbiter.Serialization
                 TextureAnimation = GetBytesFromSegment(prim.GetTextureAnimationBytes()),
                 Velocity = ToOmvVec3(prim.Velocity)
             };
+        }
+
+        /// <summary>
+        /// Maps the given sceneobjectpart to a flatbuffer primitive
+        /// </summary>
+        /// <param name="sop">The scene object to be serialized</param>
+        /// <param name="builder">A FlatBufferBuilder that has been reset</param>
+        /// <returns>A flatbuffer primitive</returns>
+        public static FlatBufferBuilder MapPartToFlatbuffer(SceneObjectPart sop, FlatBufferBuilder builder)
+        {
+            var angularVelocity = Vector3.CreateVector3(builder, sop.PhysicalAngularVelocity.X, sop.PhysicalAngularVelocity.Y,
+                sop.PhysicalAngularVelocity.Z);
+            var angularVelocityTarget = Vector3.CreateVector3(builder, sop.AngularVelocity.X, sop.AngularVelocity.Y,
+                sop.AngularVelocity.Z);
+            var creatorId = HalcyonPrimitive.CreateCreatorIdVector(builder, sop.CreatorID.GetBytes());
+            var description = builder.CreateString(sop.Description);
+            var groupPosition = Vector3.CreateVector3(builder, sop.GroupPosition.X, sop.GroupPosition.Y,
+                sop.GroupPosition.Z);
+            var id = HalcyonPrimitive.CreateIdVector(builder, sop.UUID.GetBytes());
+            var name = builder.CreateString(sop.Name);
+            var offsetPosition = Vector3.CreateVector3(builder, sop.OffsetPosition.X, sop.OffsetPosition.Y,
+                sop.OffsetPosition.Z);
+            var rotationOffset = Quaternion.CreateQuaternion(builder, sop.RotationOffset.X, sop.RotationOffset.Y,
+                sop.RotationOffset.Z, sop.RotationOffset.W);
+            var scale = Vector3.CreateVector3(builder, sop.Scale.X, sop.Scale.Y, sop.Scale.Z);
+
+            var extraParams = HalcyonPrimitiveBaseShape.CreateExtraParamsVector(builder, sop.Shape.ExtraParams);
+            var lightColor = HalcyonPrimitiveBaseShape.CreateLightColorVector(builder, new []
+            {
+                sop.Shape.LightColorA,
+                sop.Shape.LightColorR,
+                sop.Shape.LightColorG,
+                sop.Shape.LightColorB
+            });
+
+            HalcyonPrimitiveBaseShape.StartHalcyonPrimitiveBaseShape(builder);
+            HalcyonPrimitiveBaseShape.AddExtraParams(builder, extraParams);
+            HalcyonPrimitiveBaseShape.AddFlexiDrag(builder, sop.Shape.FlexiDrag);
+            HalcyonPrimitiveBaseShape.AddFlexiEntry(builder, sop.Shape.FlexiEntry);
+            HalcyonPrimitiveBaseShape.AddFlexiForceX(builder, sop.Shape.FlexiForceX);
+            HalcyonPrimitiveBaseShape.AddFlexiForceY(builder, sop.Shape.FlexiForceY);
+            HalcyonPrimitiveBaseShape.AddFlexiForceZ(builder, sop.Shape.FlexiForceZ);
+            HalcyonPrimitiveBaseShape.AddFlexiGravity(builder, sop.Shape.FlexiGravity);
+            HalcyonPrimitiveBaseShape.AddFlexiSoftness(builder, sop.Shape.FlexiSoftness);
+            HalcyonPrimitiveBaseShape.AddFlexiTension(builder, sop.Shape.FlexiTension);
+            HalcyonPrimitiveBaseShape.AddFlexiWind(builder, sop.Shape.FlexiWind);
+            HalcyonPrimitiveBaseShape.AddHighLodBytes(builder, sop.Shape.HighLODBytes);
+            HalcyonPrimitiveBaseShape.AddHollowShape(builder, (HollowShape)sop.Shape.HollowShape);
+            HalcyonPrimitiveBaseShape.AddLightColor(builder, lightColor);
+
+            HalcyonPrimitive.StartHalcyonPrimitive(builder);
+            HalcyonPrimitive.AddAngularVelocity(builder, angularVelocity);
+            HalcyonPrimitive.AddAngularVelocityTarget(builder, angularVelocityTarget);
+            HalcyonPrimitive.AddCreatorId(builder, creatorId);
+            HalcyonPrimitive.AddDescription(builder, description);
+            HalcyonPrimitive.AddGroupPosition(builder, groupPosition);
+            HalcyonPrimitive.AddId(builder, id);
+            HalcyonPrimitive.AddLinkNumber(builder, sop.LinkNum);
+            HalcyonPrimitive.AddLocalId(builder, sop.LocalId);
+            HalcyonPrimitive.AddName(builder, name);
+            HalcyonPrimitive.AddObjectFlags(builder, sop.ObjectFlags);
+            HalcyonPrimitive.AddOffsetPosition(builder, offsetPosition);
+            HalcyonPrimitive.AddParentId(builder, sop.ParentID);
+            HalcyonPrimitive.AddRotationOffset(builder, rotationOffset);
+            HalcyonPrimitive.AddScale(builder, scale);
+            //HalcyonPrimitive.AddShape(builder, );
+            var offset = HalcyonPrimitive.EndHalcyonPrimitive(builder);
+
+            HalcyonPrimitive.FinishHalcyonPrimitiveBuffer(builder, offset);
+
+            return builder;
         }
     }
 }
