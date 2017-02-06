@@ -25,7 +25,7 @@ public struct HalcyonPrimitive : IFlatbufferObject
   public sbyte Sound(int j) { int o = __p.__offset(10); return o != 0 ? __p.bb.GetSbyte(__p.__vector(o) + j * 1) : (sbyte)0; }
   public int SoundLength { get { int o = __p.__offset(10); return o != 0 ? __p.__vector_len(o) : 0; } }
   public ArraySegment<byte>? GetSoundBytes() { return __p.__vector_as_arraysegment(10); }
-  public sbyte SoundFlags { get { int o = __p.__offset(12); return o != 0 ? __p.bb.GetSbyte(o + __p.bb_pos) : (sbyte)0; } }
+  public byte SoundFlags { get { int o = __p.__offset(12); return o != 0 ? __p.bb.Get(o + __p.bb_pos) : (byte)0; } }
   public float SoundGain { get { int o = __p.__offset(14); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
   public float SoundRadius { get { int o = __p.__offset(16); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
   public sbyte CreatorId(int j) { int o = __p.__offset(18); return o != 0 ? __p.bb.GetSbyte(__p.__vector(o) + j * 1) : (sbyte)0; }
@@ -42,9 +42,12 @@ public struct HalcyonPrimitive : IFlatbufferObject
   public InWorldz.Arbiter.Serialization.Vector3? Velocity { get { int o = __p.__offset(32); return o != 0 ? (InWorldz.Arbiter.Serialization.Vector3?)(new InWorldz.Arbiter.Serialization.Vector3()).__assign(o + __p.bb_pos, __p.bb) : null; } }
   public InWorldz.Arbiter.Serialization.Vector3? AngularVelocityTarget { get { int o = __p.__offset(34); return o != 0 ? (InWorldz.Arbiter.Serialization.Vector3?)(new InWorldz.Arbiter.Serialization.Vector3()).__assign(o + __p.bb_pos, __p.bb) : null; } }
   public InWorldz.Arbiter.Serialization.Vector3? AngularVelocity { get { int o = __p.__offset(36); return o != 0 ? (InWorldz.Arbiter.Serialization.Vector3?)(new InWorldz.Arbiter.Serialization.Vector3()).__assign(o + __p.bb_pos, __p.bb) : null; } }
-  public InWorldz.Arbiter.Serialization.HalcyonPrimitiveBaseShape? Shape { get { int o = __p.__offset(38); return o != 0 ? (InWorldz.Arbiter.Serialization.HalcyonPrimitiveBaseShape?)(new InWorldz.Arbiter.Serialization.HalcyonPrimitiveBaseShape()).__assign(__p.__indirect(o + __p.bb_pos), __p.bb) : null; } }
+  public int LinkNumber { get { int o = __p.__offset(38); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
+  public uint ParentId { get { int o = __p.__offset(40); return o != 0 ? __p.bb.GetUint(o + __p.bb_pos) : (uint)0; } }
+  public InWorldz.Arbiter.Serialization.Vector3? Scale { get { int o = __p.__offset(42); return o != 0 ? (InWorldz.Arbiter.Serialization.Vector3?)(new InWorldz.Arbiter.Serialization.Vector3()).__assign(o + __p.bb_pos, __p.bb) : null; } }
+  public InWorldz.Arbiter.Serialization.HalcyonPrimitiveBaseShape? Shape { get { int o = __p.__offset(44); return o != 0 ? (InWorldz.Arbiter.Serialization.HalcyonPrimitiveBaseShape?)(new InWorldz.Arbiter.Serialization.HalcyonPrimitiveBaseShape()).__assign(__p.__indirect(o + __p.bb_pos), __p.bb) : null; } }
 
-  public static void StartHalcyonPrimitive(FlatBufferBuilder builder) { builder.StartObject(18); }
+  public static void StartHalcyonPrimitive(FlatBufferBuilder builder) { builder.StartObject(21); }
   public static void AddId(FlatBufferBuilder builder, VectorOffset idOffset) { builder.AddOffset(0, idOffset.Value, 0); }
   public static VectorOffset CreateIdVector(FlatBufferBuilder builder, sbyte[] data) { builder.StartVector(1, data.Length, 1); for (int i = data.Length - 1; i >= 0; i--) builder.AddSbyte(data[i]); return builder.EndVector(); }
   public static void StartIdVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(1, numElems, 1); }
@@ -53,7 +56,7 @@ public struct HalcyonPrimitive : IFlatbufferObject
   public static void AddSound(FlatBufferBuilder builder, VectorOffset soundOffset) { builder.AddOffset(3, soundOffset.Value, 0); }
   public static VectorOffset CreateSoundVector(FlatBufferBuilder builder, sbyte[] data) { builder.StartVector(1, data.Length, 1); for (int i = data.Length - 1; i >= 0; i--) builder.AddSbyte(data[i]); return builder.EndVector(); }
   public static void StartSoundVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(1, numElems, 1); }
-  public static void AddSoundFlags(FlatBufferBuilder builder, sbyte soundFlags) { builder.AddSbyte(4, soundFlags, 0); }
+  public static void AddSoundFlags(FlatBufferBuilder builder, byte soundFlags) { builder.AddByte(4, soundFlags, 0); }
   public static void AddSoundGain(FlatBufferBuilder builder, float soundGain) { builder.AddFloat(5, soundGain, 0.0f); }
   public static void AddSoundRadius(FlatBufferBuilder builder, float soundRadius) { builder.AddFloat(6, soundRadius, 0.0f); }
   public static void AddCreatorId(FlatBufferBuilder builder, VectorOffset creatorIdOffset) { builder.AddOffset(7, creatorIdOffset.Value, 0); }
@@ -70,7 +73,10 @@ public struct HalcyonPrimitive : IFlatbufferObject
   public static void AddVelocity(FlatBufferBuilder builder, Offset<InWorldz.Arbiter.Serialization.Vector3> velocityOffset) { builder.AddStruct(14, velocityOffset.Value, 0); }
   public static void AddAngularVelocityTarget(FlatBufferBuilder builder, Offset<InWorldz.Arbiter.Serialization.Vector3> angularVelocityTargetOffset) { builder.AddStruct(15, angularVelocityTargetOffset.Value, 0); }
   public static void AddAngularVelocity(FlatBufferBuilder builder, Offset<InWorldz.Arbiter.Serialization.Vector3> angularVelocityOffset) { builder.AddStruct(16, angularVelocityOffset.Value, 0); }
-  public static void AddShape(FlatBufferBuilder builder, Offset<InWorldz.Arbiter.Serialization.HalcyonPrimitiveBaseShape> shapeOffset) { builder.AddOffset(17, shapeOffset.Value, 0); }
+  public static void AddLinkNumber(FlatBufferBuilder builder, int linkNumber) { builder.AddInt(17, linkNumber, 0); }
+  public static void AddParentId(FlatBufferBuilder builder, uint parentId) { builder.AddUint(18, parentId, 0); }
+  public static void AddScale(FlatBufferBuilder builder, Offset<InWorldz.Arbiter.Serialization.Vector3> scaleOffset) { builder.AddStruct(19, scaleOffset.Value, 0); }
+  public static void AddShape(FlatBufferBuilder builder, Offset<InWorldz.Arbiter.Serialization.HalcyonPrimitiveBaseShape> shapeOffset) { builder.AddOffset(20, shapeOffset.Value, 0); }
   public static Offset<HalcyonPrimitive> EndHalcyonPrimitive(FlatBufferBuilder builder) {
     int o = builder.EndObject();
     return new Offset<HalcyonPrimitive>(o);

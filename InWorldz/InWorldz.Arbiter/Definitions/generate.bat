@@ -4,4 +4,4 @@
 ..\..\..\bin\flatc-win.exe --csharp HalcyonPrimitive.fbs
 
 move /Y .\InWorldz\Arbiter\Serialization\* ..\Serialization
-rmdir /S .\InWorldz
+rmdir /S /Y .\InWorldz

@@ -9,7 +9,7 @@ table HalcyonPrimitive {
 	name:string;
 	description:string;
 	sound:[byte];
-	sound_flags:byte;
+	sound_flags:ubyte;
 	sound_gain:float;
 	sound_radius:float;
 	creator_id:[byte];
@@ -22,5 +22,9 @@ table HalcyonPrimitive {
 	velocity:Vector3;
 	angular_velocity_target:Vector3;
 	angular_velocity:Vector3;
+	link_number:int;
+	parent_id:uint;
+	scale:Vector3;
+	
 	shape:HalcyonPrimitiveBaseShape;
 }

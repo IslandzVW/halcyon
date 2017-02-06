@@ -19,30 +19,30 @@ enum HollowShape : byte {
 }
 
 table HalcyonPrimitiveBaseShape {
-	profile_curve:byte;
+	profile_curve:ubyte;
 	texture_entry:[byte];
 	extra_params:[byte];
 	path_begin:ushort;
-	path_curve:byte;
+	path_curve:ubyte;
 	path_end:ushort;
 	path_radius_offset:byte;
-	path_revolutions:byte;
-	path_scale_x:byte;
-	path_scale_y:byte;
-	path_shear_x:byte;
-	path_shear_y:byte;
+	path_revolutions:ubyte;
+	path_scale_x:ubyte;
+	path_scale_y:ubyte;
+	path_shear_x:ubyte;
+	path_shear_y:ubyte;
 	path_twist:byte;
 	path_twist_begin:byte;
-	pcode:byte;
+	pcode:ubyte;
 	profile_begin:ushort;
 	profile_end:ushort;
 	profile_hollow:ushort;
 	scale:Vector3;
-	state:byte;
+	state:ubyte;
 	profile_shape:ProfileShape;
 	hollow_shape:HollowShape;
 	sculpt_texture:[byte];
-	sculpt_type:byte;
+	sculpt_type:ubyte;
 	flexi_softness:int;
 	flexi_tension:float;
 	flexi_drag:float;
@@ -55,10 +55,10 @@ table HalcyonPrimitiveBaseShape {
 	light_radius:float;
 	light_cutoff:float;
 	light_intensity:float;
-	flexi_entry:byte;
-	light_entry:byte;
-	sculpt_entry:byte;
-	projection_entry:byte;
+	flexi_entry:bool;
+	light_entry:bool;
+	sculpt_entry:bool;
+	projection_entry:bool;
 	projection_texture_id:[byte];
 	projection_fov:float;
 	projection_focus:float;
