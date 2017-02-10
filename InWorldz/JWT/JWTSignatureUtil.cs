@@ -86,7 +86,7 @@ namespace InWorldz.JWT
         private static byte[] DecodeBase64(string body)
         {
             // Thank you to http://stackoverflow.com/a/9301545
-            body = body.Trim().Replace(" ", "+");
+            body = body.Trim().Replace(" ", "+").Replace('-', '+').Replace('_', '/');
             if (body.Length % 4 > 0)
             {
                 body = body.PadRight(body.Length + 4 - body.Length % 4, '=');

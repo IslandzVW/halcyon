@@ -46,8 +46,9 @@ namespace InWorldz.JWT
             try
             {
                 Header = DecodeBase64(parts[0]);
-                Payload = LitJson.JsonMapper.ToObject<PayloadOptions>(DecodeBase64(parts[1]));
                 HasValidSignature = sigUtil.Verify(body: parts[0] + "." + parts[1], signature: parts[2]);
+                if(HasValidSignature)
+                    Payload = LitJson.JsonMapper.ToObject<PayloadOptions>(DecodeBase64(parts[1]));
             }
             catch (FormatException)
             {
@@ -91,7 +92,7 @@ namespace InWorldz.JWT
         private static string DecodeBase64(string body)
         {
             // Thank you to http://stackoverflow.com/a/9301545
-            body = body.Trim().Replace(" ", "+");
+            body = body.Trim().Replace(" ", "+").Replace('-', '+').Replace('_', '/');
             if (body.Length % 4 > 0)
             {
                 body = body.PadRight(body.Length + 4 - body.Length % 4, '=');
