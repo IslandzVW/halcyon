@@ -836,10 +836,21 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
             if (forceRefresh)
             {
+                // Delay/reset the timer as the map's getting updated now.
+                mapTileUpdateTimer?.Stop();
+
                 m_log.Debug("[WORLD MAP]: Forcing refresh of map tile");
 
-                //regenerate terrain
-                m_scene.CreateTerrainTexture(false);
+                try
+                {
+                    //regenerate terrain
+                    m_scene.CreateTerrainTexture(false);
+                }
+                finally // Make sure the timer actually gets restarted even in an Exceptional situation.
+                {
+                    // Do the reset after the update so that the above update's time delay cannot cause overlaps.
+                    mapTileUpdateTimer?.Start();
+                }
             }
 
             m_log.Debug("[WORLD MAP]: Sending map image jpeg");
@@ -1167,16 +1178,20 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             if (readyToDrawMap && lastMapPushTime + minimumMapPushTime < DateTime.Now)
             {
                 // Delay/reset the timer as the map's getting updated now.
-                if (mapTileUpdateTimer != null)
-                {
-                    mapTileUpdateTimer.Stop();
-                    mapTileUpdateTimer.Start();
-                }
+                mapTileUpdateTimer?.Stop();
 
                 m_log.Info("[WORLD MAP] Rebuilding map tile on taint as the minimum wait time has passed.");
 
-                // Update the map tile.
-                m_scene.CreateTerrainTexture(false);
+                try
+                {
+                    // Update the map tile.
+                    m_scene.CreateTerrainTexture(false);
+                }
+                finally // Make sure the timer actually gets restarted even in an Exceptional situation.
+                {
+                    // Do the reset after the update so that the above update's time delay cannot cause overlaps.
+                    mapTileUpdateTimer?.Start();
+                }
             }
         }
 
@@ -1187,10 +1202,21 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         {
             if (m_Enabled && isMapTainted && lastMapPushTime + minimumMapPushTime < DateTime.Now)
             {
+                // Delay/reset the timer as the map's getting updated now.
+                mapTileUpdateTimer?.Stop();
+
                 m_log.Info("[WORLD MAP] Rebuilding map tile; map was tainted and the maximum wait time has expired.");
 
-                // Update the map tile.
-                m_scene.CreateTerrainTexture(false);
+                try
+                {
+                    // Update the map tile.
+                    m_scene.CreateTerrainTexture(false);
+                }
+                finally // Make sure the timer actually gets restarted even in an Exceptional situation.
+                {
+                    // Do the reset after the update so that the above update's time delay cannot cause overlaps.
+                    mapTileUpdateTimer?.Start();
+                }
             }
         }
 
