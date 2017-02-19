@@ -956,7 +956,15 @@ namespace OpenSim.Framework
         /// <param name="regionHandle"></param>
         /// <param name="localID"></param>        
         void SendKillObject(ulong regionHandle, uint localID);
-        void SendKillObjects(ulong regionHandle, uint[] localID);
+        void SendKillObjects(ulong regionHandle, uint[] localIDs);
+
+        /// <summary>
+        /// Kills the object at the client, but does not prevent further updates to the client
+        /// </summary>
+        /// <param name="regionHandle"></param>
+        /// <param name="localID"></param>
+        void SendNonPermanentKillObject(ulong regionHandle, uint localID);
+        void SendNonPermanentKillObjects(ulong regionHandle, uint[] localIDs);
 
         void SendAnimations(UUID[] animID, int[] seqs, UUID sourceAgentId, UUID[] objectIDs);
         void SendRegionHandshake(RegionInfo regionInfo, RegionHandshakeArgs args);

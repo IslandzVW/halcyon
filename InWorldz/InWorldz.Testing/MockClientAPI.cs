@@ -615,17 +615,27 @@ namespace InWorldz.Testing
 
         public void SendStartPingCheck(byte seq)
         {
-            
+
         }
 
         public void SendKillObject(ulong regionHandle, uint localID)
         {
-            
+
         }
 
-        public void SendKillObjects(ulong regionHandle, uint[] localID)
+        public void SendKillObjects(ulong regionHandle, uint[] localIDs)
         {
-            
+
+        }
+
+        public void SendNonPermanentKillObject(ulong regionHandle, uint localID)
+        {
+
+        }
+
+        public void SendNonPermanentKillObjects(ulong regionHandle, uint[] localIDs)
+        {
+
         }
 
         public void SendAnimations(OpenMetaverse.UUID[] animID, int[] seqs, OpenMetaverse.UUID sourceAgentId, OpenMetaverse.UUID[] objectIDs)
