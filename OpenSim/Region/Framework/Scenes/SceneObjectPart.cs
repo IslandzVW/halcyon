@@ -1754,12 +1754,21 @@ namespace OpenSim.Region.Framework.Scenes
             return (m_parentGroup.RootPart == this);    // matches?
         }
 
-        public void SetSitTarget(Vector3 pos, Quaternion rot, bool preserveSitter)
+        // Note that enabled=false is not the same as removing a sit target.
+        public void SetSitTarget(Vector3 pos, Quaternion rot, bool enabled, bool preserveSitter)
         {
             SitTargetPosition = pos;
             SitTargetOrientation = rot;
             if (ParentGroup != null)
                 ParentGroup.SetSitTarget(this, pos, rot, preserveSitter);
+        }
+        public void RemoveSitTarget()
+        {
+            SitTargetPosition = Vector3.Zero;
+            SitTargetOrientation = Quaternion.Identity;
+            ServerFlags &= ~(uint)ServerPrimFlags.SitTargetEnabled;
+            if (ParentGroup != null)
+                ParentGroup.RemoveSitTarget(this.UUID);
         }
 
         public static readonly uint LEGACY_BASEMASK = 0x7FFFFFF0;
@@ -2067,7 +2076,8 @@ namespace OpenSim.Region.Framework.Scenes
         // part.ParentGroup must be initialized for this.
         public void CopySitTarget(SceneObjectPart part)
         {
-            this.SetSitTarget(part.SitTargetPosition, part.SitTargetOrientation, false);
+            bool sitTargetEnabled = (part.ServerFlags & (uint) ServerPrimFlags.SitTargetEnabled) != 0;
+            this.SetSitTarget(part.SitTargetPosition, part.SitTargetOrientation, sitTargetEnabled, false);
         }
 
         /// <summary>

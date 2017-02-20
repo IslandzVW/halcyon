@@ -1760,18 +1760,22 @@ namespace OpenSim.Data.MySQL
                 Convert.ToSingle(row["RotationW"])
                 );
 
-            prim.SetSitTarget(new Vector3(
-                                Convert.ToSingle(row["SitTargetOffsetX"]),
-                                Convert.ToSingle(row["SitTargetOffsetY"]),
-                                Convert.ToSingle(row["SitTargetOffsetZ"])
-                                ),
-                             new Quaternion(
-                                Convert.ToSingle(row["SitTargetOrientX"]),
-                                Convert.ToSingle(row["SitTargetOrientY"]),
-                                Convert.ToSingle(row["SitTargetOrientZ"]),
-                                Convert.ToSingle(row["SitTargetOrientW"])
-                             ), 
-                             false);
+            // We need ServerFlags first, in order to set all the SitTarget data.
+            prim.ServerFlags = Convert.ToUInt32(row["ServerFlags"]);
+            // Now the sit target info itself.
+            bool sitTargetEnabled = (prim.ServerFlags & (uint) ServerPrimFlags.SitTargetEnabled) != 0;
+            Vector3 sitTargetPos = new Vector3(
+                Convert.ToSingle(row["SitTargetOffsetX"]),
+                Convert.ToSingle(row["SitTargetOffsetY"]),
+                Convert.ToSingle(row["SitTargetOffsetZ"])
+            );
+            Quaternion sitTargetRot = new Quaternion(
+                Convert.ToSingle(row["SitTargetOrientX"]),
+                Convert.ToSingle(row["SitTargetOrientY"]),
+                Convert.ToSingle(row["SitTargetOrientZ"]),
+                Convert.ToSingle(row["SitTargetOrientW"])
+            );
+            prim.SetSitTarget(sitTargetPos, sitTargetRot, sitTargetEnabled, false);
 
             prim.PayPrice[0] = Convert.ToInt32(row["PayPrice"]);
             prim.PayPrice[1] = Convert.ToInt32(row["PayButton1"]);
@@ -1875,8 +1879,6 @@ namespace OpenSim.Data.MySQL
                     }
                 }
             }
-
-            prim.ServerFlags = Convert.ToUInt32(row["ServerFlags"]);
 
             return prim;
         }

@@ -8664,11 +8664,12 @@ namespace InWorldz.Phlox.Engine
         {
             Vector3 sitPos = new Vector3((float)offset.X, (float)offset.Y, (float)offset.Z);
             Quaternion sitRot = Rot2Quaternion(rot);
+            bool enabled = (sitPos != Vector3.Zero) && (sitRot != Quaternion.Identity);
 
             var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
-                part.SetSitTarget(sitPos, sitRot, true);
+                part.SetSitTarget(sitPos, sitRot, enabled, true);
             }
         }
 

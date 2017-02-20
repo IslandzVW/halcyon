@@ -209,7 +209,7 @@ namespace InWorldz.Region.Data.Thoosa.Tests
             part.Velocity = Util.RandomVector();
             part.FromItemID = UUID.Random();
 
-            part.SetSitTarget(Util.RandomVector(), Util.RandomQuat(), false);
+            part.SetSitTarget(Util.RandomVector(), Util.RandomQuat(), true, false);
 
             return part;
         }
