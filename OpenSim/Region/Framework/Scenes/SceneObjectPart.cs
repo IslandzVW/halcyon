@@ -137,6 +137,16 @@ namespace OpenSim.Region.Framework.Scenes
         SCULPT = 7
     }
 
+    [Flags]
+    public enum ServerPrimFlags : uint
+    {
+        None = 0,
+
+        // PRIM_SIT_TARGET supports TRUE/FALSE,pos,rot 
+        // even for ZERO_VECTOR,ZERO_ROTATION
+        // so we need to store this too.
+        SitTargetEnabled = 1
+    }
     #endregion Enumerations
 
     public class SceneObjectPart : IScriptHost, ISceneEntity
@@ -713,6 +723,7 @@ namespace OpenSim.Region.Framework.Scenes
         private Quaternion _prevAttRot = Quaternion.Identity;
         private Vector3 _standTargetPos = Vector3.Zero;
         private Quaternion _standTargetRot = Quaternion.Identity;
+        private ServerPrimFlags _serverFlags = 0;
 
         [XmlIgnore]
         public bool IsInTransaction
@@ -1396,6 +1407,12 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         public KeyframeAnimation KeyframeAnimation { get; set; }
+
+        public uint ServerFlags
+        {
+            get { return (uint)_serverFlags; }
+            set { _serverFlags = (ServerPrimFlags)value; }
+        }
 
         #endregion
 
@@ -2096,6 +2113,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.m_particleSystem = m_particleSystem;
             dupe.ObjectFlags = ObjectFlags;
+            dupe.ServerFlags = ServerFlags;
 
             dupe._ownershipCost = _ownershipCost;
             dupe._objectSaleType = _objectSaleType;

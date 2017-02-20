@@ -193,6 +193,7 @@ namespace InWorldz.Region.Data.Thoosa.Tests
             part.SavedAttachmentRot = Util.RandomQuat();
             part.ScriptAccessPin = 87654;
             part.SerializedPhysicsData = new byte[] { 0xA, 0xB, 0xC, 0xD, 0xE, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, };
+            part.ServerFlags = (int)ServerPrimFlags.SitTargetEnabled;    // see SetSitTarget below
             part.ServerWeight = 3.0f;
             part.StreamingCost = 2.0f;
             part.SitName = "Sitting";

@@ -491,6 +491,9 @@ namespace OpenSim.Data.MySQL
             ProviderRegistry.Instance.TryGet<ISerializationEngine>(out engine);
             cmd.Parameters.AddWithValue("KeyframeAnimation" + numString, 
                 engine.MiscObjectSerializer.SerializeKeyframeAnimationToBytes(prim.KeyframeAnimation));
+
+            // Server-use flags (per-prim persistence storage). Currently just enabled TRUE/FALSE for sit target.
+            cmd.Parameters.AddWithValue("ServerFlags" + numString, prim.ServerFlags);
         }
 
         private StringBuilder GenerateShapeValuesBlock(int number)
@@ -1872,6 +1875,8 @@ namespace OpenSim.Data.MySQL
                     }
                 }
             }
+
+            prim.ServerFlags = Convert.ToUInt32(row["ServerFlags"]);
 
             return prim;
         }
