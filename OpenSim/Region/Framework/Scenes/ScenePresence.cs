@@ -2390,7 +2390,7 @@ namespace OpenSim.Region.Framework.Scenes
                                 // Otherwise, we have a lot to do, it's a real stand up operation.
                                 // if there is a part with a sit target
 
-                                if (sitInfo.IsSet)
+                                if (sitInfo.IsEnabled)
                                 {   // prim not found, or has a sit target (just use that offset)
                                     info.Position = AbsolutePosition;   // don't change it from where we are now, but update with the current absolute position
                                 }
@@ -2478,7 +2478,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 // Is a sit target available?
                 SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
-                if (sitInfo.IsSet && !sitInfo.HasSitter)
+                if (sitInfo.IsEnabled && !sitInfo.HasSitter)
                 {
                     //switch the target to this prim
                     return part;
@@ -2553,7 +2553,7 @@ namespace OpenSim.Region.Framework.Scenes
                 // This adjustment gives the viewer the position it expects.
                 vPos.Z -= m_appearance.HipOffset;
 
-                if (sitInfo.IsSet)
+                if (sitInfo.IsEnabled)
                 {
                     avSitPos += sitInfo.Offset;
                     if (ADJUST_SIT_TARGET)

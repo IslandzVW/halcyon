@@ -1414,6 +1414,18 @@ namespace OpenSim.Region.Framework.Scenes
             set { _serverFlags = (ServerPrimFlags)value; }
         }
 
+        public bool SitTargetEnabled
+        {
+            get { return (_serverFlags & ServerPrimFlags.SitTargetEnabled) != 0; }
+            set
+            {
+                if (value)  // enable or disable SitTargetEnabled flag
+                    _serverFlags |= ServerPrimFlags.SitTargetEnabled;
+                else
+                    _serverFlags &= ~ServerPrimFlags.SitTargetEnabled;
+            }
+        }
+
         #endregion
 
         //---------------
@@ -1755,18 +1767,26 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         // Note that enabled=false is not the same as removing a sit target.
-        public void SetSitTarget(Vector3 pos, Quaternion rot, bool enabled, bool preserveSitter)
+        public void SetSitTarget(bool isEnabled, Vector3 pos, Quaternion rot, bool preserveSitter)
         {
+            // Take care of this prim.
             SitTargetPosition = pos;
             SitTargetOrientation = rot;
+            SitTargetEnabled = isEnabled;
+
+            // Now update the parent group.
             if (ParentGroup != null)
-                ParentGroup.SetSitTarget(this, pos, rot, preserveSitter);
+                ParentGroup.SetSitTarget(this, isEnabled, pos, rot, preserveSitter);
         }
+
         public void RemoveSitTarget()
         {
+            // Take care of this prim.
             SitTargetPosition = Vector3.Zero;
             SitTargetOrientation = Quaternion.Identity;
-            ServerFlags &= ~(uint)ServerPrimFlags.SitTargetEnabled;
+            SitTargetEnabled = false;
+
+            // Now update the parent group.
             if (ParentGroup != null)
                 ParentGroup.RemoveSitTarget(this.UUID);
         }
@@ -2076,8 +2096,7 @@ namespace OpenSim.Region.Framework.Scenes
         // part.ParentGroup must be initialized for this.
         public void CopySitTarget(SceneObjectPart part)
         {
-            bool sitTargetEnabled = (part.ServerFlags & (uint) ServerPrimFlags.SitTargetEnabled) != 0;
-            this.SetSitTarget(part.SitTargetPosition, part.SitTargetOrientation, sitTargetEnabled, false);
+            this.SetSitTarget(part.SitTargetEnabled, part.SitTargetPosition, part.SitTargetOrientation, false);
         }
 
         /// <summary>
