@@ -249,16 +249,6 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                                 presence.SceneView.CheckWhetherAttachmentsHaveChanged(m_presence);
                         }
                     }
-                    else
-                    {
-                        //Send a kill update for that avatar then
-                        if (m_presencesInView.Contains(presence.UUID))
-                        {
-                            m_presencesInView.Remove(presence.UUID);
-                            m_presence.ControllingClient.SendNonPermanentKillObject(m_presence.Scene.RegionInfo.RegionHandle,
-                                presence.LocalId);
-                        }
-                    }
                 }
             }
         }
@@ -783,6 +773,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                                     UseCulling && !ShowEntityToClient(clientAbsPosition, part.ParentGroup, out distance) &&
                                     !ShowEntityToClient(m_presence.CameraPosition, part.ParentGroup, out distance)))
                 {
+                    bool sendKill = false;
                     lastParentObjectWasCulled = true;
 
                     lock (m_updateTimes)
@@ -790,12 +781,14 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                         if (m_updateTimes.ContainsKey(part.LocalId))
                         {
                             m_updateTimes.Remove(part.LocalId);
+                            sendKill = true;
                         }
                     }
 
                     //Only send the kill object packet if we have seen this object
-                    m_presence.ControllingClient.SendNonPermanentKillObject(m_presence.Scene.RegionInfo.RegionHandle,
-                        part.ParentGroup.RootPart.LocalId);
+                    if (sendKill)
+                        m_presence.ControllingClient.SendNonPermanentKillObject(m_presence.Scene.RegionInfo.RegionHandle,
+                            part.ParentGroup.RootPart.LocalId);
 
                     lastSog = part.ParentGroup;
                     continue;

@@ -870,13 +870,6 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            if (!SceneObjectPart.IsValidAttachmentPoint(AttachmentPt))
-            {
-                m_log.WarnFormat("[SCENE] Invalid wear attachment owned by {0} attachment point {1} object '{2}'.",
-                    remoteClient.AgentId, AttachmentPt, group.Name);
-                return;
-            }
-
             bool isTainted = false;
             if ((flags & (AttachFlags.FromInWorld | AttachFlags.FromCrossing)) != 0) //if this object is from in-world, we need to prep it first
             {
