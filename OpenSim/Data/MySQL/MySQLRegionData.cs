@@ -1779,9 +1779,9 @@ namespace OpenSim.Data.MySQL
 
             // This function must be called on asset load (inventory rez) or database load (rezzed)
             // with SOP.ServerFlags initialized, which may be updated before return.
-            bool sitTargetEnabled = prim.PrepSitTargetFromStorage(sitTargetPos, sitTargetRot);
+            bool sitTargetActive = prim.PrepSitTargetFromStorage(sitTargetPos, sitTargetRot);
             // Even though the prim is set, we need to call this to update the SceneObjectGroup.
-            prim.SetSitTarget(sitTargetEnabled, sitTargetPos, sitTargetRot, false);
+            prim.SetSitTarget(sitTargetActive, sitTargetPos, sitTargetRot, false);
 
             prim.PayPrice[0] = Convert.ToInt32(row["PayPrice"]);
             prim.PayPrice[1] = Convert.ToInt32(row["PayButton1"]);

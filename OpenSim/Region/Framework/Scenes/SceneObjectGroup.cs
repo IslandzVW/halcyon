@@ -1033,7 +1033,7 @@ namespace OpenSim.Region.Framework.Scenes
             m_sitTargets.Clear();   // new UUIDs have been assigned, need to refresh
             m_childParts.ForEachPart((SceneObjectPart part) => {
                 part.ResetInstance(isNewInstance, isScriptReset, itemId);
-                this.SetSitTarget(part, part.SitTargetEnabled, part.SitTargetPosition, part.SitTargetOrientation, false);
+                this.SetSitTarget(part, part.SitTargetActive, part.SitTargetPosition, part.SitTargetOrientation, false);
             });
         }
 
@@ -1346,9 +1346,9 @@ namespace OpenSim.Region.Framework.Scenes
             });
         }
 
-        public void SetSitTarget(SceneObjectPart part, bool isEnabled, Vector3 pos, Quaternion rot, bool preserveSitter)
+        public void SetSitTarget(SceneObjectPart part, bool isActive, Vector3 pos, Quaternion rot, bool preserveSitter)
         {
-            SitTargetInfo sitInfo = new SitTargetInfo(part, isEnabled, pos, rot);
+            SitTargetInfo sitInfo = new SitTargetInfo(part, isActive, pos, rot);
             if (preserveSitter)
             {
                 SitTargetInfo oldInfo;
@@ -1572,7 +1572,7 @@ namespace OpenSim.Region.Framework.Scenes
             // then be aware it is a duplicate copy of the SOP/SOG that has UUID/LocalID
             // that matches the in-world copy. But also has its own sit target dictionary,
             // so even if the IDs match, the SOP references are different.
-            SetSitTarget(part, part.SitTargetEnabled, part.SitTargetPosition, part.SitTargetOrientation, false);
+            SetSitTarget(part, part.SitTargetActive, part.SitTargetPosition, part.SitTargetOrientation, false);
 
             //Rebuild the bounding box
             ClearBoundingBoxCache();
@@ -1606,7 +1606,7 @@ namespace OpenSim.Region.Framework.Scenes
             //Rebuild the bounding box
             ClearBoundingBoxCache();
 
-            SetSitTarget(part, part.SitTargetEnabled, part.SitTargetPosition, part.SitTargetOrientation, false);
+            SetSitTarget(part, part.SitTargetActive, part.SitTargetPosition, part.SitTargetOrientation, false);
 
             // Update the ServerWeight/LandImpact
             RecalcPrimWeights();
@@ -2575,7 +2575,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_childParts.RemovePart(part); // the old IDs are changing
                 part.ResetIDs(part.LinkNum); // Don't change link nums
                 m_childParts.AddPart(part); // update the part lists with new IDs
-                SetSitTarget(part, part.SitTargetEnabled, part.SitTargetPosition, part.SitTargetOrientation, false);
+                SetSitTarget(part, part.SitTargetActive, part.SitTargetPosition, part.SitTargetOrientation, false);
             }
         }
 
@@ -2824,7 +2824,7 @@ namespace OpenSim.Region.Framework.Scenes
             otherGroupRoot.ClearUndoState();
             otherGroupRoot.AddFlag(PrimFlags.CreateSelected);
 
-            SetSitTarget(otherGroupRoot, otherGroupRoot.SitTargetEnabled, otherGroupRoot.SitTargetPosition, otherGroupRoot.SitTargetOrientation, false);
+            SetSitTarget(otherGroupRoot, otherGroupRoot.SitTargetActive, otherGroupRoot.SitTargetPosition, otherGroupRoot.SitTargetOrientation, false);
 
             // rest of parts
             int linkNum = 3;
@@ -2845,7 +2845,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 part.ClearUndoState();
 
-                SetSitTarget(part, part.SitTargetEnabled, part.SitTargetPosition, part.SitTargetOrientation, false);
+                SetSitTarget(part, part.SitTargetActive, part.SitTargetPosition, part.SitTargetOrientation, false);
             });            
 
             otherGroup.m_childParts.Clear();
@@ -3027,7 +3027,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             part.ParentID = m_rootPart.LocalId;
             part.SetParentAndUpdatePhysics(this);
-            SetSitTarget(part, part.SitTargetEnabled, part.SitTargetPosition, part.SitTargetOrientation, false);
+            SetSitTarget(part, part.SitTargetActive, part.SitTargetPosition, part.SitTargetOrientation, false);
         }
 
         public bool GetBlockGrab()

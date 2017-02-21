@@ -8664,12 +8664,12 @@ namespace InWorldz.Phlox.Engine
         {
             Vector3 sitPos = new Vector3((float)offset.X, (float)offset.Y, (float)offset.Z);
             Quaternion sitRot = Rot2Quaternion(rot);
-            bool isEnabled = (sitPos != Vector3.Zero) || (sitRot != Quaternion.Identity);
+            bool isActive = (sitPos != Vector3.Zero) || (sitRot != Quaternion.Identity);
 
             var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
-                part.SetSitTarget(isEnabled, sitPos, sitRot, true);
+                part.SetSitTarget(isActive, sitPos, sitRot, true);
             }
         }
 
@@ -8690,7 +8690,7 @@ namespace InWorldz.Phlox.Engine
                 SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
                 if (IncludeSitTargetOnly)
                 {
-                    if (sitInfo.IsEnabled && sitInfo.HasSitter)
+                    if (sitInfo.IsActive && sitInfo.HasSitter)
                     {
                         seatedAvatar = sitInfo.Sitter.UUID;
                         break;
@@ -11680,7 +11680,7 @@ namespace InWorldz.Phlox.Engine
                                 SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
                                 if (sitInfo != null)
                                 {
-                                    res.Add((int)(sitInfo.IsEnabled ? 1 : 0));
+                                    res.Add((int)(sitInfo.IsActive ? 1 : 0));
                                     res.Add(new LSL_Vector(sitInfo.Offset));
                                     res.Add(new LSL_Rotation(sitInfo.Rotation));
                                     continue;

@@ -145,11 +145,11 @@ namespace OpenSim.Region.Framework.Scenes
         // PRIM_SIT_TARGET supports TRUE/FALSE,pos,rot 
         // even for ZERO_VECTOR,ZERO_ROTATION
         // so we need to store this too.
-        SitTargetEnabled = 1,
+        SitTargetActive = 1,
 
         // We need to know whether to use the legacy sit target persistence 
         // or the one above, or existing content will break.
-        // If this bit is NOT set, ignore SitTargetEnabled 
+        // If this bit is NOT set, ignore SitTargetActive
         // and use the legacy pos/rot != zero test.
         SitTargetStateSaved = 2
     }
@@ -1420,15 +1420,15 @@ namespace OpenSim.Region.Framework.Scenes
             set { _serverFlags = (ServerPrimFlags)value; }
         }
 
-        public bool SitTargetEnabled
+        public bool SitTargetActive
         {
-            get { return (_serverFlags & ServerPrimFlags.SitTargetEnabled) != 0; }
+            get { return (_serverFlags & ServerPrimFlags.SitTargetActive) != 0; }
             set
             {
                 if (value)  // enable or disable SitTargetEnabled flag
-                    _serverFlags |= ServerPrimFlags.SitTargetEnabled;
+                    _serverFlags |= ServerPrimFlags.SitTargetActive;
                 else
-                    _serverFlags &= ~ServerPrimFlags.SitTargetEnabled;
+                    _serverFlags &= ~ServerPrimFlags.SitTargetActive;
             }
         }
 
@@ -1773,16 +1773,16 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         // Note that enabled=false is not the same as removing a sit target.
-        public void SetSitTarget(bool isEnabled, Vector3 pos, Quaternion rot, bool preserveSitter)
+        public void SetSitTarget(bool isActive, Vector3 pos, Quaternion rot, bool preserveSitter)
         {
             // Take care of this prim.
             SitTargetPosition = pos;
             SitTargetOrientation = rot;
-            SitTargetEnabled = isEnabled;
+            SitTargetActive = isActive;
 
             // Now update the parent group.
             if (ParentGroup != null)
-                ParentGroup.SetSitTarget(this, isEnabled, pos, rot, preserveSitter);
+                ParentGroup.SetSitTarget(this, isActive, pos, rot, preserveSitter);
         }
 
         public void RemoveSitTarget()
@@ -1790,7 +1790,7 @@ namespace OpenSim.Region.Framework.Scenes
             // Take care of this prim.
             SitTargetPosition = Vector3.Zero;
             SitTargetOrientation = Quaternion.Identity;
-            SitTargetEnabled = false;
+            SitTargetActive = false;
 
             // Now update the parent group.
             if (ParentGroup != null)
@@ -1803,7 +1803,7 @@ namespace OpenSim.Region.Framework.Scenes
         public bool PrepSitTargetFromStorage(Vector3 sitTargetPos, Quaternion sitTargetRot)
         {
             // Now the sit target info itself.
-            bool sitTargetEnabled = ((this.ServerFlags & (uint) ServerPrimFlags.SitTargetEnabled) != 0);
+            bool sitTargetEnabled = ((this.ServerFlags & (uint) ServerPrimFlags.SitTargetActive) != 0);
             if (!sitTargetEnabled) // check if legacy data
             {
                 if ((this.ServerFlags & (uint) ServerPrimFlags.SitTargetStateSaved) == 0) // not set
@@ -1811,7 +1811,7 @@ namespace OpenSim.Region.Framework.Scenes
                     if ((sitTargetPos != Vector3.Zero) || (sitTargetRot != Quaternion.Identity))
                     {
                         sitTargetEnabled = true;
-                        this.ServerFlags |= (uint)ServerPrimFlags.SitTargetEnabled;
+                        this.ServerFlags |= (uint)ServerPrimFlags.SitTargetActive;
                     }
                 }
             }
@@ -2125,7 +2125,7 @@ namespace OpenSim.Region.Framework.Scenes
         // part.ParentGroup must be initialized for this.
         public void CopySitTarget(SceneObjectPart part)
         {
-            this.SetSitTarget(part.SitTargetEnabled, part.SitTargetPosition, part.SitTargetOrientation, false);
+            this.SetSitTarget(part.SitTargetActive, part.SitTargetPosition, part.SitTargetOrientation, false);
         }
 
         /// <summary>
