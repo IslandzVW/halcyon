@@ -151,6 +151,7 @@ namespace OpenSim.Region.Framework.Scenes
         // or the one above, or existing content will break.
         // If this bit is NOT set, ignore SitTargetEnabled 
         // and use the legacy pos/rot != zero test.
+        SitTargetStateSaved = 2
     }
     #endregion Enumerations
 
