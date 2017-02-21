@@ -1797,6 +1797,29 @@ namespace OpenSim.Region.Framework.Scenes
                 ParentGroup.RemoveSitTarget(this.UUID);
         }
 
+        // This function must be called on asset load (inventory rez) or database load (rezzed)
+        // with SOP.ServerFlags initialized, which may be updated before return.
+        // Returns true if there is an active sit target after calculation.
+        public bool PrepSitTargetFromStorage(Vector3 sitTargetPos, Quaternion sitTargetRot)
+        {
+            // Now the sit target info itself.
+            bool sitTargetEnabled = ((this.ServerFlags & (uint) ServerPrimFlags.SitTargetEnabled) != 0);
+            if (!sitTargetEnabled) // check if legacy data
+            {
+                if ((this.ServerFlags & (uint) ServerPrimFlags.SitTargetStateSaved) == 0) // not set
+                {   // check if non-zero sit target in pos/rot
+                    if ((sitTargetPos != Vector3.Zero) || (sitTargetRot != Quaternion.Identity))
+                    {
+                        sitTargetEnabled = true;
+                        this.ServerFlags |= (uint)ServerPrimFlags.SitTargetEnabled;
+                    }
+                }
+            }
+            // Mark this one as updated to using this ServerFlags.
+            this.ServerFlags |= (uint)ServerPrimFlags.SitTargetStateSaved;
+            return sitTargetEnabled;
+        }
+
         public static readonly uint LEGACY_BASEMASK = 0x7FFFFFF0;
         public static bool IsLegacyBasemask(uint basemask)
         {

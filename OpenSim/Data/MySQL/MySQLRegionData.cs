@@ -1776,19 +1776,11 @@ namespace OpenSim.Data.MySQL
             );
 
             // Now the sit target info itself.
-            bool sitTargetEnabled = ((prim.ServerFlags & (uint) ServerPrimFlags.SitTargetEnabled) != 0);
-            if (!sitTargetEnabled) // check if legacy data
-            {
-                if ((prim.ServerFlags & (uint) ServerPrimFlags.SitTargetStateSaved) == 0) // not set
-                {   // check if non-zero sit target in pos/rot
-                    if ((sitTargetPos != Vector3.Zero) || (sitTargetRot != Quaternion.Identity)) {
-                        sitTargetEnabled = true;
-                        prim.ServerFlags |= (uint)ServerPrimFlags.SitTargetEnabled;
-                    }
-                }
-            }
-            // Mark this one as updated to using this ServerFlags.
-            prim.ServerFlags |= (uint)ServerPrimFlags.SitTargetStateSaved;
+
+            // This function must be called on asset load (inventory rez) or database load (rezzed)
+            // with SOP.ServerFlags initialized, which may be updated before return.
+            bool sitTargetEnabled = prim.PrepSitTargetFromStorage(sitTargetPos, sitTargetRot);
+            // Even though the prim is set, we need to call this to update the SceneObjectGroup.
             prim.SetSitTarget(sitTargetEnabled, sitTargetPos, sitTargetRot, false);
 
             prim.PayPrice[0] = Convert.ToInt32(row["PayPrice"]);

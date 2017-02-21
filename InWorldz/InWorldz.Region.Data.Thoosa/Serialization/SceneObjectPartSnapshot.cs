@@ -473,6 +473,9 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 KeyframeAnimation = this.KeyframeAnimation == null ? null : this.KeyframeAnimation.ToKeyframeAnimation()
             };
 
+            // Do legacy to current update for sop.ServerFlags.
+            sop.PrepSitTargetFromStorage(sop.SitTargetPosition, sop.SitTargetOrientation);
+
             if (SerializedScriptStates != null)
             {
                 var states = new Dictionary<OpenMetaverse.UUID, byte[]>(SerializedScriptStates.Count);
