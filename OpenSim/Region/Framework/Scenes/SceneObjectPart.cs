@@ -145,7 +145,12 @@ namespace OpenSim.Region.Framework.Scenes
         // PRIM_SIT_TARGET supports TRUE/FALSE,pos,rot 
         // even for ZERO_VECTOR,ZERO_ROTATION
         // so we need to store this too.
-        SitTargetEnabled = 1
+        SitTargetEnabled = 1,
+
+        // We need to know whether to use the legacy sit target persistence 
+        // or the one above, or existing content will break.
+        // If this bit is NOT set, ignore SitTargetEnabled 
+        // and use the legacy pos/rot != zero test.
     }
     #endregion Enumerations
 

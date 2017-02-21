@@ -1762,8 +1762,7 @@ namespace OpenSim.Data.MySQL
 
             // We need ServerFlags first, in order to set all the SitTarget data.
             prim.ServerFlags = Convert.ToUInt32(row["ServerFlags"]);
-            // Now the sit target info itself.
-            bool sitTargetEnabled = prim.SitTargetEnabled;  // don't lose this on SetSitTarget below
+
             Vector3 sitTargetPos = new Vector3(
                 Convert.ToSingle(row["SitTargetOffsetX"]),
                 Convert.ToSingle(row["SitTargetOffsetY"]),
@@ -1775,6 +1774,19 @@ namespace OpenSim.Data.MySQL
                 Convert.ToSingle(row["SitTargetOrientZ"]),
                 Convert.ToSingle(row["SitTargetOrientW"])
             );
+
+            // Now the sit target info itself.
+            bool sitTargetEnabled = ((prim.ServerFlags & (uint) ServerPrimFlags.SitTargetEnabled) != 0);
+            if (!sitTargetEnabled) // check if legacy data
+            {
+                {   // check if non-zero sit target in pos/rot
+                    if ((sitTargetPos != Vector3.Zero) || (sitTargetRot != Quaternion.Identity)) {
+                        sitTargetEnabled = true;
+                        prim.ServerFlags |= (uint)ServerPrimFlags.SitTargetEnabled;
+                    }
+                }
+            }
+            // Mark this one as updated to using this ServerFlags.
             prim.SetSitTarget(sitTargetEnabled, sitTargetPos, sitTargetRot, false);
 
             prim.PayPrice[0] = Convert.ToInt32(row["PayPrice"]);
