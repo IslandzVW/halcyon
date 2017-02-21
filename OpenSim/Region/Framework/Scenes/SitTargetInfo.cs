@@ -85,7 +85,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public bool IsZero
         {
-            get { return (m_part == null) || (m_offset == Vector3.Zero) || (m_rotation == Quaternion.Identity);  }
+            get { return (m_offset == Vector3.Zero) && (m_rotation == Quaternion.Identity);  }
         }
 
         public bool HasSitter

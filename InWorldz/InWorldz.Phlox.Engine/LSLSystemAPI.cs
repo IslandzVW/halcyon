@@ -8664,7 +8664,7 @@ namespace InWorldz.Phlox.Engine
         {
             Vector3 sitPos = new Vector3((float)offset.X, (float)offset.Y, (float)offset.Z);
             Quaternion sitRot = Rot2Quaternion(rot);
-            bool isEnabled = (sitPos != Vector3.Zero) && (sitRot != Quaternion.Identity);
+            bool isEnabled = (sitPos != Vector3.Zero) || (sitRot != Quaternion.Identity);
 
             var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
