@@ -9456,6 +9456,7 @@ namespace InWorldz.Phlox.Engine
                 int remain = rules.Length - idx;
                 int face;
                 LSL_Vector v;
+                LSL_Rotation r;
 
                 if (code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
                 {
@@ -10375,6 +10376,25 @@ namespace InWorldz.Phlox.Engine
                                         SetRenderMaterialAlphaModeData(part, face, alpha_mode, alpha_mask_cutoff);
                                     }
                                 }
+                            }
+                        }
+                        break;
+                    case (int)ScriptBaseClass.PRIM_SIT_TARGET:
+                        // [ PRIM_SIT_TARGET, integer active, vector offset, rotation rot ] 
+                        if (remain < 3)
+                            return;
+                        bool isActive = rules.GetLSLIntegerItem(idx++) != 0;
+                        v = rules.GetVector3Item(idx++);
+                        r = rules.GetQuaternionItem(idx++);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                if (isActive)
+                                    part.SetSitTarget(isActive, v, r, true);
+                                else
+                                    part.RemoveSitTarget();
                             }
                         }
                         break;
