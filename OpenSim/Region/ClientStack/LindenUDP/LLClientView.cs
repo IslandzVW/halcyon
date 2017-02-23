@@ -11756,7 +11756,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void SendBlueBoxMessage(UUID FromAvatarID, String FromAvatarName, String Message)
         {
             if (!ChildAgentStatus())
-                SendInstantMessage(new GridInstantMessage(null, FromAvatarID, FromAvatarName, AgentId, 1, Message, false, new Vector3()));
+                SendInstantMessage(new GridInstantMessage(null, FromAvatarID, FromAvatarName, AgentId,
+                    (byte)InstantMessageDialog.MessageBox, Message, false, new Vector3()));
 
             //SendInstantMessage(FromAvatarID, fromSessionID, Message, AgentId, SessionId, FromAvatarName, (byte)21,(uint) Util.UnixTimeSinceEpoch());
         }
