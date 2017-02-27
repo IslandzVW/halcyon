@@ -201,20 +201,69 @@ namespace InWorldz.Arbiter.Serialization
                 sop.Shape.LightColorB
             });
 
+            var ss = sop.Shape;
+            var projectionTextureId = HalcyonPrimitiveBaseShape.CreateProjectionTextureIdVector(builder,
+                ss.ProjectionTextureUUID.GetBytes());
+            var shapeScale = Vector3.CreateVector3(builder, ss.Scale.X, ss.Scale.Y, ss.Scale.Z);
+            var sculptTextureId = HalcyonPrimitiveBaseShape.CreateSculptTextureVector(builder,
+                ss.SculptTexture.GetBytes());
+            var textureEntry = HalcyonPrimitiveBaseShape.CreateTextureEntryVector(builder, ss.TextureEntry);
+
             HalcyonPrimitiveBaseShape.StartHalcyonPrimitiveBaseShape(builder);
             HalcyonPrimitiveBaseShape.AddExtraParams(builder, extraParams);
-            HalcyonPrimitiveBaseShape.AddFlexiDrag(builder, sop.Shape.FlexiDrag);
-            HalcyonPrimitiveBaseShape.AddFlexiEntry(builder, sop.Shape.FlexiEntry);
-            HalcyonPrimitiveBaseShape.AddFlexiForceX(builder, sop.Shape.FlexiForceX);
-            HalcyonPrimitiveBaseShape.AddFlexiForceY(builder, sop.Shape.FlexiForceY);
-            HalcyonPrimitiveBaseShape.AddFlexiForceZ(builder, sop.Shape.FlexiForceZ);
-            HalcyonPrimitiveBaseShape.AddFlexiGravity(builder, sop.Shape.FlexiGravity);
-            HalcyonPrimitiveBaseShape.AddFlexiSoftness(builder, sop.Shape.FlexiSoftness);
-            HalcyonPrimitiveBaseShape.AddFlexiTension(builder, sop.Shape.FlexiTension);
-            HalcyonPrimitiveBaseShape.AddFlexiWind(builder, sop.Shape.FlexiWind);
-            HalcyonPrimitiveBaseShape.AddHighLodBytes(builder, sop.Shape.HighLODBytes);
-            HalcyonPrimitiveBaseShape.AddHollowShape(builder, (HollowShape)sop.Shape.HollowShape);
+            HalcyonPrimitiveBaseShape.AddFlexiDrag(builder, ss.FlexiDrag);
+            HalcyonPrimitiveBaseShape.AddFlexiEntry(builder, ss.FlexiEntry);
+            HalcyonPrimitiveBaseShape.AddFlexiForceX(builder, ss.FlexiForceX);
+            HalcyonPrimitiveBaseShape.AddFlexiForceY(builder, ss.FlexiForceY);
+            HalcyonPrimitiveBaseShape.AddFlexiForceZ(builder, ss.FlexiForceZ);
+            HalcyonPrimitiveBaseShape.AddFlexiGravity(builder, ss.FlexiGravity);
+            HalcyonPrimitiveBaseShape.AddFlexiSoftness(builder, ss.FlexiSoftness);
+            HalcyonPrimitiveBaseShape.AddFlexiTension(builder, ss.FlexiTension);
+            HalcyonPrimitiveBaseShape.AddFlexiWind(builder, ss.FlexiWind);
+            HalcyonPrimitiveBaseShape.AddHighLodBytes(builder, ss.HighLODBytes);
+            HalcyonPrimitiveBaseShape.AddHollowShape(builder, (HollowShape)ss.HollowShape);
             HalcyonPrimitiveBaseShape.AddLightColor(builder, lightColor);
+            HalcyonPrimitiveBaseShape.AddLightCutoff(builder, ss.LightCutoff);
+            HalcyonPrimitiveBaseShape.AddLightEntry(builder, ss.LightEntry);
+            HalcyonPrimitiveBaseShape.AddLightIntensity(builder, ss.LightIntensity);
+            HalcyonPrimitiveBaseShape.AddLightRadius(builder, ss.LightRadius);
+            HalcyonPrimitiveBaseShape.AddLowLodBytes(builder, ss.LowLODBytes);
+            HalcyonPrimitiveBaseShape.AddLowestLodBytes(builder, ss.LowestLODBytes);
+            HalcyonPrimitiveBaseShape.AddMidLodBytes(builder, ss.MidLODBytes);
+            HalcyonPrimitiveBaseShape.AddPathBegin(builder, ss.PathBegin);
+            HalcyonPrimitiveBaseShape.AddPathCurve(builder, ss.PathCurve);
+            HalcyonPrimitiveBaseShape.AddPathEnd(builder, ss.PathEnd);
+            HalcyonPrimitiveBaseShape.AddPathRadiusOffset(builder, ss.PathRadiusOffset);
+            HalcyonPrimitiveBaseShape.AddPathRevolutions(builder, ss.PathRevolutions);
+            HalcyonPrimitiveBaseShape.AddPathScaleX(builder, ss.PathScaleX);
+            HalcyonPrimitiveBaseShape.AddPathScaleY(builder, ss.PathScaleY);
+            HalcyonPrimitiveBaseShape.AddPathShearX(builder, ss.PathShearX);
+            HalcyonPrimitiveBaseShape.AddPathShearY(builder, ss.PathShearY);
+            HalcyonPrimitiveBaseShape.AddPathTaperX(builder, ss.PathTaperX);
+            HalcyonPrimitiveBaseShape.AddPathTaperY(builder, ss.PathTaperY);
+            HalcyonPrimitiveBaseShape.AddPathTwist(builder, ss.PathTwist);
+            HalcyonPrimitiveBaseShape.AddPathTwistBegin(builder, ss.PathTwistBegin);
+            HalcyonPrimitiveBaseShape.AddPathSkew(builder, ss.PathSkew);
+            HalcyonPrimitiveBaseShape.AddPcode(builder, ss.PCode);
+            HalcyonPrimitiveBaseShape.AddProfileBegin(builder, ss.ProfileBegin);
+            HalcyonPrimitiveBaseShape.AddProfileCurve(builder, ss.ProfileCurve);
+            HalcyonPrimitiveBaseShape.AddProfileEnd(builder, ss.ProfileEnd);
+            HalcyonPrimitiveBaseShape.AddProfileHollow(builder, ss.ProfileHollow);
+            HalcyonPrimitiveBaseShape.AddProfileShape(builder, (ProfileShape)ss.ProfileShape);
+            HalcyonPrimitiveBaseShape.AddProjectionAmbiance(builder, ss.ProjectionAmbiance);
+            HalcyonPrimitiveBaseShape.AddProjectionEntry(builder, ss.ProjectionEntry);
+            HalcyonPrimitiveBaseShape.AddProjectionFocus(builder, ss.ProjectionFocus);
+            HalcyonPrimitiveBaseShape.AddProjectionFov(builder, ss.ProjectionFOV);
+            HalcyonPrimitiveBaseShape.AddProjectionTextureId(builder, projectionTextureId);
+            HalcyonPrimitiveBaseShape.AddScale(builder, shapeScale);
+            HalcyonPrimitiveBaseShape.AddSculptEntry(builder, ss.SculptEntry);
+            HalcyonPrimitiveBaseShape.AddSculptTexture(builder, sculptTextureId);
+            HalcyonPrimitiveBaseShape.AddSculptType(builder, ss.SculptType);
+            HalcyonPrimitiveBaseShape.AddState(builder, ss.State);
+            HalcyonPrimitiveBaseShape.AddTextureEntry(builder, textureEntry);
+            HalcyonPrimitiveBaseShape.AddVertexCount(builder, ss.VertexCount);
+
+            var baseShapeOffset = HalcyonPrimitiveBaseShape.EndHalcyonPrimitiveBaseShape(builder);
 
             HalcyonPrimitive.StartHalcyonPrimitive(builder);
             HalcyonPrimitive.AddAngularVelocity(builder, angularVelocity);
@@ -231,7 +280,7 @@ namespace InWorldz.Arbiter.Serialization
             HalcyonPrimitive.AddParentId(builder, sop.ParentID);
             HalcyonPrimitive.AddRotationOffset(builder, rotationOffset);
             HalcyonPrimitive.AddScale(builder, scale);
-            //HalcyonPrimitive.AddShape(builder, );
+            HalcyonPrimitive.AddShape(builder, baseShapeOffset);
             var offset = HalcyonPrimitive.EndHalcyonPrimitive(builder);
 
             HalcyonPrimitive.FinishHalcyonPrimitiveBuffer(builder, offset);
