@@ -173,8 +173,9 @@ namespace InWorldz.Arbiter.Serialization
         /// </summary>
         /// <param name="sop">The scene object to be serialized</param>
         /// <param name="builder">A FlatBufferBuilder that has been reset</param>
+        /// <param name="close">Whether to close the buffer or not</param>
         /// <returns>A flatbuffer primitive</returns>
-        public static FlatBufferBuilder MapPartToFlatbuffer(SceneObjectPart sop, FlatBufferBuilder builder)
+        public static Offset<HalcyonPrimitive> MapPartToFlatbuffer(SceneObjectPart sop, FlatBufferBuilder builder, bool close=false)
         {
             var angularVelocity = Vector3.CreateVector3(builder, sop.PhysicalAngularVelocity.X, sop.PhysicalAngularVelocity.Y,
                 sop.PhysicalAngularVelocity.Z);
@@ -283,9 +284,12 @@ namespace InWorldz.Arbiter.Serialization
             HalcyonPrimitive.AddShape(builder, baseShapeOffset);
             var offset = HalcyonPrimitive.EndHalcyonPrimitive(builder);
 
-            HalcyonPrimitive.FinishHalcyonPrimitiveBuffer(builder, offset);
+            if (close)
+            {
+                HalcyonPrimitive.FinishHalcyonPrimitiveBuffer(builder, offset);
+            }
 
-            return builder;
+            return offset;
         }
     }
 }
