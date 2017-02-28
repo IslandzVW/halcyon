@@ -846,7 +846,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
         {
             // Use the known in-memory group membership data if available before going to db.
             if (remoteClient != null)
-                remoteClient.IsGroupMember(groupID);
+                return remoteClient.IsGroupMember(groupID);
 
             return m_groupData.IsAgentInGroup(groupID, remoteClient.AgentId);
         }
