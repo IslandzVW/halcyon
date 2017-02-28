@@ -8664,11 +8664,12 @@ namespace InWorldz.Phlox.Engine
         {
             Vector3 sitPos = new Vector3((float)offset.X, (float)offset.Y, (float)offset.Z);
             Quaternion sitRot = Rot2Quaternion(rot);
+            bool isActive = (sitPos != Vector3.Zero) || (sitRot != Quaternion.Identity);
 
             var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
-                part.SetSitTarget(sitPos, sitRot, true);
+                part.SetSitTarget(isActive, sitPos, sitRot, true);
             }
         }
 
@@ -8689,7 +8690,7 @@ namespace InWorldz.Phlox.Engine
                 SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
                 if (IncludeSitTargetOnly)
                 {
-                    if (sitInfo.IsSet && sitInfo.HasSitter)
+                    if (sitInfo.IsActive && sitInfo.HasSitter)
                     {
                         seatedAvatar = sitInfo.Sitter.UUID;
                         break;
@@ -9455,6 +9456,7 @@ namespace InWorldz.Phlox.Engine
                 int remain = rules.Length - idx;
                 int face;
                 LSL_Vector v;
+                LSL_Rotation r;
 
                 if (code == (int)ScriptBaseClass.PRIM_LINK_TARGET)
                 {
@@ -10374,6 +10376,25 @@ namespace InWorldz.Phlox.Engine
                                         SetRenderMaterialAlphaModeData(part, face, alpha_mode, alpha_mask_cutoff);
                                     }
                                 }
+                            }
+                        }
+                        break;
+                    case (int)ScriptBaseClass.PRIM_SIT_TARGET:
+                        // [ PRIM_SIT_TARGET, integer active, vector offset, rotation rot ] 
+                        if (remain < 3)
+                            return;
+                        bool isActive = rules.GetLSLIntegerItem(idx++) != 0;
+                        v = rules.GetVector3Item(idx++);
+                        r = rules.GetQuaternionItem(idx++);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                var part = o as SceneObjectPart;
+                                if (isActive)
+                                    part.SetSitTarget(isActive, v, r, true);
+                                else
+                                    part.RemoveSitTarget();
                             }
                         }
                         break;
@@ -11659,7 +11680,7 @@ namespace InWorldz.Phlox.Engine
                                 SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
                                 if (sitInfo != null)
                                 {
-                                    res.Add((int)(sitInfo.IsSet ? 1 : 0));
+                                    res.Add((int)(sitInfo.IsActive ? 1 : 0));
                                     res.Add(new LSL_Vector(sitInfo.Offset));
                                     res.Add(new LSL_Rotation(sitInfo.Rotation));
                                     continue;
