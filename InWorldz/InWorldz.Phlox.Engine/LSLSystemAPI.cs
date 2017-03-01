@@ -4605,6 +4605,49 @@ namespace InWorldz.Phlox.Engine
             ClearWaitingForScriptAnswer(client);
         }
 
+        /**************************
+        // Coded before I realized it was not actually needed.
+        public bool IsAgentGroupOwner(UUID agentID, UUID groupID)
+        {
+            if (groupID == UUID.Zero)
+                return false;
+
+            ScenePresence sp = World.GetScenePresence(agentID);
+            if (sp != null) {
+                IClientAPI remoteClient = sp.ControllingClient;
+                if (remoteClient != null)
+                    return IsAgentGroupOwner(remoteClient, groupID);
+            }
+
+            // Otherwise, do it the hard way.
+            IGroupsModule groupsModule = m_ScriptEngine.World.RequestModuleInterface<IGroupsModule>();
+
+            GroupRecord groupRec = groupsModule.GetGroupRecord(groupID);
+            if (groupRec == null) return false;
+
+            List<GroupRolesData> agentRoles = groupsModule.GroupRoleDataRequest(null, groupID);
+            foreach (GroupRolesData role in agentRoles)
+            {
+                if (role.RoleID == groupRec.OwnerRoleID)
+                    return true;
+            }
+            return false;
+        }
+        **************************/
+
+        public bool IsAgentGroupOwner(IClientAPI remoteClient, UUID groupID)
+        {
+            if (groupID == UUID.Zero)
+                return false;
+
+            // Use the known in-memory group membership data if available before going to db.
+            if (remoteClient == null)
+                return false; // we don't know who to check
+
+            // This isn't quite the same as being in the Owners role, but close enough in 
+            // order to avoid multiple complex queries in order to check Role membership.
+            return remoteClient.GetGroupPowers(groupID) == (ulong)Constants.OWNER_GROUP_POWERS;
+        }
 
         void handleScriptAnswer(IClientAPI client, UUID taskID, UUID itemID, int answer)
         {
@@ -4618,6 +4661,26 @@ namespace InWorldz.Phlox.Engine
             UUID invItemID = InventorySelf();
             if (invItemID == UUID.Zero)
                 return;
+
+            // PERMISSION_RETURN_OBJECTS has limits on who can approve it
+            if ((answer & ScriptBaseClass.PERMISSION_RETURN_OBJECTS) != 0)
+            {
+                // If the script is owned by an agent, PERMISSION_RETURN_OBJECTS may be granted by the owner.
+                // If the script is owned by a group, this permission may be granted by an agent belonging to the group's "Owners" role.
+                ScenePresence sp = World.GetScenePresence(client.AgentId);
+                if (sp == null) return;
+
+                if (client.AgentId != m_host.ParentGroup.OwnerID)
+                {
+                    // not the owner of the script, see if it's group owned and group Owner
+                    if ((m_host.ParentGroup.GroupID == UUID.Zero) || (m_host.ParentGroup.GroupID != m_host.ParentGroup.OwnerID))
+                        return; // not owned by agent and not group-owned
+
+                    // group-owned
+                    if (!IsAgentGroupOwner(client, m_host.ParentGroup.GroupID))
+                        return; // not an Owner in the group
+                }
+            }
 
             if ((answer & ScriptBaseClass.PERMISSION_TAKE_CONTROLS) == 0)
                 ReleaseControlsInternal(false, true, false, false);
