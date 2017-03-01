@@ -4605,36 +4605,6 @@ namespace InWorldz.Phlox.Engine
             ClearWaitingForScriptAnswer(client);
         }
 
-        /**************************
-        // Coded before I realized it was not actually needed.
-        public bool IsAgentGroupOwner(UUID agentID, UUID groupID)
-        {
-            if (groupID == UUID.Zero)
-                return false;
-
-            ScenePresence sp = World.GetScenePresence(agentID);
-            if (sp != null) {
-                IClientAPI remoteClient = sp.ControllingClient;
-                if (remoteClient != null)
-                    return IsAgentGroupOwner(remoteClient, groupID);
-            }
-
-            // Otherwise, do it the hard way.
-            IGroupsModule groupsModule = m_ScriptEngine.World.RequestModuleInterface<IGroupsModule>();
-
-            GroupRecord groupRec = groupsModule.GetGroupRecord(groupID);
-            if (groupRec == null) return false;
-
-            List<GroupRolesData> agentRoles = groupsModule.GroupRoleDataRequest(null, groupID);
-            foreach (GroupRolesData role in agentRoles)
-            {
-                if (role.RoleID == groupRec.OwnerRoleID)
-                    return true;
-            }
-            return false;
-        }
-        **************************/
-
         public bool IsAgentGroupOwner(IClientAPI remoteClient, UUID groupID)
         {
             if (groupID == UUID.Zero)
