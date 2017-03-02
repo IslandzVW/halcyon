@@ -1542,7 +1542,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         // Pass parcel==null for all parcels in the region, or parcel != null for a specific parcel
         // or all parcels owned by the same owner.
-        public int ScriptedReturnObjectsInParcel(UUID actionAgentID, UUID targetAgentID, LandData patternParcel, bool sameOwner)
+        public int ScriptedReturnObjectsInParcelByOwner(UUID actionAgentID, UUID targetAgentID, LandData patternParcel, bool sameOwner)
         {
             int count = 0;
 

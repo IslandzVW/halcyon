@@ -205,11 +205,11 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public int ScriptedReturnObjectsInParcel(UUID actionAgentID, UUID targetAgentID, LandData parcel, bool sameOwner)
+        public int ScriptedReturnObjectsInParcelByOwner(UUID actionAgentID, UUID targetAgentID, LandData parcel, bool sameOwner)
         {
             if (m_landManagementModule != null)
             {
-                return m_landManagementModule.ScriptedReturnObjectsInParcel(actionAgentID, targetAgentID, parcel, sameOwner);
+                return m_landManagementModule.ScriptedReturnObjectsInParcelByOwner(actionAgentID, targetAgentID, parcel, sameOwner);
             }
 
             return -1;

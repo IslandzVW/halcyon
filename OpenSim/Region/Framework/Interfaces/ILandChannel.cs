@@ -73,7 +73,7 @@ namespace OpenSim.Region.Framework.Interfaces
         void UpdateLandObject(int localID, LandData data);
         void UpdateLandPrimCounts();
         void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient);
-        int ScriptedReturnObjectsInParcel(UUID actionAgentID, UUID targetAgentID, LandData parcel, bool sameOwner);
+        int ScriptedReturnObjectsInParcelByOwner(UUID actionAgentID, UUID targetAgentID, LandData parcel, bool sameOwner);
         int ScriptedReturnObjectsInParcelByIDs(SceneObjectPart callingPart, List<UUID> targetIDs, int parcelLocalID);
         void setParcelObjectMaxOverride(overrideParcelMaxPrimCountDelegate overrideDel);
         void setSimulatorObjectMaxOverride(overrideSimulatorMaxPrimCountDelegate overrideDel);

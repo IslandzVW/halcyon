@@ -18444,7 +18444,7 @@ namespace InWorldz.Phlox.Engine
                     default:
                         return ScriptBaseClass.ERR_MALFORMED_PARAMS;
                 }
-                return World.LandChannel.ScriptedReturnObjectsInParcel(item.OwnerID, targetAgentID, patternParcel, sameOwner);
+                return World.LandChannel.ScriptedReturnObjectsInParcelByOwner(item.OwnerID, targetAgentID, patternParcel, sameOwner);
             }
             catch (Exception e)
             {
