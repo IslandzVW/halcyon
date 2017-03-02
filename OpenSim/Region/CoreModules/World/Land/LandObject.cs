@@ -1261,14 +1261,27 @@ namespace OpenSim.Region.CoreModules.World.Land
             int count = 0;
             m_log.InfoFormat("[LAND]: Object return by {0} for {1}", scriptOwnerID, targetOwnerID);
 
+            // This function will only work properly if one of the following is true:
+            // - the land is owned by the prim owner and this permission has been granted by the land owner, or
+            // - the land is group owned and this permission has been granted by a group member filling the group "Owners" role.
+
             List<SceneObjectGroup> returns = new List<SceneObjectGroup>();
 
             lock (primsOverMe)
             {
                 foreach (SceneObjectGroup obj in primsOverMe)
                 {
-                    if (obj.OwnerID == targetOwnerID)
+                    if (obj.OwnerID == targetOwnerID)   // targeting this prim
                     {
+                        // EO, EM and parcel owner's objects cannot be returned by this method.
+                        if (obj.OwnerID == landData.OwnerID)
+                            continue;
+                        if (m_scene.IsEstateManager(obj.OwnerID))
+                            continue;
+                        // Objects owned by the group the land is set to will not be returned.
+                        if ((landData.GroupID != UUID.Zero) && (obj.GroupID == landData.GroupID))
+                            continue;
+
                         returns.Add(obj);
                     }
                 }
@@ -1280,10 +1293,10 @@ namespace OpenSim.Region.CoreModules.World.Land
             return count;
         }
 
-        public int scriptedReturnLandObjectsByIDs(UUID scriptOwnerID, List<UUID> IDs)
+        public int scriptedReturnLandObjectsByIDs(SceneObjectPart callingPart, List<UUID> IDs)
         {
             int count = 0;
-            m_log.InfoFormat("[LAND]: Object return by {0} for list", scriptOwnerID);
+            m_log.InfoFormat("[LAND]: Object return by {0} for list", callingPart.OwnerID);
 
             List<SceneObjectGroup> returns = new List<SceneObjectGroup>();
 
@@ -1294,8 +1307,21 @@ namespace OpenSim.Region.CoreModules.World.Land
                     SceneObjectPart part = m_scene.GetSceneObjectPart(id);
                     SceneObjectGroup grp = part == null ? null : part.ParentGroup;
 
-                    if (primsOverMe.Contains(grp))
+                    if ((grp != null) && (primsOverMe.Contains(grp)))
                     {
+                        // The rules inside this IF don't apply if the calling prim specifies itself.
+                        if (grp.UUID != callingPart.ParentGroup.UUID)
+                        {
+                            // EO, EM and parcel owner's objects cannot be returned by this method.
+                            if (grp.OwnerID == landData.OwnerID)
+                                continue;
+                            if (m_scene.IsEstateManager(grp.OwnerID))
+                                continue;
+                            // Objects owned by the group the land is set to will not be returned.
+                            if ((landData.GroupID != UUID.Zero) && (grp.GroupID == landData.GroupID))
+                                continue;
+                        }
+
                         returns.Add(grp);
                     }
                 }
@@ -1306,7 +1332,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 // the returns list by ID could be a variety of owners and group settings, need to check each one separately.
                 List<SceneObjectGroup> singleList = new List<SceneObjectGroup>();
                 singleList.Add(grp);
-                if (m_scene.Permissions.CanUseObjectReturn(this, (uint) ObjectReturnType.Owner, null, scriptOwnerID, singleList))
+                if (m_scene.Permissions.CanUseObjectReturn(this, (uint) ObjectReturnType.Owner, null, callingPart.OwnerID, singleList))
                     if (singleList.Count > 0)
                         count += m_scene.returnObjects(singleList.ToArray());
             }

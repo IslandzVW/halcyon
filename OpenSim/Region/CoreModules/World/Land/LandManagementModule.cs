@@ -1572,13 +1572,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             return count;
         }
 
-        public int ScriptedReturnObjectsInParcelByIDs(UUID actionAgentID, List<UUID> targetIDs, int parcelLocalID)
+        public int ScriptedReturnObjectsInParcelByIDs(SceneObjectPart callingPart, List<UUID> targetIDs, int parcelLocalID)
         {
             if (!m_landList.ContainsKey(parcelLocalID))
                 return 0;
 
             ILandObject parcel = m_landList[parcelLocalID];
-            return parcel.scriptedReturnLandObjectsByIDs(actionAgentID, targetIDs);
+            return parcel.scriptedReturnLandObjectsByIDs(callingPart, targetIDs);
         }
 
         public void NoLandDataFromStorage()
