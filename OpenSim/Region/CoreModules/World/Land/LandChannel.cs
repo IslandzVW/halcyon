@@ -205,21 +205,21 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
-        public int ScriptedReturnObjectsInParcel(UUID actionAgentID, UUID targetAgentID, LandData parcel, bool sameOwner)
+        public int ScriptedReturnObjectsInParcelByOwner(TaskInventoryItem scriptItem, UUID targetAgentID, LandData parcel, bool sameOwner)
         {
             if (m_landManagementModule != null)
             {
-                return m_landManagementModule.ScriptedReturnObjectsInParcel(actionAgentID, targetAgentID, parcel, sameOwner);
+                return m_landManagementModule.ScriptedReturnObjectsInParcelByOwner(scriptItem, targetAgentID, parcel, sameOwner);
             }
 
             return -1;
         }
 
-        public int ScriptedReturnObjectsInParcelByIDs(UUID actionAgentID, List<UUID> targetIDs, int parcelLocalID)
+        public int ScriptedReturnObjectsInParcelByIDs(SceneObjectPart callingPart, TaskInventoryItem scriptItem, List<UUID> targetIDs, int parcelLocalID)
         {
             if (m_landManagementModule != null)
             {
-                return m_landManagementModule.ScriptedReturnObjectsInParcelByIDs(actionAgentID, targetIDs, parcelLocalID);
+                return m_landManagementModule.ScriptedReturnObjectsInParcelByIDs(callingPart, scriptItem, targetIDs, parcelLocalID);
             }
 
             return -1;
