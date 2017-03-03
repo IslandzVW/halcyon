@@ -1300,71 +1300,90 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         // Anyone can grant PERMISSION_RETURN_OBJECTS but it can be only used under strict rules.
         // Returns 0 on success, or LSL error code on error.
-        int canUseReturnPermission(ILandObject parcel, TaskInventoryItem scriptItem)
+        int canUseReturnPermission(ILandObject targetParcel, TaskInventoryItem scriptItem)
         {
+            // First check the runtime perms to see if we're allowed to do returns at all.
             if (scriptItem.PermsGranter == UUID.Zero)
                 return Constants.ERR_RUNTIME_PERMISSIONS;
 
-            // If the script is owned by an agent, PERMISSION_RETURN_OBJECTS may be granted by the owner of the script.
+            // For both the user-owned and group-deeded script cases, there is a script check and a parcel check.
+            // The non-group PermsGranter is simpler, so check that first.
+
+            // Script Check: If script owned by an agent, PERMISSION_RETURN_OBJECTS granted by owner of the script.
             if (scriptItem.OwnerID == scriptItem.PermsGranter)
-                return 0;
-            // not the owner of the script, see if it's group owned and group Owner
+            {
+                // a user owns the scripted object, not a group.
 
-            // If the script is owned by a group, this permission may be granted by an agent belonging to the group's "Owners" role.
+                // Parcel Check: owner of the parcel with the target prim == perms granter / script owner?
+                if (targetParcel.landData.OwnerID == scriptItem.OwnerID)
+                    return 0; // passed both tests
+
+                return Constants.ERR_PARCEL_PERMISSIONS; // not parcel owner
+            }
+
+            // else, granter is not the owner of the script, see if it's group-owned and granter a group Owner
+
+            // Script Check: If script is group-deeded, permission granted by an agent belonging to group's "Owners" role.
             if ((scriptItem.GroupID == UUID.Zero) || (scriptItem.GroupID != scriptItem.OwnerID))
-                return Constants.ERR_PARCEL_PERMISSIONS; // not land owner owned, not group-owned
+                return Constants.ERR_RUNTIME_PERMISSIONS; // not group-owned object
 
-            // group-owned, check if an owner (PermsGranter == script owner)
-            return IsAgentGroupOwner(scriptItem.PermsGranter, scriptItem.GroupID) ? 0 : Constants.ERR_PARCEL_PERMISSIONS;
+            // Parcel Check: first check if parcel is group-owned, the only remaining valid usage case.
+            if ((targetParcel.landData.GroupID == UUID.Zero) || (targetParcel.landData.GroupID != targetParcel.landData.OwnerID))
+                return Constants.ERR_PARCEL_PERMISSIONS; // not group-deeded (so not parcel owner)
+
+            // Parcel Check: group-owned, so check if granter is an Owner in group
+            if (IsAgentGroupOwner(scriptItem.PermsGranter, targetParcel.landData.GroupID))
+                return 0; // passed both tests
+
+            return Constants.ERR_PARCEL_PERMISSIONS;
         }
 
         public int scriptedReturnLandObjectsByOwner(TaskInventoryItem scriptItem, UUID targetOwnerID)
         {
-            int count = 0;
-            m_log.InfoFormat("[LAND]: Scripted object return by {0} for {1}", scriptItem.OwnerID, targetOwnerID);
+            m_log.InfoFormat("[LAND]: Scripted object return of {0}'s objects by {1} for {2}", targetOwnerID, scriptItem.PermsGranter, scriptItem.OwnerID);
+
+            // Check if we're allowed to be using return permission at all, and if so, allowed in this parcel.
+            int rc = canUseReturnPermission(this, scriptItem);
+            if (rc != 0) return rc;
 
             // This function will only work properly if one of the following is true:
-            // - the land is owned by the prim owner and this permission has been granted by the land owner, or
+            // - the land is owned by the scripted owner and this permission has been granted by the land owner, or
             // - the land is group owned and this permission has been granted by a group member filling the group "Owners" role.
 
             List<SceneObjectGroup> returns = new List<SceneObjectGroup>();
 
             lock (primsOverMe)
             {
-                foreach (SceneObjectGroup obj in primsOverMe)
+                foreach (SceneObjectGroup grp in primsOverMe)
                 {
-                    if (obj.OwnerID == targetOwnerID)   // targeting this prim
-                    {
-                        // EO, EM and parcel owner's objects cannot be returned by this method.
-                        if (obj.OwnerID == landData.OwnerID)
-                            continue;
-                        if (m_scene.IsEstateManager(obj.OwnerID))
-                            continue;
-                        // Objects owned by the group the land is set to will not be returned.
-                        if ((landData.GroupID != UUID.Zero) && (obj.GroupID == landData.GroupID))
-                            continue;
+                    // EO, EM and parcel owner's objects cannot be returned by this method.
+                    if (grp.OwnerID == landData.OwnerID)
+                        continue;
+                    if (m_scene.IsEstateManager(grp.OwnerID))
+                        continue;
+                    // Objects owned (deeded), by the group the land is set to, will not be returned.
+                    if (landData.IsGroupOwned && (grp.GroupID == landData.GroupID))
+                        continue;
 
-                        returns.Add(obj);
-                    }
+                    returns.Add(grp);
                 }
             }
 
-            // The more complex checks only need the parcel, item owner, perms granter, etc (all in item).
-            int rc = canUseReturnPermission(this, scriptItem);
-            if (rc != 0)
-                return rc;
-
-            if (m_scene.Permissions.CanUseObjectReturn(this, (uint)ObjectReturnType.Owner, null, scriptItem.OwnerID, returns))
-                count += m_scene.returnObjects(returns.ToArray());
-
-            return count;
+            return m_scene.returnObjects(returns.ToArray());
         }
 
         public int scriptedReturnLandObjectsByIDs(SceneObjectPart callingPart, TaskInventoryItem scriptItem, List<UUID> IDs)
         {
             int count = 0;
-            m_log.InfoFormat("[LAND]: Object return by {0} for list", callingPart.OwnerID);
+            m_log.InfoFormat("[LAND]: Scripted object return of list by {0} for {1}", scriptItem.PermsGranter, scriptItem.OwnerID);
 
+            // Check if we're allowed to be using return permission at all, and if so, allowed in this parcel.
+            int rc = canUseReturnPermission(this, scriptItem);
+            if (rc != 0) return rc;
+
+            // This function will only work properly if one of the following is true:
+            // - the land is owned by the scripted owner and this permission has been granted by the land owner, or
+            // - the land is group owned and this permission has been granted by a group member filling the group "Owners" role.
             List<SceneObjectGroup> returns = new List<SceneObjectGroup>();
 
             lock (primsOverMe)
@@ -1384,7 +1403,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                                 continue;
                             if (m_scene.IsEstateManager(grp.OwnerID))
                                 continue;
-                            // Objects owned by the group the land is set to will not be returned.
+                            // Objects owned (deeded), by the group the land is set to, will not be returned.
                             if ((landData.GroupID != UUID.Zero) && (grp.GroupID == landData.GroupID))
                                 continue;
                         }
@@ -1399,9 +1418,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                 // the returns list by ID could be a variety of owners and group settings, need to check each one separately.
                 List<SceneObjectGroup> singleList = new List<SceneObjectGroup>();
                 singleList.Add(grp);
-                if (m_scene.Permissions.CanUseObjectReturn(this, (uint) ObjectReturnType.Owner, null, callingPart.OwnerID, singleList))
-                    if (singleList.Count > 0)
-                        count += m_scene.returnObjects(singleList.ToArray());
+                if (singleList.Count > 0)
+                    count += m_scene.returnObjects(singleList.ToArray());
             }
 
             return count;
