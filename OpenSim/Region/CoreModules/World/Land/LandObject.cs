@@ -1340,11 +1340,15 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         public int scriptedReturnLandObjectsByOwner(TaskInventoryItem scriptItem, UUID targetOwnerID)
         {
-            m_log.InfoFormat("[LAND]: Scripted object return of {0}'s objects by {1} for {2}", targetOwnerID, scriptItem.PermsGranter, scriptItem.OwnerID);
-
             // Check if we're allowed to be using return permission at all, and if so, allowed in this parcel.
             int rc = canUseReturnPermission(this, scriptItem);
             if (rc != 0) return rc;
+
+            // EO, EM and parcel owner's objects cannot be returned by this method.
+            if (targetOwnerID == landData.OwnerID)
+                return 0;
+            if (m_scene.IsEstateManager(targetOwnerID))
+                return 0;
 
             // This function will only work properly if one of the following is true:
             // - the land is owned by the scripted owner and this permission has been granted by the land owner, or
@@ -1356,10 +1360,8 @@ namespace OpenSim.Region.CoreModules.World.Land
             {
                 foreach (SceneObjectGroup grp in primsOverMe)
                 {
-                    // EO, EM and parcel owner's objects cannot be returned by this method.
-                    if (grp.OwnerID == landData.OwnerID)
-                        continue;
-                    if (m_scene.IsEstateManager(grp.OwnerID))
+                    // ignore anything not owned by the target
+                    if (grp.OwnerID != targetOwnerID)
                         continue;
                     // Objects owned (deeded), to the group that the land is set to, will not be returned (ByOwner only)
                     if (grp.IsGroupDeeded && (grp.GroupID == landData.GroupID))
@@ -1369,13 +1371,15 @@ namespace OpenSim.Region.CoreModules.World.Land
                 }
             }
 
-            return m_scene.returnObjects(returns.ToArray());
+            if (returns.Count > 0)
+                return m_scene.returnObjects(returns.ToArray(), "scripted parcel owner return");
+
+            return 0;   // nothing to return
         }
 
         public int scriptedReturnLandObjectsByIDs(SceneObjectPart callingPart, TaskInventoryItem scriptItem, List<UUID> IDs)
         {
             int count = 0;
-            m_log.InfoFormat("[LAND]: Scripted object return of list by {0} for {1}", scriptItem.PermsGranter, scriptItem.OwnerID);
 
             // Check if we're allowed to be using return permission at all, and if so, allowed in this parcel.
             int rc = canUseReturnPermission(this, scriptItem);
@@ -1423,7 +1427,7 @@ namespace OpenSim.Region.CoreModules.World.Land
                 List<SceneObjectGroup> singleList = new List<SceneObjectGroup>();
                 singleList.Add(grp);
                 if (singleList.Count > 0)
-                    count += m_scene.returnObjects(singleList.ToArray());
+                    count += m_scene.returnObjects(singleList.ToArray(), "scripted parcel owner return by ID");
             }
 
             return count;

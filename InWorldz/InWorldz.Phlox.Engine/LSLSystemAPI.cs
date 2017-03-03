@@ -18376,7 +18376,10 @@ namespace InWorldz.Phlox.Engine
                     default:
                         return ScriptBaseClass.ERR_MALFORMED_PARAMS;
                 }
+
                 rc = World.LandChannel.ScriptedReturnObjectsInParcelByOwner(item, targetAgentID, patternParcel, sameOwner);
+                if (rc > 0)
+                    m_log.InfoFormat("[LAND]: Scripted object return of {0} objects owned by {1} by {2} for {3}", rc, targetAgentID, item.PermsGranter, item.OwnerID);
             }
             catch (Exception e) {
                 return ScriptBaseClass.ERR_GENERIC;
@@ -18461,8 +18464,9 @@ namespace InWorldz.Phlox.Engine
                 foreach (KeyValuePair<int, List<UUID>> bucket in objectsByParcel)
                 {
                     count += World.LandChannel.ScriptedReturnObjectsInParcelByIDs(m_host, item, bucket.Value, bucket.Key);
-                    
                 }
+                if (count > 0)
+                    m_log.InfoFormat("[LAND]: Scripted object list returned {0} objects by {1} for {2}", count, item.PermsGranter, item.OwnerID);
                 return count;
             }
             catch (Exception e)
