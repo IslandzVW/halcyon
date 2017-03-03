@@ -1542,7 +1542,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
         // Pass parcel==null for all parcels in the region, or parcel != null for a specific parcel
         // or all parcels owned by the same owner.
-        public int ScriptedReturnObjectsInParcelByOwner(UUID actionAgentID, UUID targetAgentID, LandData patternParcel, bool sameOwner)
+        public int ScriptedReturnObjectsInParcelByOwner(TaskInventoryItem scriptItem, UUID targetAgentID, LandData patternParcel, bool sameOwner)
         {
             int count = 0;
 
@@ -1561,7 +1561,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                 if (includeParcel)
                 {
-                    int rc = landObject.scriptedReturnLandObjectsByOwner(actionAgentID, targetAgentID);
+                    int rc = landObject.scriptedReturnLandObjectsByOwner(scriptItem, targetAgentID);
                     // if we get an error, stop. If we've returned items, return the count, otherwise error code.
                     if (rc < 0) // error
                         return (count > 0) ? count : rc;
@@ -1572,13 +1572,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             return count;
         }
 
-        public int ScriptedReturnObjectsInParcelByIDs(SceneObjectPart callingPart, List<UUID> targetIDs, int parcelLocalID)
+        public int ScriptedReturnObjectsInParcelByIDs(SceneObjectPart callingPart, TaskInventoryItem scriptItem, List<UUID> targetIDs, int parcelLocalID)
         {
             if (!m_landList.ContainsKey(parcelLocalID))
                 return 0;
 
             ILandObject parcel = m_landList[parcelLocalID];
-            return parcel.scriptedReturnLandObjectsByIDs(callingPart, targetIDs);
+            return parcel.scriptedReturnLandObjectsByIDs(callingPart, scriptItem, targetIDs);
         }
 
         public void NoLandDataFromStorage()

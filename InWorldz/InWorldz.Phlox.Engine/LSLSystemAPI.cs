@@ -18317,118 +18317,50 @@ namespace InWorldz.Phlox.Engine
             return ret;
         }
 
-        // This is a fast check for the case where there's an agent present and we've loaded group info.
-        public bool IsAgentGroupOwner(IClientAPI remoteClient, UUID groupID)
-        {
-            if (groupID == UUID.Zero)
-                return false;
-
-            // Use the known in-memory group membership data if available before going to db.
-            if (remoteClient == null)
-                return false; // we don't know who to check
-
-            // This isn't quite the same as being in the Owners role, but close enough in 
-            // order to avoid multiple complex queries in order to check Role membership.
-            return remoteClient.GetGroupPowers(groupID) == (ulong)Constants.OWNER_GROUP_POWERS;
-        }
-
-        public bool IsAgentGroupOwner(UUID agentID, UUID groupID)
-        {
-            if (groupID == UUID.Zero)
-                return false;
-
-            ScenePresence sp = World.GetScenePresence(agentID);
-            if (sp != null) {
-                IClientAPI remoteClient = sp.ControllingClient;
-                if (remoteClient != null)
-                    return IsAgentGroupOwner(remoteClient, groupID);
-            }
-
-            // Otherwise, do it the hard way.
-            IGroupsModule groupsModule = m_ScriptEngine.World.RequestModuleInterface<IGroupsModule>();
-
-            GroupRecord groupRec = groupsModule.GetGroupRecord(groupID);
-            if (groupRec == null) return false;
-
-            List<GroupRolesData> agentRoles = groupsModule.GroupRoleDataRequest(null, groupID);
-            foreach (GroupRolesData role in agentRoles)
-            {
-                if (role.RoleID == groupRec.OwnerRoleID)
-                    return true;
-            }
-            return false;
-        }
-
-        // Anyone can grant PERMISSION_RETURN_OBJECTS but it can be only used under strict rules.
-        // Returns 0 on success, or LSL error code on error.
-        int canUseReturnPermission(ILandObject parcel, TaskInventoryItem item)
-        {
-            if (item.PermsGranter == UUID.Zero)
-                return ScriptBaseClass.ERR_RUNTIME_PERMISSIONS;
-
-            // If the script is owned by an agent, PERMISSION_RETURN_OBJECTS may be granted by the owner of the script.
-            if (m_host.ParentGroup.OwnerID == item.PermsGranter)
-                return 0;
-            // not the owner of the script, see if it's group owned and group Owner
-
-            // If the script is owned by a group, this permission may be granted by an agent belonging to the group's "Owners" role.
-            if ((m_host.ParentGroup.GroupID == UUID.Zero) || (m_host.ParentGroup.GroupID != m_host.ParentGroup.OwnerID))
-                return ScriptBaseClass.ERR_PARCEL_PERMISSIONS; // not land owner owned, not group-owned
-
-            // group-owned, check if an owner (PermsGranter == script owner)
-            return IsAgentGroupOwner(item.PermsGranter, m_host.ParentGroup.GroupID) ? 0 : ScriptBaseClass.ERR_PARCEL_PERMISSIONS;
-        }
-
         public int llReturnObjectsByOwner(string owner, int scope)
         {
-            try
+            UUID targetAgentID;
+            if (!UUID.TryParse(owner, out targetAgentID))
+                return ScriptBaseClass.ERR_MALFORMED_PARAMS;
+
+            if (targetAgentID == UUID.Zero)
+                return 0;
+
+            UUID invItemID = InventorySelf();
+            if (invItemID == UUID.Zero)
             {
-                UUID targetAgentID;
-                if (!UUID.TryParse(owner, out targetAgentID))
-                    return ScriptBaseClass.ERR_MALFORMED_PARAMS;
+                LSLError("No item found from which to run script");
+                return ScriptBaseClass.ERR_GENERIC;
+            }
 
-                if (targetAgentID == UUID.Zero)
-                    return 0;
+            // After this, set rc for error code.
+            int rc = 0;
 
-                UUID invItemID = InventorySelf();
-                if (invItemID == UUID.Zero)
-                {
-                    LSLError("No item found from which to run script");
-                    return ScriptBaseClass.ERR_GENERIC;
-                }
+            try {
 
                 TaskInventoryItem item;
-                lock (m_host.TaskInventory)
-                {
+                lock (m_host.TaskInventory) {
                     item = m_host.TaskInventory[invItemID];
                 }
 
                 // First, just check if anyone has ERR_RUNTIME_PERMISSIONS ...
-                if (!CheckRuntimePerms(item, item.PermsGranter, ScriptBaseClass.PERMISSION_RETURN_OBJECTS))
-                {
-                    LSLError("No permissions to return objects");
-                    return ScriptBaseClass.ERR_RUNTIME_PERMISSIONS;
+                if (!CheckRuntimePerms(item, item.PermsGranter, ScriptBaseClass.PERMISSION_RETURN_OBJECTS)) {
+                    rc = ScriptBaseClass.ERR_RUNTIME_PERMISSIONS;
+                    return rc;
                 }
 
                 // We need the land parcel for everything after this.
                 Vector3 currentPos = m_host.ParentGroup.AbsolutePosition;
                 ILandObject currentParcel = World.LandChannel.GetLandObject(currentPos.X, currentPos.Y);
                 if ((currentParcel == null) && (scope == ScriptBaseClass.OBJECT_RETURN_REGION))
-                    return ScriptBaseClass.ERR_GENERIC;
-
-                // The more complex checks only need the parcel, item owner, perms granter, etc (all in item).
-                int rc = canUseReturnPermission(currentParcel, item);
-                if (rc != 0)
                 {
-                    // ScriptBaseClass.ERR_PARCEL_PERMISSIONS
-                    LSLError("No parcel/region permission to return objects");
+                    rc = ScriptBaseClass.ERR_GENERIC;
                     return rc;
                 }
 
                 LandData patternParcel = null;
                 bool sameOwner;
-                switch (scope)
-                {
+                switch (scope) {
                     case ScriptBaseClass.OBJECT_RETURN_PARCEL:
                         patternParcel = currentParcel.landData;
                         sameOwner = false;
@@ -18438,18 +18370,38 @@ namespace InWorldz.Phlox.Engine
                         sameOwner = true;
                         break;
                     case ScriptBaseClass.OBJECT_RETURN_REGION:
-                        patternParcel = null;  // wildcard for all parcels
+                        patternParcel = null; // wildcard for all parcels
                         sameOwner = false;
                         break;
                     default:
                         return ScriptBaseClass.ERR_MALFORMED_PARAMS;
                 }
-                return World.LandChannel.ScriptedReturnObjectsInParcelByOwner(item.OwnerID, targetAgentID, patternParcel, sameOwner);
+                rc = World.LandChannel.ScriptedReturnObjectsInParcelByOwner(item, targetAgentID, patternParcel, sameOwner);
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 return ScriptBaseClass.ERR_GENERIC;
             }
+            finally
+            {
+                switch (rc) {
+                    case ScriptBaseClass.ERR_GENERIC:
+                        LSLError("No parcel found for permissions to return objects");
+                        break;
+                    case ScriptBaseClass.ERR_PARCEL_PERMISSIONS:
+                        LSLError("No parcel/region permission to return objects");
+                        break;
+                    case ScriptBaseClass.ERR_RUNTIME_PERMISSIONS:
+                        LSLError("No permissions to return objects");
+                        break;
+                    case ScriptBaseClass.ERR_MALFORMED_PARAMS:
+                        LSLError("Bad parameters on scripted call to return objects");
+                        break;
+                    default:
+                        // do nothing for other 0, other errors, or >0 counts
+                        break;
+                }
+            }
+            return rc;
         }
 
         public int llReturnObjectsByID(LSL_List objects)
@@ -18508,7 +18460,7 @@ namespace InWorldz.Phlox.Engine
                 int count = 0;
                 foreach (KeyValuePair<int, List<UUID>> bucket in objectsByParcel)
                 {
-                    count += World.LandChannel.ScriptedReturnObjectsInParcelByIDs(m_host, bucket.Value, bucket.Key);
+                    count += World.LandChannel.ScriptedReturnObjectsInParcelByIDs(m_host, item, bucket.Value, bucket.Key);
                     
                 }
                 return count;

@@ -48,6 +48,12 @@ namespace OpenSim.Framework
         public const int LINK_ALL_OTHERS = -2;
         public const int LINK_ALL_CHILDREN = -3;
         public const int LINK_THIS = -4;
+        // Returned by llReturnObjectsByOwner and llReturnObjectsByID
+        public const int ERR_GENERIC = -1;
+        public const int ERR_PARCEL_PERMISSIONS = -2;
+        public const int ERR_MALFORMED_PARAMS = -3;
+        public const int ERR_RUNTIME_PERMISSIONS = -4;
+        public const int ERR_THROTTLED = -5;
 
         public const uint MaxGroups = 100;  // maximum number of groups a user can be a member of
         public const GroupPowers DefaultEveryonePowers = GroupPowers.AllowSetHome | GroupPowers.JoinChat | GroupPowers.AllowVoiceChat | GroupPowers.ReceiveNotices;
