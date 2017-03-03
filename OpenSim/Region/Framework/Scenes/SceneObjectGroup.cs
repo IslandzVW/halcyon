@@ -471,6 +471,11 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_rootPart.GroupID = value; }
         }
 
+        public bool IsGroupDeeded
+        {
+            get { return (GroupID != UUID.Zero) && (OwnerID == GroupID); }
+        }
+
         /// <value>
         /// The root part of this scene object
         /// </value>

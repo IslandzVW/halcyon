@@ -1361,8 +1361,8 @@ namespace OpenSim.Region.CoreModules.World.Land
                         continue;
                     if (m_scene.IsEstateManager(grp.OwnerID))
                         continue;
-                    // Objects owned (deeded), by the group the land is set to, will not be returned.
-                    if (landData.IsGroupOwned && (grp.GroupID == landData.GroupID))
+                    // Objects owned (deeded), to the group that the land is set to, will not be returned (ByOwner only)
+                    if (grp.IsGroupDeeded && (grp.GroupID == landData.GroupID))
                         continue;
 
                     returns.Add(grp);
@@ -1395,7 +1395,7 @@ namespace OpenSim.Region.CoreModules.World.Land
 
                     if ((grp != null) && (primsOverMe.Contains(grp)))
                     {
-                        // The rules inside this IF don't apply if the calling prim specifies itself.
+                        // The rules inside this IF only apply if the calling prim is not specifying itself.
                         if (grp.UUID != callingPart.ParentGroup.UUID)
                         {
                             // EO, EM and parcel owner's objects cannot be returned by this method.
@@ -1403,9 +1403,13 @@ namespace OpenSim.Region.CoreModules.World.Land
                                 continue;
                             if (m_scene.IsEstateManager(grp.OwnerID))
                                 continue;
-                            // Objects owned (deeded), by the group the land is set to, will not be returned.
-                            if ((landData.GroupID != UUID.Zero) && (grp.GroupID == landData.GroupID))
-                                continue;
+                            if (!m_scene.IsEstateManager(scriptItem.OwnerID))
+                            {
+                                // EO and EM can return from any parcel, otherwise allowed only on 
+                                // objects located in any parcel owned by the script owner in the region.
+                                if (landData.OwnerID != scriptItem.OwnerID)
+                                    continue;   // parcel has different owner
+                            }
                         }
 
                         returns.Add(grp);

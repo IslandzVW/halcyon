@@ -1618,6 +1618,11 @@ namespace OpenSim.Region.Framework.Scenes
             set { _lastOwnerID = value; }
         }
 
+        public bool IsGroupDeeded
+        {
+            get { return (GroupID != UUID.Zero) && (OwnerID == GroupID); }
+        }
+
         public uint BaseMask
         {
             get { return _baseMask; }
