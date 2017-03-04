@@ -62,7 +62,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
 {
     public delegate void UpLoadedAsset(
         string assetName, string description, UUID assetID, UUID inventoryItem, UUID parentFolder,
-        byte[] data, string inventoryType, string assetType);
+        byte[] data, string inventoryType, string assetType, PermissionMask nextOwnerPerm, PermissionMask groupPerm, PermissionMask everyonePerm);
 
     public delegate UpdateItemResponse UpdateItem(UUID itemID, byte[] data);
 
@@ -439,6 +439,14 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 string assetDes = map["description"].AsString();
                 UUID parentFolder = map["folder_id"].AsUUID();
                 string inventory_type = map["inventory_type"].AsString();
+
+                PermissionMask nextOwnerPerm = PermissionMask.All;
+                if (map.ContainsKey("next_owner_mask")) nextOwnerPerm = (PermissionMask)map["next_owner_mask"].AsUInteger();
+                PermissionMask groupPerm = PermissionMask.None;
+                if (map.ContainsKey("group_mask")) groupPerm = (PermissionMask)map["group_mask"].AsUInteger();
+                PermissionMask everyonePerm = PermissionMask.None;
+                if (map.ContainsKey("everyone_mask")) everyonePerm = (PermissionMask)map["everyone_mask"].AsUInteger();
+
                 UUID newAsset = UUID.Random();
                 UUID newInvItem = UUID.Random();
 
@@ -512,7 +520,8 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 string uploaderURL = m_Caps.HttpListener.ServerURI + m_Caps.CapsBase + uploaderPath;
                 AssetUploader uploader =
                     new AssetUploader(assetName, assetDes, newAsset, newInvItem, parentFolder, inventory_type,
-                                      asset_type, m_Caps.CapsBase + uploaderPath, m_Caps.HttpListener);
+                                      asset_type, nextOwnerPerm, groupPerm, everyonePerm, 
+                                      m_Caps.CapsBase + uploaderPath, m_Caps.HttpListener);
                 uploader.OnUpLoad += UploadCompleteHandler;
 
                 m_Caps.HttpListener.AddStreamHandler(
@@ -539,7 +548,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
             /// <param name="assetType"></param>
             public void UploadCompleteHandler(string assetName, string assetDescription, UUID assetID,
                                               UUID inventoryItem, UUID parentFolder, byte[] data, string inventoryType,
-                                              string assetType)
+                                              string assetType, PermissionMask nextOwnerPerm, PermissionMask groupPerm, PermissionMask everyonePerm)
+
+
             {
                 sbyte assType = (sbyte)AssetType.Texture;
                 sbyte inType = (sbyte)InventoryType.Texture;
@@ -622,11 +633,16 @@ namespace OpenSim.Region.CoreModules.Capabilities
 
                 item.BasePermissions = (uint)(PermissionMask.All | PermissionMask.Export);
                 item.CurrentPermissions = (uint)(PermissionMask.All | PermissionMask.Export);
-                item.GroupPermissions = (uint)PermissionMask.None;
-                item.EveryOnePermissions = (uint)PermissionMask.None;
-                item.NextPermissions = (uint)PermissionMask.All;
+                item.GroupPermissions = (uint)groupPerm;
+                item.EveryOnePermissions = (uint)everyonePerm;
+                item.NextPermissions = (uint)nextOwnerPerm;
 
                 m_Scene.AddInventoryItem(m_Caps.AgentID, item);
+
+                IClientAPI client = null;
+                m_Scene.TryGetClient(m_Caps.AgentID, out client); 
+                if (client != null)
+                    client.SendInventoryItemCreateUpdate(item,0);
             }
 
             private byte[] ObjectUploadComplete(string assetName, byte[] data)
@@ -945,7 +961,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         if (folderId == UUID.Zero)
                         {
                             //indicates the client wants the root for this user
-                            folder = m_checkedStorageProvider.FindFolderForType(m_Caps.AgentID, AssetType.RootFolder);
+                            folder = m_checkedStorageProvider.FindFolderForType(m_Caps.AgentID, (AssetType)FolderType.Root);
                             folderId = folder.ID;
                         }
                         else
@@ -1363,7 +1379,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                             if (item != null)
                             {
                                 m_Scene.AddInventoryItem(m_Caps.AgentID, item);
-                                // m_log.InfoFormat("[CAPS]: CopyInventoryFromNotecard, ItemID:{0}, FolderID:{1}", copyItem.ID, copyItem.Folder);
+                                // m_log.InfoFormat("[CAPS]: SendInventoryItemCreateUpdate ItemID:{0}, AssetID:{1}", item.ID, item.AssetID);
                                 client.SendInventoryItemCreateUpdate(item,0);
                                 response["int_response_code"] = 200;
                                 return LLSDHelpers.SerializeLLSDReply(response);
@@ -1473,9 +1489,14 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 private string m_invType = String.Empty;
                 private string m_assetType = String.Empty;
 
+                private PermissionMask m_nextOwnerMask = PermissionMask.All;
+                private PermissionMask m_groupMask = PermissionMask.None;
+                private PermissionMask m_everyoneMask = PermissionMask.None;
+
                 public AssetUploader(string assetName, string description, UUID assetID, UUID inventoryItem,
-                                     UUID parentFolderID, string invType, string assetType, string path,
-                                     IHttpServer httpServer)
+                                     UUID parentFolderID, string invType, string assetType, 
+                                     PermissionMask nextOwnerPerm, PermissionMask groupPerm, PermissionMask everyonePerm,
+                                     string path, IHttpServer httpServer)
                 {
                     m_assetName = assetName;
                     m_assetDes = description;
@@ -1486,6 +1507,9 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     parentFolder = parentFolderID;
                     m_assetType = assetType;
                     m_invType = invType;
+                    m_nextOwnerMask = nextOwnerPerm;
+                    m_groupMask = groupPerm;
+                    m_everyoneMask = everyonePerm;
                 }
 
                 /// <summary>
@@ -1511,7 +1535,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     handlerUpLoad = OnUpLoad;
                     if (handlerUpLoad != null)
                     {
-                        handlerUpLoad(m_assetName, m_assetDes, newAssetID, inv, parentFolder, data, m_invType, m_assetType);
+                        handlerUpLoad(m_assetName, m_assetDes, newAssetID, inv, parentFolder, data, m_invType, m_assetType, m_nextOwnerMask, m_groupMask, m_everyoneMask);
                     }
 
                     return res;

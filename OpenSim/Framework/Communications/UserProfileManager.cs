@@ -1141,10 +1141,10 @@ namespace OpenSim.Framework.Communications
         /// <param name="regY">location Y</param>
         /// <param name="uuid">UUID of avatar.</param>
         /// <returns>The UUID of the created user profile.  On failure, returns UUID.Zero</returns>
-        public virtual UUID AddUser(
-            string firstName, string lastName, string password, string email, uint regX, uint regY, UUID uuid)
+        public virtual UUID AddUser(string firstName, string lastName, string password, string email, uint regX, uint regY, UUID uuid)
         {
-            string md5PasswdHash = Util.Md5Hash(Util.Md5Hash(password) + ":" + String.Empty);
+            string salt = Util.RandomString(32);
+            string md5PasswdHash = Util.Md5Hash(Util.Md5Hash(password) + ":" + salt);
 
             UserProfileData userProf = GetUserProfile(firstName, lastName);
             if (userProf != null)
@@ -1159,7 +1159,7 @@ namespace OpenSim.Framework.Communications
             user.FirstName = firstName;
             user.SurName = lastName;
             user.PasswordHash = md5PasswdHash;
-            user.PasswordSalt = String.Empty;
+            user.PasswordSalt = salt;
             user.Created = Util.UnixTimeSinceEpoch();
             user.HomeLookAt = new Vector3(100, 100, 100);
             user.HomeRegionX = regX;
@@ -1258,7 +1258,7 @@ namespace OpenSim.Framework.Communications
             folder.Owner = user;
             folder.ID = UUID.Random();
             folder.Name = "Lost And Found";
-            folder.Type = (short)AssetType.LostAndFoundFolder;
+            folder.Type = (short)FolderType.LostAndFound;
             folder.Version = 1;
             storage.CreateFolder(folder);
 
@@ -1285,7 +1285,7 @@ namespace OpenSim.Framework.Communications
             folder.Owner = user;
             folder.ID = UUID.Random();
             folder.Name = "Photo Album";
-            folder.Type = (short)AssetType.SnapshotFolder;
+            folder.Type = (short)FolderType.Snapshot;
             folder.Version = 1;
             storage.CreateFolder(folder);
 
@@ -1321,7 +1321,7 @@ namespace OpenSim.Framework.Communications
             folder.Owner = user;
             folder.ID = UUID.Random();
             folder.Name = "Trash";
-            folder.Type = (short)AssetType.TrashFolder;
+            folder.Type = (short)FolderType.Trash;
             folder.Version = 1;
             storage.CreateFolder(folder);
         }
@@ -1335,7 +1335,8 @@ namespace OpenSim.Framework.Communications
         /// <returns>true if the update was successful, false otherwise</returns>
         public virtual bool ResetUserPassword(string firstName, string lastName, string newPassword)
         {
-            string md5PasswdHash = Util.Md5Hash(Util.Md5Hash(newPassword) + ":" + String.Empty);
+            string salt = Util.RandomString(32);
+            string md5PasswdHash = Util.Md5Hash(Util.Md5Hash(newPassword) + ":" + salt);
 
             UserProfileData profile = GetUserProfile(firstName, lastName);
 
@@ -1346,7 +1347,7 @@ namespace OpenSim.Framework.Communications
             }
 
             profile.PasswordHash = md5PasswdHash;
-            profile.PasswordSalt = String.Empty;
+            profile.PasswordSalt = salt;
 
             UpdateUserProfile(profile);
 

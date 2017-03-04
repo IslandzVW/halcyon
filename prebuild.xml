@@ -625,7 +625,7 @@
 
       <Reference name="log4net" path="../../bin/"/>
       <Reference name="Nini" path="../../bin/"/>
-      <Reference name="OpenMetaverse.StructuredData" path="../../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
 
       <Reference name="OpenSim.Services.Interfaces"/>
       <Reference name="OpenSim.Framework"/>

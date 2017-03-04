@@ -1010,11 +1010,13 @@ namespace InWorldz.Data.Inventory.Cassandra
 
             foreach (KeyValuePair<Guid, InventoryFolderBase> indexInfo in folderIndex)
             {
-                if (indexInfo.Value.Type == (short)type &&
-                    (indexInfo.Value.Level == InventoryFolderBase.FolderLevel.TopLevel ||
-                    indexInfo.Value.Level == InventoryFolderBase.FolderLevel.Root))
+                if (indexInfo.Value.Level == InventoryFolderBase.FolderLevel.TopLevel ||
+                    indexInfo.Value.Level == InventoryFolderBase.FolderLevel.Root)
                 {
-                    return indexInfo.Value;
+                    if ((short)type == indexInfo.Value.Type)
+                        return indexInfo.Value;
+                    if (((short)type == (short)FolderType.Root) && (indexInfo.Value.Type == (short)FolderType.OldRoot)) // old AssetType.RootFolder == 9
+                        return indexInfo.Value; // consider 9 to be FolderType.Root too
                 }
             }
 
@@ -1056,7 +1058,7 @@ namespace InWorldz.Data.Inventory.Cassandra
 
                 try
                 {
-                    trashFolder = this.FindFolderForType(folder.Owner, OpenMetaverse.AssetType.TrashFolder);
+                    trashFolder = this.FindFolderForType(folder.Owner, (AssetType)FolderType.Trash);
                 }
                 catch (Exception e)
                 {
@@ -1916,7 +1918,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             if (item.Folder == UUID.Zero)
             {
                 _log.WarnFormat("[Inworldz.Data.Inventory.Cassandra] Repairing parent folder ID for item {0} for {1}: Folder set to UUID.Zero", item.ID, item.Owner);
-                item.Folder = this.FindFolderForType(item.Owner, AssetType.RootFolder).ID;
+                item.Folder = this.FindFolderForType(item.Owner, (AssetType)FolderType.Root).ID;
             }
         }
 
@@ -2354,7 +2356,7 @@ namespace InWorldz.Data.Inventory.Cassandra
 
                 try
                 {
-                    trashFolder = this.FindFolderForType(item.Owner, OpenMetaverse.AssetType.TrashFolder);
+                    trashFolder = this.FindFolderForType(item.Owner, (AssetType)FolderType.Trash);
                 }
                 catch (Exception e)
                 {

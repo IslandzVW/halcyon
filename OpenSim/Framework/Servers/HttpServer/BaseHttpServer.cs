@@ -1597,12 +1597,12 @@ namespace OpenSim.Framework.Servers.HttpServer
         // Fallback HTTP responses in case the HTTP error response files don't exist
         private static string getDefaultHTTP404(string host)
         {
-            return "<HTML><HEAD><TITLE>404 Page not found</TITLE><BODY><BR /><H1>Ooops!</H1><P>You have reached an InWorldz server, but must connect with a viewer application rather than a web browser.</P><P>If you are trying to log in with a viewer, your command line should specify: &quot;-loginpage http://" + host + "/?method=login -loginuri http://" + host + "/&quot;.</P></BODY></HTML>";
+            return "<HTML><HEAD><TITLE>404 Page not found</TITLE><BODY><BR /><H1>Ooops!</H1><P>You have reached a Halcyon server.</P><P>To log in to this virtual world, you must connect with a viewer application or web-based viewer.</P></BODY></HTML>";
         }
 
         private static string getDefaultHTTP500()
         {
-            return "<HTML><HEAD><TITLE>500 Internal Server Error</TITLE><BODY><BR /><H1>Ooops!</H1><P>The InWorldz server you requested does not support browser logins.</P></BODY></HTML>";
+            return "<HTML><HEAD><TITLE>500 Internal Server Error</TITLE><BODY><BR /><H1>Ooops!</H1><P>The Halcyon server you requested does not support browser logins.</P></BODY></HTML>";
         }
     }
 

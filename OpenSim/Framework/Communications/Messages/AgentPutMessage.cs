@@ -165,6 +165,9 @@ namespace OpenSim.Framework.Communications.Messages
         [ProtoMember(38)]
         public bool AvatarAsAPrim;
 
+        [ProtoMember(39)]
+        public PackedAgentPrefs AgentPrefs;
+
         static AgentPutMessage()
         {
             ProtoBuf.Serializer.PrepareSerializer<AgentPutMessage>();
@@ -177,6 +180,7 @@ namespace OpenSim.Framework.Communications.Messages
                 ActiveGroupID = data.ActiveGroupID.Guid,
                 AgentAccess = data.AgentAccess,
                 AgentId = data.AgentID.Guid,
+                AgentPrefs = PackedAgentPrefs.FromAgentPrefs(data.AgentPrefs),
                 AlwaysRun = data.AlwaysRun,
                 Anims = PackedAnimation.FromAnimations(data.Anims),
                 Appearance = PackedAppearance.FromAppearance(data.Appearance),
@@ -226,6 +230,7 @@ namespace OpenSim.Framework.Communications.Messages
                 ActiveGroupID = new UUID(this.ActiveGroupID),
                 AgentAccess = this.AgentAccess,
                 AgentID = agentId,
+                AgentPrefs = (this.AgentPrefs != null) ? this.AgentPrefs.ToAgentPrefs(agentId) : new AgentPreferencesData(),
                 AlwaysRun = this.AlwaysRun,
                 Anims = PackedAnimation.ToAnimations(this.Anims),
                 Appearance = this.Appearance.ToAppearance(agentId),

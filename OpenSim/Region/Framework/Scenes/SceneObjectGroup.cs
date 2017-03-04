@@ -4562,7 +4562,7 @@ namespace OpenSim.Region.Framework.Scenes
                     m_scene.EventManager.OnFrame -= moveKeyframeMotion;
                     return;
                 }
-                if (m_rootPart.PhysActor == null || InTransit)
+                if (InTransit)
                     return;
 
                 if (m_rootPart.KeyframeAnimation.TimeLastTick == 0)
@@ -4681,16 +4681,28 @@ namespace OpenSim.Region.Framework.Scenes
                     Vector3 _target_velocity = Vector3.Lerp(Vector3.Zero, positionTarget, progress);
                     if (MadeItToCheckpoint)
                     {
-                        if (AllDoneMoving)//If we're all done, make sure to kill the velocity so that it doesn't continue moving at all in the client
-                            m_rootPart.PhysActor.SetVelocity(Vector3.Zero, false);
+                        if (m_rootPart.PhysActor != null)
+                        {
+                            if (AllDoneMoving)//If we're all done, make sure to kill the velocity so that it doesn't continue moving at all in the client
+                                m_rootPart.PhysActor.SetVelocity(Vector3.Zero, false);
+                        }
                         SetAbsolutePosition(m_rootPart.KeyframeAnimation.InitialPosition + positionTarget, false);
                         m_rootPart.KeyframeAnimation.InitialPosition = m_rootPart.KeyframeAnimation.InitialPosition + positionTarget;
                     }
                     else
                     {
-                        m_rootPart.PhysActor.SetVelocity(((m_rootPart.KeyframeAnimation.InitialPosition + _target_velocity) - AbsolutePosition) * -1f, false);
+                        if(m_rootPart.PhysActor != null)
+                        {
+                            m_rootPart.PhysActor.SetVelocity(((m_rootPart.KeyframeAnimation.InitialPosition + _target_velocity) - AbsolutePosition) * -1f, false);
+                        }
                         if (!_target_velocity.ApproxEquals(Vector3.Zero, 0.001f))//Only send the update if we are actually moving
                             SetAbsolutePosition(m_rootPart.KeyframeAnimation.InitialPosition + _target_velocity, false);
+
+                        //If it is phantom, then an update never gets sent out for some reason
+                        // even though SetAbsolutePosition is called. We also don't want to overdo
+                        // this, so we only do it once every 12 frames to not overload the sim
+                        if (m_rootPart.PhysActor == null && m_scene.Frame % 12 != 0)
+                            RootPart.ScheduleTerseUpdate();
                     }
                 }
 
@@ -4715,7 +4727,10 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 m_scene.EventManager.OnFrame -= moveKeyframeMotion;
                 //If we're all done, make sure to kill the velocity so that it doesn't continue moving at all in the client
-                m_rootPart.PhysActor.SetVelocity(Vector3.Zero, false);
+                if (m_rootPart.PhysActor != null)
+                {
+                    m_rootPart.PhysActor.SetVelocity(Vector3.Zero, false);
+                }
                 m_log.ErrorFormat("[KeyframeAnimation]: Exception animating object '{0}' at {1}:", m_rootPart.Name, m_rootPart.AbsolutePosition);
                 m_log.Error("[KeyframeAnimation]: Error: " + e.Message);
             }

@@ -861,11 +861,12 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            // it's a HUD and someone else's...
-            if (SceneObjectPart.IsAttachmentPointOnHUD(AttachmentPt) && (group.OwnerID != remoteClient.AgentId))
+            if ((group.OwnerID != remoteClient.AgentId))
             {
-                m_log.WarnFormat("[SCENE] Invalid wear HUD owned by {0} on {1} attachment point {2} object '{3}'.",
-                    group.UUID, remoteClient.AgentId, AttachmentPt, group.Name);
+                // Even for bots, the group.OwnerID will be set to the bot ID, so this is a safe check.
+                m_log.WarnFormat(
+                    "[SCENE] Invalid wear attachment owned by {0} on {1} object '{2}'.",
+                    group.UUID, remoteClient.AgentId, group.Name);
                 return;
             }
 
@@ -1967,6 +1968,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if ((parentGroup.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                     return;
 
+                if (parentGroup.IsAttachment)
+                {
+                    client.SendAlertMessage("Cannot link objects while attached: nothing to link.");
+                    return;
+                }
+
                 foreach (uint id in childPrimIds)
                 {
                     SceneObjectGroup group = this.GetGroupByPrim(id);
@@ -1976,6 +1983,11 @@ namespace OpenSim.Region.Framework.Scenes
                         return;
                     if ((group.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                         return;
+                    if (group.IsAttachment)
+                    {
+                        client.SendAlertMessage("Cannot link objects while attached: nothing to link.");
+                        return;
+                    }
 
                     if (group.RootPart.LocalId != parentPrimId)
                     {

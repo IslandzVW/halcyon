@@ -2352,7 +2352,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     if (CheckLandImpact(parcel, landImpact, out reason))
                     {
-                        AddNewPrim(ownerID, groupID, pos, rot, shape, true);
+                        AddNewPrim(ownerID, groupID, pos, rot, shape, true, true);
                         return;
                     }
                     if (reason == "region")
@@ -2376,8 +2376,33 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
+        public void ApplyDefaultPerms(SceneObjectPart part)
+        {
+            // Try to apply the avatar's preferred default permissions from AgentPrefs.
+            ScenePresence sp = GetScenePresence(part.OwnerID);
+            if (sp == null) return;
+            AgentPreferencesData prefs = sp.AgentPrefs;
+            if (prefs == null) return;
+
+            part.NextOwnerMask = prefs.PermNextOwner & part.BaseMask;
+            part.GroupMask = prefs.PermGroup & part.BaseMask;
+            part.EveryoneMask = prefs.PermEveryone & part.BaseMask;
+
+            // Check if trying to set the Export flag.
+            if ((prefs.PermEveryone & (uint)PermissionMask.Export) != 0)
+            {
+                // Attempting to set export flag.
+                if ((part.OwnerMask & (uint)PermissionMask.Export) == 0 || (part.BaseMask & (uint)PermissionMask.Export) == 0 || (part.NextOwnerMask & (uint)PermissionMask.All) != (uint)PermissionMask.All)
+                    part.EveryoneMask &= ~(uint)PermissionMask.Export;
+            }
+
+            // If the owner has not provided full rights (MCT) for NextOwner, clear the Export flag.
+            if ((part.NextOwnerMask &(uint)PermissionMask.All) != (uint)PermissionMask.All)
+                part.EveryoneMask &= ~(uint)PermissionMask.Export;
+        }
+
         public virtual SceneObjectGroup AddNewPrim(
-            UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape, bool rezSelected)
+            UUID ownerID, UUID groupID, Vector3 pos, Quaternion rot, PrimitiveBaseShape shape, bool rezSelected, bool sessionPerms)
         {
             //m_log.DebugFormat(
             //    "[SCENE]: Scene.AddNewPrim() pcode {0} called for {1} in {2}", shape.PCode, ownerID, RegionInfo.RegionName);
@@ -2388,6 +2413,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             // Otherwise, use this default creation code;
             SceneObjectGroup sceneObject = new SceneObjectGroup(ownerID, pos, rot, shape, rezSelected);
+            if (sessionPerms) ApplyDefaultPerms(sceneObject.RootPart);
             sceneObject.SetGroup(groupID, null);
             AddNewSceneObject(sceneObject, true);
 
@@ -4380,10 +4406,14 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (RegionSecret == loggingOffUser.ControllingClient.SecureSessionId || (parsedsecret && RegionSecret == localRegionSecret))
                 {
-                    loggingOffUser.ControllingClient.Kick(message);
-                    // Give them a second to receive the message!
-                    Thread.Sleep(1000);
-                    loggingOffUser.ControllingClient.Close();
+                    if (loggingOffUser.ControllingClient != null)   // may have been cleaned up
+                    {
+                        loggingOffUser.ControllingClient.Kick(message);
+                        // Give them a second to receive the message!
+                        Thread.Sleep(1000);
+                        if (loggingOffUser.ControllingClient != null)   // may have been cleaned up
+                            loggingOffUser.ControllingClient.Close();
+                    }
                 }
                 else
                 {

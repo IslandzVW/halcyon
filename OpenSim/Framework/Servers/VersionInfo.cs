@@ -30,7 +30,7 @@ using System.Reflection;
 // Using a * for the third number means auto-fill with the # days since 2000. Good for us here.
 // That only leaves us with two in front, so we'll divide the first number by 10.
 // i.e. 9.18.R in the assembly is presented as 0.9.18.R
-[assembly: AssemblyVersion("9.30.*")]
+[assembly: AssemblyVersion("9.31.*")]
 // Do not provide AssemblyFileVersion and it will be kept in sync.
 
 namespace OpenSim

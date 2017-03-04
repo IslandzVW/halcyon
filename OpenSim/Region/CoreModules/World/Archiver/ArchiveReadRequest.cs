@@ -236,8 +236,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                     if (!ResolveUserUuid(part.CreatorID))
                     {
                         m_log.WarnFormat("[ARCHIVER]: Could not resolve av/group ID {0} for object '{1}' part creator", part.CreatorID, sceneObject.Name);
-                        objectFixingFailed = true;
-                        part.CreatorID = masterAvatarId;
+                        // Don't fail to load an object owned by a valid user, just because a creator no longer exists in the DB. (We've seen this with some of YadNi's stuff.)
+                        // objectFixingFailed = true;
+                        // part.CreatorID = masterAvatarId;
                     }
 
                     if (!ResolveUserUuid(part.OwnerID))
@@ -273,8 +274,9 @@ namespace OpenSim.Region.CoreModules.World.Archiver
                             if (!ResolveUserUuid(kvp.Value.CreatorID))
                             {
                                 m_log.WarnFormat("[ARCHIVER]: Could not resolve av/group ID {0} for object '{1}' inventory item creator", kvp.Value.CreatorID, sceneObject.Name);
-                                objectFixingFailed = true;
-                                kvp.Value.CreatorID = masterAvatarId;
+                                // Don't fail to load an object owned by a valid user, just because a creator no longer exists in the DB. (We've seen this with some of YadNi's stuff.)
+                                // objectFixingFailed = true;
+                                // kvp.Value.CreatorID = masterAvatarId;
                             }
                         }
                     }

@@ -947,7 +947,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (recipientParentFolderId == UUID.Zero)
             {
-                InventoryFolderBase rootFolder = recipientUserInfo.FindFolderForType((int)AssetType.RootFolder);
+                InventoryFolderBase rootFolder = recipientUserInfo.FindFolderForType((int)FolderType.Root);
                 recipientParentFolderId = rootFolder.ID;
             }
 
@@ -1256,13 +1256,13 @@ namespace OpenSim.Region.Framework.Scenes
 
             try
             {
-                currentOutfitFolder = userInfo.FindFolderForType((int)AssetType.CurrentOutfitFolder);
+                currentOutfitFolder = userInfo.FindFolderForType((int)FolderType.CurrentOutfit);
             }
             catch (InventoryStorageException)
             {
                 // could not find it by type. load root and try to find it by name.
                 InventorySubFolderBase foundFolder = null;
-                InventoryFolderBase rootFolder = userInfo.FindFolderForType((int)AssetType.RootFolder);
+                InventoryFolderBase rootFolder = userInfo.FindFolderForType((int)FolderType.Root);
                 foreach (var subfolder in rootFolder.SubFolders)
                 {
                     if (subfolder.Name == COF_NAME)
@@ -1920,7 +1920,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             UUID newFolderID = UUID.Random();
 
-            InventoryFolderBase rootFolder = profile.FindFolderForType((int)AssetType.RootFolder);
+            InventoryFolderBase rootFolder = profile.FindFolderForType((int)FolderType.Root);
             profile.CreateFolder(category, newFolderID, (short)AssetType.Unknown, rootFolder.ID);
 
             foreach (UUID itemID in items)
@@ -2837,11 +2837,11 @@ namespace OpenSim.Region.Framework.Scenes
                 //owner goes to trash, other goes to l&f
                 if (remoteClient.AgentId == uInfo.UserProfile.ID)
                 {
-                    destinationFolder = uInfo.FindFolderForType((int)AssetType.TrashFolder);
+                    destinationFolder = uInfo.FindFolderForType((int)FolderType.Trash);
                 }
                 else
                 {
-                    destinationFolder = uInfo.FindFolderForType((int)AssetType.LostAndFoundFolder);
+                    destinationFolder = uInfo.FindFolderForType((int)FolderType.LostAndFound);
                 }
 
                 this.CopyItemsToFolder(uInfo, destinationFolder.ID, ownerObjects.Value, remoteClient, true);
@@ -2878,7 +2878,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        InventoryFolderBase destinationFolder = uInfo.FindFolderForType((int)AssetType.LostAndFoundFolder);
+                        InventoryFolderBase destinationFolder = uInfo.FindFolderForType((int)FolderType.LostAndFound);
                         List<SceneObjectGroup> items = new List<SceneObjectGroup>();
                         items.Add(SOG);
 
@@ -2979,7 +2979,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 InventoryFolderBase topLevelFolder = uInfo.FindTopLevelFolderFor(desiredFolder.ID);
 
-                if ((topLevelFolder != null) && (topLevelFolder.Type != (int)AssetType.TrashFolder))
+                if ((topLevelFolder != null) && (topLevelFolder.Type != (int)FolderType.Trash))
                 {
                     return desiredFolder;
                 }
@@ -3036,7 +3036,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 try
                 {
-                    folder = uInfo.FindFolderForType((int)AssetType.RootFolder);
+                    folder = uInfo.FindFolderForType((int)FolderType.Root);
                 }
                 catch (Exception e)
                 {

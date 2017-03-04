@@ -281,8 +281,12 @@ namespace OpenSim.Region.Framework.Scenes
         public const byte MAX_HUD        = (byte)OpenMetaverse.AttachmentPoint.HUDBottomRight;  // 38
         public const byte MAX_ATTACHMENT = (byte)OpenMetaverse.AttachmentPoint.Root;            // 40
 
-        // Attachment points with the high bit set must be converted to 7-bit before this call.
+        // Attachment points with the high bit set must be converted to 7-bit before these calls.
         public static bool IsAttachmentPointOnHUD(uint attachPoint)
+        {
+            return (attachPoint >= MIN_HUD) && (attachPoint <= MAX_HUD);
+        }
+        public static bool IsValidAttachmentPoint(uint attachPoint)
         {
             return (attachPoint >= MIN_ATTACHMENT) && (attachPoint <= MAX_ATTACHMENT);
         }

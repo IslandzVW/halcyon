@@ -1,35 +1,4 @@
 /*
- * Copyright (c) 2015, InWorldz Halcyon Developers
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- * 
- *   * Redistributions of source code must retain the above copyright notice, this
- *     list of conditions and the following disclaimer.
- * 
- *   * Redistributions in binary form must reproduce the above copyright notice,
- *     this list of conditions and the following disclaimer in the documentation
- *     and/or other materials provided with the distribution.
- * 
- *   * Neither the name of halcyon nor the names of its
- *     contributors may be used to endorse or promote products derived from
- *     this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-
-/*
  * Copyright (c) InWorldz Halcyon Developers
  * Copyright (c) Contributors, http://opensimulator.org/
  *
@@ -67,7 +36,6 @@ using OpenSim.Framework.Client;
 using OpenSim.Framework.Communications.Cache;
 using OpenSim.Framework.Geom;
 using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes.Types;
 using OpenSim.Region.Physics.Manager;
 using OpenSim.Region.Framework.Scenes.Serialization;
 using System.Threading.Tasks;
@@ -265,6 +233,23 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get { return m_appearance; }
             set { m_appearance = value; }
+        }
+
+        public AgentPreferencesData m_agentPrefs;
+
+        public AgentPreferencesData AgentPrefs
+        {
+            get { return m_agentPrefs; }
+            set
+            {
+                bool updatedHover = (m_agentPrefs == null) ? true : (m_agentPrefs.HoverHeight != (float)value.HoverHeight);
+                m_agentPrefs = value;
+                if (updatedHover)
+                {
+                    // keep other viewers in sync
+                    SendAppearanceToAllOtherAgents();
+                }
+            }
         }
 
         protected List<SceneObjectGroup> m_attachments = new List<SceneObjectGroup>();
@@ -2459,11 +2444,8 @@ namespace OpenSim.Region.Framework.Scenes
                             SetHeight(m_avHeight);
                         }
 
-                        if (!fromCrossing)
-                        {
-                            m_animPersistUntil = 0;    // abort any timed animation
-                            TrySetMovementAnimation("STAND");
-                        }
+                        m_animPersistUntil = 0;    // abort any timed animation
+                        TrySetMovementAnimation("STAND");
                     }
                 }
             }
@@ -3480,15 +3462,16 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Send appearance data to an agent that isn't this one.
+        /// Send MY appearance data to ANOTHER different avatar (that isn't this one).
         /// </summary>
-        /// <param name="avatar"></param>
-        public void SendAppearanceToOtherAgent(ScenePresence avatar)
+        /// <param name="otherAvatar"></param>
+        public void SendAppearanceToOtherAgent(ScenePresence otherAvatar)
         {
             //m_log.WarnFormat("[SP]: Sending avatar appearance for {0} to {1}. Face[0]: {2}, Owner: {3}", this.Name, avatar.Name,
             //    m_appearance.Texture.FaceTextures[0] != null ? m_appearance.Texture.FaceTextures[0].TextureID.ToString() : "null", m_appearance.Owner);
 
-            avatar.ControllingClient.SendAppearance(m_appearance);
+            float hover = (this.AgentPrefs != null) ? (float)this.AgentPrefs.HoverHeight : 0.0f;
+            otherAvatar.ControllingClient.SendAppearance(m_appearance, new Vector3(0.0f, 0.0f, (float)hover));
         }
 
         private void InitialAttachmentRez()
@@ -4150,6 +4133,7 @@ namespace OpenSim.Region.Framework.Scenes
                 cAgent.GodLevel = (byte) 0;
 
             cAgent.Appearance = new AvatarAppearance(m_appearance);
+            cAgent.AgentPrefs = new AgentPreferencesData(m_agentPrefs);
 
             // Animations
             try
@@ -4248,6 +4232,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_godlevel = cAgent.GodLevel;
 
             m_appearance = new AvatarAppearance(cAgent.Appearance);
+            m_agentPrefs = new AgentPreferencesData(cAgent.AgentPrefs);
 
             // Animations
             try

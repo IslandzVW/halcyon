@@ -7256,12 +7256,18 @@ namespace InWorldz.Phlox.Engine
 
         public string llGetAgentLanguage(string id)
         {
-            // This should only return a value if the avatar is in the same region
-            //ckrinke 1-30-09 : This needs to parse the XMLRPC language field supplied
-            //by the client at login. Currently returning only en-us until our I18N
-            //effort gains momentum
-            
-            return "en-us";
+            UUID agent = new UUID();
+            if (!UUID.TryParse(id, out agent)) return String.Empty;
+
+            ScenePresence presence = World.GetScenePresence(agent);
+            if (presence == null) return String.Empty;
+            if (presence.IsChildAgent) return String.Empty;
+
+            AgentPreferencesData prefs = presence.AgentPrefs;
+            if (prefs == null) return String.Empty;
+            if (!prefs.LanguageIsPublic) return String.Empty;
+
+            return prefs.Language;
         }
 
         public void llAdjustSoundVolume(float volume)
@@ -10140,10 +10146,16 @@ namespace InWorldz.Phlox.Engine
                         else
                             phantom = false;
 
-                        //no matter how many parts are selected, this physics change
-                        //is applied to the group, so dont apply in a loop
-                        m_host.ParentGroup.ScriptSetPhantomStatus(phantom);
-
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                //no matter how many parts are selected, this physics change
+                                //is applied to the group, so dont apply in a loop
+                                part.ParentGroup.ScriptSetPhantomStatus(phantom);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_PHYSICS:
@@ -10157,9 +10169,16 @@ namespace InWorldz.Phlox.Engine
                         else
                             physics = false;
 
-                        //no matter how many parts are selected, this physics change
-                        //is applied to the group, so dont apply in a loop
-                        m_host.ParentGroup.ScriptSetPhysicsStatus(physics);
+                        foreach (var o in links)
+                        {
+                            if (o is SceneObjectPart)
+                            {
+                                SceneObjectPart part = o as SceneObjectPart;
+                                //no matter how many parts are selected, this physics change
+                                //is applied to the group, so dont apply in a loop
+                                part.ParentGroup.ScriptSetPhysicsStatus(physics);
+                            }
+                        }
                         break;
 
                     case (int)ScriptBaseClass.PRIM_TEMP_ON_REZ:
@@ -12027,16 +12046,25 @@ namespace InWorldz.Phlox.Engine
 
         private int ClearPrimMedia(SceneObjectPart part, int face)
         {
+            IMoapModule module = m_ScriptEngine.World.RequestModuleInterface<IMoapModule>();
+            if (null == module)
+                return ScriptBaseClass.LSL_STATUS_NOT_SUPPORTED;
+
+            if (face == ScriptBaseClass.ALL_SIDES)
+            {
+                for (uint i = 0; i < part.GetNumberOfSides(); i++)
+                {
+                    module.ClearMediaEntry(part, face);
+                }
+                return ScriptBaseClass.LSL_STATUS_OK;
+            }
+
             // LSL Spec http://wiki.secondlife.com/wiki/LlClearPrimMedia says to fail silently if face is invalid
             // Assuming silently fail means sending back LSL_STATUS_OK.  Ideally, need to check this.
             // FIXME: Don't perform the media check directly
             if (face < 0 || face > part.GetNumberOfSides() - 1)
                 return ScriptBaseClass.LSL_STATUS_NOT_FOUND;
-
-            IMoapModule module = m_ScriptEngine.World.RequestModuleInterface<IMoapModule>();
-            if (null == module)
-                return ScriptBaseClass.LSL_STATUS_NOT_SUPPORTED;
-
+            
             module.ClearMediaEntry(part, face);
 
             return ScriptBaseClass.LSL_STATUS_OK;
@@ -13424,18 +13452,31 @@ namespace InWorldz.Phlox.Engine
 
         public void llMapDestination(string simname, LSL_Vector pos, LSL_Vector lookAt)
         {
-
+            UUID targetAvatar = UUID.Zero;
             VM.DetectVariables detectedParams = _thisScript.ScriptState.GetDetectVariables(0);
-            if (detectedParams == null) return; // only works on the first detected avatar
 
-            ScenePresence avatar = World.GetScenePresence(UUID.Parse(detectedParams.Key));
-            if (avatar != null)
+            // Figure out who to apply this to.
+            if (detectedParams != null) // e.g. touch_start, someone clicked
             {
-                avatar.ControllingClient.SendScriptTeleportRequest(m_host.Name, simname,
-                                                                   new Vector3(pos.X, pos.Y, pos.Z),
-                                                                   new Vector3(lookAt.X, lookAt.Y, lookAt.Z));
+                targetAvatar = UUID.Parse(detectedParams.Key);
             }
-            
+            else
+            {
+                if (m_host.IsAttachment)
+                    targetAvatar = m_host.OwnerID;
+            }
+
+            if (targetAvatar != UUID.Zero)
+            {
+                ScenePresence avatar = World.GetScenePresence(targetAvatar);
+                if (avatar != null)
+                {
+                    avatar.ControllingClient.SendScriptTeleportRequest(m_host.Name, simname,
+                        new Vector3(pos.X, pos.Y, pos.Z),
+                        new Vector3(lookAt.X, lookAt.Y, lookAt.Z));
+                }
+            }
+
             ScriptSleep(1000);
         }
 
@@ -14681,7 +14722,7 @@ namespace InWorldz.Phlox.Engine
                     }
                 }
 
-                int textLength = notecardData.Length;
+                int textLength = Encoding.UTF8.GetByteCount(notecardData.ToString());
                 string sNotecardData = "Linden text version 2\n{\nLLEmbeddedItems version 1\n{\ncount 0\n}\nText length "
                     + textLength.ToString() + "\n" + notecardData.ToString() + "}\n";
 
