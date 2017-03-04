@@ -695,14 +695,23 @@ namespace OpenSim.Region.Framework.Scenes
         {
             TaskInventoryItem newItem = null;
             bool scriptUpdate = false;
-            int type = m_items[itemID].InvType;
-            if (type == 10) // Script
+
+            // Avoid a race condition where the viewer might send what results in a second _Replace(itemID, null) 
+            // for a delete which is a *duplicate*. This can happen if the user deletes the TaskInventoryItem 
+            // a *second* time before the viewer updates the Contents to remove it. This change just handle 
+            // the itemID no longer being present in the items list.
+            TaskInventoryItem item;
+            if (!m_items.TryGetValue(itemID, out item))
+                return;
+
+            InventoryType type = (InventoryType) item.InvType;
+            if (type == InventoryType.LSL) // Script
                 scriptUpdate = true;
             if ((replaceArgs != null) && (replaceArgs.ReplacementItem != null))
                 newItem = replaceArgs.ReplacementItem;
 
-            m_items.Remove(itemID);
-            _removedItems.Add(itemID);
+            if (m_items.Remove(itemID))
+                _removedItems.Add(itemID);
             m_inventorySerial++;
             m_part.TriggerScriptChangedEvent(Changed.INVENTORY);
             HasInventoryChanged = true;
