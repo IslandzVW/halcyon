@@ -70,6 +70,7 @@ namespace MOSES.FreeSwitchVoice
 
         // Freeswitch Config pieces
         private string m_realm = String.Empty;
+        private string m_apiPrefix = String.Empty;
 
         public void Initialize(IConfigSource config)
         {
@@ -88,7 +89,7 @@ namespace MOSES.FreeSwitchVoice
 
                 if (m_enabled)
                 {
-                    m_log.InfoFormat("[FreeSwitchVoice] using FreeSwitch server {0}", m_accountService);
+                    m_log.InfoFormat("[FreeSwitchVoice] using FreeSwitch MGMT gateway: {0}", m_accountService);
                 }
                 else
                 {
@@ -109,6 +110,11 @@ namespace MOSES.FreeSwitchVoice
                 XmlNode node = dirs[0];
                 m_log.InfoFormat("[FreeSwitchVoice] using FreeSwitch realm {0}", node.InnerText);
                 m_realm = node.InnerText;
+
+                dirs = resp.GetElementsByTagName("APIPrefix");
+                node = dirs[0];
+                m_log.InfoFormat("[FreeSwitchVoice] using FreeSwitch client endpoint: {0}/{1}", m_realm, node.InnerText);
+                m_apiPrefix = node.InnerText;
             }
             catch (Exception e)
             {
@@ -283,7 +289,7 @@ namespace MOSES.FreeSwitchVoice
                 if(GetVoiceAccountInfo(agentname, avatarName, out account))
                 {
                     LLSDVoiceAccountResponse voiceAccountResponse =
-                    new LLSDVoiceAccountResponse(agentname, account.password, account.realm, String.Format("http://{0}/fsapi", m_realm));
+                    new LLSDVoiceAccountResponse(agentname, account.password, account.realm, String.Format("http://{0}/{1}", m_realm, m_apiPrefix));
 
                     string r = LLSDHelpers.SerializeLLSDReply(voiceAccountResponse);
 
