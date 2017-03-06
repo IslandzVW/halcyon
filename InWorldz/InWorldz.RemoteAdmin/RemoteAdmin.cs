@@ -41,6 +41,7 @@ using Nini.Config;
 using Nwc.XmlRpc;
 
 using OpenMetaverse;
+using InWorldz.JWT;
 
 using OpenSim;
 using OpenSim.Framework;
@@ -64,11 +65,14 @@ namespace InWorldz.RemoteAdmin
         private Dictionary<string, Dictionary<string, XmlMethodHandler>> m_commands = 
             new Dictionary<string, Dictionary<string, XmlMethodHandler>>();
 
+        private JWTSignatureUtil m_sigUtil;
+
         public delegate object XmlMethodHandler(IList args, IPEndPoint client);
 
         public RemoteAdmin()
         {
             AddCommand("session", "login_with_password", SessionLoginWithPassword);
+            AddCommand("session", "login_with_token", SessionLoginWithToken);
             AddCommand("session", "logout", SessionLogout);
 
             AddCommand("Console", "Command", ConsoleCommandHandler);
@@ -78,6 +82,7 @@ namespace InWorldz.RemoteAdmin
             sessionTimer = new Timer(60000); // 60 seconds
             sessionTimer.Elapsed += sessionTimer_Elapsed;
             sessionTimer.Enabled = true;
+            m_sigUtil = new JWTSignatureUtil(publicKeyPath: "./server.crt");
         }
 
         /// <summary>
@@ -207,6 +212,27 @@ namespace InWorldz.RemoteAdmin
             else
             {
                 throw new Exception("Invalid Username or Password");
+            }
+
+            return (sessionId.ToString());
+        }
+
+        private object SessionLoginWithToken(IList args, IPEndPoint remoteClient)
+        {
+            UUID sessionId;
+            var token = new JWToken((string)args[0], m_sigUtil);
+
+            if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-admin"))
+            {
+                throw new Exception("Invalid Token");
+            }
+            else
+            {
+                lock (m_activeSessions)
+                {
+                    sessionId = UUID.Random();
+                    m_activeSessions.Add(sessionId, DateTime.Now);
+                }
             }
 
             return (sessionId.ToString());
