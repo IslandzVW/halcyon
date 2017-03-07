@@ -271,7 +271,7 @@ namespace OpenSim.Framework.Console
                     var token = new JWToken(authHeader.Substring(7), m_sigUtil);
 
                     // TODO: Make the scope strings come from some central list that can be registered into?
-                    if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
+                    if (token.Payload.Scope != "remote-console")
                     {
                         m_log.Warn($"[REMOTECONSOLE] StartSession invalid/expired/wrong scope JWToken from '{headers["remote_addr"]}'.");
                         return reply;
@@ -371,9 +371,9 @@ namespace OpenSim.Framework.Console
                     token = new JWToken(authHeader.Substring(7), m_sigUtil);
 
                     // TODO: Make the scope strings come from some central list that can be registered into?
-                    if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
+                    if (token.Payload.Scope != "remote-console")
                     {
-                        m_log.Warn($"[REMOTECONSOLE] CloseSession invalid/expired/wrong scope JWToken from '{headers["remote_addr"]}'.");
+                        m_log.Warn($"[REMOTECONSOLE] CloseSession wrong scope JWToken from '{headers["remote_addr"]}'.");
                         return reply;
                     }
 
@@ -464,9 +464,9 @@ namespace OpenSim.Framework.Console
                     var token = new JWToken(authHeader.Substring(7), m_sigUtil);
 
                     // TODO: Make the scope strings come from some central list that can be registered into?
-                    if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
+                    if (token.Payload.Scope != "remote-console")
                     {
-                        m_log.Warn($"[REMOTECONSOLE] SessionCommand invalid/expired/wrong scope JWToken from '{headers["remote_addr"]}'.");
+                        m_log.Warn($"[REMOTECONSOLE] SessionCommand wrong scope JWToken from '{headers["remote_addr"]}'.");
                         return reply;
                     }
 
@@ -586,7 +586,7 @@ namespace OpenSim.Framework.Console
                     var token = new JWToken(authHeader.Substring(7), m_sigUtil);
 
                     // TODO: Make the scope strings come from some central list that can be registered into?
-                    if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
+                    if (token.Payload.Scope != "remote-console")
                     {
                         m_log.Warn($"[REMOTECONSOLE] ReadResponses invalid/expired/wrong scope JWToken from '{httpRequest.RemoteIPEndPoint}'.");
                         return;
