@@ -2414,6 +2414,7 @@
       <Reference name="OpenSim.Framework.Servers"/>
       <Reference name="OpenSim.Framework.Servers.HttpServer"/>
       <Reference name="OpenSim.Framework.Console"/>
+      <Reference name="InWorldz.JWT"/>
       <Reference name="log4net" path="../../bin/"/>
 
       <Files>
