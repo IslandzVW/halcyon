@@ -222,9 +222,9 @@ namespace InWorldz.RemoteAdmin
             UUID sessionId;
             var token = new JWToken((string)args[0], m_sigUtil);
 
-            if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-admin"))
+            if (token.Payload.Scope != "remote-admin")
             {
-                throw new Exception("Invalid Token");
+                throw new Exception("Invalid Token Scope");
             }
             else
             {
