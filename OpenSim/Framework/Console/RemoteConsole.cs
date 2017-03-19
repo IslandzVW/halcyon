@@ -66,6 +66,7 @@ namespace OpenSim.Framework.Console
         private Dictionary<UUID, ConsoleConnection> m_Connections;
         private string m_AllowedOrigin;
         private JWTSignatureUtil m_sigUtil;
+        private String m_certFilename = String.Empty;   // e.g. "server.crt"
 
         public RemoteConsole(string defaultPrompt) : base(defaultPrompt)
         {
@@ -77,7 +78,7 @@ namespace OpenSim.Framework.Console
             m_LineNumber = 0;
             m_Connections = new Dictionary<UUID, ConsoleConnection>();
             m_AllowedOrigin = String.Empty;
-            m_sigUtil = new JWTSignatureUtil(publicKeyPath: "./server.crt");
+            m_sigUtil = null;   // conditionally initialized in ReadConfig
         }
 
         public void ReadConfig(IConfigSource config)
@@ -89,6 +90,11 @@ namespace OpenSim.Framework.Console
                 return;
 
             m_AllowedOrigin = netConfig.GetString("ConsoleAllowedOrigin", String.Empty);
+
+            m_certFilename = netConfig.GetString("SSLCertFile", String.Empty);
+
+            if (!String.IsNullOrWhiteSpace(m_certFilename))
+                m_sigUtil = new JWTSignatureUtil(publicKeyPath: m_certFilename);
         }
 
         public void SetServer(IHttpServer server)
