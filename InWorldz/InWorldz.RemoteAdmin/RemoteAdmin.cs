@@ -65,12 +65,18 @@ namespace InWorldz.RemoteAdmin
         private Dictionary<string, Dictionary<string, XmlMethodHandler>> m_commands = 
             new Dictionary<string, Dictionary<string, XmlMethodHandler>>();
 
+        private IConfigSource m_config;
+
         private JWTSignatureUtil m_sigUtil;
+        private String m_certFilename = String.Empty;   // e.g. "server.crt"
 
         public delegate object XmlMethodHandler(IList args, IPEndPoint client);
 
         public RemoteAdmin()
         {
+            m_config = new IniConfigSource("Halcyon.ini");
+            m_certFilename = m_config.Configs["Network"].GetString("SSLCertFile", String.Empty);
+
             AddCommand("session", "login_with_password", SessionLoginWithPassword);
             AddCommand("session", "login_with_token", SessionLoginWithToken);
             AddCommand("session", "logout", SessionLogout);
@@ -82,7 +88,8 @@ namespace InWorldz.RemoteAdmin
             sessionTimer = new Timer(60000); // 60 seconds
             sessionTimer.Elapsed += sessionTimer_Elapsed;
             sessionTimer.Enabled = true;
-            m_sigUtil = new JWTSignatureUtil(publicKeyPath: "./server.crt");
+            if (!String.IsNullOrWhiteSpace(m_certFilename))
+                m_sigUtil = new JWTSignatureUtil(publicKeyPath: m_certFilename);
         }
 
         /// <summary>
