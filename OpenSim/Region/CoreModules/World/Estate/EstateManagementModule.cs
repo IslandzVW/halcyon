@@ -258,12 +258,15 @@ namespace OpenSim.Region.CoreModules.World.Estate
         {
             if (AgentId == UUID.Zero)
                 return EstateResult.InvalidReq; // not found
-            if (AgentId == m_scene.RegionInfo.EstateSettings.EstateOwner)
-                return EstateResult.InvalidReq; // never process EO
-            if (m_scene.IsEstateOwnerPartner(AgentId))
-                return EstateResult.InvalidReq; // never process EO
-            if (AgentId == m_scene.RegionInfo.MasterAvatarAssignedUUID)
-                return EstateResult.InvalidReq; // never process owner
+            if (isBan)
+            {
+                if (m_scene.IsEstateManager(AgentId))
+                    return EstateResult.InvalidReq; // never process EO
+                if (m_scene.IsEstateOwnerPartner(AgentId))
+                    return EstateResult.InvalidReq; // never process EO
+                if (AgentId == m_scene.RegionInfo.MasterAvatarAssignedUUID)
+                    return EstateResult.InvalidReq; // never process owner
+            }
 
             EstateBan[] banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
 

@@ -947,7 +947,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (recipientParentFolderId == UUID.Zero)
             {
-                InventoryFolderBase rootFolder = recipientUserInfo.FindFolderForType((int)AssetType.RootFolder);
+                InventoryFolderBase rootFolder = recipientUserInfo.FindFolderForType((int)FolderType.Root);
                 recipientParentFolderId = rootFolder.ID;
             }
 
@@ -1256,13 +1256,13 @@ namespace OpenSim.Region.Framework.Scenes
 
             try
             {
-                currentOutfitFolder = userInfo.FindFolderForType((int)AssetType.CurrentOutfitFolder);
+                currentOutfitFolder = userInfo.FindFolderForType((int)FolderType.CurrentOutfit);
             }
             catch (InventoryStorageException)
             {
                 // could not find it by type. load root and try to find it by name.
                 InventorySubFolderBase foundFolder = null;
-                InventoryFolderBase rootFolder = userInfo.FindFolderForType((int)AssetType.RootFolder);
+                InventoryFolderBase rootFolder = userInfo.FindFolderForType((int)FolderType.Root);
                 foreach (var subfolder in rootFolder.SubFolders)
                 {
                     if (subfolder.Name == COF_NAME)
@@ -1920,7 +1920,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             UUID newFolderID = UUID.Random();
 
-            InventoryFolderBase rootFolder = profile.FindFolderForType((int)AssetType.RootFolder);
+            InventoryFolderBase rootFolder = profile.FindFolderForType((int)FolderType.Root);
             profile.CreateFolder(category, newFolderID, (short)AssetType.Unknown, rootFolder.ID);
 
             foreach (UUID itemID in items)
@@ -2478,9 +2478,11 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="groupID"></param>
         /// <param name="action"></param>
         /// <param name="destinationID"></param>
-        public virtual void DeRezObjects(IClientAPI remoteClient, ICollection<uint> objectParts, 
+        /// <returns>The number of items returned/removed.</returns>
+        public virtual int DeRezObjects(IClientAPI remoteClient, ICollection<uint> objectParts, 
             UUID groupId, DeRezAction action, UUID destinationID)
         {
+            int count = 0;
             //get the intended behavior of this action
             DeRezActionResult intendedResult = this.GetIntendedResult(action);
 
@@ -2500,14 +2502,14 @@ namespace OpenSim.Region.Framework.Scenes
                         foreach (uint partInfo in objectParts)
                         {
                             SceneObjectGroup grp = this.FindGroupAppropriateForDeRez(partInfo);
-                            if (grp == null) return; //couldn't find groups
+                            if (grp == null) return count; //couldn't find groups
                             if (grp.IsAttachment) continue; //none of this should be done on attachments
 
                             if (this.FindDeRezPermissions(remoteClient, grp, action) != this.GetIntendedResult(action))
                             {
                                 //missing permissions for one or more of the objects
                                 remoteClient.SendAlertMessage("Insuffient permissions on '" + grp.Name + "'.");
-                                return;
+                                return count;
                             }
                             else
                             {
@@ -2516,7 +2518,7 @@ namespace OpenSim.Region.Framework.Scenes
                                     //could not derez
                                     abort = true;
                                     remoteClient.SendBlueBoxMessage(UUID.Zero, String.Empty, "Could not take/remove '" + grp.Name + "', operation aborted.");
-                                    return;
+                                    return count;
                                 }
                             }
                         }
@@ -2527,7 +2529,7 @@ namespace OpenSim.Region.Framework.Scenes
                         foreach (uint partInfo in objectParts)
                         {
                             SceneObjectGroup grp = this.FindGroupAppropriateForDeRez(partInfo);
-                            if (grp == null) return; //couldn't find groups
+                            if (grp == null) return count; //couldn't find groups
                             if (grp.IsAttachment) continue; //none of this should be done on attachments
 
                             //protect against a return on the same object happing multiple times
@@ -2555,7 +2557,7 @@ namespace OpenSim.Region.Framework.Scenes
                             remoteClient.SendBlueBoxMessage(UUID.Zero, String.Empty, "Could not find objects to derez");
                         }
                         */
-                        return;
+                        return count;
                     }
 
                     //if we got here, we can start completing the requested action
@@ -2572,6 +2574,7 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         DeleteSceneObjects(groupsToDerez, false);
                     }
+                    count += groupsToDerez.Count;
                 }
                 finally
                 {
@@ -2585,6 +2588,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
             }
+
+            return count;
         }
 
         private bool AddToListIfDerezOk(DeRezActionResult intendedResult, SceneObjectGroup grp, List<SceneObjectGroup> groupsToDerez)
@@ -2837,11 +2842,11 @@ namespace OpenSim.Region.Framework.Scenes
                 //owner goes to trash, other goes to l&f
                 if (remoteClient.AgentId == uInfo.UserProfile.ID)
                 {
-                    destinationFolder = uInfo.FindFolderForType((int)AssetType.TrashFolder);
+                    destinationFolder = uInfo.FindFolderForType((int)FolderType.Trash);
                 }
                 else
                 {
-                    destinationFolder = uInfo.FindFolderForType((int)AssetType.LostAndFoundFolder);
+                    destinationFolder = uInfo.FindFolderForType((int)FolderType.LostAndFound);
                 }
 
                 this.CopyItemsToFolder(uInfo, destinationFolder.ID, ownerObjects.Value, remoteClient, true);
@@ -2878,7 +2883,7 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                     else
                     {
-                        InventoryFolderBase destinationFolder = uInfo.FindFolderForType((int)AssetType.LostAndFoundFolder);
+                        InventoryFolderBase destinationFolder = uInfo.FindFolderForType((int)FolderType.LostAndFound);
                         List<SceneObjectGroup> items = new List<SceneObjectGroup>();
                         items.Add(SOG);
 
@@ -2979,7 +2984,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 InventoryFolderBase topLevelFolder = uInfo.FindTopLevelFolderFor(desiredFolder.ID);
 
-                if ((topLevelFolder != null) && (topLevelFolder.Type != (int)AssetType.TrashFolder))
+                if ((topLevelFolder != null) && (topLevelFolder.Type != (int)FolderType.Trash))
                 {
                     return desiredFolder;
                 }
@@ -3036,7 +3041,7 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 try
                 {
-                    folder = uInfo.FindFolderForType((int)AssetType.RootFolder);
+                    folder = uInfo.FindFolderForType((int)FolderType.Root);
                 }
                 catch (Exception e)
                 {
@@ -4311,14 +4316,12 @@ namespace OpenSim.Region.Framework.Scenes
             return rootPart.ParentGroup;
         }
 
-        public virtual bool returnObjects(SceneObjectGroup[] returnobjects)
+        public virtual int returnObjects(SceneObjectGroup[] returnobjects)
         {
-            returnObjects(returnobjects, "parcel owner return");
-
-            return true;
+            return returnObjects(returnobjects, "parcel owner return");
         }
 
-        public void returnObjects(SceneObjectGroup[] returnobjects, string reason)
+        public int returnObjects(SceneObjectGroup[] returnobjects, string reason)
         {
             List<uint> groupIds = new List<uint>();
             foreach (SceneObjectGroup grp in returnobjects)
@@ -4328,7 +4331,7 @@ namespace OpenSim.Region.Framework.Scenes
                 groupIds.Add(grp.RootPart.LocalId);
             }
 
-            DeRezObjects(null, groupIds, UUID.Zero, DeRezAction.Return, UUID.Zero);
+            return DeRezObjects(null, groupIds, UUID.Zero, DeRezAction.Return, UUID.Zero);
         }
 
         public void SetScriptRunning(IClientAPI controllingClient, UUID objectID, UUID itemID, bool running)

@@ -1501,7 +1501,7 @@ namespace OpenSim.Framework.Servers.HttpServer
             {
                 m_log.ErrorFormat("[BASE HTTP SERVER]: Error - {0}", e.Message);
                 m_log.ErrorFormat("[BASE HTTP SERVER]: Tip: Do you have permission to listen on port {0} ?", m_port);
-                m_log.ErrorFormat("[BASE HTTP SERVER]: Try:    netssh http add urlacl url={0}://+:{1}/ user={2}", 
+                m_log.ErrorFormat("[BASE HTTP SERVER]: Try:    netsh http add urlacl url={0}://+:{1}/ user={2}", 
                     Secure ? "https" : "http", m_port, Environment.UserName);
 
                 // We want this exception to halt the entire server since in current configurations we aren't too
@@ -1597,7 +1597,7 @@ namespace OpenSim.Framework.Servers.HttpServer
         // Fallback HTTP responses in case the HTTP error response files don't exist
         private static string getDefaultHTTP404(string host)
         {
-            return "<HTML><HEAD><TITLE>404 Page not found</TITLE><BODY><BR /><H1>Ooops!</H1><P>You have reached a Halcyon-based server, but must connect with a viewer application rather than a web browser.</P><P>If you are trying to log in with a viewer, your command line should specify: &quot;-loginpage http://" + host + "/?method=login -loginuri http://" + host + "/&quot;.</P></BODY></HTML>";
+            return "<HTML><HEAD><TITLE>404 Page not found</TITLE><BODY><BR /><H1>Ooops!</H1><P>You have reached a Halcyon-based server.</P><P>To log in to this virtual world, you must connect with a viewer application or web-based viewer.</P></BODY></HTML>";
         }
 
         private static string getDefaultHTTP500()

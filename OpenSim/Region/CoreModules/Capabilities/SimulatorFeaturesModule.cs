@@ -168,6 +168,7 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 m_features["RenderMaterialsCapability"] = m_RenderMaterialsCapability;
                 m_features["MaxMaterialsPerTransaction"] = m_MaxMaterialsPerTransaction;
                 m_features["DynamicPathfindingEnabled"] = m_DynamicPathfindingEnabled;
+                m_features["AvatarHoverHeightEnabled"] = true;
     
                 OSDMap typesMap = new OSDMap();
                 typesMap["convex"] = true;

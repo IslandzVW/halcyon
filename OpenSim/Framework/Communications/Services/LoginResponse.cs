@@ -247,6 +247,15 @@ namespace OpenSim.Framework.Communications.Services
                                          "false"));
         }
 
+        public XmlRpcResponse CreateIPBannedResponseLLSD()
+        {
+            // We'll obfuscate the reason for failure, however make it different so that we know when it is reported to Support.
+            return GenerateFailureResponse(
+                        "key",
+                        "You are not permitted to log in at this time.",
+                        "false");
+        }
+
         public OSD CreateLoginFailedResponseLLSD()
         {
             return GenerateFailureResponseLLSD(

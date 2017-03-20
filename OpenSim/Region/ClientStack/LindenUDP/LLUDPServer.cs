@@ -558,7 +558,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     */
 
                     // Set the resent flag
-                    outgoingPacket.Buffer[0] = (byte)(outgoingPacket.Buffer[0] | Helpers.MSG_RESENT);
+                    outgoingPacket.Buffer.Data[0] = (byte)(outgoingPacket.Buffer.Data[0] | Helpers.MSG_RESENT);
                     outgoingPacket.Category = (int) ThrottleOutPacketType.Resend;
 
                     // Bump up the resend count on this packet
@@ -587,7 +587,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         internal void SendPacketFinal(OutgoingPacket outgoingPacket)
         {
-            byte[] buffer = outgoingPacket.Buffer;
+            byte[] buffer = outgoingPacket.Buffer.Data;
             byte flags = buffer[0];
             bool isResend = (flags & Helpers.MSG_RESENT) != 0;
             bool isReliable = (flags & Helpers.MSG_RELIABLE) != 0;

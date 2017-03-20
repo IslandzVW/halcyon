@@ -507,7 +507,7 @@ namespace OpenSim.Framework.Communications.Cache
                 }
                 else
                 {
-                    InventoryFolderBase folder = FindFolderForType((int)AssetType.RootFolder);
+                    InventoryFolderBase folder = FindFolderForType((int)FolderType.Root);
                     item.Folder = folder.ID;
                 }
             }
@@ -632,7 +632,7 @@ namespace OpenSim.Framework.Communications.Cache
                 //next best folder will be the user root folder, it has to exist
                 try
                 {
-                    bestFolderForType = provider.FindFolderForType(m_userProfile.ID, AssetType.RootFolder);
+                    bestFolderForType = provider.FindFolderForType(m_userProfile.ID, (AssetType)FolderType.Root);
                 }
                 catch
                 { }

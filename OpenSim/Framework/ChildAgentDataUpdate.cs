@@ -174,7 +174,6 @@ namespace OpenSim.Framework
         {
             AgentID = new UUID(cAgent.AgentID);
 
-            // next: ???
             Size = new Vector3();
             Size.Z = cAgent.AVHeight;
 
@@ -250,6 +249,12 @@ namespace OpenSim.Framework
         Crossing = (1 << 1)
     }
 
+    [Flags]
+    public enum PresenceFlags
+    {
+        DebugCrossings = (1 << 0)
+    }
+
     public class AgentData : IAgentData
     {
         public ulong AgentDataCreatedOn = Util.GetLongTickCount();
@@ -294,6 +299,9 @@ namespace OpenSim.Framework
         // Appearance
         public AvatarAppearance Appearance;
 
+        // AgentPreferences from viewer
+        public AgentPreferencesData AgentPrefs;
+
         public string CallbackURI;
 
         public UUID SatOnGroup;
@@ -308,6 +316,10 @@ namespace OpenSim.Framework
 
         public Vector3 ConstantForces;
         public bool ConstantForcesAreLocal;
+
+        public ulong PresenceFlags;
+
+        public bool AvatarAsAPrim;
 
         public virtual OSDMap Pack()
         {
@@ -362,16 +374,15 @@ namespace OpenSim.Framework
                     anims.Add(aanim.PackUpdateMessage());
                 args["animations"] = anims;
             }
-            
-            if ((Appearance != null) && (Appearance.Texture != null))
-                args["texture_entry"] = OSD.FromBinary(Appearance.Texture.GetBytes());
 
-            if ((Appearance != null) && (Appearance.VisualParams != null) && (Appearance.VisualParams.Length > 0))
-                args["visual_params"] = OSD.FromBinary(Appearance.VisualParams);
-
-            // We might not pass this in all cases...
             if (Appearance != null)
             {
+                // We might not pass this in all cases...
+                if (Appearance.Texture != null)
+                    args["texture_entry"] = OSD.FromBinary(Appearance.Texture.GetBytes());
+                if ((Appearance.VisualParams != null) && (Appearance.VisualParams.Length > 0))
+                    args["visual_params"] = OSD.FromBinary(Appearance.VisualParams);
+
                 OSDArray wears = new OSDArray(AvatarWearable.MAX_WEARABLES * 2);
                 for (int i = 0; i < AvatarWearable.MAX_WEARABLES; i++)
                 {
@@ -383,6 +394,19 @@ namespace OpenSim.Framework
                 args["wearables"] = wears;
             }
 
+            // AgentPreferences from viewer
+            if (AgentPrefs != null)
+            {
+                args["hover_height"] = AgentPrefs.HoverHeight;
+                args["access_prefs"] = AgentPrefs.AccessPrefs;
+                args["perm_everyone"] = AgentPrefs.PermEveryone;
+                args["perm_group"] = AgentPrefs.PermGroup;
+                args["perm_next_owner"] = AgentPrefs.PermNextOwner;
+                args["language"] = AgentPrefs.Language;
+                args["language_is_public"] = AgentPrefs.LanguageIsPublic;
+                args["principal_id"] = m_id;
+            }
+
             if (!String.IsNullOrEmpty(CallbackURI))
                 args["callback_uri"] = OSD.FromString(CallbackURI);
 
@@ -392,6 +416,8 @@ namespace OpenSim.Framework
                 args["sat_on_prim"] = OSD.FromUUID(SatOnPrim);
                 args["sit_offset"] = OSD.FromString(SatOnPrimOffset.ToString());
             }
+
+            args["avatar_as_a_prim"] = OSD.FromBoolean(AvatarAsAPrim);
 
             return args;
         }
@@ -548,6 +574,9 @@ namespace OpenSim.Framework
             if (args.ContainsKey("callback_uri"))
                 CallbackURI = args["callback_uri"].AsString();
 
+            if (args.ContainsKey("avatar_as_a_prim"))
+                AvatarAsAPrim = args["avatar_as_a_prim"].AsBoolean();
+
             if (args.ContainsKey("sat_on_group"))
             {
                 SatOnGroup = args["sat_on_group"].AsUUID();
@@ -565,6 +594,41 @@ namespace OpenSim.Framework
                     // The following is compatible with OSD.FromVector3(vec), since Vector3.TryParse is not.
                     SatOnPrimOffset = args["sit_offset"].AsVector3();
                 }
+            }
+
+            // Initialize AgentPrefs from viewer
+            AgentPrefs = new AgentPreferencesData();
+            if (args.ContainsKey("hover_height"))
+            {
+                AgentPrefs.HoverHeight = args["hover_height"];
+            }
+            if (args.ContainsKey("access_prefs"))
+            {
+                AgentPrefs.AccessPrefs = args["access_prefs"];
+            }
+            if (args.ContainsKey("perm_everyone"))
+            {
+                AgentPrefs.PermEveryone = args["perm_everyone"];
+            }
+            if (args.ContainsKey("perm_group"))
+            {
+                AgentPrefs.PermGroup = args["perm_group"];
+            }
+            if (args.ContainsKey("perm_next_owner"))
+            {
+                AgentPrefs.PermNextOwner = args["perm_next_owner"];
+            }
+            if (args.ContainsKey("language"))
+            {
+                AgentPrefs.Language = args["language"];
+            }
+            if (args.ContainsKey("language_is_public"))
+            {
+                AgentPrefs.LanguageIsPublic = args["language_is_public"];
+            }
+            if (args.ContainsKey("principal_id"))
+            {
+                AgentPrefs.PrincipalID = args["principal_id"];
             }
         }
 

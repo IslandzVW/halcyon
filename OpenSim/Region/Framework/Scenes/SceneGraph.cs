@@ -334,7 +334,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                 if (entityAdded)
                 {
-                    m_numPrim += sceneObject.PrimCount;
+                    m_numPrim += sceneObject.PartCount;
                     m_parentScene.EventManager.TriggerParcelPrimCountTainted();
 
                     if (attachToBackup)
@@ -391,7 +391,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     if (!resultOfObjectLinked)
                     {
-                        m_numPrim -= group.PrimCount;
+                        m_numPrim -= group.PartCount;
 
                         if ((group.RootPart.Flags & PrimFlags.Physics) == PrimFlags.Physics)
                         {
@@ -861,11 +861,12 @@ namespace OpenSim.Region.Framework.Scenes
                 return;
             }
 
-            // it's a HUD and someone else's...
-            if (SceneObjectPart.IsAttachmentPointOnHUD(AttachmentPt) && (group.OwnerID != remoteClient.AgentId))
+            if ((group.OwnerID != remoteClient.AgentId))
             {
-                m_log.WarnFormat("[SCENE] Invalid wear HUD owned by {0} on {1} attachment point {2} object '{3}'.",
-                    group.UUID, remoteClient.AgentId, AttachmentPt, group.Name);
+                // Even for bots, the group.OwnerID will be set to the bot ID, so this is a safe check.
+                m_log.WarnFormat(
+                    "[SCENE] Invalid wear attachment owned by {0} on {1} object '{2}'.",
+                    group.UUID, remoteClient.AgentId, group.Name);
                 return;
             }
 
@@ -1967,6 +1968,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if ((parentGroup.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                     return;
 
+                if (parentGroup.IsAttachment)
+                {
+                    client.SendAlertMessage("Cannot link objects while attached: nothing to link.");
+                    return;
+                }
+
                 foreach (uint id in childPrimIds)
                 {
                     SceneObjectGroup group = this.GetGroupByPrim(id);
@@ -1976,6 +1983,11 @@ namespace OpenSim.Region.Framework.Scenes
                         return;
                     if ((group.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                         return;
+                    if (group.IsAttachment)
+                    {
+                        client.SendAlertMessage("Cannot link objects while attached: nothing to link.");
+                        return;
+                    }
 
                     if (group.RootPart.LocalId != parentPrimId)
                     {
@@ -2017,6 +2029,9 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     parentGroup.LinkOtherGroupPrimsToThisGroup(child);
                 }
+
+                // Now fix avatar link numbers
+                parentGroup.RecalcSeatedAvatarLinks();
 
                 // We need to explicitly resend the newly link prim's object properties since no other actions
                 // occur on link to invoke this elsewhere (such as object selection)
@@ -2061,6 +2076,7 @@ namespace OpenSim.Region.Framework.Scenes
                             continue;
                         if ((part.ParentGroup.RootPart.OwnerMask & (uint)PermissionMask.Modify) != (uint)PermissionMask.Modify)
                             continue;
+
                         if (part.LinkNum < 2) // Root or single
                             rootParts.Add(part);
                         else
@@ -2152,6 +2168,12 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
+                // Now fix avatar link numbers
+                foreach (SceneObjectGroup g in affectedGroups)
+                {
+                    g.RecalcSeatedAvatarLinks();
+                }
+
                 // Finally, trigger events in the roots
                 //
                 foreach (SceneObjectGroup g in affectedGroups)
@@ -2240,7 +2262,7 @@ namespace OpenSim.Region.Framework.Scenes
             SceneObjectGroup original = GetGroupByPrim(originalPrimID);
             if (original != null)
             {
-                if (m_parentScene.Permissions.CanDuplicateObject(original.PrimCount, original.UUID, AgentID, original.AbsolutePosition))
+                if (m_parentScene.Permissions.CanDuplicateObject(original.PartCount, original.UUID, AgentID, original.AbsolutePosition))
                 {
                     ScenePresence sp;
                     if (!TryGetAvatar(AgentID, out sp)) sp = null;
@@ -2276,7 +2298,7 @@ namespace OpenSim.Region.Framework.Scenes
                     // think it's selected, so it will never send a deselect...
                     copy.SetUnselectedForCopy();
 
-                    m_numPrim += copy.PrimCount;
+                    m_numPrim += copy.PartCount;
 
                     if (copy.OwnerID != AgentID)
                         copy.ChangeOwner(AgentID, GroupID);

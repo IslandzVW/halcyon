@@ -42,10 +42,27 @@ namespace OpenSim.Framework
         public const float REGION_VALID_Y = 128.0f;
         public const float REGION_VALID_Z = 128.0f;
 
+        // LSL constants (must match LSLConstants.cs from the script engine)
+        public const int LINK_SET = -1;
+        public const int LINK_ROOT = 1;
+        public const int LINK_ALL_OTHERS = -2;
+        public const int LINK_ALL_CHILDREN = -3;
+        public const int LINK_THIS = -4;
+        // Returned by llReturnObjectsByOwner and llReturnObjectsByID
+        public const int ERR_GENERIC = -1;
+        public const int ERR_PARCEL_PERMISSIONS = -2;
+        public const int ERR_MALFORMED_PARAMS = -3;
+        public const int ERR_RUNTIME_PERMISSIONS = -4;
+        public const int ERR_THROTTLED = -5;
+
         public const uint MaxGroups = 100;  // maximum number of groups a user can be a member of
         public const GroupPowers DefaultEveryonePowers = GroupPowers.AllowSetHome | GroupPowers.JoinChat | GroupPowers.AllowVoiceChat | GroupPowers.ReceiveNotices;
+        public const GroupPowers OWNER_GROUP_POWERS = (GroupPowers)ulong.MaxValue;
 
         public const string DefaultTexture = "89556747-24cb-43ed-920b-47caed15465f";
+
+        // Avatar "bounce" when descending into a no-entry parcel (e.g. banned)
+        public const float AVATAR_BOUNCE = 10.0f;
 
         // Summary:
         //     Used by EstateOwnerMessage packets

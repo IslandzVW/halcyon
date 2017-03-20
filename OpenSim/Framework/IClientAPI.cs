@@ -122,7 +122,7 @@ namespace OpenSim.Framework
     // really don't want to be passing packets in these events, so this is very temporary.
     public delegate void GenericCall4(Packet packet, IClientAPI remoteClient);
 
-    public delegate void DeRezObjects(
+    public delegate int DeRezObjects(
         IClientAPI remoteClient, ICollection<uint> objects, UUID groupId, DeRezAction action, UUID destinationID);
 
     public delegate void GenericCall5(IClientAPI remoteClient, bool status);
@@ -610,6 +610,7 @@ namespace OpenSim.Framework
         ulong ActiveGroupPowers { get; }
 
         ulong GetGroupPowers(UUID groupID);
+        ulong? GetGroupPowersOrNull(UUID groupID);
 
         bool IsGroupMember(UUID GroupID);
 
@@ -647,6 +648,8 @@ namespace OpenSim.Framework
         bool IsActive { get; }
 
         bool SendLogoutPacketWhenClosing { set; }
+
+        bool DebugCrossings { get; set; }
 
         // [Obsolete("LLClientView Specific - Circuits are unique to LLClientView")]
         uint CircuitCode { get; }
@@ -942,10 +945,9 @@ namespace OpenSim.Framework
         /// <summary>
         /// Send information about the given agent's appearance to another client.
         /// </summary>
-        /// <param name="agentID">The id of the agent associated with the appearance</param>
-        /// <param name="visualParams"></param>
-        /// <param name="textureEntry"></param>        
-        void SendAppearance(AvatarAppearance app);
+        /// <param name="app">Appearance to send</param>
+        /// <param name="hover">A vector representing the AgentPreferences hover height.</param>
+        void SendAppearance(AvatarAppearance app, Vector3 hover);
 
         void SendStartPingCheck(byte seq);
 
@@ -955,7 +957,15 @@ namespace OpenSim.Framework
         /// <param name="regionHandle"></param>
         /// <param name="localID"></param>        
         void SendKillObject(ulong regionHandle, uint localID);
-        void SendKillObjects(ulong regionHandle, uint[] localID);
+        void SendKillObjects(ulong regionHandle, uint[] localIDs);
+
+        /// <summary>
+        /// Kills the object at the client, but does not prevent further updates to the client
+        /// </summary>
+        /// <param name="regionHandle"></param>
+        /// <param name="localID"></param>
+        void SendNonPermanentKillObject(ulong regionHandle, uint localID);
+        void SendNonPermanentKillObjects(ulong regionHandle, uint[] localIDs);
 
         void SendAnimations(UUID[] animID, int[] seqs, UUID sourceAgentId, UUID[] objectIDs);
         void SendRegionHandshake(RegionInfo regionInfo, RegionHandshakeArgs args);

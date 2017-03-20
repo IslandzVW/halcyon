@@ -407,10 +407,11 @@ namespace OpenSim.Region.Framework.Scenes
                 }
                 else
                 {
+                    string context = (_sp == null) ? String.Empty : " for "+_sp.Name;
                     failure = true;
 
                     //hmm, someone stole this presence from us
-                    _log.ErrorFormat("[REMOTEPRESENCE]: Unable to update child presence established to {0} for {1}. Child presence missing.", establishResult, _sp.Name);
+                    _log.ErrorFormat("[REMOTEPRESENCE]: Unable to update child presence established to {0}{1}. Child presence missing.", establishResult, context);
                     establishResult = Tuple.Create(EstablishPresenceResult.ConnectionAborted, "Connection was aborted");
                 }
             });
@@ -654,6 +655,20 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         return true;
                     }
+                }
+            }
+
+            return false;
+        }
+
+        public bool HasEstablishedConnection(SimpleRegionInfo region)
+        {
+            AvatarRemotePresence pres;
+            lock (_remotePresences)
+            {
+                if (_remotePresences.TryGetValue(region.RegionHandle, out pres))
+                {
+                    return (pres.State == RemotePresenceState.Established);
                 }
             }
 

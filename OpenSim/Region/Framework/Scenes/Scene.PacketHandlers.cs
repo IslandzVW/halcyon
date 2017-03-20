@@ -748,14 +748,14 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool CheckFolderHeirarchyIsAppropriateForPurge(InventoryFolderBase folder, CachedUserInfo userProfile)
         {
-            if (folder.Type == (short)AssetType.TrashFolder ||
-                folder.Type == (short)AssetType.LostAndFoundFolder)
+            if (folder.Type == (short)FolderType.Trash||
+                folder.Type == (short)FolderType.LostAndFound)
             {
                 return true;
             }
 
             if (folder.ParentID == UUID.Zero ||
-                folder.Type == (short)AssetType.RootFolder)
+                folder.Type == (short)FolderType.Root)
             {
                 //got to the top, didnt find squat
                 return false;

@@ -67,12 +67,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
 
         private ConnectionFactory _connFactory;
 
-        public static UUID CURRENCY_ACCOUNT_ID = new UUID("efbfe4e6-95c2-4af3-9d27-25a35c2fd575");
+        public static UUID DEFAULT_CURRENCY_ACCOUNT_ID = new UUID("efbfe4e6-95c2-4af3-9d27-25a35c2fd575");
 
         /// <summary>
         /// Setup of the base vars that will be pulled from the ini file
         /// </summary>
         ///
+
+        public UUID CurrencyAccountID = DEFAULT_CURRENCY_ACCOUNT_ID;
 
         private float EnergyEfficiency = 0f;
         //private ObjectPaid handlerOnObjectPaid;
@@ -108,7 +110,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             if (connstr.Length <= 0) // EconomyConnString not found or blank, try the connection string this code previously used.
             {
                 m_log.Info("[CURRENCY] EconomyConnString not found in INI file section [Economy]. Falling back to legacy usage of ProfileConnString in [Profile].");
-                IConfig profileConfig = config.Configs["Profile"];
+            IConfig profileConfig = config.Configs["Profile"];
                 connstr = profileConfig.GetString("ProfileConnString", String.Empty);
             }
 
@@ -152,6 +154,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 PriceGroupCreate = economyConfig.GetInt("PriceGroupCreate", DEFAULT_PRICE_GROUP_CREATE);
 
                 CurrencySymbol = economyConfig.GetString("CurrencySymbol", CurrencySymbol);
+
+                string option = economyConfig.GetString("CurrencyAccount", DEFAULT_CURRENCY_ACCOUNT_ID.ToString()).Trim();
+                if (!UUID.TryParse(option, out CurrencyAccountID)) {
+                    CurrencyAccountID = DEFAULT_CURRENCY_ACCOUNT_ID;
+                }
 
                 // easy way for all accounts on debug servers to have some cash to test Buy operations and transfers
                 MinDebugMoney = economyConfig.GetInt("MinDebugMoney", Int32.MinValue);
@@ -290,7 +297,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
         public UUID ApplyCharge(UUID agentID, int transCode, int transAmount, string transDesc)
         {
             // for transCodes, see comments at EOF
-            UUID transID = doMoneyTransfer(agentID, CURRENCY_ACCOUNT_ID, transAmount, transCode, transDesc);
+            UUID transID = doMoneyTransfer(agentID, CurrencyAccountID, transAmount, transCode, transDesc);
 
             return transID;
         }
@@ -492,13 +499,22 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             SendMoneyBalanceTransaction(client, UUID.Zero, true, String.Empty, null);
         }
 
-        public bool ObjectGiveMoney(UUID objectID, UUID sourceAvatarID, UUID destAvatarID, int amount)
+        // Returns the transaction ID that shows up in the transaction history.
+        public string ObjectGiveMoney(UUID objectID, UUID sourceAvatarID, UUID destAvatarID, int amount, out string reason)
         {
-            if (amount < 0) return false;
+            reason = String.Empty;
+            if (amount <= 0)
+            {
+                reason = "INVALID_AMOUNT";
+                return String.Empty;
+            }
 
             SceneObjectPart part = findPrim(objectID);
             if (part == null)
-                return false;
+            {
+                reason = "MISSING_PERMISSION_DEBIT";    // if you can't find it, no perms either
+                return String.Empty;
+            }
 
             string objName = part.ParentGroup.Name;
             string description = String.Format("{0} paid {1}", objName, resolveAgentName(destAvatarID));
@@ -509,11 +525,15 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 int sourceAvatarFunds = getCurrentBalance(sourceAvatarID);
                 if (sourceAvatarFunds < amount)
                 {
-                    return false;
+                    reason = "LINDENDOLLAR_INSUFFICIENTFUNDS";
+                    return String.Empty;
                 }
             }
 
             UUID transID = doMoneyTransfer(sourceAvatarID, destAvatarID, amount, transType, description);
+            // the transID UUID is actually a ulong stored in a UUID.
+            string result = transID.GetULong().ToString();
+            reason = String.Empty;
 
             TransactionInfoBlock transInfo = new TransactionInfoBlock();
             transInfo.Amount = amount;
@@ -547,7 +567,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 SendMoneyBalanceTransaction(destAvatarClient, transID, true, destText, transInfo);
             }
 
-            return true;
+            return result;
         }
 
         private bool CheckPayObjectAmount(SceneObjectPart part, int amount)
@@ -643,6 +663,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             if (sourceAvatarClient == null)
             {
                 m_log.Debug("[CURRENCY]: Source Avatar not found!");
+                return;
             }
 
             if (transType == (int)MoneyTransactionType.PayObject)
@@ -762,7 +783,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 return;
 
             // perform actual money transaction
-            doMoneyTransfer(e.mBuyerID, CURRENCY_ACCOUNT_ID, costToApply, (int)MoneyTransactionType.ClassifiedCharge, e.mDescription);
+            doMoneyTransfer(e.mBuyerID, CurrencyAccountID, costToApply, (int)MoneyTransactionType.ClassifiedCharge, e.mDescription);
             SendMoneyBalance(remoteClient);   // send balance update
 
             if (e.mOrigPrice == 0) // this is an initial classified charge.

@@ -255,12 +255,12 @@ namespace InWorldz.Data.Inventory.Cassandra
             folder.Level = InventoryFolderBase.FolderLevel.TopLevel;
             folder.Owner = userId;
             folder.ParentID = UUID.Zero;
-            folder.Type = (short)OpenMetaverse.AssetType.TrashFolder;
+            folder.Type = (short)OpenMetaverse.FolderType.Trash;
 
             _storage.CreateFolder(folder);
 
             InventoryFolderBase trashFolderRetrieved = _storage.GetFolder(folder.ID);
-            Assert.AreEqual((short)OpenMetaverse.AssetType.TrashFolder, trashFolderRetrieved.Type);
+            Assert.AreEqual((short)OpenMetaverse.FolderType.Trash, trashFolderRetrieved.Type);
 
             InventoryFolderBase firstLeaf = new InventoryFolderBase();
             firstLeaf.ID = UUID.Random();
@@ -294,7 +294,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             folder.Level = InventoryFolderBase.FolderLevel.TopLevel;
             folder.Owner = userId;
             folder.ParentID = UUID.Zero;
-            folder.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            folder.Type = (short)OpenMetaverse.FolderType.Root;
 
             _storage.CreateFolder(folder);
 
@@ -347,7 +347,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             folder.Level = InventoryFolderBase.FolderLevel.TopLevel;
             folder.Owner = userId;
             folder.ParentID = UUID.Zero;
-            folder.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            folder.Type = (short)OpenMetaverse.FolderType.Root;
 
             _storage.CreateFolder(folder);
 
@@ -423,7 +423,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             folder.Level = InventoryFolderBase.FolderLevel.TopLevel;
             folder.Owner = userId;
             folder.ParentID = UUID.Zero;
-            folder.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            folder.Type = (short)OpenMetaverse.FolderType.Root;
 
             _storage.CreateFolder(folder);
 
@@ -473,7 +473,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             folder1.Level = InventoryFolderBase.FolderLevel.TopLevel;
             folder1.Owner = userId;
             folder1.ParentID = UUID.Zero;
-            folder1.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            folder1.Type = (short)OpenMetaverse.FolderType.Root;
 
             _storage.CreateFolder(folder1);
 
@@ -483,7 +483,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             folder2.Level = InventoryFolderBase.FolderLevel.TopLevel;
             folder2.Owner = userId;
             folder2.ParentID = UUID.Zero;
-            folder2.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            folder2.Type = (short)OpenMetaverse.FolderType.Root;
 
             _storage.CreateFolder(folder2);
 
@@ -562,7 +562,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             folder1.Level = InventoryFolderBase.FolderLevel.TopLevel;
             folder1.Owner = userId;
             folder1.ParentID = UUID.Zero;
-            folder1.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            folder1.Type = (short)OpenMetaverse.FolderType.Root;
 
             _storage.CreateFolder(folder1);
 
@@ -635,7 +635,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             folder1.Level = InventoryFolderBase.FolderLevel.TopLevel;
             folder1.Owner = userId;
             folder1.ParentID = UUID.Zero;
-            folder1.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            folder1.Type = (short)OpenMetaverse.FolderType.Root;
 
             try
             {
@@ -733,7 +733,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             folder1.Level = InventoryFolderBase.FolderLevel.TopLevel;
             folder1.Owner = userId;
             folder1.ParentID = UUID.Zero;
-            folder1.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            folder1.Type = (short)OpenMetaverse.FolderType.Root;
 
             _storage.CreateFolder(folder1);
 
@@ -744,7 +744,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             folder2.Level = InventoryFolderBase.FolderLevel.TopLevel;
             folder2.Owner = userId;
             folder2.ParentID = UUID.Zero;
-            folder2.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            folder2.Type = (short)OpenMetaverse.FolderType.Root;
 
             _storage.CreateFolder(folder1);
             _storage.CreateFolder(folder2);
@@ -806,7 +806,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             rootFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
             rootFolder.Owner = userId;
             rootFolder.ParentID = UUID.Zero;
-            rootFolder.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            rootFolder.Type = (short)OpenMetaverse.FolderType.Root;
 
             _storage.CreateFolder(rootFolder);
 
@@ -816,7 +816,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             trashFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
             trashFolder.Owner = userId;
             trashFolder.ParentID = rootFolder.ID;
-            trashFolder.Type = (short)OpenMetaverse.AssetType.TrashFolder;
+            trashFolder.Type = (short)OpenMetaverse.FolderType.Trash;
 
             _storage.CreateFolder(trashFolder);
 
@@ -865,7 +865,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             rootFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
             rootFolder.Owner = userId;
             rootFolder.ParentID = UUID.Zero;
-            rootFolder.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            rootFolder.Type = (short)OpenMetaverse.FolderType.Root;
 
             _storage.CreateFolder(rootFolder);
 
@@ -875,7 +875,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             trashFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
             trashFolder.Owner = userId;
             trashFolder.ParentID = rootFolder.ID;
-            trashFolder.Type = (short)OpenMetaverse.AssetType.TrashFolder;
+            trashFolder.Type = (short)OpenMetaverse.FolderType.Trash;
 
             _storage.CreateFolder(trashFolder);
 
@@ -891,7 +891,7 @@ namespace InWorldz.Data.Inventory.Cassandra
                 folder.Name = "RandomFolder" + i.ToString();
                 folder.Level = InventoryFolderBase.FolderLevel.Leaf;
                 folder.Owner = userId;
-                folder.Type = (short)OpenMetaverse.AssetType.TrashFolder;
+                folder.Type = (short)OpenMetaverse.FolderType.Trash;
 
                 int index = r.Next(-1, folders.Count - 1);
                 if (index == -1)
@@ -1086,7 +1086,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             parentFolder.Name = "RootFolder";
             parentFolder.Level = InventoryFolderBase.FolderLevel.Root;
             parentFolder.Owner = userId;
-            parentFolder.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            parentFolder.Type = (short)OpenMetaverse.FolderType.Root;
             parentFolder.ParentID = UUID.Zero;
 
             InventoryFolderBase folder = new InventoryFolderBase();
@@ -1259,7 +1259,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             parentFolder.Name = "RootFolder";
             parentFolder.Level = InventoryFolderBase.FolderLevel.Root;
             parentFolder.Owner = userId;
-            parentFolder.Type = (short)OpenMetaverse.AssetType.RootFolder;
+            parentFolder.Type = (short)OpenMetaverse.FolderType.Root;
             parentFolder.ParentID = UUID.Zero;
 
             InventoryFolderBase folder = new InventoryFolderBase();

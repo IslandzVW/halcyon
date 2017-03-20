@@ -159,6 +159,15 @@ namespace OpenSim.Framework.Communications.Messages
         [ProtoMember(36)]
         public bool ConstantForcesAreLocal;
 
+        [ProtoMember(37)]
+        public ulong PresenceFlags;
+
+        [ProtoMember(38)]
+        public bool AvatarAsAPrim;
+
+        [ProtoMember(39)]
+        public PackedAgentPrefs AgentPrefs;
+
         static AgentPutMessage()
         {
             ProtoBuf.Serializer.PrepareSerializer<AgentPutMessage>();
@@ -171,6 +180,7 @@ namespace OpenSim.Framework.Communications.Messages
                 ActiveGroupID = data.ActiveGroupID.Guid,
                 AgentAccess = data.AgentAccess,
                 AgentId = data.AgentID.Guid,
+                AgentPrefs = PackedAgentPrefs.FromAgentPrefs(data.AgentPrefs),
                 AlwaysRun = data.AlwaysRun,
                 Anims = PackedAnimation.FromAnimations(data.Anims),
                 Appearance = PackedAppearance.FromAppearance(data.Appearance),
@@ -203,7 +213,9 @@ namespace OpenSim.Framework.Communications.Messages
                 Velocity = data.Velocity,
                 RemoteAgents = data.RemoteAgents,
                 ConstantForces = data.ConstantForces,
-                ConstantForcesAreLocal = data.ConstantForcesAreLocal
+                ConstantForcesAreLocal = data.ConstantForcesAreLocal,
+                PresenceFlags = data.PresenceFlags,
+                AvatarAsAPrim = data.AvatarAsAPrim
             };
 
             return message;
@@ -218,6 +230,7 @@ namespace OpenSim.Framework.Communications.Messages
                 ActiveGroupID = new UUID(this.ActiveGroupID),
                 AgentAccess = this.AgentAccess,
                 AgentID = agentId,
+                AgentPrefs = (this.AgentPrefs != null) ? this.AgentPrefs.ToAgentPrefs(agentId) : new AgentPreferencesData(),
                 AlwaysRun = this.AlwaysRun,
                 Anims = PackedAnimation.ToAnimations(this.Anims),
                 Appearance = this.Appearance.ToAppearance(agentId),
@@ -251,7 +264,9 @@ namespace OpenSim.Framework.Communications.Messages
                 Velocity = this.Velocity,
                 RemoteAgents = this.RemoteAgents,
                 ConstantForces = this.ConstantForces,
-                ConstantForcesAreLocal = this.ConstantForcesAreLocal
+                ConstantForcesAreLocal = this.ConstantForcesAreLocal,
+                PresenceFlags = this.PresenceFlags,
+                AvatarAsAPrim = this.AvatarAsAPrim
             };
 
             return agentData;

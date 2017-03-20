@@ -290,6 +290,10 @@ namespace OpenSim
                                           "kick user <first> <last> [message]",
                                           "Kick a user off the simulator", KickUserCommand);
 
+            m_console.Commands.AddCommand("region", false, "teleport user",
+                                          "teleport user <first> <last> regionName x y z",
+                                          "Force-teleport a user to another location", TeleportUserCommand);
+
             m_console.Commands.AddCommand("region", false, "show assets",
                                           "show assets",
                                           "Show asset data", HandleShow);
@@ -514,6 +518,51 @@ namespace OpenSim
                 }
             }
             m_console.Notice(String.Empty);
+        }
+
+        private void TeleportUserCommand(string module, string[] cmdparams)
+        {
+            if (cmdparams.Length != 8)
+            {
+                m_console.Notice("teleport user <first> <last> regionName x y z");
+                return;
+            }
+
+            string destreg = cmdparams[4];
+            Vector3 destpos = new Vector3(128, 128, 25);
+            try
+            {
+                destpos.X = Convert.ToUInt32(cmdparams[5]);
+                destpos.Y = Convert.ToUInt32(cmdparams[6]);
+                destpos.Z = Convert.ToUInt32(cmdparams[7]);
+            }
+            catch(Exception)
+            {
+                m_console.Notice("teleport user <first> <last> regionName x y z");
+                return;
+            }
+
+            IList agents = m_sceneManager.GetCurrentSceneAvatars();
+
+            foreach (ScenePresence presence in agents)
+            {
+                RegionInfo regionInfo = m_sceneManager.GetRegionInfo(presence.RegionHandle);
+
+                if (presence.Firstname.ToLower().Contains(cmdparams[2].ToLower()) &&
+                    presence.Lastname.ToLower().Contains(cmdparams[3].ToLower()))
+                {
+                    m_console.Notice(
+                        String.Format(
+                            "Force-teleporting user: {0,-16}{1,-16}{2,-37} in region: {3,-16}",
+                            presence.Firstname, presence.Lastname, presence.UUID, regionInfo.RegionName));
+
+                    // force-teleport client...
+                    presence.ControllingClient.SendAlertMessage("The grid manager has teleported you to another location.");
+                    if (destreg != presence.Scene.RegionInfo.RegionName) // diff region?
+                        presence.ControllingClient.SendTeleportLocationStart();
+                    presence.Scene.RequestTeleportLocation(presence.ControllingClient, destreg, destpos, presence.Lookat, (uint)TeleportFlags.ViaLocation);
+                }
+            }
         }
 
         /// <summary>

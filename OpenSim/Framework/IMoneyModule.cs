@@ -51,7 +51,7 @@ namespace OpenSim.Framework
         // Generic functions
         bool AmountCovered(UUID agentID, int amount);
         UUID ApplyCharge(UUID agentID, int transCode, int transAmount, string transDesc);
-        bool ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID, int amount);
+        string ObjectGiveMoney(UUID objectID, UUID fromID, UUID toID, int amount, out string reason);
         EconomyData GetEconomyData();
 
         event ObjectPaid OnObjectPaid;

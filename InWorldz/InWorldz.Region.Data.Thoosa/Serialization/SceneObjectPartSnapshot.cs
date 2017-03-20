@@ -264,6 +264,9 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
         [ProtoMember(63)]
         public KeyframeAnimationSnapshot KeyframeAnimation;
 
+        [ProtoMember(64)]
+        public ServerPrimFlags ServerFlags;
+
         static SceneObjectPartSnapshot()
         {
             ProtoBuf.Serializer.PrepareSerializer<SceneObjectPartSnapshot>();
@@ -287,6 +290,7 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                     stopScriptReason = StopScriptReason.Derez;
             }
 
+            SitTargetInfo sitInfo = part.ParentGroup.SitTargetForPart(part.UUID);
             SceneObjectPartSnapshot partSnap = new SceneObjectPartSnapshot
             {
                 AngularVelocity = part.PhysicalAngularVelocity,
@@ -341,10 +345,11 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 ScriptAccessPin = part.ScriptAccessPin,
                 SerializedPhysicsData = part.SerializedPhysicsData,
                 ServerWeight = part.ServerWeight,
+                ServerFlags = (ServerPrimFlags)part.ServerFlags,
                 Shape = PrimShapeSnapshot.FromShape(part.Shape),
                 SitName = part.SitName,
-                SitTargetOrientation = part.SitTargetOrientation,
-                SitTargetPosition = part.SitTargetPosition,
+                SitTargetOrientation = sitInfo.Rotation,
+                SitTargetPosition = sitInfo.Offset,
                 Sound = part.Sound.Guid,
                 SoundFlags = part.SoundOptions,
                 SoundGain = part.SoundGain,
@@ -448,6 +453,7 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 Scale = this.Scale,
                 ScriptAccessPin = this.ScriptAccessPin,
                 SerializedPhysicsData = this.SerializedPhysicsData,
+                ServerFlags = (uint)this.ServerFlags,
                 ServerWeight = this.ServerWeight,
                 Shape = this.Shape.ToPrimitiveBaseShape(),
                 SitName = this.SitName,
@@ -466,6 +472,9 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
                 FromItemID = new OpenMetaverse.UUID(this.FromItemId),
                 KeyframeAnimation = this.KeyframeAnimation == null ? null : this.KeyframeAnimation.ToKeyframeAnimation()
             };
+
+            // Do legacy to current update for sop.ServerFlags.
+            sop.PrepSitTargetFromStorage(sop.SitTargetPosition, sop.SitTargetOrientation);
 
             if (SerializedScriptStates != null)
             {

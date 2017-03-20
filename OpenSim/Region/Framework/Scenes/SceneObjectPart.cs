@@ -137,6 +137,22 @@ namespace OpenSim.Region.Framework.Scenes
         SCULPT = 7
     }
 
+    [Flags]
+    public enum ServerPrimFlags : uint
+    {
+        None = 0,
+
+        // PRIM_SIT_TARGET supports TRUE/FALSE,pos,rot 
+        // even for ZERO_VECTOR,ZERO_ROTATION
+        // so we need to store this too.
+        SitTargetActive = 1,
+
+        // We need to know whether to use the legacy sit target persistence 
+        // or the one above, or existing content will break.
+        // If this bit is NOT set, ignore SitTargetActive
+        // and use the legacy pos/rot != zero test.
+        SitTargetStateSaved = 2
+    }
     #endregion Enumerations
 
     public class SceneObjectPart : IScriptHost, ISceneEntity
@@ -279,10 +295,14 @@ namespace OpenSim.Region.Framework.Scenes
         public const byte MIN_ATTACHMENT = (byte)OpenMetaverse.AttachmentPoint.Chest;           // 1
         public const byte MIN_HUD        = (byte)OpenMetaverse.AttachmentPoint.HUDCenter2;      // 31
         public const byte MAX_HUD        = (byte)OpenMetaverse.AttachmentPoint.HUDBottomRight;  // 38
-        public const byte MAX_ATTACHMENT = (byte)OpenMetaverse.AttachmentPoint.Root;            // 40
+        public const byte MAX_ATTACHMENT = (byte)OpenMetaverse.AttachmentPoint.RightHindFoot;   // 55
 
-        // Attachment points with the high bit set must be converted to 7-bit before this call.
+        // Attachment points with the high bit set must be converted to 7-bit before these calls.
         public static bool IsAttachmentPointOnHUD(uint attachPoint)
+        {
+            return (attachPoint >= MIN_HUD) && (attachPoint <= MAX_HUD);
+        }
+        public static bool IsValidAttachmentPoint(uint attachPoint)
         {
             return (attachPoint >= MIN_ATTACHMENT) && (attachPoint <= MAX_ATTACHMENT);
         }
@@ -696,7 +716,6 @@ namespace OpenSim.Region.Framework.Scenes
         private uint _category;
         private Int32 _creationDate;
         private uint _parentID = 0;
-        private UUID m_sitTargetAvatar = UUID.Zero;
         private uint _baseMask = (uint)(PermissionMask.All | PermissionMask.Export);
         private uint _ownerMask = (uint)(PermissionMask.All | PermissionMask.Export);
         private uint _groupMask = (uint)PermissionMask.None;
@@ -708,6 +727,9 @@ namespace OpenSim.Region.Framework.Scenes
         private byte _prevAttPt= (byte)0;
         private Vector3 _prevAttPos = Vector3.Zero;
         private Quaternion _prevAttRot = Quaternion.Identity;
+        private Vector3 _standTargetPos = Vector3.Zero;
+        private Quaternion _standTargetRot = Quaternion.Identity;
+        private ServerPrimFlags _serverFlags = 0;
 
         [XmlIgnore]
         public bool IsInTransaction
@@ -1004,15 +1026,13 @@ namespace OpenSim.Region.Framework.Scenes
             return true;
         }
 
-        private void UpdateSeatedAvatarPosition()
+        private void UpdateSeatedAvatarPositions()
         {
-            UUID avatarID = SitTargetAvatar;
-            if (avatarID  != UUID.Zero)
+            m_seatedAvatars.ForEach((ScenePresence sp) =>
             {
-                ScenePresence sp = m_parentGroup.Scene.GetScenePresence(avatarID);
-                if (sp != null)
+                if (sp.AvatarMovesWithPart)
                     sp.SendTerseUpdateToAllClients();
-            }
+            });
         }
         
         public Vector3 OffsetPosition
@@ -1033,7 +1053,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     physActor.UpdateOffsetPosition(m_offsetPosition, m_rotationOffset);
                 }
-                UpdateSeatedAvatarPosition();
+                UpdateSeatedAvatarPositions();
             }
         }
 
@@ -1061,7 +1081,7 @@ namespace OpenSim.Region.Framework.Scenes
                 {
                     physActor.Rotation = value;
                 }
-                UpdateSeatedAvatarPosition();
+                UpdateSeatedAvatarPositions();
             }
         }
 
@@ -1394,6 +1414,24 @@ namespace OpenSim.Region.Framework.Scenes
 
         public KeyframeAnimation KeyframeAnimation { get; set; }
 
+        public uint ServerFlags
+        {
+            get { return (uint)_serverFlags; }
+            set { _serverFlags = (ServerPrimFlags)value; }
+        }
+
+        public bool SitTargetActive
+        {
+            get { return (_serverFlags & ServerPrimFlags.SitTargetActive) != 0; }
+            set
+            {
+                if (value)  // enable or disable SitTargetEnabled flag
+                    _serverFlags |= ServerPrimFlags.SitTargetActive;
+                else
+                    _serverFlags &= ~ServerPrimFlags.SitTargetActive;
+            }
+        }
+
         #endregion
 
         //---------------
@@ -1507,34 +1545,10 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_sitTargetOrientation = value; }
         }
 
-
         public Vector3 SitTargetPosition
         {
             get { return m_sitTargetPosition; }
             set { m_sitTargetPosition = value; }
-        }
-
-        // This sort of sucks, but I'm adding these in to make some of
-        // the mappings more consistant.
-        public Vector3 SitTargetPositionLL
-        {
-            get { return new Vector3(m_sitTargetPosition.X, m_sitTargetPosition.Y,m_sitTargetPosition.Z); }
-            set { m_sitTargetPosition = value; }
-        }
-
-        public Quaternion SitTargetOrientationLL
-        {
-            get
-            {
-                return new Quaternion(
-                                        m_sitTargetOrientation.X,
-                                        m_sitTargetOrientation.Y,
-                                        m_sitTargetOrientation.Z,
-                                        m_sitTargetOrientation.W
-                                        );
-            }
-
-            set { m_sitTargetOrientation = new Quaternion(value.X, value.Y, value.Z, value.W); }
         }
 
         public bool Stopped
@@ -1604,6 +1618,11 @@ namespace OpenSim.Region.Framework.Scenes
             set { _lastOwnerID = value; }
         }
 
+        public bool IsGroupDeeded
+        {
+            get { return (GroupID != UUID.Zero) && (OwnerID == GroupID); }
+        }
+
         public uint BaseMask
         {
             get { return _baseMask; }
@@ -1652,17 +1671,22 @@ namespace OpenSim.Region.Framework.Scenes
             set { _prevAttRot = value; }
         }
 
+        public Vector3 StandTargetPos
+        {
+            get { return _standTargetPos; }
+            set { _standTargetPos = value; }
+        }
+
+        public Quaternion StandTargetRot
+        {
+            get { return _standTargetRot; }
+            set { _standTargetRot = value; }
+        }
+
         public PrimFlags Flags
         {
             get { return _flags; }
             set { _flags = value; }
-        }
-
-        [XmlIgnore]
-        public UUID SitTargetAvatar
-        {
-            get { return m_sitTargetAvatar; }
-            set { m_sitTargetAvatar = value; }
         }
 
         [XmlIgnore]
@@ -1707,9 +1731,18 @@ namespace OpenSim.Region.Framework.Scenes
 
         #region Private Methods
 
-        public int NumAvatarsSeated()
+        [XmlIgnore]
+        private AvatarPartsCollection m_seatedAvatars = new AvatarPartsCollection ();
+
+        [XmlIgnore]
+        public int NumAvatarsSeated
         {
-            return (m_sitTargetAvatar == UUID.Zero) ? 0 : 1;
+            get { return m_seatedAvatars.Count; }
+        }
+
+        public void ForEachSittingAvatar(Action<ScenePresence> action)
+        {
+            m_seatedAvatars.ForEach(action);
         }
 
         private uint ApplyMask(uint val, bool set, uint mask)
@@ -1742,6 +1775,54 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_parentGroup.RootPart == null)
                 return true;    // no parent part... consider this root
             return (m_parentGroup.RootPart == this);    // matches?
+        }
+
+        // Note that enabled=false is not the same as removing a sit target.
+        public void SetSitTarget(bool isActive, Vector3 pos, Quaternion rot, bool preserveSitter)
+        {
+            // Take care of this prim.
+            SitTargetPosition = pos;
+            SitTargetOrientation = rot;
+            SitTargetActive = isActive;
+
+            // Now update the parent group.
+            if (ParentGroup != null)
+                ParentGroup.SetSitTarget(this, isActive, pos, rot, preserveSitter);
+        }
+
+        public void RemoveSitTarget()
+        {
+            // Take care of this prim.
+            SitTargetPosition = Vector3.Zero;
+            SitTargetOrientation = Quaternion.Identity;
+            SitTargetActive = false;
+
+            // Now update the parent group.
+            if (ParentGroup != null)
+                ParentGroup.RemoveSitTarget(this.UUID);
+        }
+
+        // This function must be called on asset load (inventory rez) or database load (rezzed)
+        // with SOP.ServerFlags initialized, which may be updated before return.
+        // Returns true if there is an active sit target after calculation.
+        public bool PrepSitTargetFromStorage(Vector3 sitTargetPos, Quaternion sitTargetRot)
+        {
+            // Now the sit target info itself.
+            bool sitTargetEnabled = ((this.ServerFlags & (uint) ServerPrimFlags.SitTargetActive) != 0);
+            if (!sitTargetEnabled) // check if legacy data
+            {
+                if ((this.ServerFlags & (uint) ServerPrimFlags.SitTargetStateSaved) == 0) // not set
+                {   // check if non-zero sit target in pos/rot
+                    if ((sitTargetPos != Vector3.Zero) || (sitTargetRot != Quaternion.Identity))
+                    {
+                        sitTargetEnabled = true;
+                        this.ServerFlags |= (uint)ServerPrimFlags.SitTargetActive;
+                    }
+                }
+            }
+            // Mark this one as updated to using this ServerFlags.
+            this.ServerFlags |= (uint)ServerPrimFlags.SitTargetStateSaved;
+            return sitTargetEnabled;
         }
 
         public static readonly uint LEGACY_BASEMASK = 0x7FFFFFF0;
@@ -2046,6 +2127,12 @@ namespace OpenSim.Region.Framework.Scenes
             return outdata;
         }
 
+        // part.ParentGroup must be initialized for this.
+        public void CopySitTarget(SceneObjectPart part)
+        {
+            this.SetSitTarget(part.SitTargetActive, part.SitTargetPosition, part.SitTargetOrientation, false);
+        }
+
         /// <summary>
         /// Duplicates this part.
         /// </summary>
@@ -2089,6 +2176,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.m_particleSystem = m_particleSystem;
             dupe.ObjectFlags = ObjectFlags;
+            dupe.ServerFlags = ServerFlags;
 
             dupe._ownershipCost = _ownershipCost;
             dupe._objectSaleType = _objectSaleType;
@@ -2224,11 +2312,6 @@ namespace OpenSim.Region.Framework.Scenes
 
             // for tempOnRez objects, we have to fix the Expire date.
             if ((this.Flags & PrimFlags.TemporaryOnRez) != 0) this.ResetExpire();
-        }
-
-        public UUID GetAvatarOnSitTarget()
-        {
-            return m_sitTargetAvatar;
         }
 
         public bool GetDieAtEdge()
@@ -2884,9 +2967,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (isNewInstance)
             {
-                this.SitTargetAvatar = UUID.Zero;
+                this.m_seatedAvatars.Clear();
             }
-
         }
 
         /// <summary>
@@ -3311,11 +3393,27 @@ namespace OpenSim.Region.Framework.Scenes
             return Vector3.Zero;
         }
 
-        public void SetAvatarOnSitTarget(UUID avatarID, bool sendEvent)
+        public void AddSeatedAvatar(ScenePresence sp, bool sendEvent)
         {
-            m_sitTargetAvatar = avatarID;
-            if (sendEvent && (ParentGroup != null))
-                ParentGroup.TriggerScriptChangedEvent(Changed.LINK);
+            m_seatedAvatars.AddAvatar(sp);
+            if (ParentGroup != null)
+                ParentGroup.AddSeatedAvatar(this.UUID, sp, sendEvent);    // event sent if needed
+        }
+
+        public void RemoveSeatedAvatar(ScenePresence sp, bool sendEvent)
+        {
+            if (ParentGroup != null)
+                ParentGroup.RemoveSeatedAvatar(this.UUID, sp, sendEvent); // event sent if needed
+            m_seatedAvatars.RemoveAvatar(sp);
+        }
+
+        // Called the same way on both old and new parent part.
+        public void ReparentSeatedAvatar(ScenePresence sp, SceneObjectPart newParent)
+        {
+            if (newParent == this)
+                m_seatedAvatars.AddAvatar(sp);
+            else
+                m_seatedAvatars.RemoveAvatar(sp);
         }
 
         public void SetBuoyancy(float fvalue)
@@ -3581,11 +3679,13 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        ///
+        /// Returns true if the parent has changed.
         /// </summary>
-        public void SetParent(SceneObjectGroup parent)
+        public bool SetParent(SceneObjectGroup parent)
         {
+            bool hasChanged = (m_parentGroup != parent);
             m_parentGroup = parent;
+            return hasChanged;
         }
 
         public void SetParentAndUpdatePhysics(SceneObjectGroup parent)

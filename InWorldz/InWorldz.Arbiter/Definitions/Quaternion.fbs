@@ -1,0 +1,8 @@
+﻿namespace InWorldz.Arbiter.Serialization;
+
+struct Quaternion {
+	x:float;
+	y:float;
+	z:float;
+	w:float;
+}

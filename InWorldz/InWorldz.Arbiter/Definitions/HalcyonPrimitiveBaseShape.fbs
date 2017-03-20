@@ -1,0 +1,76 @@
+﻿include "Vector3.fbs";
+
+namespace InWorldz.Arbiter.Serialization;
+
+enum ProfileShape : byte {
+    Circle = 0,
+    Square = 1,
+    IsometricTriangle = 2,
+    EquilateralTriangle = 3,
+    RightTriangle = 4,
+    HalfCircle = 5
+}
+
+enum HollowShape : byte {
+    Same = 0,
+    Circle = 16,
+    Square = 32,
+    Triangle = 48
+}
+
+table HalcyonPrimitiveBaseShape {
+	profile_curve:byte;
+	texture_entry:[byte];
+	extra_params:[byte];
+	path_begin:ushort;
+	path_curve:byte;
+	path_end:ushort;
+	path_radius_offset:byte;
+	path_revolutions:byte;
+	path_scale_x:byte;
+	path_scale_y:byte;
+	path_shear_x:byte;
+	path_shear_y:byte;
+	path_twist:byte;
+	path_twist_begin:byte;
+	pcode:byte;
+	profile_begin:ushort;
+	profile_end:ushort;
+	profile_hollow:ushort;
+	scale:Vector3;
+	state:byte;
+	profile_shape:ProfileShape;
+	hollow_shape:HollowShape;
+	sculpt_texture:[byte];
+	sculpt_type:byte;
+	flexi_softness:int;
+	flexi_tension:float;
+	flexi_drag:float;
+	flexi_gravity:float;
+	flexi_wind:float;
+	flexi_force_x:float;
+	flexi_force_y:float;
+	flexi_force_z:float;
+	light_color:[float];
+	light_radius:float;
+	light_cutoff:float;
+	light_intensity:float;
+	flexi_entry:byte;
+	light_entry:byte;
+	sculpt_entry:byte;
+	projection_entry:byte;
+	projection_texture_id:[byte];
+	projection_fov:float;
+	projection_focus:float;
+	projection_ambiance:float;
+	path_skew:byte;
+	path_taper_x:byte;
+	path_taper_y:byte;
+	vertex_count:int;
+	high_lod_bytes:int;
+	mid_lod_bytes:int;
+	low_lod_bytes:int;
+	lowest_lod_bytes:int;
+}
+
+root_type HalcyonPrimitiveBaseShape;

@@ -181,7 +181,12 @@ namespace OpenSim.Region.Physics.Meshing
                 if (primShape.SculptEntry && ((primShape.SculptData == null) || (primShape.SculptData.Length == 0)))
                 {
                     //preload the sculpt/mesh data
-                    AssetBase asset = _assetCache.GetAsset(primShape.SculptTexture, AssetRequestInfo.InternalRequest());
+                    AssetBase asset = null;
+                    Util.ReportIfSlow("[MESHER]: GetAsset for '"+primName+"'", 500, () =>
+                        {
+                            asset = _assetCache.GetAsset(primShape.SculptTexture, AssetRequestInfo.InternalRequest());
+                        });
+
                     if (asset == null)
                     {
                         return null;
@@ -193,11 +198,21 @@ namespace OpenSim.Region.Physics.Meshing
                 if (primShape.SculptEntry == false ||
                     (primShape.SculptEntry == true && (SculptType)primShape.SculptType != SculptType.Mesh))
                 {
-                    return ExtractTrimeshFromPrimOrSculpt(primName, primShape, ref size, lod, preScale, meshKey);
+                    MeshingResult result = null;
+                    Util.ReportIfSlow("[MESHER]: From prim" + primName + "'", 1000, () =>
+                        {
+                            result = ExtractTrimeshFromPrimOrSculpt(primName, primShape, ref size, lod, preScale, meshKey);
+                        });
+                    return result;
                 }
                 else //mesh
                 {
-                    return ExtractMeshingResultFromMesh(primName, primShape, ref size, lod, preScale, desiredShape, meshKey);
+                    MeshingResult result = null;
+                    Util.ReportIfSlow("[MESHER]: From mesh" + primName + "'", 1000, () =>
+                        {
+                            result = ExtractMeshingResultFromMesh(primName, primShape, ref size, lod, preScale, desiredShape, meshKey);
+                        });
+                    return result;
                 }
             }
             finally

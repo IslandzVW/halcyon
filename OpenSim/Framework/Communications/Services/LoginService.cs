@@ -149,7 +149,7 @@ namespace OpenSim.Framework.Communications.Services
             List<string> newList = new List<string>();
             LoadStringListFromFile(newList, fileName, desc);
             if (newList.Count < 1)
-                m_log.Error("No locations found.");
+                m_log.ErrorFormat("{0}: No locations found.", fileName);
             else
                 m_log.InfoFormat("{0} updated with {1} locations.", desc, newList.Count);
             return newList;
@@ -171,6 +171,46 @@ namespace OpenSim.Framework.Communications.Services
                 _DefaultRegionsList = LoadRegionsFromFile(fileName, "Default region locations");
         }
 
+        private const string BANS_FILE = "bans.txt";
+        private List<string> bannedIPs = new List<string>();
+        private DateTime bannedIPsLoadedAt = DateTime.MinValue;
+        private void LoadBannedIPs()
+        {
+            if (File.Exists(BANS_FILE))
+            {
+                DateTime changedAt = File.GetLastWriteTime(BANS_FILE);
+                lock (bannedIPs)    // don't reload it in parallel, block login if reloading
+                {
+                    if ( changedAt > bannedIPsLoadedAt)
+                    {
+                        bannedIPsLoadedAt = DateTime.Now;
+                        bannedIPs.Clear();
+                        string[] lines = File.ReadAllLines("bans.txt");
+                        foreach (string line in lines)
+                        {
+                            bannedIPs.Add(line.Trim());
+                        }
+                    }
+                }
+            }
+        }
+
+        // Assumes IPstr is trimmed.
+        private bool IsBannedIP(string IPstr)
+        {
+            LoadBannedIPs();    // refresh, if changed
+
+            lock (bannedIPs)
+            {
+                foreach (string ban in bannedIPs)
+                {
+                    if (IPstr.StartsWith(ban))
+                        return true;
+                }
+            }
+            return false;
+        }
+
 
         private HashSet<string> _loginsProcessing = new HashSet<string>();
 
@@ -185,6 +225,16 @@ namespace OpenSim.Framework.Communications.Services
 
             try
             {
+                LoginResponse logResponse = new LoginResponse();
+
+                IPAddress IPaddr = remoteClient.Address;
+                string IPstr = IPaddr.ToString();
+                if (this.IsBannedIP(IPstr))
+                {
+                    m_log.WarnFormat("[LOGIN]: Denying login, IP {0} is BANNED.", IPstr);
+                    return logResponse.CreateIPBannedResponseLLSD();
+                }
+
                 XmlRpcResponse response = new XmlRpcResponse();
                 Hashtable requestData = (Hashtable)request.Params[0];
 
@@ -195,7 +245,6 @@ namespace OpenSim.Framework.Communications.Services
 
                 string firstname = null;
                 string lastname = null;
-                LoginResponse logResponse = new LoginResponse();
 
                 if (GoodXML)
                 {
@@ -1014,7 +1063,22 @@ namespace OpenSim.Framework.Communications.Services
                 // regionInfo = m_gridService.RequestClosestRegion(String.Empty);
                 //m_log.InfoFormat("[LOGIN]: StartLocation not available sending to region {0}", regionInfo.regionName);
 
-                // Normal login failed, try to find a default region from the list
+                // Normal login failed, try to find an alternative region, starting with Home.
+                if (homeInfo != null)
+                {
+                    if ((regionInfo == null) || (regionInfo.RegionID != homeInfo.RegionID))
+                    {
+                        regionInfo = homeInfo;
+                        theUser.CurrentAgent.Position = theUser.HomeLocation;
+                        response.LookAt = String.Format("[r{0},r{1},r{2}]", theUser.HomeLookAt.X.ToString(),
+                                                        theUser.HomeLookAt.Y.ToString(), theUser.HomeLookAt.Z.ToString());
+                        m_log.InfoFormat("[LOGIN]: StartLocation not available, trying user's Home region {0}", regionInfo.RegionName);
+                        if (PrepareLoginToRegion(regionInfo, theUser, response, clientVersion))
+                            return true;
+                    }
+                }
+
+                // No Home location available either, try to find a default region from the list
                 if (PrepareNextDefaultRegion(response, theUser, clientVersion))
                     return true;
             }
