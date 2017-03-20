@@ -449,23 +449,17 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                 (byte)ChatSourceType.System, (byte)ChatAudibleLevel.Fully);
         }
 
-        private string LocationURL(Scene scene, SceneObjectPart part)
-        {
-            Vector3 pos = part.AbsolutePosition;
-            return Util.LocationURL(scene.RegionInfo.RegionName, pos, "/");
-        }
-
         private void DumpPart(IClientAPI client, Scene scene, SceneObjectPart part)
         {
             if (part == part.ParentGroup.RootPart)
             {
-                SendSystemChat(client, "Object {0} [{1}] '{2}' at {3}", part.LocalId.ToString(), part.UUID.ToString(), part.Name, LocationURL(scene, part));
+                SendSystemChat(client, "Object {0} [{1}] '{2}' at {3}", part.LocalId.ToString(), part.UUID.ToString(), part.Name, Util.LocationShortCode(scene.RegionInfo.RegionName, part.AbsolutePosition));
             }
             else
             {
                 SceneObjectPart root = part.ParentGroup.RootPart;
-                SendSystemChat(client, "Child prim {0} [{1}] '{2}' at {3}", part.LocalId.ToString(), part.UUID.ToString(), part.Name, LocationURL(scene, part));
-                SendSystemChat(client, "Root prim {0} [{1}] '{2}' at {3}", root.LocalId.ToString(), root.UUID.ToString(), root.Name, LocationURL(scene, root));
+                SendSystemChat(client, "Child prim {0} [{1}] '{2}' at {3}", part.LocalId.ToString(), part.UUID.ToString(), part.Name, Util.LocationShortCode(scene.RegionInfo.RegionName, part.AbsolutePosition));
+                SendSystemChat(client, "Root prim {0} [{1}] '{2}' at {3}", root.LocalId.ToString(), root.UUID.ToString(), root.Name, Util.LocationShortCode(scene.RegionInfo.RegionName, part.AbsolutePosition));
             }
         }
 

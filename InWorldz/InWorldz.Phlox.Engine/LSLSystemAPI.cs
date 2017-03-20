@@ -3803,7 +3803,7 @@ namespace InWorldz.Phlox.Engine
             msg.Position = m_host.AbsolutePosition;
             msg.RegionID = World.RegionInfo.RegionID.Guid;//RegionID.Guid;
             // binaryBucket is the SL URL without the prefix, e.g. "Region/x/y/z"
-            string url = EncodeURL(false, World.RegionInfo.RegionName, msg.Position.X, msg.Position.Y, msg.Position.Z);
+            string url = Util.LocationShortCode(World.RegionInfo.RegionName, msg.Position);
             byte[] bucket = Utils.StringToBytes(url);
             msg.binaryBucket = new byte[bucket.Length];// binaryBucket;
             bucket.CopyTo(msg.binaryBucket, 0);
@@ -5194,16 +5194,6 @@ namespace InWorldz.Phlox.Engine
             return 1.0f;
         }
 
-        private string EncodeURL(bool includePrefix, string region, float posx, float posy, float posz)
-        {
-            int x = (int)Math.Floor(posx);
-            int y = (int)Math.Floor(posy);
-            int z = (int)Math.Floor(posz);
-            string prefix = includePrefix ? "http://places.inworldz.com/" : String.Empty;
-
-            return prefix + Util.EscapeUriDataStringRfc3986(region) + "/" + x.ToString() + "/" + y.ToString() + "/" + z.ToString();
-        }
-
         int DeliverReasonToResult(string reason)
         {
             int rc = -1;
@@ -5307,7 +5297,7 @@ namespace InWorldz.Phlox.Engine
                 bucket[0] = assetType;
                 SceneObjectPart rootPart = part.ParentGroup.RootPart;
                 Vector3 pos = rootPart.AbsolutePosition;
-                string URL = EncodeURL(true, World.RegionInfo.RegionName, pos.X, pos.Y, pos.Z);
+                string URL = Util.LocationURL(World.RegionInfo.RegionName, pos);
 
                 GridInstantMessage msg = new GridInstantMessage(World,
                         rootPart.OwnerID, rootPart.Name, destId,
@@ -8383,7 +8373,7 @@ namespace InWorldz.Phlox.Engine
             bucket[0] = (byte)AssetType.Folder;
             SceneObjectPart rootPart = part.ParentGroup.RootPart;
             Vector3 pos = rootPart.AbsolutePosition;
-            string URL = EncodeURL(true, World.RegionInfo.RegionName, pos.X, pos.Y, pos.Z);
+            string URL = Util.LocationURL(World.RegionInfo.RegionName, pos);
 
             GridInstantMessage msg = new GridInstantMessage(World,
                     rootPart.OwnerID, rootPart.Name, destID,

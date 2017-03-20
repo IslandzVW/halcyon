@@ -99,6 +99,8 @@ namespace OpenSim.Framework.Communications.Services
                     {
                         _info[k] = gridCfg.GetString(k);
                     }
+
+                    Util.LocationURLPrefix = gridCfg.GetString("slurl_base", "http://places.inworldz.com/");
                 }
                 else if (null != netCfg)
                 {

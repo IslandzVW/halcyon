@@ -2136,16 +2136,24 @@ namespace OpenSim.Framework
             return newPos;
         }
 
-        public static string LocationURL(string regionName, Vector3 pos, string separator)
+        /// <summary>
+        /// Formats the region name and the location given into a concatenated form.  The most common usage is to create a URL path for mapping.
+        /// </summary>
+        /// <returns>The short code.</returns>
+        /// <param name="regionName">Region name.</param>
+        /// <param name="positionInRegion">Location in the region.</param>
+        /// <param name="separator">Separator, defaults to "/" and is placed between the region name, and each of the X, Y, and Z parts.</param>
+        public static string LocationShortCode(string regionName, Vector3 positionInRegion, string separator = "/")
         {
-            int x = (int)pos.X;
-            int y = (int)pos.Y;
-            int z = (int)pos.Z;
+            int x = (int)positionInRegion.X;
+            int y = (int)positionInRegion.Y;
+            int z = (int)positionInRegion.Z;
+
             string region;
+
             if (String.IsNullOrEmpty(regionName))
             {
-                region = String.Empty;
-                return x.ToString() + separator + y.ToString() + separator + z.ToString();
+                return x + separator + y + separator + z;
             }
 
             try
@@ -2156,7 +2164,29 @@ namespace OpenSim.Framework
             {
                 region = regionName;
             }
-            return "http://places.inworldz.com/" + region + separator + x.ToString() + separator + y.ToString() + separator + z.ToString();
+            return region + separator + x + separator + y + separator + z;
+        }
+
+        /// <summary>
+        /// The prefix to the URL links.  Set by the GridInfoService, and is also known to the viewer as "slurl_base".
+        /// </summary>
+        public static string LocationURLPrefix = "http://example.com/";
+        /// <summary>
+        /// Builds a teleport URL.
+        /// </summary>
+        /// <returns>The formatted URL.</returns>
+        /// <param name="regionName">Region name.</param>
+        /// <param name="positionInRegion">Location in the region.</param>
+        public static string LocationURL(string regionName, Vector3 positionInRegion)
+        {
+            string separator = String.Empty;
+
+            if (!LocationURLPrefix.EndsWith("/")) // Fix it without side effects.
+            {
+                separator = "/";
+            }
+
+            return LocationURLPrefix + separator + LocationShortCode(regionName, positionInRegion);
         }
 
         public static Vector3 EmergencyPosition()

@@ -309,7 +309,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             msg.Position = sp.AbsolutePosition;
             msg.RegionID = m_scene.RegionInfo.RegionID.Guid;//RegionID.Guid;
             // binaryBucket is the SL URL without the prefix, e.g. "Region/x/y/z"
-            string url = EncodeURL(false, m_scene.RegionInfo.RegionName, msg.Position.X, msg.Position.Y, msg.Position.Z);
+            string url = Util.LocationShortCode(m_scene.RegionInfo.RegionName, msg.Position, "/");
             byte[] bucket = Utils.StringToBytes(url);
             msg.binaryBucket = new byte[bucket.Length];// binaryBucket;
             bucket.CopyTo(msg.binaryBucket, 0);
@@ -319,16 +319,6 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             {
                 transferModule.SendInstantMessage(msg, delegate(bool success) { });
             }
-        }
-
-        private string EncodeURL(bool includePrefix, string region, float posx, float posy, float posz)
-        {
-            int x = (int)Math.Floor(posx);
-            int y = (int)Math.Floor(posy);
-            int z = (int)Math.Floor(posz);
-            string prefix = includePrefix ? "http://places.inworldz.com/" : String.Empty;
-
-            return prefix + Util.EscapeUriDataStringRfc3986(m_scene.RegionInfo.RegionName) + "/" + x.ToString() + "/" + y.ToString() + "/" + z.ToString();
         }
 
         public void SendChatMessage(string message, byte type, OpenMetaverse.Vector3 fromPos, string fromName, OpenMetaverse.UUID fromAgentID, OpenMetaverse.UUID ownerID, byte source, byte audible)
@@ -362,7 +352,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
                 bucket[0] = assetType;
                 agentItem.ID.ToBytes(bucket, 1);
                 ScenePresence sp = m_scene.GetScenePresence(AgentID);
-                string URL = EncodeURL(true, m_scene.RegionInfo.RegionName, sp.AbsolutePosition.X, sp.AbsolutePosition.Y, sp.AbsolutePosition.Z);
+                string URL = Util.LocationURL(m_scene.RegionInfo.RegionName, sp.AbsolutePosition);
 
                 GridInstantMessage msg = new GridInstantMessage(m_scene,
                         AgentID, Name, destId,
