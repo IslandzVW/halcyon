@@ -31,15 +31,13 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using InWorldz.JWT;
+using LitJson;
+using log4net;
 using OpenSim.Framework.Communications.JWT;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Grid.Framework;
-using LitJson;
-using log4net;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace OpenSim.Grid.UserServer.Modules
 {
@@ -66,15 +64,15 @@ namespace OpenSim.Grid.UserServer.Modules
             m_coreService = core;
         }
 
-        public void PostInitialize()
+        public void PostInitialize(string privateKeyPath, string publicKeyPath)
         {
-            if (!m_coreService.TryGet<UserDataBaseService>(out m_userDataBaseService))
+            if (m_coreService.TryGet(out m_userDataBaseService))
             {
-                m_userDataBaseService = null;
+                m_authGateway = new JWTUserAuthenticationGateway(m_userDataBaseService, privateKeyPath, publicKeyPath);
             }
             else
             {
-                m_authGateway = new JWTUserAuthenticationGateway(m_userDataBaseService);
+                m_userDataBaseService = null;
             }
         }
 

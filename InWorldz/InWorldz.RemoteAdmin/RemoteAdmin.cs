@@ -69,7 +69,7 @@ namespace InWorldz.RemoteAdmin
 
         public delegate object XmlMethodHandler(IList args, IPEndPoint client);
 
-        public RemoteAdmin()
+        public RemoteAdmin(string publicKeyPath = null)
         {
             AddCommand("session", "login_with_password", SessionLoginWithPassword);
             AddCommand("session", "login_with_token", SessionLoginWithToken);
@@ -82,7 +82,8 @@ namespace InWorldz.RemoteAdmin
             sessionTimer = new Timer(60000); // 60 seconds
             sessionTimer.Elapsed += sessionTimer_Elapsed;
             sessionTimer.Enabled = true;
-            m_sigUtil = new JWTSignatureUtil(publicKeyPath: "./server.crt");
+
+            m_sigUtil = new JWTSignatureUtil(publicKeyPath: publicKeyPath);
         }
 
         /// <summary>
