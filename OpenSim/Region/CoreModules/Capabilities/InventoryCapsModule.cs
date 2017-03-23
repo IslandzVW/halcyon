@@ -1045,6 +1045,38 @@ namespace OpenSim.Region.CoreModules.Capabilities
                         {
                             item.SerializeToLLSD(contents);
                             count++; 
+                                
+                            if (item.AssetType == (int)AssetType.LinkFolder)
+                            {
+                                // Add this when we do categories below
+                                linkedFolders.Add(item.AssetID);
+                            }
+                            else if (item.AssetType == (int)AssetType.Link)
+                            {
+                                try 
+                                {
+                                    InventoryItemBase linkedItem = m_checkedStorageProvider.GetItem(m_agentID, item.AssetID, UUID.Zero);
+
+                                    if (linkedItem != null)
+                                    {
+                                        linkedItem.SerializeToLLSD(contents);
+                                    }
+                                    else
+                                    {
+                                        m_log.ErrorFormat(
+                                            "[CAPS/INVENTORY] Failed to resolve link to item {0} for {1}",
+                                            item.AssetID, m_Caps.AgentID);
+                                    }
+                                    // Don't add it to the count. It was accounted for with the link.
+                                    //count++;
+                                }
+                                catch (Exception e)
+                                {
+                                    m_log.ErrorFormat(
+                                        "[CAPS/INVENTORY] Failed to resolve link to item {0} for {1}: {2}",
+                                        item.AssetID, m_Caps.AgentID, e.Message);
+                                }
+                            }
                         } 
                     }
 
@@ -1053,6 +1085,35 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     contents.WriteKey("categories"); //Start array cats
                     contents.WriteStartArray("categories"); //We don't send any folders
 
+                    // If there were linked folders include the folders referenced here
+                    if (linkedFolders.Count > 0)
+                    {
+                        foreach (UUID linkedFolderID in linkedFolders)
+                        {
+                            try
+                            {
+                                InventoryFolderBase linkedFolder = m_checkedStorageProvider.GetFolderAttributes(m_agentID, linkedFolderID);
+                                if (linkedFolder != null)
+                                {
+                                    linkedFolder.SerializeToLLSD(contents);
+                                    // Don't add it to the count.. it was accounted for with the link.
+                                    //count++;
+                                }
+                            }
+                            catch (InventoryObjectMissingException)
+                            {
+                                m_log.ErrorFormat("[CAPS/INVENTORY] Failed to resolve link to folder {0} for {1}",
+                                    linkedFolderID, m_agentID);
+                            }
+                            catch (Exception e)
+                            {
+                                m_log.ErrorFormat(
+                                    "[CAPS/INVENTORY] Failed to resolve link to folder {0} for {1}: {2}",
+                                    linkedFolderID, m_agentID, e);
+                            }
+                        }
+                    }
+                        
                     if (fetchFolders)
                     {
                         foreach (InventorySubFolderBase subFolder in folder.SubFolders)
