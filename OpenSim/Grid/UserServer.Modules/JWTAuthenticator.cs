@@ -52,7 +52,8 @@ namespace OpenSim.Grid.UserServer.Modules
         private BaseHttpServer m_httpServer;
         private readonly Dictionary<string, int> m_levelsAllowedPerScope = new Dictionary<string, int>
         {
-            {"remote-console", 250}
+            {"remote-console", 250},
+            {"remote-admin", 250},
         };
         private JWTUserAuthenticationGateway m_authGateway = null;
 
