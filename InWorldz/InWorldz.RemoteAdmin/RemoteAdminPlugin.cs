@@ -90,7 +90,7 @@ namespace InWorldz.RemoteAdmin
         public void Initialize(OpenSimBase openSim)
         {
             m_app = openSim;
-            m_admin = new RemoteAdmin();
+            m_admin = new RemoteAdmin(openSim.ConfigSource.Source.Configs["Network"]?.GetString("SSLCertFile", null));
         }
 
         public void PostInitialize()

@@ -843,7 +843,7 @@ namespace OpenSim.Region.ScriptEngine.Shared.ScriptBase
 
         // Returned by llReturnObjectsByOwner and llReturnObjectsByID
         public const int ERR_GENERIC = -1;
-        public const int ERR_PARCEL_PERMISSION = -2;
+        public const int ERR_PARCEL_PERMISSIONS = -2;
         public const int ERR_MALFORMED_PARAMS = -3;
         public const int ERR_RUNTIME_PERMISSIONS = -4;
         public const int ERR_THROTTLED = -5;

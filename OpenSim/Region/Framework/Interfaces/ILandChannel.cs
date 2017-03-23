@@ -28,6 +28,7 @@
 using System.Collections.Generic;
 using OpenMetaverse;
 using OpenSim.Framework;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.Framework.Interfaces
 {
@@ -72,8 +73,8 @@ namespace OpenSim.Region.Framework.Interfaces
         void UpdateLandObject(int localID, LandData data);
         void UpdateLandPrimCounts();
         void ReturnObjectsInParcel(int localID, uint returnType, UUID[] agentIDs, UUID[] taskIDs, IClientAPI remoteClient);
-        int ScriptedReturnObjectsInParcel(UUID actionAgentID, UUID targetAgentID, LandData parcel, bool sameOwner);
-        int ScriptedReturnObjectsInParcelByIDs(UUID actionAgentID, List<UUID> targetIDs, int parcelLocalID);
+        int ScriptedReturnObjectsInParcelByOwner(TaskInventoryItem scriptItem, UUID targetAgentID, LandData parcel, bool sameOwner);
+        int ScriptedReturnObjectsInParcelByIDs(SceneObjectPart callingPart, TaskInventoryItem scriptItem, List<UUID> targetIDs, int parcelLocalID);
         void setParcelObjectMaxOverride(overrideParcelMaxPrimCountDelegate overrideDel);
         void setSimulatorObjectMaxOverride(overrideSimulatorMaxPrimCountDelegate overrideDel);
         void SetParcelOtherCleanTime(IClientAPI remoteClient, int localID, int otherCleanTime);

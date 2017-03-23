@@ -91,8 +91,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             param["EveryonePowers"] = ((ulong)Constants.DefaultEveryonePowers).ToString();
             param["OwnerRoleID"] = OwnerRoleID.ToString();
 
-            // Would this be cleaner as (GroupPowers)ulong.MaxValue;
-            GroupPowers OwnerPowers = (GroupPowers)ulong.MaxValue;
+            GroupPowers OwnerPowers = Constants.OWNER_GROUP_POWERS;
             param["OwnersPowers"] = ((ulong)OwnerPowers).ToString();
 
 

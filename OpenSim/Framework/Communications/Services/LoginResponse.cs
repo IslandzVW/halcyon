@@ -243,7 +243,7 @@ namespace OpenSim.Framework.Communications.Services
         {
             return
                 (GenerateFailureResponse("key",
-                                         "The viewer you are using is not allowed to connect to the InWorldz grid. Please use a different viewer.",
+                                         "The viewer you are using is not allowed to connect to the grid. Please use a different viewer.",
                                          "false"));
         }
 
@@ -424,6 +424,11 @@ namespace OpenSim.Framework.Communications.Services
                     responseData["buddy-list"] = m_buddyList.ToArray();
                 }
 
+                if (CurrencySymbol.Length > 0)
+                {
+                    responseData["currency"] = CurrencySymbol;
+                }
+
                 responseData["login"] = "true";
                 xmlRpcResponse.Value = responseData;
 
@@ -523,6 +528,11 @@ namespace OpenSim.Framework.Communications.Services
                 if (m_buddyList != null)
                 {
                     map["buddy-list"] = ArrayListToOSDArray(m_buddyList.ToArray());
+                }
+
+                if (CurrencySymbol.Length > 0)
+                {
+                    map["currency"] = OSD.FromString(CurrencySymbol);
                 }
 
                 map["login"] = OSD.FromString("true");
@@ -801,6 +811,12 @@ namespace OpenSim.Framework.Communications.Services
         {
             get { return profileServerURI; }
             set { profileServerURI = value; }
+        }
+
+        public string CurrencySymbol
+        {
+            get;
+            set;
         }
 
         #endregion

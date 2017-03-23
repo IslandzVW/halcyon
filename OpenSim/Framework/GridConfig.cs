@@ -46,6 +46,8 @@ namespace OpenSim.Framework
         public string UserRecvKey = String.Empty;
         public string UserSendKey = String.Empty;
 
+        public string SSLPublicCertFile = ConfigSettings.DefaultSSLPublicCertFile;
+
         public GridConfig(string description, string filename)
         {
             m_configMember =
@@ -93,8 +95,11 @@ namespace OpenSim.Framework
             m_configMember.addConfigurationOption("allow_region_registration", 
                                                 ConfigurationOption.ConfigurationTypes.TYPE_BOOLEAN,
                                                 "Allow regions to register immediately upon grid server startup? true/false", 
-                                                "True", 
-                                                false);            
+                                                "True",
+                                                false);
+
+            m_configMember.addConfigurationOption("ssl_public_certificate", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                  $"Path to public key certificate [{ConfigSettings.DefaultSSLPublicCertFile}]", ConfigSettings.DefaultSSLPublicCertFile, true);
         }
 
         public bool handleIncomingConfiguration(string configuration_key, object configuration_result)
@@ -139,7 +144,10 @@ namespace OpenSim.Framework
                     break;
                 case "allow_region_registration":
                     AllowRegionRegistration = (bool)configuration_result;
-                    break;                
+                    break;
+                case "ssl_public_certificate":
+                    SSLPublicCertFile = (string)configuration_result;
+                    break;
             }
 
             return true;

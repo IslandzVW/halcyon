@@ -238,7 +238,7 @@ namespace OpenSim.Grid.UserServer
         protected virtual void StartupLoginService()
         {
             m_loginService = new UserLoginService(
-                m_userDataBaseService, new LibraryRootFolder(Cfg.LibraryXmlfile), Cfg.MapServerURI, Cfg.ProfileServerURI, Cfg, Cfg.DefaultStartupMsg, new RegionProfileServiceProxy());
+                m_userDataBaseService, new LibraryRootFolder(Cfg.LibraryXmlfile, Cfg.LibraryName), Cfg.MapServerURI, Cfg.ProfileServerURI, Cfg, Cfg.DefaultStartupMsg, new RegionProfileServiceProxy());
         }
 
         protected virtual void PostInitializeModules()
@@ -254,7 +254,7 @@ namespace OpenSim.Grid.UserServer
 
             if (m_useJwt)
             {
-                m_jwtAuthenticator.PostInitialize();
+                m_jwtAuthenticator.PostInitialize(Cfg.SSLPrivateCertFile, Cfg.SSLPublicCertFile);
             }
         }
 
@@ -274,7 +274,7 @@ namespace OpenSim.Grid.UserServer
             }
             
 
-            m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin();
+            m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin(Cfg.SSLPublicCertFile);
             m_radmin.AddCommand("UserService", "Shutdown", UserServerShutdownHandler);
             m_radmin.AddHandler(m_httpServer);
         }

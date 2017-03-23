@@ -91,8 +91,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 UUID groupID = UUID.Random();
                 UUID ownerRoleID = UUID.Random();
                 
-                // Would this be cleaner as (GroupPowers)ulong.MaxValue;
-                GroupPowers ownerPowers = (GroupPowers)ulong.MaxValue;
+                GroupPowers ownerPowers = Constants.OWNER_GROUP_POWERS;
 
                 string query
                     =   "INSERT INTO osgroup " +

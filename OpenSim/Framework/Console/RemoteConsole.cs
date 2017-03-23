@@ -76,8 +76,7 @@ namespace OpenSim.Framework.Console
             m_InputData = new List<string>();
             m_LineNumber = 0;
             m_Connections = new Dictionary<UUID, ConsoleConnection>();
-            m_AllowedOrigin = String.Empty;
-            m_sigUtil = new JWTSignatureUtil(publicKeyPath: "./server.crt");
+            m_AllowedOrigin = string.Empty;
         }
 
         public void ReadConfig(IConfigSource config)
@@ -88,7 +87,14 @@ namespace OpenSim.Framework.Console
             if (netConfig == null)
                 return;
 
-            m_AllowedOrigin = netConfig.GetString("ConsoleAllowedOrigin", String.Empty);
+            m_AllowedOrigin = netConfig.GetString("ConsoleAllowedOrigin", string.Empty);
+
+            var certFilename = netConfig.GetString("SSLCertFile", string.Empty);
+
+            if (!string.IsNullOrWhiteSpace(certFilename))
+            {
+                m_sigUtil = new JWTSignatureUtil(publicKeyPath: certFilename);
+            }
         }
 
         public void SetServer(IHttpServer server)
@@ -266,12 +272,18 @@ namespace OpenSim.Framework.Console
                     return reply;
                 }
 
+                if (m_sigUtil == null)
+                {
+                    m_log.Warn("[REMOTECONSOLE] StartSession JWT Authorization subsystem not initialized. Does your Halcyon.ini contain a SSLCertFile stanza in the [Network] section?");
+                    return reply;
+                }
+
                 try
                 {
                     var token = new JWToken(authHeader.Substring(7), m_sigUtil);
 
                     // TODO: Make the scope strings come from some central list that can be registered into?
-                    if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
+                    if (token.Payload.Scope != "remote-console")
                     {
                         m_log.Warn($"[REMOTECONSOLE] StartSession invalid/expired/wrong scope JWToken from '{headers["remote_addr"]}'.");
                         return reply;
@@ -366,14 +378,20 @@ namespace OpenSim.Framework.Console
                     return reply;
                 }
 
+                if (m_sigUtil == null)
+                {
+                    m_log.Warn("[REMOTECONSOLE] CloseSession JWT Authorization subsystem not initialized. Does your Halcyon.ini contain a SSLCertFile stanza in the [Network] section?");
+                    return reply;
+                }
+
                 try
                 {
                     token = new JWToken(authHeader.Substring(7), m_sigUtil);
 
                     // TODO: Make the scope strings come from some central list that can be registered into?
-                    if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
+                    if (token.Payload.Scope != "remote-console")
                     {
-                        m_log.Warn($"[REMOTECONSOLE] CloseSession invalid/expired/wrong scope JWToken from '{headers["remote_addr"]}'.");
+                        m_log.Warn($"[REMOTECONSOLE] CloseSession wrong scope JWToken from '{headers["remote_addr"]}'.");
                         return reply;
                     }
 
@@ -459,14 +477,20 @@ namespace OpenSim.Framework.Console
                     return reply;
                 }
 
+                if (m_sigUtil == null)
+                {
+                    m_log.Warn("[REMOTECONSOLE] SessionCommand JWT Authorization subsystem not initialized. Does your Halcyon.ini contain a SSLCertFile stanza in the [Network] section?");
+                    return reply;
+                }
+
                 try
                 {
                     var token = new JWToken(authHeader.Substring(7), m_sigUtil);
 
                     // TODO: Make the scope strings come from some central list that can be registered into?
-                    if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
+                    if (token.Payload.Scope != "remote-console")
                     {
-                        m_log.Warn($"[REMOTECONSOLE] SessionCommand invalid/expired/wrong scope JWToken from '{headers["remote_addr"]}'.");
+                        m_log.Warn($"[REMOTECONSOLE] SessionCommand wrong scope JWToken from '{headers["remote_addr"]}'.");
                         return reply;
                     }
 
@@ -581,12 +605,18 @@ namespace OpenSim.Framework.Console
                     return;
                 }
 
+                if (m_sigUtil == null)
+                {
+                    m_log.Warn("[REMOTECONSOLE] ReadResponses JWT Authorization subsystem not initialized. Does your Halcyon.ini contain a SSLCertFile stanza in the [Network] section?");
+                    return;
+                }
+
                 try
                 {
                     var token = new JWToken(authHeader.Substring(7), m_sigUtil);
 
                     // TODO: Make the scope strings come from some central list that can be registered into?
-                    if (!(token.HasValidSignature && token.IsNotExpired && token.Payload.Scope == "remote-console"))
+                    if (token.Payload.Scope != "remote-console")
                     {
                         m_log.Warn($"[REMOTECONSOLE] ReadResponses invalid/expired/wrong scope JWToken from '{httpRequest.RemoteIPEndPoint}'.");
                         return;

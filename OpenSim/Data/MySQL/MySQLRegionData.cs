@@ -491,6 +491,9 @@ namespace OpenSim.Data.MySQL
             ProviderRegistry.Instance.TryGet<ISerializationEngine>(out engine);
             cmd.Parameters.AddWithValue("KeyframeAnimation" + numString, 
                 engine.MiscObjectSerializer.SerializeKeyframeAnimationToBytes(prim.KeyframeAnimation));
+
+            // Server-use flags (per-prim persistence storage). Currently just enabled TRUE/FALSE for sit target.
+            cmd.Parameters.AddWithValue("ServerFlags" + numString, prim.ServerFlags);
         }
 
         private StringBuilder GenerateShapeValuesBlock(int number)
@@ -1757,18 +1760,28 @@ namespace OpenSim.Data.MySQL
                 Convert.ToSingle(row["RotationW"])
                 );
 
-            prim.SetSitTarget(new Vector3(
-                                Convert.ToSingle(row["SitTargetOffsetX"]),
-                                Convert.ToSingle(row["SitTargetOffsetY"]),
-                                Convert.ToSingle(row["SitTargetOffsetZ"])
-                                ),
-                             new Quaternion(
-                                Convert.ToSingle(row["SitTargetOrientX"]),
-                                Convert.ToSingle(row["SitTargetOrientY"]),
-                                Convert.ToSingle(row["SitTargetOrientZ"]),
-                                Convert.ToSingle(row["SitTargetOrientW"])
-                             ), 
-                             false);
+            // We need ServerFlags first, in order to set all the SitTarget data.
+            prim.ServerFlags = Convert.ToUInt32(row["ServerFlags"]);
+
+            Vector3 sitTargetPos = new Vector3(
+                Convert.ToSingle(row["SitTargetOffsetX"]),
+                Convert.ToSingle(row["SitTargetOffsetY"]),
+                Convert.ToSingle(row["SitTargetOffsetZ"])
+            );
+            Quaternion sitTargetRot = new Quaternion(
+                Convert.ToSingle(row["SitTargetOrientX"]),
+                Convert.ToSingle(row["SitTargetOrientY"]),
+                Convert.ToSingle(row["SitTargetOrientZ"]),
+                Convert.ToSingle(row["SitTargetOrientW"])
+            );
+
+            // Now the sit target info itself.
+
+            // This function must be called on asset load (inventory rez) or database load (rezzed)
+            // with SOP.ServerFlags initialized, which may be updated before return.
+            bool sitTargetActive = prim.PrepSitTargetFromStorage(sitTargetPos, sitTargetRot);
+            // Even though the prim is set, we need to call this to update the SceneObjectGroup.
+            prim.SetSitTarget(sitTargetActive, sitTargetPos, sitTargetRot, false);
 
             prim.PayPrice[0] = Convert.ToInt32(row["PayPrice"]);
             prim.PayPrice[1] = Convert.ToInt32(row["PayButton1"]);

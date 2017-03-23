@@ -844,11 +844,11 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
         public bool IsAgentInGroup(IClientAPI remoteClient, UUID groupID)
         {
-            // Use the known in-memory group membership data if available before going to db.
-            if (remoteClient != null)
-                remoteClient.IsGroupMember(groupID);
+            if (remoteClient == null)
+                return false;   // we don't know who to check
 
-            return m_groupData.IsAgentInGroup(groupID, remoteClient.AgentId);
+            // Use the known in-memory group membership data if available before going to db.
+            return remoteClient.IsGroupMember(groupID);
         }
 
         /// <summary>
