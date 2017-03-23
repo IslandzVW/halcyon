@@ -44,6 +44,8 @@ namespace OpenSimProfile.Modules.OpenProfile
         private ConnectionFactory _connFactory;
         private ConnectionFactory _regionConnFactory;
 
+        private string _currencyString = "I'z$";
+
         public void Initialize(Scene scene, IConfigSource config)
         {
             if (!m_Enabled)
@@ -67,6 +69,12 @@ namespace OpenSimProfile.Modules.OpenProfile
             string storageConnStr = profileConfig.GetString("storage_connection_string", String.Empty);
 
             _regionConnFactory = new ConnectionFactory("MySQL", storageConnStr);
+
+            IMoneyModule mm = scene.RequestModuleInterface<IMoneyModule>();
+            if (mm != null)
+            {
+                _currencyString = mm.GetCurrencySymbol();
+            }
 
             // Hook up events
             scene.EventManager.OnNewClient += OnNewClient;

@@ -47,7 +47,10 @@ namespace OpenSim.Framework
         public uint HttpPort = ConfigSettings.DefaultUserServerHttpPort;
         public bool HttpSSL = ConfigSettings.DefaultUserServerHttpSSL;
         public uint DefaultUserLevel = 0;
-        public string LibraryXmlfile = string.Empty;
+
+        public string LibraryName = String.Empty;
+        public string LibraryXmlfile = String.Empty;
+        public string CurrencySymbol = String.Empty;
         public string SSLPrivateCertFile = string.Empty;
         public string SSLPublicCertFile = ConfigSettings.DefaultSSLPublicCertFile;
 
@@ -125,11 +128,16 @@ namespace OpenSim.Framework
                                                 "User Server (this) External URI for authentication keys",
                                                 "http://localhost:" + ConfigSettings.DefaultUserServerHttpPort + "/",
                                                 false);
+
+            m_configMember.addConfigurationOption("library_name",
+                                                ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
+                                                "Displayed name of common inventory library - anything other than 'Library' is going to cause language translation issues in the viewer",
+                                                "InWorldz Library", true);
             m_configMember.addConfigurationOption("library_location",
                                                 ConfigurationOption.ConfigurationTypes.TYPE_STRING_NOT_EMPTY,
                                                 "Path to library control file",
                                                 string.Format(".{0}inventory{0}Libraries.xml", Path.DirectorySeparatorChar), false);
-            
+
             m_configMember.addConfigurationOption("database_provider", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                 "DLL for database provider", "OpenSim.Data.MySQL.dll", false);
             m_configMember.addConfigurationOption("database_connect", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
@@ -154,10 +162,15 @@ namespace OpenSim.Framework
             m_configMember.addConfigurationOption("default_loginLevel", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Minimum Level a user should have to login [0 default]", "0", false);
 
+
+            m_configMember.addConfigurationOption("currency_symbol", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "The currency symbol string to show in the viewer in place of L$", String.Empty, true);
+
             m_configMember.addConfigurationOption("ssl_private_certificate", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                   "Path to private key certificate", string.Empty, true);
             m_configMember.addConfigurationOption("ssl_public_certificate", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                   $"Path to public key certificate [{ConfigSettings.DefaultSSLPublicCertFile}]", ConfigSettings.DefaultSSLPublicCertFile, true);
+
         }
 
         public bool handleIncomingConfiguration(string configuration_key, object configuration_result)
@@ -209,11 +222,17 @@ namespace OpenSim.Framework
                 case "library_location":
                     LibraryXmlfile = (string)configuration_result;
                     break;
+                case "library_name":
+                    LibraryName = (string)configuration_result;
+                    break;
                 case "map_server_uri":
                     MapServerURI = (string)configuration_result;
                     break;
                 case "profile_server_uri":
                     ProfileServerURI = (string)configuration_result;
+                    break;
+                case "currency_symbol":
+                    CurrencySymbol = (string)configuration_result;
                     break;
                 case "ssl_private_certificate":
                     SSLPrivateCertFile = (string)configuration_result;

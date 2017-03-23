@@ -117,7 +117,7 @@ namespace OpenSim.ApplicationPlugins.CreateCommsManager
 
         protected void InitializeCommsManager(OpenSimBase openSim)
         {
-            LibraryRootFolder libraryRootFolder = new LibraryRootFolder(m_openSim.ConfigurationSettings.LibrariesXMLFile);
+            LibraryRootFolder libraryRootFolder = new LibraryRootFolder(m_openSim.ConfigurationSettings.LibrariesXMLFile, m_openSim.ConfigurationSettings.LibraryName);
 
             InitializeStandardServices(libraryRootFolder);
 

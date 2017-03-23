@@ -165,16 +165,6 @@ namespace OpenSim.Region.CoreModules.Plus
 
         #region Utility methods
 
-        private string EncodeURL(bool includePrefix, string region, float posx, float posy, float posz)
-        {
-            int x = (int)Math.Floor(posx);
-            int y = (int)Math.Floor(posy);
-            int z = (int)Math.Floor(posz);
-            string prefix = includePrefix ? "http://places.inworldz.com/" : String.Empty;
-
-            return prefix + Util.EscapeUriDataStringRfc3986(region) + "/" + x.ToString() + "/" + y.ToString() + "/" + z.ToString();
-        }
-
         private void SendIM(UUID agentId, Vector3 pos, UUID fromID, string fromName, string message)
         {
             if (_scenes.Count < 1)
@@ -206,7 +196,7 @@ namespace OpenSim.Region.CoreModules.Plus
             msg.Position = pos;
             msg.RegionID = scene.RegionInfo.RegionID.Guid;//RegionID.Guid;
             // binaryBucket is the SL URL without the prefix, e.g. "Region/x/y/z"
-            string url = EncodeURL(false, scene.RegionInfo.RegionName, msg.Position.X, msg.Position.Y, msg.Position.Z);
+            string url = Util.LocationShortCode(scene.RegionInfo.RegionName, msg.Position, "/");
             byte[] bucket = Utils.StringToBytes(url);
             msg.binaryBucket = new byte[bucket.Length];// binaryBucket;
             bucket.CopyTo(msg.binaryBucket, 0);
@@ -252,7 +242,8 @@ namespace OpenSim.Region.CoreModules.Plus
             UserProfileData userProfile = scene.CommsManager.UserService.GetUserProfile(userID);
             string name = (userProfile != null) ? userProfile.Name : "Unknown " + userID.ToString();
             string verb = isClaim ? "claimed" : "abandoned";
-            string url = EncodeURL(true, scene.RegionInfo.RegionName, parcel.UserLocation.X, parcel.UserLocation.Y, parcel.UserLocation.Z);
+            string url = Util.LocationURL(scene.RegionInfo.RegionName, parcel.UserLocation);
+
             foreach (UUID manager in scene.RegionInfo.EstateSettings.EstateManagers)
             {
                 SendIM(manager, parcel.UserLocation, INWORLDZ_MAINLAND, scene.RegionInfo.RegionName, name + " has " + verb + " parcel '" + parcel.Name + "' at " + url);

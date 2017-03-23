@@ -125,6 +125,8 @@ namespace OpenSim.Grid.UserServer.Modules
 
         public void RegisterHandlers(BaseHttpServer httpServer, bool registerOpenIDHandlers)
         {
+            m_currencySymbol = m_config.CurrencySymbol;
+
             m_httpServer = httpServer;
 
             m_httpServer.AddHTTPHandler("login", ProcessHTMLLogin); 

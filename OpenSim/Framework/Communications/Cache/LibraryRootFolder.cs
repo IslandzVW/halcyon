@@ -53,11 +53,11 @@ namespace OpenSim.Framework.Communications.Cache
         protected Dictionary<UUID, InventoryFolderImpl> libraryFolders
             = new Dictionary<UUID, InventoryFolderImpl>();
         
-        public LibraryRootFolder(string pLibrariesLocation)
+        public LibraryRootFolder(string pLibrariesLocation, string libraryName)
         {
             Owner = libOwner;
             ID = new UUID("00000112-000f-0000-0000-000100bba000");
-            Name = "InWorldz Library";
+            Name = libraryName;
             ParentID = UUID.Zero;
             Type = (short) 8;
             Version = (ushort) 1;
