@@ -254,7 +254,7 @@ namespace OpenSim.Grid.UserServer
 
             if (m_useJwt)
             {
-                m_jwtAuthenticator.PostInitialize();
+                m_jwtAuthenticator.PostInitialize(Cfg.SSLPrivateCertFile, Cfg.SSLPublicCertFile);
             }
         }
 
@@ -274,7 +274,7 @@ namespace OpenSim.Grid.UserServer
             }
             
 
-            m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin();
+            m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin(Cfg.SSLPublicCertFile);
             m_radmin.AddCommand("UserService", "Shutdown", UserServerShutdownHandler);
             m_radmin.AddHandler(m_httpServer);
         }

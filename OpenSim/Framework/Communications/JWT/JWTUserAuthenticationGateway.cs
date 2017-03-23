@@ -47,10 +47,10 @@ namespace OpenSim.Framework.Communications.JWT
 
         private readonly JWTSignatureUtil m_sigUtil;
 
-        public JWTUserAuthenticationGateway(IUserService userService)
+        public JWTUserAuthenticationGateway(IUserService userService, string privateKeyPath, string publicKeyPath)
         {
             _userService = userService;
-            m_sigUtil = new JWTSignatureUtil(privateKeyPath: "./server.p12", publicKeyPath:"./server.crt");
+            m_sigUtil = new JWTSignatureUtil(privateKeyPath, publicKeyPath);
         }
 
         /// <summary>
