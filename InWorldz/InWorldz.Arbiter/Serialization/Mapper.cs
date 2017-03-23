@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using FlatBuffers;
 using OpenMetaverse;
 using OpenSim.Framework;
@@ -61,6 +62,39 @@ namespace InWorldz.Arbiter.Serialization
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Maps from a flatbuffer serialized group to a SOG
+        /// </summary>
+        /// <param name="inGroup">The flatbuffer group to serialize</param>
+        /// <returns></returns>
+        public static SceneObjectGroup MapFlatbufferGroupToSceneObjectGroup(HalcyonGroup inGroup)
+        {
+            if (!inGroup.Root.HasValue)
+            {
+                throw new NullReferenceException();
+            }
+            
+            var group = new SceneObjectGroup();
+            group.SetRootPart(MapFlatbufferPrimToPart(inGroup.Root.Value));
+            
+            for (int i = 0; i < inGroup.ChildPartsLength; i++)
+            {
+                if (! inGroup.ChildParts(i).HasValue) continue;
+
+                SceneObjectPart childPart = Mapper.MapFlatbufferPrimToPart(inGroup.ChildParts(i).Value);
+
+                int originalLinkNum = childPart.LinkNum;
+                group.AddPart(childPart);
+
+                // SceneObjectGroup.AddPart() tries to be smart and automatically set the LinkNum.
+                // We override that here
+                if (originalLinkNum != 0)
+                    childPart.LinkNum = originalLinkNum;
+            }
+
+            return group;
         }
 
         /// <summary>
