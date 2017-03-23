@@ -175,10 +175,10 @@ namespace OpenSimProfile.Modules.OpenProfile
                 }
 
                 remoteClient.SendAvatarInterestsReply(avatarID,
-                    wantToMask,
-                    wantToText,
                     skillsMask,
                     skillsText,
+                    wantToMask,
+                    wantToText,
                     languagesText);
             }
 
