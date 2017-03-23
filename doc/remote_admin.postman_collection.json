@@ -12,25 +12,127 @@
 			"description": "",
 			"item": [
 				{
-					"name": "XMLRPC Login",
+					"name": "Get JWT Auth Token",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"type": "text/javascript",
-								"exec": "var jsonObject = {};\n\ntry {\n    jsonObject = xml2Json(responseBody);\n    \n    if (jsonObject.hasOwnProperty(\"methodResponse\") && jsonObject.methodResponse.hasOwnProperty(\"params\")) {\n        postman.setEnvironmentVariable(\"rpc_login_key\", jsonObject.methodResponse.params.param.value.struct.member[0].value.string);\n    }\n}\ncatch(e) {\n    tests[\"parserr: \" + JSON.stringify(e)] = false;\n    tests[\"data: \" + JSON.stringify(jsonObject)] = false;\n}\n\ntests[\"rpc_login_key: \" + environment.rpc_login_key] = environment.rpc_login_key !== null && environment.rpc_login_key.length > 0;"
+								"exec": [
+									"var jsonObject = {};",
+									"",
+									"try",
+									"{",
+									"    jsonObject = JSON.parse(responseBody);",
+									"    ",
+									"    tests[\"body: \" + responseBody] = true;",
+									"    ",
+									"    if (jsonObject.hasOwnProperty(\"token\"))",
+									"    {",
+									"        tests[\"Parameter 'token' in response object\"] = jsonObject.hasOwnProperty(\"token\");",
+									"        tests[\"Parameter 'token' is a string\"] = Object.prototype.toString.call(jsonObject.token) === \"[object String]\";",
+									"        tests[\"Token: \" + jsonObject.token] = true;",
+									"        postman.setEnvironmentVariable(\"restadmin_jwt_token\", jsonObject.token);",
+									"    }",
+									"    else",
+									"    {",
+									"        tests[\"Parameter 'denied' in response object\"] = jsonObject.hasOwnProperty(\"denied\");",
+									"        tests[\"Parameter 'denied' is a string\"] = Object.prototype.toString.call(jsonObject.denied) === \"[object String]\";",
+									"        tests[\"Denial reason: \" + jsonObject.denied] = false; // Fail the test so the user knows that something's amiss.",
+									"    }",
+									"}",
+									"catch(e)",
+									"{",
+									"    tests[\"parserr: \" + JSON.stringify(e)] = false;",
+									"    tests[\"data: \" + JSON.stringify(jsonObject)] = false;",
+									"}",
+									""
+								]
 							}
 						},
 						{
 							"listen": "prerequest",
 							"script": {
 								"type": "text/javascript",
-								"exec": "postman.clearEnvironmentVariable(\"rpc_login_key\");"
+								"exec": [
+									"postman.clearEnvironmentVariable(\"restadmin_jwt_token\");"
+								]
 							}
 						}
 					],
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{USERSERVER_URL}}:{{USERSERVER_PORT}}/auth/jwt/remote-admin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{USER}}\",\n    \"password\": \"{{PASS}}\"\n}"
+						},
+						"description": "Gets a JWT token that can be used to access the remote console endpoints.\n"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Grid Server",
+			"description": "",
+			"item": [
+				{
+					"name": "Get Grid Info",
+					"request": {
+						"url": "{{PROTOCOL}}://{{GRIDSERVER_URL}}:{{GRIDSERVER_PORT}}/get_grid_info",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Login JWT",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonObject = {};",
+									"",
+									"try {",
+									"    jsonObject = xml2Json(responseBody);",
+									"    ",
+									"    if (jsonObject.hasOwnProperty(\"methodResponse\") && jsonObject.methodResponse.hasOwnProperty(\"params\")) {",
+									"        postman.setEnvironmentVariable(\"rpc_login_key\", jsonObject.methodResponse.params.param.value.struct.member[0].value.string);",
+									"    }",
+									"}",
+									"catch(e) {",
+									"    tests[\"parserr: \" + JSON.stringify(e)] = false;",
+									"    tests[\"data: \" + JSON.stringify(jsonObject)] = false;",
+									"}",
+									"",
+									"tests[\"rpc_login_key: \" + environment.rpc_login_key] = environment.rpc_login_key !== null && environment.rpc_login_key.length > 0;"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.clearEnvironmentVariable(\"rpc_login_key\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{PROTOCOL}}://{{GRIDSERVER_URL}}:{{GRIDSERVER_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -41,12 +143,13 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_password</methodName>\n    <params>\n        <param>\n            <value><string>{{USER}}</string></value>\n        </param>\n        <param>\n            <value><string>{{PASS}}</string></value>\n        </param>\n    </params>\n</methodCall>"
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_token</methodName>\n    <params>\n        <param>\n            <value><string>{{restadmin_jwt_token}}</string></value>\n        </param>\n    </params>\n</methodCall>"
 						},
 						"description": "XMLRPC access point for remote administration.\n"
 					},
 					"response": [
 						{
+							"id": "93cce335-56d0-439d-ab2d-bc42247dcfc9",
 							"name": "ExampleLogin",
 							"originalRequest": {
 								"url": "http://localhost:9991/xmlrpc/RemoteAdmin",
@@ -119,12 +222,14 @@
 							"listen": "test",
 							"script": {
 								"type": "text/javascript",
-								"exec": "postman.clearEnvironmentVariable(\"rpc_login_key\");"
+								"exec": [
+									"postman.clearEnvironmentVariable(\"rpc_login_key\");"
+								]
 							}
 						}
 					],
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{GRIDSERVER_URL}}:{{GRIDSERVER_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -142,49 +247,9 @@
 					"response": []
 				},
 				{
-					"name": "XMLRPC Arbitrary Command",
-					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "text/xml",
-								"description": ""
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Console.Command</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param>\n            <value><string>alert general This is a ping from remote!</string></value>\n        </param>\n    </params>\n</methodCall>"
-						},
-						"description": "XMLRPC access point for remote administration.\n"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Grid Server",
-			"description": "",
-			"item": [
-				{
-					"name": "Get Grid Info",
-					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/get_grid_info",
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": []
-						},
-						"description": ""
-					},
-					"response": []
-				},
-				{
 					"name": "XMLRPC Grid Server Shutdown",
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{GRIDSERVER_URL}}:{{GRIDSERVER_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -208,9 +273,160 @@
 			"description": "",
 			"item": [
 				{
+					"name": "XMLRPC Login JWT",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonObject = {};",
+									"",
+									"try {",
+									"    jsonObject = xml2Json(responseBody);",
+									"    ",
+									"    if (jsonObject.hasOwnProperty(\"methodResponse\") && jsonObject.methodResponse.hasOwnProperty(\"params\")) {",
+									"        postman.setEnvironmentVariable(\"rpc_login_key\", jsonObject.methodResponse.params.param.value.struct.member[0].value.string);",
+									"    }",
+									"}",
+									"catch(e) {",
+									"    tests[\"parserr: \" + JSON.stringify(e)] = false;",
+									"    tests[\"data: \" + JSON.stringify(jsonObject)] = false;",
+									"}",
+									"",
+									"tests[\"rpc_login_key: \" + environment.rpc_login_key] = environment.rpc_login_key !== null && environment.rpc_login_key.length > 0;"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.clearEnvironmentVariable(\"rpc_login_key\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{PROTOCOL}}://{{MESSAGESERVER_URL}}:{{MESSAGESERVER_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_token</methodName>\n    <params>\n        <param>\n            <value><string>{{restadmin_jwt_token}}</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": "XMLRPC access point for remote administration.\n"
+					},
+					"response": [
+						{
+							"id": "b23f8b80-f983-49b0-961f-aeb97c83caa5",
+							"name": "ExampleLogin",
+							"originalRequest": {
+								"url": "http://localhost:9991/xmlrpc/RemoteAdmin",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/xml",
+										"enabled": true,
+										"description": "The mime type of this content"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_password</methodName>\n    <params>\n        <param>\n            <value><string>user</string></value>\n        </param>\n        <param>\n            <value><string>pass</string></value>\n        </param>\n    </params>\n</methodCall>"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"_postman_previewtype": "html",
+							"header": [
+								{
+									"name": "Content-Encoding",
+									"key": "Content-Encoding",
+									"value": "gzip",
+									"description": "The type of encoding used on the data."
+								},
+								{
+									"name": "Content-Length",
+									"key": "Content-Length",
+									"value": "196",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"name": "Content-Type",
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8",
+									"description": "The mime type of this content"
+								},
+								{
+									"name": "Date",
+									"key": "Date",
+									"value": "Tue, 05 Jul 2016 05:41:19 GMT",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"name": "Keep-Alive",
+									"key": "Keep-Alive",
+									"value": "timeout=15,max=100",
+									"description": "Custom header"
+								},
+								{
+									"name": "Server",
+									"key": "Server",
+									"value": "Mono-HTTPAPI/1.0",
+									"description": "A name for the server"
+								}
+							],
+							"cookie": [],
+							"responseTime": 36,
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?><methodResponse><params><param><value><struct><member><name>Value</name><value><string>ef4b81ff-0838-4979-b286-a2f8084c4ff9</string></value></member><member><name>Status</name><value><string>Success</string></value></member></struct></value></param></params></methodResponse>"
+						}
+					]
+				},
+				{
+					"name": "XMLRPC Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.clearEnvironmentVariable(\"rpc_login_key\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{PROTOCOL}}://{{MESSAGESERVER_URL}}:{{MESSAGESERVER_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.logout</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": "XMLRPC access point for remote administration.\n"
+					},
+					"response": []
+				},
+				{
 					"name": "XMLRPC Message Server Shutdown",
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{MESSAGESERVER_URL}}:{{MESSAGESERVER_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -234,9 +450,300 @@
 			"description": "",
 			"item": [
 				{
+					"name": "XMLRPC Login JWT",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonObject = {};",
+									"",
+									"try {",
+									"    jsonObject = xml2Json(responseBody);",
+									"    ",
+									"    if (jsonObject.hasOwnProperty(\"methodResponse\") && jsonObject.methodResponse.hasOwnProperty(\"params\")) {",
+									"        postman.setEnvironmentVariable(\"rpc_login_key\", jsonObject.methodResponse.params.param.value.struct.member[0].value.string);",
+									"    }",
+									"}",
+									"catch(e) {",
+									"    tests[\"parserr: \" + JSON.stringify(e)] = false;",
+									"    tests[\"data: \" + JSON.stringify(jsonObject)] = false;",
+									"}",
+									"",
+									"tests[\"rpc_login_key: \" + environment.rpc_login_key] = environment.rpc_login_key !== null && environment.rpc_login_key.length > 0;"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.clearEnvironmentVariable(\"rpc_login_key\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_token</methodName>\n    <params>\n        <param>\n            <value><string>{{restadmin_jwt_token}}</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": "XMLRPC access point for remote administration.\n"
+					},
+					"response": [
+						{
+							"id": "8b4e579b-c537-4ce8-a0f1-be7089e3813f",
+							"name": "ExampleLogin",
+							"originalRequest": {
+								"url": "http://localhost:9991/xmlrpc/RemoteAdmin",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/xml",
+										"enabled": true,
+										"description": "The mime type of this content"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_password</methodName>\n    <params>\n        <param>\n            <value><string>user</string></value>\n        </param>\n        <param>\n            <value><string>pass</string></value>\n        </param>\n    </params>\n</methodCall>"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"_postman_previewtype": "html",
+							"header": [
+								{
+									"name": "Content-Encoding",
+									"key": "Content-Encoding",
+									"value": "gzip",
+									"description": "The type of encoding used on the data."
+								},
+								{
+									"name": "Content-Length",
+									"key": "Content-Length",
+									"value": "196",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"name": "Content-Type",
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8",
+									"description": "The mime type of this content"
+								},
+								{
+									"name": "Date",
+									"key": "Date",
+									"value": "Tue, 05 Jul 2016 05:41:19 GMT",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"name": "Keep-Alive",
+									"key": "Keep-Alive",
+									"value": "timeout=15,max=100",
+									"description": "Custom header"
+								},
+								{
+									"name": "Server",
+									"key": "Server",
+									"value": "Mono-HTTPAPI/1.0",
+									"description": "A name for the server"
+								}
+							],
+							"cookie": [],
+							"responseTime": 36,
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?><methodResponse><params><param><value><struct><member><name>Value</name><value><string>ef4b81ff-0838-4979-b286-a2f8084c4ff9</string></value></member><member><name>Status</name><value><string>Success</string></value></member></struct></value></param></params></methodResponse>"
+						}
+					]
+				},
+				{
+					"name": "XMLRPC Login User & Pass",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonObject = {};",
+									"",
+									"try {",
+									"    jsonObject = xml2Json(responseBody);",
+									"    ",
+									"    if (jsonObject.hasOwnProperty(\"methodResponse\") && jsonObject.methodResponse.hasOwnProperty(\"params\")) {",
+									"        postman.setEnvironmentVariable(\"rpc_login_key\", jsonObject.methodResponse.params.param.value.struct.member[0].value.string);",
+									"    }",
+									"}",
+									"catch(e) {",
+									"    tests[\"parserr: \" + JSON.stringify(e)] = false;",
+									"    tests[\"data: \" + JSON.stringify(jsonObject)] = false;",
+									"}",
+									"",
+									"tests[\"rpc_login_key: \" + environment.rpc_login_key] = environment.rpc_login_key !== null && environment.rpc_login_key.length > 0;"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.clearEnvironmentVariable(\"rpc_login_key\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_password</methodName>\n    <params>\n        <param>\n            <value><string>{{USER}}</string></value>\n        </param>\n        <param>\n            <value><string>{{PASS}}</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": "XMLRPC access point for remote administration.\n"
+					},
+					"response": [
+						{
+							"id": "74ee02e5-af9a-4c94-a06f-e7bb82b57017",
+							"name": "ExampleLogin",
+							"originalRequest": {
+								"url": "http://localhost:9991/xmlrpc/RemoteAdmin",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/xml",
+										"enabled": true,
+										"description": "The mime type of this content"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_password</methodName>\n    <params>\n        <param>\n            <value><string>user</string></value>\n        </param>\n        <param>\n            <value><string>pass</string></value>\n        </param>\n    </params>\n</methodCall>"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"_postman_previewtype": "html",
+							"header": [
+								{
+									"name": "Content-Encoding",
+									"key": "Content-Encoding",
+									"value": "gzip",
+									"description": "The type of encoding used on the data."
+								},
+								{
+									"name": "Content-Length",
+									"key": "Content-Length",
+									"value": "196",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"name": "Content-Type",
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8",
+									"description": "The mime type of this content"
+								},
+								{
+									"name": "Date",
+									"key": "Date",
+									"value": "Tue, 05 Jul 2016 05:41:19 GMT",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"name": "Keep-Alive",
+									"key": "Keep-Alive",
+									"value": "timeout=15,max=100",
+									"description": "Custom header"
+								},
+								{
+									"name": "Server",
+									"key": "Server",
+									"value": "Mono-HTTPAPI/1.0",
+									"description": "A name for the server"
+								}
+							],
+							"cookie": [],
+							"responseTime": 36,
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?><methodResponse><params><param><value><struct><member><name>Value</name><value><string>ef4b81ff-0838-4979-b286-a2f8084c4ff9</string></value></member><member><name>Status</name><value><string>Success</string></value></member></struct></value></param></params></methodResponse>"
+						}
+					]
+				},
+				{
+					"name": "XMLRPC Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.clearEnvironmentVariable(\"rpc_login_key\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.logout</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": "XMLRPC access point for remote administration.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Arbitrary Command",
+					"request": {
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Console.Command</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param>\n            <value><string>alert general This is a ping from remote!</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": "XMLRPC access point for remote administration.\n"
+					},
+					"response": []
+				},
+				{
 					"name": "XMLRPC Region Server Restart (specified region, default timeout)",
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -256,7 +763,7 @@
 				{
 					"name": "XMLRPC Region Server Shutdown (specified region, 10 sec)",
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -276,7 +783,7 @@
 				{
 					"name": "XMLRPC Region Server Send Alert",
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -296,7 +803,7 @@
 				{
 					"name": "XMLRPC Region Server Backup To File",
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -316,7 +823,7 @@
 				{
 					"name": "XMLRPC Region Server Restore From File",
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -336,7 +843,7 @@
 				{
 					"name": "XMLRPC Region Server Save OAR File",
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -356,7 +863,7 @@
 				{
 					"name": "XMLRPC Region Server Load OAR File",
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -376,7 +883,7 @@
 				{
 					"name": "XMLRPC Region Server Change Parcel Flags",
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{
@@ -400,9 +907,160 @@
 			"description": "",
 			"item": [
 				{
+					"name": "XMLRPC Login JWT",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonObject = {};",
+									"",
+									"try {",
+									"    jsonObject = xml2Json(responseBody);",
+									"    ",
+									"    if (jsonObject.hasOwnProperty(\"methodResponse\") && jsonObject.methodResponse.hasOwnProperty(\"params\")) {",
+									"        postman.setEnvironmentVariable(\"rpc_login_key\", jsonObject.methodResponse.params.param.value.struct.member[0].value.string);",
+									"    }",
+									"}",
+									"catch(e) {",
+									"    tests[\"parserr: \" + JSON.stringify(e)] = false;",
+									"    tests[\"data: \" + JSON.stringify(jsonObject)] = false;",
+									"}",
+									"",
+									"tests[\"rpc_login_key: \" + environment.rpc_login_key] = environment.rpc_login_key !== null && environment.rpc_login_key.length > 0;"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.clearEnvironmentVariable(\"rpc_login_key\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{PROTOCOL}}://{{USERSERVER_URL}}:{{USERSERVER_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_token</methodName>\n    <params>\n        <param>\n            <value><string>{{restadmin_jwt_token}}</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": "XMLRPC access point for remote administration.\n"
+					},
+					"response": [
+						{
+							"id": "57dab8fe-5248-4c19-9bef-203317c22123",
+							"name": "ExampleLogin",
+							"originalRequest": {
+								"url": "http://localhost:9991/xmlrpc/RemoteAdmin",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/xml",
+										"enabled": true,
+										"description": "The mime type of this content"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.login_with_password</methodName>\n    <params>\n        <param>\n            <value><string>user</string></value>\n        </param>\n        <param>\n            <value><string>pass</string></value>\n        </param>\n    </params>\n</methodCall>"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"_postman_previewtype": "html",
+							"header": [
+								{
+									"name": "Content-Encoding",
+									"key": "Content-Encoding",
+									"value": "gzip",
+									"description": "The type of encoding used on the data."
+								},
+								{
+									"name": "Content-Length",
+									"key": "Content-Length",
+									"value": "196",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"name": "Content-Type",
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8",
+									"description": "The mime type of this content"
+								},
+								{
+									"name": "Date",
+									"key": "Date",
+									"value": "Tue, 05 Jul 2016 05:41:19 GMT",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"name": "Keep-Alive",
+									"key": "Keep-Alive",
+									"value": "timeout=15,max=100",
+									"description": "Custom header"
+								},
+								{
+									"name": "Server",
+									"key": "Server",
+									"value": "Mono-HTTPAPI/1.0",
+									"description": "A name for the server"
+								}
+							],
+							"cookie": [],
+							"responseTime": 36,
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?><methodResponse><params><param><value><struct><member><name>Value</name><value><string>ef4b81ff-0838-4979-b286-a2f8084c4ff9</string></value></member><member><name>Status</name><value><string>Success</string></value></member></struct></value></param></params></methodResponse>"
+						}
+					]
+				},
+				{
+					"name": "XMLRPC Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.clearEnvironmentVariable(\"rpc_login_key\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{PROTOCOL}}://{{USERSERVER_URL}}:{{USERSERVER_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>session.logout</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": "XMLRPC access point for remote administration.\n"
+					},
+					"response": []
+				},
+				{
 					"name": "XMLRPC User Server Shutdown",
 					"request": {
-						"url": "{{PROTOCOL}}://{{URL}}:{{PORT}}/xmlrpc/RemoteAdmin",
+						"url": "{{PROTOCOL}}://{{USERSERVER_URL}}:{{USERSERVER_PORT}}/xmlrpc/RemoteAdmin",
 						"method": "POST",
 						"header": [
 							{

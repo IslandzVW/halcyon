@@ -84,16 +84,22 @@ namespace OpenSim.Framework
             m_defaultHomeLocX = (uint) config.Configs["StandAlone"].GetInt("default_location_x", 1000);
             m_defaultHomeLocY = (uint) config.Configs["StandAlone"].GetInt("default_location_y", 1000);
 
-            HostName = config.Configs["Network"].GetString("hostname", Util.RetrieveListenAddress());
-            HttpListenerPort = (uint) config.Configs["Network"].GetInt("http_listener_port", (int) ConfigSettings.DefaultRegionHttpPort);
-            httpSSLPort = (uint)config.Configs["Network"].GetInt("http_listener_sslport", ((int)ConfigSettings.DefaultRegionHttpPort+1));
-            HttpUsesSSL = config.Configs["Network"].GetBoolean("http_listener_ssl", false);
-            HttpSSLCN = config.Configs["Network"].GetString("http_listener_cn", "localhost");
-            HttpSSLCert = config.Configs["Network"].GetString("http_listener_ssl_cert", String.Empty);
-            HttpSSLPassword = config.Configs["Network"].GetString("http_listener_ssl_passwd", String.Empty);
-            useHTTPS = config.Configs["Network"].GetBoolean("use_https", false);
+            var networkConfigSection = config.Configs["Network"];
 
-            string sslproto = config.Configs["Network"].GetString("https_ssl_protocol", "Default");
+            HostName = networkConfigSection.GetString("hostname", Util.RetrieveListenAddress());
+            HttpListenerPort = (uint) networkConfigSection.GetInt("http_listener_port", (int) ConfigSettings.DefaultRegionHttpPort);
+            httpSSLPort = (uint) networkConfigSection.GetInt("http_listener_sslport", ((int)ConfigSettings.DefaultRegionHttpPort+1));
+            HttpUsesSSL = networkConfigSection.GetBoolean("http_listener_ssl", false);
+            HttpSSLCN = networkConfigSection.GetString("http_listener_cn", "localhost");
+            HttpSSLCert = networkConfigSection.GetString("http_listener_ssl_cert", string.Empty);
+            if (string.IsNullOrWhiteSpace(HttpSSLCert))
+            {
+                HttpSSLCert = networkConfigSection.GetString("SSLCertFile", ConfigSettings.DefaultSSLPublicCertFile);
+            }
+            HttpSSLPassword = networkConfigSection.GetString("http_listener_ssl_passwd", String.Empty);
+            useHTTPS = networkConfigSection.GetBoolean("use_https", false);
+
+            string sslproto = networkConfigSection.GetString("https_ssl_protocol", "Default");
             try
             {
                 sslProtocol = (SslProtocols)Enum.Parse(typeof(SslProtocols), sslproto);
@@ -104,24 +110,20 @@ namespace OpenSim.Framework
             }
             
             ConfigSettings.DefaultRegionRemotingPort =
-                (uint) config.Configs["Network"].GetInt("remoting_listener_port", (int) ConfigSettings.DefaultRegionRemotingPort);
-            GridURL =
-                config.Configs["Network"].GetString("grid_server_url",
-                                                    "http://127.0.0.1:" + ConfigSettings.DefaultGridServerHttpPort.ToString());
-            GridSendKey = config.Configs["Network"].GetString("grid_send_key", "null");
-            GridRecvKey = config.Configs["Network"].GetString("grid_recv_key", "null");
-            UserURL =
-                config.Configs["Network"].GetString("user_server_url",
-                                                    "http://127.0.0.1:" + ConfigSettings.DefaultUserServerHttpPort.ToString());
-            UserSendKey = config.Configs["Network"].GetString("user_send_key", "null");
-            UserRecvKey = config.Configs["Network"].GetString("user_recv_key", "null");
-            AssetURL = config.Configs["Network"].GetString("asset_server_url", AssetURL);
-            InventoryURL = config.Configs["Network"].GetString("inventory_server_url",
+                (uint) networkConfigSection.GetInt("remoting_listener_port", (int) ConfigSettings.DefaultRegionRemotingPort);
+            GridURL = networkConfigSection.GetString("grid_server_url", "http://127.0.0.1:" + ConfigSettings.DefaultGridServerHttpPort.ToString());
+            GridSendKey = networkConfigSection.GetString("grid_send_key", "null");
+            GridRecvKey = networkConfigSection.GetString("grid_recv_key", "null");
+            UserURL = networkConfigSection.GetString("user_server_url", "http://127.0.0.1:" + ConfigSettings.DefaultUserServerHttpPort.ToString());
+            UserSendKey = networkConfigSection.GetString("user_send_key", "null");
+            UserRecvKey = networkConfigSection.GetString("user_recv_key", "null");
+            AssetURL = networkConfigSection.GetString("asset_server_url", AssetURL);
+            InventoryURL = networkConfigSection.GetString("inventory_server_url",
                                                                "http://127.0.0.1:" +
                                                                ConfigSettings.DefaultInventoryServerHttpPort.ToString());
-            secureInventoryServer = config.Configs["Network"].GetBoolean("secure_inventory_server", true);
+            secureInventoryServer = networkConfigSection.GetBoolean("secure_inventory_server", true);
 
-            MessagingURL = config.Configs["Network"].GetString("messaging_server_url",
+            MessagingURL = networkConfigSection.GetString("messaging_server_url",
                                                                "http://127.0.0.1:" + ConfigSettings.DefaultMessageServerHttpPort);
         }
     }
