@@ -877,6 +877,7 @@
       <Reference name="OpenSim.Data.MySQL"/>
       <Reference name="OpenSim.Grid.Framework"/>
       <Reference name="InWorldz.RemoteAdmin"/>
+      <Reference name="Nini" path="../../bin/"/>
 
       <Files>
         <Match pattern="*.cs" recurse="true"/>
