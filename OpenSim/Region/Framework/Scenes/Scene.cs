@@ -1551,8 +1551,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
-                _taintedGroups.RemoveAll<SceneObjectGroup>(groupsNeedingBackup);
-                _taintedGroups.RemoveAll<SceneObjectGroup>(deletedGroups);
+                _taintedGroups.RemoveAll(groupsNeedingBackup);
+                _taintedGroups.RemoveAll(deletedGroups);
             }
 
             m_lastBackup = DateTime.Now;    // last attempt

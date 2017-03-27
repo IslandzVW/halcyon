@@ -94,8 +94,8 @@ namespace OpenSim.Region.Framework.Scenes.Types
                 if (m_queue.Count > 0)
                 {
                     part = m_queue.Dequeue();
-                    m_ids.Find(part.LocalId, out updateFlags);
-                    m_ids.Remove(part.LocalId);
+                    if (!m_ids.Remove(part.LocalId, out updateFlags))
+                        updateFlags = PrimUpdateFlags.None;
 
                     return new KeyValuePair<SceneObjectPart, PrimUpdateFlags>(part, updateFlags);
                 }
