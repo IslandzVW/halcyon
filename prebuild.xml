@@ -1062,6 +1062,7 @@
       <Reference name="OpenSim.Grid.Framework"/>
       <Reference name="OpenSim.Grid.MessagingServer.Modules"/>
       <Reference name="InWorldz.RemoteAdmin"/>
+      <Reference name="Nini" path="../../bin/"/>
 
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="OpenMetaverse" path="../../../bin/"/>
