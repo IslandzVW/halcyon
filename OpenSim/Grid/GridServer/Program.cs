@@ -57,11 +57,6 @@ namespace OpenSim.Grid.GridServer
 			configSource.AddSwitch("Startup", "background");
 
 			bool background = configSource.Configs["Startup"].GetBoolean("background", false);
-			foreach(string arg in args){
-				if (arg == "--background")
-					background = true;
-			}
-
            
 			if (background) {
 				m_log.Info ("[GridServer MAIN]: set to background");

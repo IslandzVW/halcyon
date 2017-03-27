@@ -37,9 +37,7 @@ namespace OpenSim.Grid.GridServer
 	/// </summary>
 	public class GridServerBackground : GridServerBase
 	{
-		private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-		private ManualResetEvent WorldHasComeToAnEnd = new ManualResetEvent(false);
+		private ManualResetEvent Terminating = new ManualResetEvent(false);
 
 		public GridServerBackground() : base()
 		{
@@ -47,8 +45,8 @@ namespace OpenSim.Grid.GridServer
 
 		new public void Work()
 		{
-			WorldHasComeToAnEnd.WaitOne();
-			WorldHasComeToAnEnd.Close();
+			Terminating.WaitOne();
+			Terminating.Close();
 		}
 
 		/// <summary>
@@ -56,7 +54,7 @@ namespace OpenSim.Grid.GridServer
 		/// </summary>
 		public override void Shutdown()
 		{
-			WorldHasComeToAnEnd.Set();
+			Terminating.Set();
 			base.Shutdown();
 		}
 	}
