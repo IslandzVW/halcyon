@@ -137,6 +137,22 @@ namespace OpenSim.Region.Framework.Scenes
         SCULPT = 7
     }
 
+    [Flags]
+    public enum ServerPrimFlags : uint
+    {
+        None = 0,
+
+        // PRIM_SIT_TARGET supports TRUE/FALSE,pos,rot 
+        // even for ZERO_VECTOR,ZERO_ROTATION
+        // so we need to store this too.
+        SitTargetActive = 1,
+
+        // We need to know whether to use the legacy sit target persistence 
+        // or the one above, or existing content will break.
+        // If this bit is NOT set, ignore SitTargetActive
+        // and use the legacy pos/rot != zero test.
+        SitTargetStateSaved = 2
+    }
     #endregion Enumerations
 
     public class SceneObjectPart : IScriptHost, ISceneEntity
@@ -279,7 +295,7 @@ namespace OpenSim.Region.Framework.Scenes
         public const byte MIN_ATTACHMENT = (byte)OpenMetaverse.AttachmentPoint.Chest;           // 1
         public const byte MIN_HUD        = (byte)OpenMetaverse.AttachmentPoint.HUDCenter2;      // 31
         public const byte MAX_HUD        = (byte)OpenMetaverse.AttachmentPoint.HUDBottomRight;  // 38
-        public const byte MAX_ATTACHMENT = (byte)OpenMetaverse.AttachmentPoint.Root;            // 40
+        public const byte MAX_ATTACHMENT = (byte)OpenMetaverse.AttachmentPoint.RightHindFoot;   // 55
 
         // Attachment points with the high bit set must be converted to 7-bit before these calls.
         public static bool IsAttachmentPointOnHUD(uint attachPoint)
@@ -713,6 +729,7 @@ namespace OpenSim.Region.Framework.Scenes
         private Quaternion _prevAttRot = Quaternion.Identity;
         private Vector3 _standTargetPos = Vector3.Zero;
         private Quaternion _standTargetRot = Quaternion.Identity;
+        private ServerPrimFlags _serverFlags = 0;
 
         [XmlIgnore]
         public bool IsInTransaction
@@ -1397,6 +1414,24 @@ namespace OpenSim.Region.Framework.Scenes
 
         public KeyframeAnimation KeyframeAnimation { get; set; }
 
+        public uint ServerFlags
+        {
+            get { return (uint)_serverFlags; }
+            set { _serverFlags = (ServerPrimFlags)value; }
+        }
+
+        public bool SitTargetActive
+        {
+            get { return (_serverFlags & ServerPrimFlags.SitTargetActive) != 0; }
+            set
+            {
+                if (value)  // enable or disable SitTargetEnabled flag
+                    _serverFlags |= ServerPrimFlags.SitTargetActive;
+                else
+                    _serverFlags &= ~ServerPrimFlags.SitTargetActive;
+            }
+        }
+
         #endregion
 
         //---------------
@@ -1583,6 +1618,11 @@ namespace OpenSim.Region.Framework.Scenes
             set { _lastOwnerID = value; }
         }
 
+        public bool IsGroupDeeded
+        {
+            get { return (GroupID != UUID.Zero) && (OwnerID == GroupID); }
+        }
+
         public uint BaseMask
         {
             get { return _baseMask; }
@@ -1737,12 +1777,52 @@ namespace OpenSim.Region.Framework.Scenes
             return (m_parentGroup.RootPart == this);    // matches?
         }
 
-        public void SetSitTarget(Vector3 pos, Quaternion rot, bool preserveSitter)
+        // Note that enabled=false is not the same as removing a sit target.
+        public void SetSitTarget(bool isActive, Vector3 pos, Quaternion rot, bool preserveSitter)
         {
+            // Take care of this prim.
             SitTargetPosition = pos;
             SitTargetOrientation = rot;
+            SitTargetActive = isActive;
+
+            // Now update the parent group.
             if (ParentGroup != null)
-                ParentGroup.SetSitTarget(this, pos, rot, preserveSitter);
+                ParentGroup.SetSitTarget(this, isActive, pos, rot, preserveSitter);
+        }
+
+        public void RemoveSitTarget()
+        {
+            // Take care of this prim.
+            SitTargetPosition = Vector3.Zero;
+            SitTargetOrientation = Quaternion.Identity;
+            SitTargetActive = false;
+
+            // Now update the parent group.
+            if (ParentGroup != null)
+                ParentGroup.RemoveSitTarget(this.UUID);
+        }
+
+        // This function must be called on asset load (inventory rez) or database load (rezzed)
+        // with SOP.ServerFlags initialized, which may be updated before return.
+        // Returns true if there is an active sit target after calculation.
+        public bool PrepSitTargetFromStorage(Vector3 sitTargetPos, Quaternion sitTargetRot)
+        {
+            // Now the sit target info itself.
+            bool sitTargetEnabled = ((this.ServerFlags & (uint) ServerPrimFlags.SitTargetActive) != 0);
+            if (!sitTargetEnabled) // check if legacy data
+            {
+                if ((this.ServerFlags & (uint) ServerPrimFlags.SitTargetStateSaved) == 0) // not set
+                {   // check if non-zero sit target in pos/rot
+                    if ((sitTargetPos != Vector3.Zero) || (sitTargetRot != Quaternion.Identity))
+                    {
+                        sitTargetEnabled = true;
+                        this.ServerFlags |= (uint)ServerPrimFlags.SitTargetActive;
+                    }
+                }
+            }
+            // Mark this one as updated to using this ServerFlags.
+            this.ServerFlags |= (uint)ServerPrimFlags.SitTargetStateSaved;
+            return sitTargetEnabled;
         }
 
         public static readonly uint LEGACY_BASEMASK = 0x7FFFFFF0;
@@ -2050,7 +2130,7 @@ namespace OpenSim.Region.Framework.Scenes
         // part.ParentGroup must be initialized for this.
         public void CopySitTarget(SceneObjectPart part)
         {
-            this.SetSitTarget(part.SitTargetPosition, part.SitTargetOrientation, false);
+            this.SetSitTarget(part.SitTargetActive, part.SitTargetPosition, part.SitTargetOrientation, false);
         }
 
         /// <summary>
@@ -2096,6 +2176,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             dupe.m_particleSystem = m_particleSystem;
             dupe.ObjectFlags = ObjectFlags;
+            dupe.ServerFlags = ServerFlags;
 
             dupe._ownershipCost = _ownershipCost;
             dupe._objectSaleType = _objectSaleType;

@@ -411,6 +411,7 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         }
 
         public ulong GetGroupPowers(OpenMetaverse.UUID groupID) { return 0; }
+        public ulong? GetGroupPowersOrNull(OpenMetaverse.UUID groupID) { return null; }
 
         public bool IsGroupMember(OpenMetaverse.UUID GroupID) { return false; }
 
@@ -932,7 +933,15 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
         {
         }
 
-        public void SendKillObjects(ulong regionHandle, uint[] localID)
+        public void SendKillObjects(ulong regionHandle, uint[] localIDs)
+        {
+        }
+
+        public void SendNonPermanentKillObject(ulong regionHandle, uint localID)
+        {
+        }
+
+        public void SendNonPermanentKillObjects(ulong regionHandle, uint[] localIDs)
         {
         }
 

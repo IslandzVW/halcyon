@@ -419,7 +419,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return false;
         }
 
-        public ulong GetGroupPowers(UUID groupID)
+        // Returns null if not in the group at all.
+        public ulong? GetGroupPowersOrNull(UUID groupID)
         {
             if (m_groupPowers != null)
             {
@@ -433,7 +434,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
             }
 
-            return 0;
+            return null;
+        }
+        public ulong GetGroupPowers(UUID groupID)
+        {
+            return GetGroupPowersOrNull(groupID) ?? 0;
         }
 
         public void SetGroupPowers(IEnumerable<AgentGroupData> groupPowers)
@@ -1947,6 +1952,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 FlushExpiredKills();
             }
 
+            SendNonPermanentKillObject(regionHandle, localID);
+        }
+
+        public void SendNonPermanentKillObject(ulong regionHandle, uint localID)
+        {
             KillObjectPacket kill = (KillObjectPacket)PacketPool.Instance.GetPacket(PacketType.KillObject);
             // TODO: don't create new blocks if recycling an old packet
             kill.ObjectData = new KillObjectPacket.ObjectDataBlock[1];
@@ -1957,17 +1967,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             OutPacket(kill, ThrottleOutPacketType.Task);
         }
 
-        public void SendKillObjects(ulong regionHandle, uint[] localIDs)
+        public void SendNonPermanentKillObjects(ulong regionHandle, uint[] localIDs)
         {
-            lock (m_primUpdatesLock)
-            {
-                for (int i = 0; i < localIDs.Length; i++)
-                {
-                    _pastKills[localIDs[i]] = new KillRecord(localIDs[i]);
-                }
-                FlushExpiredKills();
-            }
-
             for (int i = 0; i < localIDs.Length; i += 10)
             {
                 int amt = Math.Min(localIDs.Length - i, 10);
@@ -1983,6 +1984,20 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 kill.Header.Zerocoded = true;
                 OutPacket(kill, ThrottleOutPacketType.Task);
             }
+        }
+
+        public void SendKillObjects(ulong regionHandle, uint[] localIDs)
+        {
+            lock (m_primUpdatesLock)
+            {
+                for (int i = 0; i < localIDs.Length; i++)
+                {
+                    _pastKills[localIDs[i]] = new KillRecord(localIDs[i]);
+                }
+                FlushExpiredKills();
+            }
+
+            SendNonPermanentKillObjects(regionHandle, localIDs);
         }
 
         private void FlushExpiredKills()
@@ -11741,7 +11756,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public void SendBlueBoxMessage(UUID FromAvatarID, String FromAvatarName, String Message)
         {
             if (!ChildAgentStatus())
-                SendInstantMessage(new GridInstantMessage(null, FromAvatarID, FromAvatarName, AgentId, 1, Message, false, new Vector3()));
+                SendInstantMessage(new GridInstantMessage(null, FromAvatarID, FromAvatarName, AgentId,
+                    (byte)InstantMessageDialog.MessageBox, Message, false, new Vector3()));
 
             //SendInstantMessage(FromAvatarID, fromSessionID, Message, AgentId, SessionId, FromAvatarName, (byte)21,(uint) Util.UnixTimeSinceEpoch());
         }

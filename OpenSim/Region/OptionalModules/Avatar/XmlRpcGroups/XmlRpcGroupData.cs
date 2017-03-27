@@ -94,12 +94,8 @@ namespace OpenSim.Region.OptionalModules.Avatar.XmlRpcGroups
             //param["EveryonePowers"] = ((ulong)m_DefaultEveryonePowers).ToString();
             param["OwnerRoleID"] = OwnerRoleID.ToString();
 
-            // Would this be cleaner as (GroupPowers)ulong.MaxValue;
-            GroupPowers OwnerPowers = (GroupPowers)ulong.MaxValue; ;
+            GroupPowers OwnerPowers = Constants.OWNER_GROUP_POWERS;
             param["OwnersPowers"] = ((ulong)OwnerPowers).ToString();
-
-
-
 
             Hashtable respData = XmlRpcCall(requestID, "groups.createGroup", param);
 

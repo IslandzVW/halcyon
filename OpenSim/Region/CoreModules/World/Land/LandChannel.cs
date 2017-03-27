@@ -205,6 +205,26 @@ namespace OpenSim.Region.CoreModules.World.Land
             }
         }
 
+        public int ScriptedReturnObjectsInParcelByOwner(TaskInventoryItem scriptItem, UUID targetAgentID, LandData parcel, bool sameOwner)
+        {
+            if (m_landManagementModule != null)
+            {
+                return m_landManagementModule.ScriptedReturnObjectsInParcelByOwner(scriptItem, targetAgentID, parcel, sameOwner);
+            }
+
+            return -1;
+        }
+
+        public int ScriptedReturnObjectsInParcelByIDs(SceneObjectPart callingPart, TaskInventoryItem scriptItem, List<UUID> targetIDs, int parcelLocalID)
+        {
+            if (m_landManagementModule != null)
+            {
+                return m_landManagementModule.ScriptedReturnObjectsInParcelByIDs(callingPart, scriptItem, targetIDs, parcelLocalID);
+            }
+
+            return -1;
+        }
+
         public void setParcelObjectMaxOverride(overrideParcelMaxPrimCountDelegate overrideDel)
         {
             if (m_landManagementModule != null)

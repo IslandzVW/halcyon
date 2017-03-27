@@ -67,12 +67,14 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
 
         private ConnectionFactory _connFactory;
 
-        public static UUID CURRENCY_ACCOUNT_ID = new UUID("efbfe4e6-95c2-4af3-9d27-25a35c2fd575");
+        public static UUID DEFAULT_CURRENCY_ACCOUNT_ID = new UUID("efbfe4e6-95c2-4af3-9d27-25a35c2fd575");
 
         /// <summary>
         /// Setup of the base vars that will be pulled from the ini file
         /// </summary>
         ///
+
+        public UUID CurrencyAccountID = DEFAULT_CURRENCY_ACCOUNT_ID;
 
         private float EnergyEfficiency = 0f;
         //private ObjectPaid handlerOnObjectPaid;
@@ -146,6 +148,11 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 PriceObjectScaleFactor = economyConfig.GetFloat("PriceObjectScaleFactor", DEFAULT_PRICE_OBJECT_SCALE_FACTOR);
                 PriceParcelRent = economyConfig.GetInt("PriceParcelRent", DEFAULT_PRICE_PARCEL_RENT);
                 PriceGroupCreate = economyConfig.GetInt("PriceGroupCreate", DEFAULT_PRICE_GROUP_CREATE);
+
+                string option = economyConfig.GetString("CurrencyAccount", DEFAULT_CURRENCY_ACCOUNT_ID.ToString()).Trim();
+                if (!UUID.TryParse(option, out CurrencyAccountID)) {
+                    CurrencyAccountID = DEFAULT_CURRENCY_ACCOUNT_ID;
+                }
 
                 // easy way for all accounts on debug servers to have some cash to test Buy operations and transfers
                 MinDebugMoney = economyConfig.GetInt("MinDebugMoney", Int32.MinValue);
@@ -279,7 +286,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
         public UUID ApplyCharge(UUID agentID, int transCode, int transAmount, string transDesc)
         {
             // for transCodes, see comments at EOF
-            UUID transID = doMoneyTransfer(agentID, CURRENCY_ACCOUNT_ID, transAmount, transCode, transDesc);
+            UUID transID = doMoneyTransfer(agentID, CurrencyAccountID, transAmount, transCode, transDesc);
 
             return transID;
         }
@@ -645,6 +652,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             if (sourceAvatarClient == null)
             {
                 m_log.Debug("[CURRENCY]: Source Avatar not found!");
+                return;
             }
 
             if (transType == (int)MoneyTransactionType.PayObject)
@@ -764,7 +772,7 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
                 return;
 
             // perform actual money transaction
-            doMoneyTransfer(e.mBuyerID, CURRENCY_ACCOUNT_ID, costToApply, (int)MoneyTransactionType.ClassifiedCharge, e.mDescription);
+            doMoneyTransfer(e.mBuyerID, CurrencyAccountID, costToApply, (int)MoneyTransactionType.ClassifiedCharge, e.mDescription);
             SendMoneyBalance(remoteClient);   // send balance update
 
             if (e.mOrigPrice == 0) // this is an initial classified charge.

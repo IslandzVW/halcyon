@@ -46,6 +46,7 @@ namespace OpenSim.Region.Framework.Scenes
 {
     public class SitTargetInfo
     {
+        private bool m_isActive = false;
         private Vector3 m_offset = Vector3.Zero;
         private Quaternion m_rotation = Quaternion.Identity;
         private SceneObjectPart m_part = null;
@@ -65,6 +66,11 @@ namespace OpenSim.Region.Framework.Scenes
             get { return m_rotation; }
         }
 
+        public bool IsActive
+        {
+            get { return m_isActive; }
+        }
+
         public ScenePresence Sitter
         {
             get { return m_sitter; }
@@ -77,9 +83,9 @@ namespace OpenSim.Region.Framework.Scenes
             set { m_part = value; }
         }
 
-        public bool IsSet
+        public bool IsZero
         {
-            get { return (m_part != null) && (m_offset != Vector3.Zero) || (m_rotation != Quaternion.Identity);  }
+            get { return (m_offset == Vector3.Zero) && (m_rotation == Quaternion.Identity);  }
         }
 
         public bool HasSitter
@@ -93,12 +99,14 @@ namespace OpenSim.Region.Framework.Scenes
         {
             m_offset = Vector3.Zero;
             m_rotation = Quaternion.Identity;
+            m_isActive = false;
             m_part = null;
             m_sitter = null;
         }
 
-        public SitTargetInfo(SceneObjectPart part, Vector3 pos, Quaternion rot)
+        public SitTargetInfo(SceneObjectPart part, bool isEnabled, Vector3 pos, Quaternion rot)
         {
+            m_isActive = isEnabled;
             m_offset = pos;
             m_rotation = rot;
             m_part = part;
@@ -113,6 +121,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         public void CopyTo(SitTargetInfo sitInfo)
         {
+            sitInfo.m_isActive = this.m_isActive;
             sitInfo.m_offset = this.m_offset;
             sitInfo.m_rotation = this.m_rotation;
             sitInfo.m_part = this.m_part;

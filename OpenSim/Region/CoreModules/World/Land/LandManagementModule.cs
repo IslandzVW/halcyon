@@ -1540,6 +1540,47 @@ namespace OpenSim.Region.CoreModules.World.Land
             selectedParcel.returnLandObjects(returnType, agentIDs, taskIDs, remoteClient);
         }
 
+        // Pass parcel==null for all parcels in the region, or parcel != null for a specific parcel
+        // or all parcels owned by the same owner.
+        public int ScriptedReturnObjectsInParcelByOwner(TaskInventoryItem scriptItem, UUID targetAgentID, LandData patternParcel, bool sameOwner)
+        {
+            int count = 0;
+
+            // Applies to all parcels in the region
+            foreach (ILandObject landObject in AllParcels())
+            {
+                bool includeParcel = (patternParcel == null);  // all parcels
+                if (patternParcel != null)  // a more specific criteria
+                {
+                    if (patternParcel.LocalID == landObject.landData.LocalID)
+                        includeParcel = true;
+                    else
+                    if (sameOwner && (patternParcel.OwnerID == landObject.landData.OwnerID))
+                        includeParcel = true;
+                }
+
+                if (includeParcel)
+                {
+                    int rc = landObject.scriptedReturnLandObjectsByOwner(scriptItem, targetAgentID);
+                    // if we get an error, stop. If we've returned items, return the count, otherwise error code.
+                    if (rc < 0) // error
+                        return (count > 0) ? count : rc;
+                    count += rc;
+                }
+            }
+
+            return count;
+        }
+
+        public int ScriptedReturnObjectsInParcelByIDs(SceneObjectPart callingPart, TaskInventoryItem scriptItem, List<UUID> targetIDs, int parcelLocalID)
+        {
+            if (!m_landList.ContainsKey(parcelLocalID))
+                return 0;
+
+            ILandObject parcel = m_landList[parcelLocalID];
+            return parcel.scriptedReturnLandObjectsByIDs(callingPart, scriptItem, targetIDs);
+        }
+
         public void NoLandDataFromStorage()
         {
             ResetSimLandObjects();

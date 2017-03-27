@@ -2423,6 +2423,56 @@
         <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
+	
+	<Project frameworkVersion="v4_5" name="InWorldz.Arbiter" path="InWorldz/InWorldz.Arbiter" type="Library">
+      <Configuration name="Debug" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release" platform="x64">
+        <Options>
+          <OutputPath>../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+
+      <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Data"/>
+      <Reference name="System.Drawing"/>
+      <Reference name="System.Xml"/>
+      <Reference name="System.Runtime.Remoting"/>
+      <Reference name="System.Web"/>
+      <Reference name="FlatBuffers"/>
+      <Reference name="OpenMetaverseTypes" path="../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../bin/"/>
+      <Reference name="OpenMetaverse.StructuredData" path="../../bin/"/>
+      <Reference name="OpenSim.Framework"/>
+      <Reference name="OpenSim.Framework.Communications"/>
+      <Reference name="OpenSim.Framework.Console"/>
+      <Reference name="OpenSim.Region.CoreModules"/>
+      <Reference name="OpenSim.Region.Physics.Manager"/>
+      <Reference name="OpenSim.Region.Framework"/>
+      <Reference name="OpenSim.Region.Interfaces"/>
+      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
+      <Reference name="OpenSim.Region.ScriptEngine.Interfaces"/>
+      <Reference name="OpenSim.Region.ScriptEngine.Shared"/>
+      <!--
+      <Reference name="Microsoft.JScript"/>
+      -->
+      <Reference name="Nini" path="../../bin/"/>
+      <Reference name="log4net" path="../../bin/"/>
+      <Reference name="Tools" path="../../bin/"/>
+      <Reference name="C5" path="../../bin/"/>
+      <Reference name="InWorldz.Phlox" path="../../bin/"/>
+      <Reference name="protobuf-net" path="../../bin/"/>
+      <Reference name="Antlr3.Runtime" path="../../bin/"/>
+      <Reference name="System.Data.SQLite" path="../../bin/"/>
+      <Reference name="SmartThreadPool"/>
+      <Files>
+        <Match pattern="*.cs" recurse="true"/>
+      </Files>
+    </Project>
 
     <Project frameworkVersion="v4_5" name="OpenSim.Region.FrameworkTests" path="OpenSim/Region/FrameworkTests" type="Library">
       <Configuration name="Debug" platform="x64">
@@ -2471,7 +2521,6 @@
         <Match pattern="*.cs" recurse="true"/>
       </Files>
     </Project>
-<!-- /////////////////// DO NOT EDIT THE BELOW 6 LINES!!!! //////////// -->
 
     <Project frameworkVersion="v4_5" name="OpenSimProfile.Modules" path="OpenSimProfile/Modules" type="Library">
       <Configuration name="Debug" platform="x64">
