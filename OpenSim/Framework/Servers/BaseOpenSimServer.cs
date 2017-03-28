@@ -126,9 +126,9 @@ namespace OpenSim.Framework.Servers
 
         protected void HandleConsoleCancelEvent(object sender, ConsoleCancelEventArgs args)
         {
-            System.Console.Write("\nUse the SHUTDOWN command to exit this server cleanly.\nOr press the console close box to abort this server.\n" + m_console.DefaultPrompt + "# ");
-            // Set the Cancel property to true to prevent the process from terminating.
-            args.Cancel = true;
+            // The system may be running without a console prompt and cannot issue SHUTDOWN command
+            // call shutdown on ctrl-c
+            this.Shutdown();
         }
         
         /// <summary>

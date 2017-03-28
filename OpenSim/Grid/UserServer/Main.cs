@@ -49,6 +49,7 @@ using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Framework.Statistics;
 using OpenSim.Grid.Framework;
 using OpenSim.Grid.UserServer.Modules;
+using System.Threading;
 
 namespace OpenSim.Grid.UserServer
 {
@@ -80,6 +81,8 @@ namespace OpenSim.Grid.UserServer
 
         protected JWTAuthenticator m_jwtAuthenticator;
 
+		private ManualResetEvent Terminating = new ManualResetEvent(false);
+
         private bool m_useJwt;
 
         public static void Main(string[] args)
@@ -89,6 +92,15 @@ namespace OpenSim.Grid.UserServer
             PIDFileManager pidFile = new PIDFileManager();
             XmlConfigurator.Configure();
 
+			ArgvConfigSource configSource = new ArgvConfigSource(args);
+			configSource.Alias.AddAlias("On", true);
+			configSource.Alias.AddAlias("Off", false);
+			configSource.Alias.AddAlias("True", true);
+			configSource.Alias.AddAlias("False", false);
+			configSource.Alias.AddAlias("Yes", true);
+			configSource.Alias.AddAlias("No", false);
+			configSource.AddSwitch("Startup", "background");
+
             m_log.Info("Launching UserServer...");
 
             OpenUser_Main userserver = new OpenUser_Main();
@@ -97,7 +109,7 @@ namespace OpenSim.Grid.UserServer
             userserver.Startup();
 
             pidFile.SetStatus(PIDFileManager.Status.Running);
-            userserver.Work();
+			userserver.Work(configSource.Configs["Startup"].GetBoolean("background", false));
         }
 
         public OpenUser_Main()
@@ -106,14 +118,19 @@ namespace OpenSim.Grid.UserServer
             MainConsole.Instance = m_console;
         }
 
-        public void Work()
+		public void Work(bool background)
         {
-            m_console.Notice("Enter help for a list of commands\n");
+			if (background) {
+				Terminating.WaitOne();
+				Terminating.Close();
+			} else {
+				m_console.Notice("Enter help for a list of commands\n");
 
-            while (true)
-            {
-                m_console.Prompt();
-            }
+				while (true)
+				{
+					m_console.Prompt();
+				}
+			}
         }
 
         protected override void StartupSpecific()
@@ -315,6 +332,7 @@ namespace OpenSim.Grid.UserServer
 
         public override void ShutdownSpecific()
         {
+			Terminating.Set();
             m_eventDispatcher.Close();
         }
 
