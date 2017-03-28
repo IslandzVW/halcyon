@@ -139,6 +139,9 @@ publish/
 *.pubxml
 *.publishproj
 
+ThirdParty/**/*.sln
+ThirdParty/**/*.csproj
+
 # NuGet Packages
 *.nupkg
 # The packages folder can be ignored because of Package Restore
