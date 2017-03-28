@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) InWorldz Halcyon Developers
  * Copyright (c) Contributors, http://opensimulator.org/
  *
@@ -9,7 +9,7 @@
  *     * Redistributions in binary form must reproduce the above copyright
  *       notice, this list of conditions and the following disclaimer in the
  *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of the OpenSim Project nor the
+ *     * Neither the name of the OpenSimulator Project nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
  *
@@ -25,50 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System.Net;
-using log4net.Config;
+using System;
+using System.Reflection;
+using System.Threading;
 using log4net;
-using Nini.Config;
 
 namespace OpenSim.Grid.GridServer
 {
-    public static class Program
-    {
-		private static readonly ILog m_log = LogManager.GetLogger("OpenSim.Grid.GridServer");
+	/// <summary>
+	/// Consoleless OpenSimulator GridServer
+	/// </summary>
+	public class GridServerBackground : GridServerBase
+	{
+		private ManualResetEvent Terminating = new ManualResetEvent(false);
 
-        public static void Main(string[] args)
-        {
-            ServicePointManager.DefaultConnectionLimit = 12;
+		public GridServerBackground() : base()
+		{
+		}
 
-			m_log.Info ("starting up");
+		new public void Work()
+		{
+			Terminating.WaitOne();
+			Terminating.Close();
+		}
 
-            XmlConfigurator.Configure();
-
-			// Add the arguments supplied when running the application to the configuration
-			ArgvConfigSource configSource = new ArgvConfigSource(args);
-
-			configSource.Alias.AddAlias("On", true);
-			configSource.Alias.AddAlias("Off", false);
-			configSource.Alias.AddAlias("True", true);
-			configSource.Alias.AddAlias("False", false);
-			configSource.Alias.AddAlias("Yes", true);
-			configSource.Alias.AddAlias("No", false);
-
-			configSource.AddSwitch("Startup", "background");
-
-			bool background = configSource.Configs["Startup"].GetBoolean("background", false);
-           
-			if (background) {
-				m_log.Info ("[GridServer MAIN]: set to background");
-				GridServerBackground app = new GridServerBackground ();
-				app.Startup();
-				app.Work();
-			} else {
-				m_log.Info ("[GridServer MAIN]: set to foreground");
-				GridServerBase app = new GridServerBase();
-				app.Startup();
-				app.Work();
-			}
-        }
-    }
+		/// <summary>
+		/// Performs any last-minute sanity checking and shuts down the region server
+		/// </summary>
+		public override void Shutdown()
+		{
+			Terminating.Set();
+			base.Shutdown();
+		}
+	}
 }
