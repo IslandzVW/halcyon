@@ -230,7 +230,7 @@ bin/UserServer_Config.xml
 bin/Regions
 
 # Other testing folder ignores 
-bin/*.dll
+# bin/*.dll
 bin/Halcyon.exe
 bin/Halcyon.vshost.exe
 bin/OpenSim.Grid.UserServer.exe
