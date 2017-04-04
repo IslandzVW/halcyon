@@ -4785,6 +4785,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (ParentGroup.RootPart != this)
                 ParentGroup.RootPart.Rezzed = DateTime.Now;
 
+            TriggerScriptChangedEvent(Changed.SHAPE);
             ParentGroup.HasGroupChanged = true;
             ScheduleFullUpdate(PrimUpdateFlags.Shape);
         }
