@@ -6,8 +6,6 @@
 *.user
 *.userosscache
 *.sln.docstates
-*.csproj
-*.sln
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -140,6 +138,9 @@ publish/
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
 *.publishproj
+
+ThirdParty/**/*.sln
+ThirdParty/**/*.csproj
 
 # NuGet Packages
 *.nupkg
