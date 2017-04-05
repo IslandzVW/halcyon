@@ -1746,7 +1746,7 @@ namespace InWorldz.Phlox.Engine
                 texcolor.G = Util.Clip((float)color.Y, 0.0f, 1.0f);
                 texcolor.B = Util.Clip((float)color.Z, 0.0f, 1.0f);
                 tex.FaceTextures[face].RGBA = texcolor;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, Changed.COLOR);
                 return;
             }
             else if (face == ScriptBaseClass.ALL_SIDES)
@@ -1767,7 +1767,7 @@ namespace InWorldz.Phlox.Engine
                     texcolor.B = Util.Clip((float)color.Z, 0.0f, 1.0f);
                     tex.DefaultTexture.RGBA = texcolor;
                 }
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, Changed.COLOR);
                 return;
             }
         }
@@ -1784,7 +1784,7 @@ namespace InWorldz.Phlox.Engine
             {
                 tex.CreateFace((uint)face);
                 tex.FaceTextures[face].TexMapType = textype;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, 0); // no changed notification for this
                 return;
             }
             else if (face == ScriptBaseClass.ALL_SIDES)
@@ -1797,7 +1797,7 @@ namespace InWorldz.Phlox.Engine
                     }
                     tex.DefaultTexture.TexMapType = textype;
                 }
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, 0); // no changed notification for this
                 return;
             }
         }
@@ -1946,7 +1946,7 @@ namespace InWorldz.Phlox.Engine
                 texcolor = tex.CreateFace((uint)face).RGBA;
                 texcolor.A = Util.Clip((float)alpha, 0.0f, 1.0f);
                 tex.FaceTextures[face].RGBA = texcolor;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, Changed.COLOR);
                 return;
             }
             else if (face == ScriptBaseClass.ALL_SIDES)
@@ -1963,7 +1963,7 @@ namespace InWorldz.Phlox.Engine
                 texcolor = tex.DefaultTexture.RGBA;
                 texcolor.A = Util.Clip((float)alpha, 0.0f, 1.0f);
                 tex.DefaultTexture.RGBA = texcolor;
-                part.UpdateTexture(tex);
+                part.UpdateTexture(tex, Changed.COLOR);
                 return;
             }
         }
