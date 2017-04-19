@@ -531,6 +531,12 @@ namespace OpenSim.Framework.Communications.Cache
                 baseItem = this.FindItem(baseItem.AssetID);
             }
 
+            if (baseItem == null)
+            {
+                //broken link cannot be followed
+                return null;
+            }
+
             if (baseItem.AssetType == (int)AssetType.Link)
             {
                 //recursion limit was hit
