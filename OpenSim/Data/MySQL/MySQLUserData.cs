@@ -1838,7 +1838,7 @@ namespace OpenSim.Data.MySQL
         {
             Dictionary<string, object> param = new Dictionary<string, object>();
             param["?regionID"] = regionID.ToString();
-            param["?logoutTime"] = DateTime.Now;
+            param["?logoutTime"] = Util.UnixTimeSinceEpoch();
 
             try
             {
