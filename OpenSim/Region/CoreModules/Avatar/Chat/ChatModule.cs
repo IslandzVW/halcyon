@@ -453,13 +453,13 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
         {
             if (part == part.ParentGroup.RootPart)
             {
-                SendSystemChat(client, "Object {0} [{1}] '{2}' at {3}", part.LocalId.ToString(), part.UUID.ToString(), part.Name, Util.LocationShortCode(scene.RegionInfo.RegionName, part.AbsolutePosition));
+                SendSystemChat(client, "Object {0} [{1}] '{2}' at {3}{4}", part.LocalId.ToString(), part.UUID.ToString(), part.Name, Util.LocationShortCode(scene.RegionInfo.RegionName, part.AbsolutePosition), part.ParentGroup.IsAttachment ? " (attached)" : "");
             }
             else
             {
                 SceneObjectPart root = part.ParentGroup.RootPart;
                 SendSystemChat(client, "Child prim {0} [{1}] '{2}' at {3}", part.LocalId.ToString(), part.UUID.ToString(), part.Name, Util.LocationShortCode(scene.RegionInfo.RegionName, part.AbsolutePosition));
-                SendSystemChat(client, "Root prim {0} [{1}] '{2}' at {3}", root.LocalId.ToString(), root.UUID.ToString(), root.Name, Util.LocationShortCode(scene.RegionInfo.RegionName, part.AbsolutePosition));
+                SendSystemChat(client, "Root prim {0} [{1}] '{2}' at {3}{4}", root.LocalId.ToString(), root.UUID.ToString(), root.Name, Util.LocationShortCode(scene.RegionInfo.RegionName, part.AbsolutePosition), part.ParentGroup.IsAttachment ? " (attached)" : "");
             }
         }
 
@@ -485,10 +485,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                     SceneObjectPart part = scene.GetSceneObjectPart(uuid);
                     if (part != null)
                     {
-                        if (part.IsAttachment && !scene.Permissions.IsGod(client.AgentId))
-                            SendSystemChat(client, "That ID specifies an attachment.");
-                        else
-                            DumpPart(client, scene, part);
+                        // Allow the user to dump any part (including an attachment) if they specify the UUID.
+                        DumpPart(client, scene, part);
                         return;
                     }
                 }
@@ -501,7 +499,8 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                     SceneObjectPart part = scene.GetSceneObjectPart(localID);
                     if (part != null)
                     {
-                        if (part.IsAttachment && !scene.Permissions.IsGod(client.AgentId))
+                        // Allow the user to dump any part (including an attachment) if they are the owner of the attachment.
+                        if (part.IsAttachment && part.OwnerID != client.AgentId && !scene.Permissions.IsGod(client.AgentId))
                             SendSystemChat(client, "That ID specifies an attachment.");
                         else
                             DumpPart(client, scene, part);
