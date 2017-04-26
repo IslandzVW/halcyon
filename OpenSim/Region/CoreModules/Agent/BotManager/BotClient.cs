@@ -478,6 +478,8 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
 
         public event AvatarNowWearing OnAvatarNowWearing;
 
+        public event CreateNewOutfitAttachments OnCreateNewOutfitAttachments;
+
         public event RezSingleAttachmentFromInv OnRezSingleAttachmentFromInv;
 
         public event RezMultipleAttachmentsFromInv OnRezMultipleAttachmentsFromInv;

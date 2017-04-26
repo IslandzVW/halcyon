@@ -66,6 +66,8 @@ namespace OpenSim.Framework
 
     public delegate void AvatarNowWearing(IClientAPI sender, AvatarWearingArgs e);
 
+    public delegate void CreateNewOutfitAttachments(IClientAPI sender, NewOutfitAttachmentsArgs e);
+
     public delegate void ImprovedInstantMessage(IClientAPI remoteclient, GridInstantMessage im);
 
     public delegate void RezObject(IClientAPI remoteClient, UUID groupID, UUID itemID, Vector3 RayEnd, Vector3 RayStart,
@@ -676,6 +678,7 @@ namespace OpenSim.Framework
         event SetAppearance OnSetAppearance;
         // [Obsolete("LLClientView Specific - Replace and rename OnAvatarUpdate. Difference from SetAppearance?")]
         event AvatarNowWearing OnAvatarNowWearing;
+        event CreateNewOutfitAttachments OnCreateNewOutfitAttachments;
         event RezSingleAttachmentFromInv OnRezSingleAttachmentFromInv;
         event RezMultipleAttachmentsFromInv OnRezMultipleAttachmentsFromInv;
         event UUIDNameRequest OnDetachAttachmentIntoInv;

@@ -1160,6 +1160,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         public event GenericCall2 OnRequestWearables;
         public event SetAppearance OnSetAppearance;
         public event AvatarNowWearing OnAvatarNowWearing;
+        public event CreateNewOutfitAttachments OnCreateNewOutfitAttachments;
         public event RezSingleAttachmentFromInv OnRezSingleAttachmentFromInv;
         public event RezMultipleAttachmentsFromInv OnRezMultipleAttachmentsFromInv;
         public event UUIDNameRequest OnDetachAttachmentIntoInv;
@@ -4858,6 +4859,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             AddLocalPacketHandler(PacketType.RezSingleAttachmentFromInv, HandlerRezSingleAttachmentFromInv, PacketHandlingDisposition.HandleAsync);
             AddLocalPacketHandler(PacketType.RezMultipleAttachmentsFromInv, HandleRezMultipleAttachmentsFromInv, PacketHandlingDisposition.HandleAsync);
             AddLocalPacketHandler(PacketType.RezRestoreToWorld, HandlerRezRestoreToWorld, PacketHandlingDisposition.HandleAsync);
+            AddLocalPacketHandler(PacketType.CreateNewOutfitAttachments, HandlerCreateNewOutfitAttachments, PacketHandlingDisposition.HandleSynchronized);
             AddLocalPacketHandler(PacketType.DetachAttachmentIntoInv, HandleDetachAttachmentIntoInv, PacketHandlingDisposition.HandleAsync);
             AddLocalPacketHandler(PacketType.ObjectAttach, HandleObjectAttach, PacketHandlingDisposition.HandleSynchronized);
             AddLocalPacketHandler(PacketType.ObjectDetach, HandleObjectDetach, PacketHandlingDisposition.HandleSynchronized);
@@ -8124,6 +8126,49 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             return true;
         }
 
+        private bool HandlerCreateNewOutfitAttachments(IClientAPI sender, Packet Pack)
+        {
+            if (m_frozenUser) return true;
+
+            if (OnAvatarNowWearing != null)
+            {
+                CreateNewOutfitAttachmentsPacket newOutfitAttachments = (CreateNewOutfitAttachmentsPacket)Pack;
+
+                #region Packet Session and User Check
+                if (m_checkPackets)
+                {
+                    if (newOutfitAttachments.AgentData.SessionID != SessionId ||
+                        newOutfitAttachments.AgentData.AgentID != AgentId)
+                        return true;
+                }
+                #endregion
+
+                NewOutfitAttachmentsArgs args = new NewOutfitAttachmentsArgs();
+                for (int i = 0; i < newOutfitAttachments.ObjectData.Length; i++)
+                {
+                    CreateNewOutfitAttachmentsPacket.ObjectDataBlock newOutfitAttachment = newOutfitAttachments.ObjectData[i];
+
+
+                    UUID folderID = newOutfitAttachment.OldFolderID;
+                    UUID itemID = newOutfitAttachment.OldItemID;
+                    NewOutfitAttachmentsArgs.OutfitAttachment attachment = new NewOutfitAttachmentsArgs.OutfitAttachment(folderID, itemID);
+
+                    m_log.WarnFormat("[CLIENT]: CreateNewOutfitAttachmentsPacket for item {0} in folder {1}", itemID, folderID);
+                    args.OutfitAttachments.Add(attachment);
+                }
+
+                CreateNewOutfitAttachments handlerCreateNewOutfitAttachments = OnCreateNewOutfitAttachments;
+                if (handlerCreateNewOutfitAttachments != null)
+                {
+                    handlerCreateNewOutfitAttachments(this, args);
+                }
+                else
+                {
+                    m_log.Error("[CLIENT]: No handler for CreateNewOutfitAttachmentsPacket.");
+                }
+            }
+            return true;
+        }
 
         // Third set of switches
 
