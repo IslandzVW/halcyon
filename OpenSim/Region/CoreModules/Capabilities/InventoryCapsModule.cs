@@ -1196,30 +1196,50 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 //            m_log.DebugFormat("[FETCH LIBRARY HANDLER]: Received FetchInventory capabilty request");
 
                 OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
-                OSDArray itemsRequested = (OSDArray)requestmap["items"];
+                OSDArray itemsRequested = null;
                 string reply;
 
                 LLSDFetchInventory llsdReply = new LLSDFetchInventory();
 
-                foreach (OSDMap osdItemId in itemsRequested)
+                if (requestmap.ContainsKey("items"))
                 {
-                    UUID itemId = osdItemId["item_id"].AsUUID();
+                    itemsRequested = (OSDArray)requestmap["items"];
 
-                    try
+                    foreach (OSDMap osdItemId in itemsRequested)
                     {
-                        InventoryItemBase item = m_libraryFolder.FindItem(itemId);
+                        UUID itemId = osdItemId["item_id"].AsUUID();
 
-                        if (item != null)
+                        try
                         {
-                            llsdReply.agent_id = item.Owner;
-                            llsdReply.items.Array.Add(ConvertInventoryItem(item));
+                            InventoryItemBase item = m_libraryFolder.FindItem(itemId);
+
+                            if (item != null)
+                            {
+                                llsdReply.agent_id = item.Owner;
+                                llsdReply.items.Array.Add(ConvertInventoryItem(item));
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            m_log.ErrorFormat(
+                                "[CAPS/FETCH LIBRARY HANDLER] Could not retrieve requested library item {0} for {1}: {2}",
+                                itemId, m_Caps.AgentID, e);
                         }
                     }
-                    catch (Exception e)
+                } else
+                {
+                    // Cool VL seems to invoke this with only "agent_id" and "cap_name"=="FetchLib2" (perhaps for the root folder of the Library?)
+                    // At any rate, this causes an exception and craps out the whole function with no handling.  
+                    // Instead, we'll respond to Cool VL with an empty LLSDFetchInventory response, which has agent_id filled and empty items array.
+                    if (requestmap.ContainsKey("cap_name") && requestmap.ContainsKey("agent_id"))
                     {
+                        UUID agent_id = requestmap["agent_id"].AsUUID();
+                        string cap_name = requestmap["cap_name"].AsString();
+                        // Since we don't understand the request, and nothing was passed for requestmap["items"], 
+                        // rather than crash with an exception, leave llsdReply.items as an empty array.
+                        llsdReply.agent_id = agent_id;
                         m_log.ErrorFormat(
-                            "[CAPS/FETCH LIBRARY HANDLER] Could not retrieve requested library item {0} for {1}: {2}",
-                            itemId, m_Caps.AgentID, e);
+                            "[CAPS/FETCH LIBRARY HANDLER] Did not understand library request {0} for {1}", cap_name, agent_id);
                     }
                 }
 
