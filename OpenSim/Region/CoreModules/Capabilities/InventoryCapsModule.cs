@@ -195,11 +195,11 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 {
                     IRequestHandler requestHandler;
 
-                    requestHandler = new RestStreamHandler("POST", m_Caps.CapsBase + m_notecardTaskUpdatePath, ScriptTaskInventory);
+                    requestHandler = new RestStreamHandler("POST", m_Caps.CapsBase + "/STI" + m_notecardTaskUpdatePath, ScriptTaskInventory);
                     m_Caps.RegisterHandler("UpdateScriptTaskInventory", requestHandler);
                     m_Caps.RegisterHandler("UpdateScriptTask", requestHandler);
 
-                    requestHandler = new RestStreamHandler("POST", m_Caps.CapsBase + m_notecardUpdatePath, NoteCardAgentInventory);
+                    requestHandler = new RestStreamHandler("POST", m_Caps.CapsBase + "/NCAI" + m_notecardUpdatePath, NoteCardAgentInventory);
                     m_Caps.RegisterHandler("UpdateNotecardAgentInventory", requestHandler);
                     m_Caps.RegisterHandler("UpdateScriptAgentInventory", requestHandler);
                     m_Caps.RegisterHandler("UpdateScriptAgent", requestHandler);
@@ -209,25 +209,25 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     //requestHandler = new RestStreamHandler("POST", m_Caps.CapsBase + "/NewFileAgentInventoryVariablePrice/", NewAgentInventoryRequestVariablePrice);
                     //m_Caps.RegisterHandler("NewFileAgentInventoryVariablePrice", requestHandler);
 
-                    requestHandler = new AsyncRequestHandler("POST", m_Caps.CapsBase + m_fetchInventoryPath, AsyncFetchInventoryDescendents);
+                    requestHandler = new AsyncRequestHandler("POST", m_Caps.CapsBase + "/AFID" + m_fetchInventoryPath, AsyncFetchInventoryDescendents);
                     m_Caps.RegisterHandler("FetchInventoryDescendents", requestHandler);
                     m_Caps.RegisterHandler("WebFetchInventoryDescendents", requestHandler); 
                     m_Caps.RegisterHandler("FetchInventoryDescendents2", requestHandler);
                     m_Caps.RegisterHandler("FetchLibDescendents", requestHandler);
                     m_Caps.RegisterHandler("FetchLibDescendents2", requestHandler);
 
-                    requestHandler = new RestStreamHandler("POST", "/CAPS/" + UUID.Random(), FetchInventoryRequest);
+                    requestHandler = new RestStreamHandler("POST", "/CAPS/" + UUID.Random() + "/FIR/", FetchInventoryRequest);
                     m_Caps.RegisterHandler("FetchInventory", requestHandler);
                     m_Caps.RegisterHandler("FetchInventory2", requestHandler);
 
-                    requestHandler = new RestStreamHandler("POST", "/CAPS/" + UUID.Random(), FetchLibraryRequest);
+                    requestHandler = new RestStreamHandler("POST", "/CAPS/" + UUID.Random() + "/FLR/", FetchLibraryRequest);
                     m_Caps.RegisterHandler("FetchLib", requestHandler);
                     m_Caps.RegisterHandler("FetchLib2", requestHandler);
 
-                    requestHandler = new RestStreamHandler("POST", "/CAPS/" + UUID.Random(), CopyInventoryFromNotecard);
+                    requestHandler = new RestStreamHandler("POST", "/CAPS/" + UUID.Random() + "/CIFN/", CopyInventoryFromNotecard);
                     m_Caps.RegisterHandler("CopyInventoryFromNotecard", requestHandler);
 
-                    //requestHandler = new RestStreamHandler("POST", m_Caps.CapsBase + UUID.Random(), CreateInventoryCategory);
+                    //requestHandler = new RestStreamHandler("POST", m_Caps.CapsBase + UUID.Random() + "/CIC/", CreateInventoryCategory);
                     //m_Caps.RegisterHandler("CreateInventoryCategory", requestHandler);
                 }
                 catch (Exception e)
