@@ -4605,7 +4605,7 @@ namespace OpenSim.Region.Framework.Scenes
             if ((sp != null) && (!sp.IsChildAgent))
             {
                 sp.IsChildAgent = true;
-                sp.IsFullyInRegion = false;
+                sp.AgentInRegion = AgentInRegionFlags.None;
                 return sp.CopyAgent(out agent);
             }
 
