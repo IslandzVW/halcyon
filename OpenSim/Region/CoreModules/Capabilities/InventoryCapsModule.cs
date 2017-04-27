@@ -1043,9 +1043,6 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     {
                         foreach (InventoryItemBase item in folder.Items)
                         {
-                            item.SerializeToLLSD(contents);
-                            count++; 
-                                
                             if (item.AssetType == (int)AssetType.LinkFolder)
                             {
                                 // Add this when we do categories below
@@ -1077,6 +1074,12 @@ namespace OpenSim.Region.CoreModules.Capabilities
                                         item.AssetID, m_Caps.AgentID, e.Message);
                                 }
                             }
+
+                            // Now that we've sent the original to the viewer, and it has created a dummy 
+                            // node for the parent if it's new to the viewer, we can send the actual link
+                            // to the item or folder it is now aware of.
+                            item.SerializeToLLSD(contents);
+                            count++; 
                         } 
                     }
 
