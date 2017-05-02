@@ -2180,7 +2180,7 @@ namespace OpenSim.Framework
         /// <summary>
         /// The prefix to the URL links.  Set by the GridInfoService, and is also known to the viewer as "slurl_base".
         /// </summary>
-        public static string LocationURLPrefix = "http://example.com/";
+        public static string LocationURLPrefix = "http://places.inworldz.com/"; // use InWorldz default until override works throughout all code modules
         /// <summary>
         /// Builds a teleport URL.
         /// </summary>
