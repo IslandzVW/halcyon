@@ -84,8 +84,9 @@ namespace OpenSim.Region.Framework.Scenes
         CompleteMovementReceived = 1,
         FetchedProfile = 2,
         InitialDataSent = 4,
-        MovementComplete = 8,
-        FullyInRegion = CompleteMovementReceived|FetchedProfile|InitialDataSent|MovementComplete
+        ParcelInfoSent = 8,
+        CanExitRegion = CompleteMovementReceived|FetchedProfile|InitialDataSent,
+        FullyInRegion = CompleteMovementReceived|FetchedProfile|InitialDataSent|ParcelInfoSent
     }
 
     public class ScenePresence : EntityBase
@@ -908,6 +909,10 @@ namespace OpenSim.Region.Framework.Scenes
         {
             get { return m_AgentInRegionFlags == AgentInRegionFlags.FullyInRegion; }
         }
+        public bool CanExitRegion
+        {
+            get { return m_AgentInRegionFlags == AgentInRegionFlags.CanExitRegion; }
+        }
 
         public bool IsInTransit
         {
@@ -1590,7 +1595,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     Thread.Sleep(250);
                     m_scene.LandChannel.RefreshParcelInfo(m_controllingClient, true);
-                    this.AgentInRegion |= AgentInRegionFlags.MovementComplete;
+                    this.AgentInRegion |= AgentInRegionFlags.ParcelInfoSent;
                 });
             }
             finally
