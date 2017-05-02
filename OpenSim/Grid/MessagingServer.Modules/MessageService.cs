@@ -139,6 +139,10 @@ namespace OpenSim.Grid.MessagingServer.Modules
             {
                 if (receiver.lookupUserRegionYN)
                 {
+                    // this is incomplete, just filling in one field, but just calling
+                    // m_regionModule.GetRegionInfo (again) here isn't a solution.
+                    // Maybe we should be treating it as if p2Handle got a null above,
+                    // and asynchronously trying to update the regionData again later.
                     receiver.regionData.regionHandle = p2Handle.Handle;
                 }
                 else
@@ -479,10 +483,17 @@ namespace OpenSim.Grid.MessagingServer.Modules
             UserPresenceData up = new UserPresenceData();
             up.agentData = agentData;
             up.friendData = GetUserFriendList(agentData.AgentID);
-            up.regionData = m_regionModule.GetRegionInfo(regionHandle);
-            up.OnlineYN = true;
-            up.lookupUserRegionYN = false;
-            ProcessFriendListSubscriptions(up);
+
+            // Null reference exception in een by Vinhold on GW grid in enqueuePresenceUpdate with a null receiver.regionData
+            // Should never be null but GetRegionInfo() can return that. Probably crash/quit/disconnect during login.
+            RegionProfileData regionData = m_regionModule.GetRegionInfo(regionHandle);
+            if (regionData != null) // else go with non-null default UserPresenceData.regionData
+            {
+                up.regionData = regionData;
+                up.OnlineYN = true;
+                up.lookupUserRegionYN = false;
+                ProcessFriendListSubscriptions(up);
+            }
 
             return new XmlRpcResponse();
         }
