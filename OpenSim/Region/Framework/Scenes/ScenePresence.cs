@@ -85,8 +85,9 @@ namespace OpenSim.Region.Framework.Scenes
         FetchedProfile = 2,
         InitialDataSent = 4,
         ParcelInfoSent = 8,
-        CanExitRegion = CompleteMovementReceived|FetchedProfile|InitialDataSent,
-        FullyInRegion = CompleteMovementReceived|FetchedProfile|InitialDataSent|ParcelInfoSent
+        CanExitRegion = CompleteMovementReceived,   // don't care much about this region if leaving
+        // FullyInRegion doesn't need parcel info to start sending updates, especially with 250ms delay
+        FullyInRegion = CompleteMovementReceived|FetchedProfile|InitialDataSent
     }
 
     public class ScenePresence : EntityBase
