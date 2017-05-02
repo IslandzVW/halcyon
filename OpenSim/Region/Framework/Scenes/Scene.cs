@@ -2776,7 +2776,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             //assert that this avatar is ready to leave the region
-            if (!avatar.IsFullyInRegion)
+            if (!avatar.CanExitRegion)
             {
                 result = "Can not move to a new region, until established in the current region";
                 return false;

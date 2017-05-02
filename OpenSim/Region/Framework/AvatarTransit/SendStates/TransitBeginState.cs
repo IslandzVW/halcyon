@@ -77,7 +77,7 @@ namespace OpenSim.Region.Framework.AvatarTransit.SendStates
             }
 
             //assert that this avatar is ready to leave the region
-            if (!_avatar.ScenePresence.IsFullyInRegion)
+            if (!_avatar.ScenePresence.CanExitRegion)
             {
 //                _avatar.ScenePresence.ControllingClient.SendAlertMessage("Can not move to a new region, until established in the current region");
                 throw new InvalidOperationException("An avatar can not begin transition to a new region until established in the current region");
