@@ -4045,6 +4045,8 @@ namespace OpenSim.Region.Framework.Scenes
             CopyFrom(cAgentData);
         }
 
+        private static Vector3 NO_POSITION = new Vector3(-1, -1, -1);
+        private Vector3 oldPos = NO_POSITION;
         /// <summary>
         /// This updates important decision making data about a child agent
         /// The main purpose is to figure out what objects to send to a child agent that's in a neighboring region
@@ -4069,10 +4071,12 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.Info("[SCENE PRESENCE]: ChildAgentPositionUpdate while in transit - ignored.");
                 return;
             }
-            if (cAgentData.Position != new Vector3(-1, -1, -1)) // UGH!!
+            if (cAgentData.Position.CompareTo(NO_POSITION) == 0) // UGH!!
             {
                 lock (m_posInfo)
                 {
+                    // if (cAgentData.Position.CompareTo(m_posInfo.m_pos) != 0)
+                    //    m_log.Warn("[SCENE PRESENCE]: >>> ChildAgentPositionUpdate (" + rRegionX + "," + rRegionY + ") at " + cAgentData.Position.ToString());
                     if (m_posInfo.Parent != null)
                     {
                         m_log.InfoFormat("[SCENE PRESENCE]: ChildAgentPositionUpdate move to {0} refused for agent already sitting at {1}.",
