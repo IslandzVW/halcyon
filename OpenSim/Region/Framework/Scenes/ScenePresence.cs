@@ -908,11 +908,11 @@ namespace OpenSim.Region.Framework.Scenes
         }
         public bool IsFullyInRegion
         {
-            get { return m_AgentInRegionFlags == AgentInRegionFlags.FullyInRegion; }
+            get { return (m_AgentInRegionFlags & AgentInRegionFlags.FullyInRegion) == AgentInRegionFlags.FullyInRegion; }
         }
         public bool CanExitRegion
         {
-            get { return m_AgentInRegionFlags == AgentInRegionFlags.CanExitRegion; }
+            get { return (m_AgentInRegionFlags & AgentInRegionFlags.CanExitRegion) == AgentInRegionFlags.CanExitRegion; }
         }
 
         public bool IsInTransit
