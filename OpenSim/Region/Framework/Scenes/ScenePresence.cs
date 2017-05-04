@@ -83,11 +83,11 @@ namespace OpenSim.Region.Framework.Scenes
         None = 0,
         CompleteMovementReceived = 1,
         FetchedProfile = 2,
-        InitialDataSent = 4,
+        InitialDataReady = 4,
         ParcelInfoSent = 8,
         CanExitRegion = CompleteMovementReceived,   // don't care much about this region if leaving
         // FullyInRegion doesn't need parcel info to start sending updates, especially with 250ms delay
-        FullyInRegion = CompleteMovementReceived|FetchedProfile|InitialDataSent
+        FullyInRegion = CompleteMovementReceived|FetchedProfile|InitialDataReady
     }
 
     public class ScenePresence : EntityBase
@@ -1617,8 +1617,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (!IsBot)
                 SendAvatarData(ControllingClient, true);
+            this.AgentInRegion |= AgentInRegionFlags.InitialDataReady;
             SceneView.SendInitialFullUpdateToAllClients();
-            this.AgentInRegion |= AgentInRegionFlags.InitialDataSent;
 
             SendAnimPack();
         }
@@ -4077,12 +4077,12 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.Info("[SCENE PRESENCE]: ChildAgentPositionUpdate while in transit - ignored.");
                 return;
             }
-            if (cAgentData.Position.CompareTo(NO_POSITION) == 0) // UGH!!
+            if (cAgentData.Position != NO_POSITION) // if valid, use it.
             {
                 lock (m_posInfo)
                 {
-                    // if (cAgentData.Position.CompareTo(m_posInfo.m_pos) != 0)
-                    //    m_log.Warn("[SCENE PRESENCE]: >>> ChildAgentPositionUpdate (" + rRegionX + "," + rRegionY + ") at " + cAgentData.Position.ToString());
+                    if (cAgentData.Position.CompareTo(m_posInfo.m_pos) != 0)
+                        m_log.Warn("[SCENE PRESENCE]: >>> ChildAgentPositionUpdate (" + rRegionX + "," + rRegionY + ") at " + cAgentData.Position.ToString());
                     if (m_posInfo.Parent != null)
                     {
                         m_log.InfoFormat("[SCENE PRESENCE]: ChildAgentPositionUpdate move to {0} refused for agent already sitting at {1}.",
