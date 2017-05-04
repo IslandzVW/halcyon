@@ -284,10 +284,24 @@ namespace OpenSim.Framework
                         console_result = attribute;
                     }
 
-                    // if the first character is a "$", assume it's the name
-                    // of an environment variable and substitute with the value of that variable
-                    if (console_result.StartsWith("$"))
-                        console_result = Environment.GetEnvironmentVariable(console_result.Substring(1));
+                    // If the first character of a multicharacter string is a "$", assume it's the name of an environment variable and substitute with the value of that variable.
+                    if (console_result.StartsWith("$", StringComparison.InvariantCulture) && console_result.Length > 1)
+                    {
+                        // Using a second $ to be an escape character was experimented with, but that would require modifying the write process to re-apply the escape character.  Over-all escapes seem too fragile, and the below code handles it cleanly.  If the admin wants to use a value that collides with an environment variable, then the admin can make sure to unset it first.
+                        var env_var_key = console_result.Substring(1);
+                        var env_var_value = Environment.GetEnvironmentVariable(env_var_key);
+                        if (env_var_value != null)
+                        {
+                            // Log the use of an environment variable just in case someone didn't expect it.
+                            m_log.Info($"[CONFIG]: Parameter [{configOption.configurationKey}] started with '$'. Value replaced with environment variable '{env_var_key}' value '{env_var_value}'.");
+                            console_result = env_var_value;
+                        }
+                        else
+                        {
+                            // Unless there is no such variable, in which case just move on with the original and let the user know that happened.
+                            m_log.Warn($"[CONFIG]: Parameter [{configOption.configurationKey}] started with '$', however there was no environment variable found with the name '{env_var_key}'.");
+                        }
+                    }
 
                     switch (configOption.configurationType)
                     {
