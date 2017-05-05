@@ -4082,8 +4082,8 @@ namespace OpenSim.Region.Framework.Scenes
             {
                 lock (m_posInfo)
                 {
-                    if (cAgentData.Position.CompareTo(m_posInfo.m_pos) != 0)
-                        m_log.Warn("[SCENE PRESENCE]: >>> ChildAgentPositionUpdate (" + rRegionX + "," + rRegionY + ") at " + cAgentData.Position.ToString());
+                    // if (cAgentData.Position.CompareTo(m_posInfo.m_pos) != 0)
+                    //    m_log.Warn("[SCENE PRESENCE]: >>> ChildAgentPositionUpdate (" + rRegionX + "," + rRegionY + ") at " + cAgentData.Position.ToString());
                     if (m_posInfo.Parent != null)
                     {
                         m_log.InfoFormat("[SCENE PRESENCE]: ChildAgentPositionUpdate move to {0} refused for agent already sitting at {1}.",
