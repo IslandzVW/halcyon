@@ -3614,7 +3614,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_isChildAgent)
                 return;
             // this should be sent when the initial data is also sent, which matches when culling is ready to send (IsFullyInRegion).
-            if (this.IsFullyInRegion)
+            if (!this.IsFullyInRegion)
             {
 //                m_log.WarnFormat("[SCENE PRESENCE]: NOT sending anim pack to {0}: avatar not yet in region.", this.Name);
                 return;
