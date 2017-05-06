@@ -135,21 +135,17 @@ namespace OpenSim.Region.CoreModules
 
         private const int TICKS_PER_SECOND = 10000000;
 
-
-
         // Current time in elapsed seconds since Jan 1st 1970
         private ulong CurrentTime
         {
             get
             {
-                return (ulong)(((DateTime.Now.Ticks) - TicksToEpoch + TicksUTCOffset) / TICKS_PER_SECOND);
+                return (ulong)(((DateTime.UtcNow.Ticks) - TicksToEpoch + TicksUTCOffset) / TICKS_PER_SECOND);
             }
         }
 
         // Time in seconds since UTC to use to calculate sun position.
         ulong PosTime = 0;
-
-
 
         /// <summary>
         /// Calculate the sun's orbital position and its velocity.
@@ -297,11 +293,8 @@ namespace OpenSim.Region.CoreModules
                 m_scene.AddCommand(this, String.Format("sun {0}", kvp.Key), String.Format("{0} - {1}", kvp.Key, kvp.Value), String.Empty, HandleSunConsoleCommand);
             }
 
-
-
-            TimeZone local = TimeZone.CurrentTimeZone;
-            TicksUTCOffset = local.GetUtcOffset(local.ToLocalTime(DateTime.Now)).Ticks;
-            m_log.Debug("[SUN]: localtime offset is " + TicksUTCOffset);
+            // Use a fixed offset from UTC for Pacific time with no DST changes. Must be a specific unchanging offset, could be 0.
+            TicksUTCOffset = -288000000000; // -8 * 60 * 60 * TICKS_PER_SECOND
 
             // Align ticks with Second Life
 

@@ -1,0 +1,12 @@
+include "HalcyonPrimitive.fbs";
+
+namespace InWorldz.Arbiter.Serialization;
+
+table HalcyonGroup {
+	root:HalcyonPrimitive;
+	childParts:[HalcyonPrimitive];
+
+	shape:HalcyonPrimitiveBaseShape;
+}
+
+root_type HalcyonGroup;

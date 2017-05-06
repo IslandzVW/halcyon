@@ -180,6 +180,11 @@ namespace OpenSim.Framework
             set { m_estateConnectionString = value; }
         }
 
+        public string LibraryName
+        {
+            get;
+            set;
+        }
         protected string m_librariesXMLFile;
         public string LibrariesXMLFile
         {
@@ -221,5 +226,7 @@ namespace OpenSim.Framework
         public const bool DefaultMessageServerHttpSSL = false;
         public const uint DefaultGridServerHttpPort = 8001;
         public const uint DefaultInventoryServerHttpPort = 8004;
+
+        public const string DefaultSSLPublicCertFile = "";
     }
 }

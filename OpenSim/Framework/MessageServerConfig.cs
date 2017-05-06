@@ -47,6 +47,8 @@ namespace OpenSim.Framework
         public string UserSendKey = String.Empty;
         public string UserServerURL = String.Empty;
 
+        public string SSLPublicCertFile = ConfigSettings.DefaultSSLPublicCertFile;
+
         public MessageServerConfig(string description, string filename)
         {
             m_configMember =
@@ -88,6 +90,9 @@ namespace OpenSim.Framework
                                                 "Use SSL? true/false", ConfigSettings.DefaultMessageServerHttpSSL.ToString(), false);
             m_configMember.addConfigurationOption("published_ip", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                 "My Published IP Address", "127.0.0.1", false);
+
+            m_configMember.addConfigurationOption("ssl_public_certificate", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                  $"Path to public key certificate [{ConfigSettings.DefaultSSLPublicCertFile}]", ConfigSettings.DefaultSSLPublicCertFile, true);
         }
 
         public bool handleIncomingConfiguration(string configuration_key, object configuration_result)
@@ -129,6 +134,9 @@ namespace OpenSim.Framework
                     break;
                 case "published_ip":
                     MessageServerIP = (string) configuration_result;
+                    break;
+                case "ssl_public_certificate":
+                    SSLPublicCertFile = (string)configuration_result;
                     break;
             }
 

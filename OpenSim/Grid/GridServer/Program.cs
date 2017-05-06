@@ -27,21 +27,48 @@
 
 using System.Net;
 using log4net.Config;
+using log4net;
+using Nini.Config;
 
 namespace OpenSim.Grid.GridServer
 {
     public static class Program
     {
+		private static readonly ILog m_log = LogManager.GetLogger("OpenSim.Grid.GridServer");
+
         public static void Main(string[] args)
         {
             ServicePointManager.DefaultConnectionLimit = 12;
 
+			m_log.Info ("starting up");
+
             XmlConfigurator.Configure();
 
-            GridServerBase app = new GridServerBase();
+			// Add the arguments supplied when running the application to the configuration
+			ArgvConfigSource configSource = new ArgvConfigSource(args);
 
-            app.Startup();
-            app.Work();
+			configSource.Alias.AddAlias("On", true);
+			configSource.Alias.AddAlias("Off", false);
+			configSource.Alias.AddAlias("True", true);
+			configSource.Alias.AddAlias("False", false);
+			configSource.Alias.AddAlias("Yes", true);
+			configSource.Alias.AddAlias("No", false);
+
+			configSource.AddSwitch("Startup", "background");
+
+			bool background = configSource.Configs["Startup"].GetBoolean("background", false);
+           
+			if (background) {
+				m_log.Info ("[GridServer MAIN]: set to background");
+				GridServerBackground app = new GridServerBackground ();
+				app.Startup();
+				app.Work();
+			} else {
+				m_log.Info ("[GridServer MAIN]: set to foreground");
+				GridServerBase app = new GridServerBase();
+				app.Startup();
+				app.Work();
+			}
         }
     }
 }

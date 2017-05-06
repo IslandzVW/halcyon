@@ -63,6 +63,8 @@ namespace OpenSim.Framework.Communications.Services
         protected uint m_defaultHomeX;
         protected uint m_defaultHomeY;
 
+        protected string m_currencySymbol = String.Empty;
+
         private const string BAD_VIEWERS_FILE = "badviewers.txt";
         private List<string> _badViewerStrings = new List<string>();
 
@@ -427,6 +429,8 @@ namespace OpenSim.Framework.Communications.Services
                         logResponse.ProfileServerURI = m_ProfileServerURI;
                         logResponse.BuddList = ConvertFriendListItem(m_userManager.GetUserFriendList(agentID));
                         logResponse.StartLocation = startLocationRequest;
+                        logResponse.CurrencySymbol = m_currencySymbol;
+
 //                        m_log.WarnFormat("[LOGIN END]: >>> Login response for {0} SSID={1}", logResponse.AgentID, logResponse.SecureSessionID);
 
                         if (CustomiseResponse(logResponse, userProfile, startLocationRequest, clientVersion))

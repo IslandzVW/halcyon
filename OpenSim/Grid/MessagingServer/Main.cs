@@ -36,6 +36,7 @@ using System.Threading.Tasks;
 
 using log4net;
 using log4net.Config;
+using Nini.Config;
 using OpenMetaverse;
 
 using OpenSim.Framework;
@@ -44,6 +45,7 @@ using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Grid.Framework;
 using OpenSim.Grid.MessagingServer.Modules;
+using System.Threading;
 
 namespace OpenSim.Grid.MessagingServer
 {
@@ -61,6 +63,8 @@ namespace OpenSim.Grid.MessagingServer
 
         private UserDataBaseService m_userDataBaseService;
 
+		private ManualResetEvent Terminating = new ManualResetEvent(false);
+
         private InWorldz.RemoteAdmin.RemoteAdmin m_radmin;
 
         public static void Main(string[] args)
@@ -69,12 +73,21 @@ namespace OpenSim.Grid.MessagingServer
 
             XmlConfigurator.Configure();
 
+			ArgvConfigSource configSource = new ArgvConfigSource(args);
+			configSource.Alias.AddAlias("On", true);
+			configSource.Alias.AddAlias("Off", false);
+			configSource.Alias.AddAlias("True", true);
+			configSource.Alias.AddAlias("False", false);
+			configSource.Alias.AddAlias("Yes", true);
+			configSource.Alias.AddAlias("No", false);
+			configSource.AddSwitch("Startup", "background");
+
             m_log.Info("[SERVER]: Launching MessagingServer...");
 
             OpenMessage_Main messageserver = new OpenMessage_Main();
 
             messageserver.Startup();
-            messageserver.Work();
+			messageserver.Work(configSource.Configs["Startup"].GetBoolean("background", false));
         }
 
         public OpenMessage_Main()
@@ -83,14 +96,19 @@ namespace OpenSim.Grid.MessagingServer
             MainConsole.Instance = m_console;
         }
 
-        private void Work()
+		private void Work(bool background)
         {
-            m_console.Notice("Enter help for a list of commands\n");
+			if (background) {
+				Terminating.WaitOne();
+				Terminating.Close();
+			} else {
+				m_console.Notice("Enter help for a list of commands\n");
 
-            while (true)
-            {
-                m_console.Prompt();
-            }
+				while (true)
+				{
+					m_console.Prompt();
+				}
+			}
         }
 
         private void registerWithUserServer()
@@ -121,7 +139,7 @@ namespace OpenSim.Grid.MessagingServer
                 m_httpServer.AddStreamHandler(new XmlRpcStreamHandler("POST", Util.XmlRpcRequestPrefix("region_startup"), m_regionModule.RegionStartup));
                 m_httpServer.AddStreamHandler(new XmlRpcStreamHandler("POST", Util.XmlRpcRequestPrefix("region_shutdown"), m_regionModule.RegionShutdown));
 
-                m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin();
+                m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin(Cfg.SSLPublicCertFile);
                 m_radmin.AddCommand("MessagingService", "Shutdown", MessagingServerShutdownHandler);
                 m_radmin.AddHandler(m_httpServer);
 
@@ -237,6 +255,7 @@ namespace OpenSim.Grid.MessagingServer
 
         public override void ShutdownSpecific()
         {
+			Terminating.Set();
             m_userServerModule.deregisterWithUserServer();
         }
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) InWorldz Halcyon Developers
  * Copyright (c) Contributors, http://opensimulator.org/
  *
@@ -25,32 +25,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace OpenSim.Servers.Base
-{
-    public class ProtocolVersions
-    {
-        /// <value>
-        /// This is the external protocol versions.  It is separate from the OpenSimulator project version.
-        /// 
-        /// These version numbers should be increased by 1 every time a code
-        /// change in the Service.Connectors and Server.Handlers, espectively, 
-        /// makes the previous OpenSimulator revision incompatible
-        /// with the new revision. 
-        /// 
-        /// Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
-        /// but not outright failure) do not need a version number increment.
-        /// 
-        /// Having this version number allows the grid service to reject connections from regions running a version
-        /// of the code that is too old. 
-        ///
-        /// </value>
-        
-        // The range of acceptable servers for client-side connectors
-        public readonly static int ClientProtocolVersionMin = 0;
-        public readonly static int ClientProtocolVersionMax = 0;
+using System;
+using System.Reflection;
+using System.Threading;
+using log4net;
 
-        // The range of acceptable clients in server-side handlers
-        public readonly static int ServerProtocolVersionMin = 0;
-        public readonly static int ServerProtocolVersionMax = 0;
-    }
+namespace OpenSim.Grid.GridServer
+{
+	/// <summary>
+	/// Consoleless OpenSimulator GridServer
+	/// </summary>
+	public class GridServerBackground : GridServerBase
+	{
+		private ManualResetEvent Terminating = new ManualResetEvent(false);
+
+		public GridServerBackground() : base()
+		{
+		}
+
+		new public void Work()
+		{
+			Terminating.WaitOne();
+			Terminating.Close();
+		}
+
+		/// <summary>
+		/// Performs any last-minute sanity checking and shuts down the region server
+		/// </summary>
+		public override void Shutdown()
+		{
+			Terminating.Set();
+			base.Shutdown();
+		}
+	}
 }

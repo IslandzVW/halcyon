@@ -47,7 +47,7 @@ namespace InWorldz.Testing
             //2130706433 = 127.0.0.1
             BaseHttpServer server = new BaseHttpServer(httpPort, new System.Net.IPAddress(2130706433));
             var commsManager = new OpenSim.Framework.Communications.CommunicationsManager(new OpenSim.Framework.NetworkServersInfo(), server,
-                    new AssetCache(), new LibraryRootFolder("."));
+                    new AssetCache(), new LibraryRootFolder(".", "Library"));
             var gridSvc = new SceneCommunicationService(commsManager);
             var regionInfo =  new OpenSim.Framework.RegionInfo(xloc, yloc,
                     new System.Net.IPEndPoint(new System.Net.IPAddress(2130706433), 9001),

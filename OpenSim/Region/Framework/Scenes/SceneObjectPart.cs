@@ -4785,6 +4785,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (ParentGroup.RootPart != this)
                 ParentGroup.RootPart.Rezzed = DateTime.Now;
 
+            TriggerScriptChangedEvent(Changed.SHAPE);
             ParentGroup.HasGroupChanged = true;
             ScheduleFullUpdate(PrimUpdateFlags.Shape);
         }
@@ -4794,14 +4795,20 @@ namespace OpenSim.Region.Framework.Scenes
         /// This also nulls the m_textureEntryBytes (blob) and TextureEntryBytes
         /// until someone calls them.
         /// </summary>
-        /// <param name="tex"></param>
-        public void UpdateTexture(Primitive.TextureEntry tex)
+        /// <param name="tex">TextureEntry</param>
+        /// <param name="change">changed event to send</param>
+        public void UpdateTexture(Primitive.TextureEntry tex, Changed change)
         {
             m_shape.Textures = tex;
 
-            TriggerScriptChangedEvent(Changed.TEXTURE);
+            if (change != 0)
+                TriggerScriptChangedEvent(change);
             ParentGroup.HasGroupChanged = true;
             ScheduleFullUpdate(PrimUpdateFlags.Textures);
+        }
+        public void UpdateTexture(Primitive.TextureEntry tex)
+        {
+            UpdateTexture(tex, Changed.TEXTURE);
         }
 
         /// <summary>

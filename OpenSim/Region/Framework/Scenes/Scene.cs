@@ -1551,8 +1551,8 @@ namespace OpenSim.Region.Framework.Scenes
                     }
                 }
 
-                _taintedGroups.RemoveAll<SceneObjectGroup>(groupsNeedingBackup);
-                _taintedGroups.RemoveAll<SceneObjectGroup>(deletedGroups);
+                _taintedGroups.RemoveAll(groupsNeedingBackup);
+                _taintedGroups.RemoveAll(deletedGroups);
             }
 
             m_lastBackup = DateTime.Now;    // last attempt
@@ -4258,21 +4258,25 @@ namespace OpenSim.Region.Framework.Scenes
                 return false;
             }
 
-            if (this.m_sceneGraph.GetRootAgentCount() + 1 > m_maxRootAgents)
+            int currentRootAgents = SceneGraph.GetRootAgentCount();
+
+            // Check hard limit on region.
+            if (currentRootAgents >= m_maxRootAgents)
             {
-                m_log.WarnFormat("[SCENE]: User {0} ({1}) was denied access to the region because it was full", agentId, userName);
-                reason = "Region is full";
+                m_log.WarnFormat("[SCENE]: User {0} ({1}) was denied access to the region because it was full ({2})", agentId, userName, currentRootAgents);
+                reason = String.Format("Region is full ({0} of {1})", currentRootAgents, m_maxRootAgents);
                 return false;
             }
 
-            if (SceneGraph.GetRootAgentCount() + 1 > RegionInfo.RegionSettings.AgentLimit)
+            // Check estate soft limit on region.
+            if (currentRootAgents >= RegionInfo.RegionSettings.AgentLimit)
             {
                 if (RegionInfo.EstateSettings.HasAccess(agentId) == false)
                 {
                     m_log.WarnFormat(
-                        "[SCENE]: User {0} ({1}) was denied access to the region because agent limit was reached",
-                        agentId, userName);
-                    reason = "Region is full";
+                        "[SCENE]: User {0} ({1}) was denied access to the region because estate limit ({2} of {3}) was reached",
+                        agentId, userName, currentRootAgents, RegionInfo.RegionSettings.AgentLimit);
+                    reason = "Region estate limit has been reached";
                     return false;
                 }
             }
