@@ -83,11 +83,11 @@ namespace OpenSim.Region.Framework.Scenes
         None = 0,
         CompleteMovementReceived = 1,
         FetchedProfile = 2,
-        InitialDataSent = 4,
+        InitialDataReady = 4,
         ParcelInfoSent = 8,
         CanExitRegion = CompleteMovementReceived,   // don't care much about this region if leaving
         // FullyInRegion doesn't need parcel info to start sending updates, especially with 250ms delay
-        FullyInRegion = CompleteMovementReceived|FetchedProfile|InitialDataSent
+        FullyInRegion = CompleteMovementReceived|FetchedProfile|InitialDataReady
     }
 
     public class ScenePresence : EntityBase
@@ -1617,8 +1617,8 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (!IsBot)
                 SendAvatarData(ControllingClient, true);
+            this.AgentInRegion |= AgentInRegionFlags.InitialDataReady;
             SceneView.SendInitialFullUpdateToAllClients();
-            this.AgentInRegion |= AgentInRegionFlags.InitialDataSent;
 
             SendAnimPack();
         }
@@ -3613,7 +3613,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (m_isChildAgent)
                 return;
-            if ((this.AgentInRegion & AgentInRegionFlags.CompleteMovementReceived) != AgentInRegionFlags.CompleteMovementReceived)
+            // this should be sent when the initial data is also sent, which matches when culling is ready to send (IsFullyInRegion).
+            if (!this.IsFullyInRegion)
             {
 //                m_log.WarnFormat("[SCENE PRESENCE]: NOT sending anim pack to {0}: avatar not yet in region.", this.Name);
                 return;
@@ -4077,7 +4078,7 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.Info("[SCENE PRESENCE]: ChildAgentPositionUpdate while in transit - ignored.");
                 return;
             }
-            if (cAgentData.Position.CompareTo(NO_POSITION) == 0) // UGH!!
+            if (cAgentData.Position != NO_POSITION) // if valid, use it.
             {
                 lock (m_posInfo)
                 {
