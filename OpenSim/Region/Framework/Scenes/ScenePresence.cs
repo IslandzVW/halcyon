@@ -77,6 +77,19 @@ namespace OpenSim.Region.Framework.Scenes
         public ScriptControlled eventControls;
     }
 
+    [Flags]
+    public enum AgentInRegionFlags : byte
+    {
+        None = 0,
+        CompleteMovementReceived = 1,
+        FetchedProfile = 2,
+        InitialDataReady = 4,
+        ParcelInfoSent = 8,
+        CanExitRegion = CompleteMovementReceived,   // don't care much about this region if leaving
+        // FullyInRegion doesn't need parcel info to start sending updates, especially with 250ms delay
+        FullyInRegion = CompleteMovementReceived|FetchedProfile|InitialDataReady
+    }
+
     public class ScenePresence : EntityBase
     {
         const float DEFAULT_AV_HEIGHT = 1.56f;
@@ -886,10 +899,20 @@ namespace OpenSim.Region.Framework.Scenes
 
         private bool m_mouseLook;
         private bool m_leftButtonDown;
+
+        private AgentInRegionFlags m_AgentInRegionFlags = AgentInRegionFlags.None;
+        public AgentInRegionFlags AgentInRegion
+        {
+            get { return m_AgentInRegionFlags; }
+            set { m_AgentInRegionFlags = value; }
+        }
         public bool IsFullyInRegion
         {
-            get;
-            set;
+            get { return (m_AgentInRegionFlags & AgentInRegionFlags.FullyInRegion) == AgentInRegionFlags.FullyInRegion; }
+        }
+        public bool CanExitRegion
+        {
+            get { return (m_AgentInRegionFlags & AgentInRegionFlags.CanExitRegion) == AgentInRegionFlags.CanExitRegion; }
         }
 
         public bool IsInTransit
@@ -1370,7 +1393,7 @@ namespace OpenSim.Region.Framework.Scenes
             lock (m_posInfo)
             {
                 Vector3 restorePos = m_posInfo.Parent == null ? AbsolutePosition : m_posInfo.m_parentPos;
-                IsFullyInRegion = false;
+                this.AgentInRegion = AgentInRegionFlags.None;
                 m_isChildAgent = true;
                 m_posInfo.Position = restorePos;
                 m_posInfo.Parent = null;
@@ -1509,9 +1532,11 @@ namespace OpenSim.Region.Framework.Scenes
         public void CompleteMovement()
         {
             int completeMovementStart = Environment.TickCount;
+            this.AgentInRegion = AgentInRegionFlags.None;
             try
             {
-                m_log.InfoFormat("[SCENE PRESENCE]: CompleteMovement received for {0} ({1}) in region {2}", UUID.ToString(), Name, Scene.RegionInfo.RegionName);
+                m_log.InfoFormat("[SCENE PRESENCE]: CompleteMovement received for {0} ({1}) in region {2} status={3}", 
+                    UUID.ToString(), Name, Scene.RegionInfo.RegionName, (uint)this.AgentInRegion);
                 DumpDebug("CompleteMovement", "n/a");
 
                 Vector3 look = Velocity;
@@ -1525,7 +1550,6 @@ namespace OpenSim.Region.Framework.Scenes
 
                     lock (m_posInfo)
                     {
-                        IsFullyInRegion = false;
                         m_isChildAgent = false;
                         flying = ((m_AgentControlFlags & (uint)AgentManager.ControlFlags.AGENT_CONTROL_FLY) != 0);
                         // m_log.Warn("[SCENE PRESENCE]: CompleteMovement, flying=" + flying.ToString());
@@ -1551,6 +1575,7 @@ namespace OpenSim.Region.Framework.Scenes
                 }
 
                 m_controllingClient.MoveAgentIntoRegion(m_regionInfo, AbsolutePosition, look);
+                this.AgentInRegion |= AgentInRegionFlags.CompleteMovementReceived;
 
                 Util.FireAndForget(delegate(object o)
                 {
@@ -1559,7 +1584,8 @@ namespace OpenSim.Region.Framework.Scenes
                     try
                     {
                         Scene.CommsManager.UserService.GetUserProfile(this.UUID, true);  // force a cache refresh
-                        IsFullyInRegion = true;
+                        this.AgentInRegion |= AgentInRegionFlags.FetchedProfile;
+
                         SendInitialData();
                         Scene.EventManager.TriggerOnCompletedMovementToNewRegion(this);
                     }
@@ -1567,13 +1593,16 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         m_log.DebugFormat("[SCENE PRESENCE]: TriggerOnCompletedMovementToNewRegion {0} ms", Environment.TickCount - triggerOnCompletedMovementToNewRegionStart);
                     }
+
                     Thread.Sleep(250);
                     m_scene.LandChannel.RefreshParcelInfo(m_controllingClient, true);
+                    this.AgentInRegion |= AgentInRegionFlags.ParcelInfoSent;
                 });
             }
             finally
             {
                 m_log.DebugFormat("[SCENE PRESENCE]: CompleteMovement {0} ms", Environment.TickCount - completeMovementStart);
+                this.AgentInRegion |= AgentInRegionFlags.CompleteMovementReceived;  // just in case
             }
         }
 
@@ -1588,7 +1617,9 @@ namespace OpenSim.Region.Framework.Scenes
 
             if (!IsBot)
                 SendAvatarData(ControllingClient, true);
+            this.AgentInRegion |= AgentInRegionFlags.InitialDataReady;
             SceneView.SendInitialFullUpdateToAllClients();
+
             SendAnimPack();
         }
 
@@ -3582,7 +3613,8 @@ namespace OpenSim.Region.Framework.Scenes
         {
             if (m_isChildAgent)
                 return;
-            if (!IsFullyInRegion)
+            // this should be sent when the initial data is also sent, which matches when culling is ready to send (IsFullyInRegion).
+            if (!this.IsFullyInRegion)
             {
 //                m_log.WarnFormat("[SCENE PRESENCE]: NOT sending anim pack to {0}: avatar not yet in region.", this.Name);
                 return;
@@ -4020,6 +4052,8 @@ namespace OpenSim.Region.Framework.Scenes
             CopyFrom(cAgentData);
         }
 
+        private static Vector3 NO_POSITION = new Vector3(-1, -1, -1);
+        private Vector3 oldPos = NO_POSITION;
         /// <summary>
         /// This updates important decision making data about a child agent
         /// The main purpose is to figure out what objects to send to a child agent that's in a neighboring region
@@ -4044,10 +4078,12 @@ namespace OpenSim.Region.Framework.Scenes
                 m_log.Info("[SCENE PRESENCE]: ChildAgentPositionUpdate while in transit - ignored.");
                 return;
             }
-            if (cAgentData.Position != new Vector3(-1, -1, -1)) // UGH!!
+            if (cAgentData.Position != NO_POSITION) // if valid, use it.
             {
                 lock (m_posInfo)
                 {
+                    // if (cAgentData.Position.CompareTo(m_posInfo.m_pos) != 0)
+                    //    m_log.Warn("[SCENE PRESENCE]: >>> ChildAgentPositionUpdate (" + rRegionX + "," + rRegionY + ") at " + cAgentData.Position.ToString());
                     if (m_posInfo.Parent != null)
                     {
                         m_log.InfoFormat("[SCENE PRESENCE]: ChildAgentPositionUpdate move to {0} refused for agent already sitting at {1}.",

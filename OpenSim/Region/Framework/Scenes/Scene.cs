@@ -2776,7 +2776,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             //assert that this avatar is ready to leave the region
-            if (!avatar.IsFullyInRegion)
+            if (!avatar.CanExitRegion)
             {
                 result = "Can not move to a new region, until established in the current region";
                 return false;
@@ -4605,7 +4605,7 @@ namespace OpenSim.Region.Framework.Scenes
             if ((sp != null) && (!sp.IsChildAgent))
             {
                 sp.IsChildAgent = true;
-                sp.IsFullyInRegion = false;
+                sp.AgentInRegion = AgentInRegionFlags.None;
                 return sp.CopyAgent(out agent);
             }
 

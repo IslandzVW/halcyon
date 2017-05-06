@@ -375,8 +375,12 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                 return;
             if (avatar.IsChildAgent)
                 return;
+            // uint inRegion = (uint)avatar.AgentInRegion;
             if (!avatar.IsFullyInRegion)
+            {
+                // m_log.WarnFormat("[SendPresenceToUs]: AgentInRegion={0:x2}",inRegion);
                 return; // don't send to them yet, they aren't ready
+            }
             if (avatar.IsDeleted)
                 return; // don't send them, they're on their way outta here
 
@@ -712,8 +716,12 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
 
             if (m_presence.IsInTransit)
                 return; // disable prim updates during a crossing, but leave them queued for after transition
+            // uint inRegion = (uint)m_presence.AgentInRegion;
             if (!m_presence.IsChildAgent && !m_presence.IsFullyInRegion) 
-                return;
+            {
+                // m_log.WarnFormat("[SendPrimUpdates]: AgentInRegion={0:x2}",inRegion);
+                return; // don't send to them yet, they aren't ready
+            }
 
             m_perfMonMS = Environment.TickCount;
 

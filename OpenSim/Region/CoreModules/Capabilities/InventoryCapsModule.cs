@@ -1043,6 +1043,41 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     {
                         foreach (InventoryItemBase item in folder.Items)
                         {
+                            if (item.AssetType == (int)AssetType.LinkFolder)
+                            {
+                                // Add this when we do categories below
+                                linkedFolders.Add(item.AssetID);
+                            }
+                            else if (item.AssetType == (int)AssetType.Link)
+                            {
+                                try 
+                                {
+                                    InventoryItemBase linkedItem = m_checkedStorageProvider.GetItem(m_agentID, item.AssetID, UUID.Zero);
+
+                                    if (linkedItem != null)
+                                    {
+                                        linkedItem.SerializeToLLSD(contents);
+                                    }
+                                    else
+                                    {
+                                        m_log.ErrorFormat(
+                                            "[CAPS/INVENTORY] Failed to resolve link to item {0} for {1}",
+                                            item.AssetID, m_Caps.AgentID);
+                                    }
+                                    // Don't add it to the count. It was accounted for with the link.
+                                    //count++;
+                                }
+                                catch (Exception e)
+                                {
+                                    m_log.ErrorFormat(
+                                        "[CAPS/INVENTORY] Failed to resolve link to item {0} for {1}: {2}",
+                                        item.AssetID, m_Caps.AgentID, e.Message);
+                                }
+                            }
+
+                            // Now that we've sent the original to the viewer, and it has created a dummy 
+                            // node for the parent if it's new to the viewer, we can send the actual link
+                            // to the item or folder it is now aware of.
                             item.SerializeToLLSD(contents);
                             count++; 
                         } 
@@ -1053,6 +1088,35 @@ namespace OpenSim.Region.CoreModules.Capabilities
                     contents.WriteKey("categories"); //Start array cats
                     contents.WriteStartArray("categories"); //We don't send any folders
 
+                    // If there were linked folders include the folders referenced here
+                    if (linkedFolders.Count > 0)
+                    {
+                        foreach (UUID linkedFolderID in linkedFolders)
+                        {
+                            try
+                            {
+                                InventoryFolderBase linkedFolder = m_checkedStorageProvider.GetFolderAttributes(m_agentID, linkedFolderID);
+                                if (linkedFolder != null)
+                                {
+                                    linkedFolder.SerializeToLLSD(contents);
+                                    // Don't add it to the count.. it was accounted for with the link.
+                                    //count++;
+                                }
+                            }
+                            catch (InventoryObjectMissingException)
+                            {
+                                m_log.ErrorFormat("[CAPS/INVENTORY] Failed to resolve link to folder {0} for {1}",
+                                    linkedFolderID, m_agentID);
+                            }
+                            catch (Exception e)
+                            {
+                                m_log.ErrorFormat(
+                                    "[CAPS/INVENTORY] Failed to resolve link to folder {0} for {1}: {2}",
+                                    linkedFolderID, m_agentID, e);
+                            }
+                        }
+                    }
+                        
                     if (fetchFolders)
                     {
                         foreach (InventorySubFolderBase subFolder in folder.SubFolders)
@@ -1196,30 +1260,50 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 //            m_log.DebugFormat("[FETCH LIBRARY HANDLER]: Received FetchInventory capabilty request");
 
                 OSDMap requestmap = (OSDMap)OSDParser.DeserializeLLSDXml(Utils.StringToBytes(request));
-                OSDArray itemsRequested = (OSDArray)requestmap["items"];
+                OSDArray itemsRequested = null;
                 string reply;
 
                 LLSDFetchInventory llsdReply = new LLSDFetchInventory();
 
-                foreach (OSDMap osdItemId in itemsRequested)
+                if (requestmap.ContainsKey("items"))
                 {
-                    UUID itemId = osdItemId["item_id"].AsUUID();
+                    itemsRequested = (OSDArray)requestmap["items"];
 
-                    try
+                    foreach (OSDMap osdItemId in itemsRequested)
                     {
-                        InventoryItemBase item = m_libraryFolder.FindItem(itemId);
+                        UUID itemId = osdItemId["item_id"].AsUUID();
 
-                        if (item != null)
+                        try
                         {
-                            llsdReply.agent_id = item.Owner;
-                            llsdReply.items.Array.Add(ConvertInventoryItem(item));
+                            InventoryItemBase item = m_libraryFolder.FindItem(itemId);
+
+                            if (item != null)
+                            {
+                                llsdReply.agent_id = item.Owner;
+                                llsdReply.items.Array.Add(ConvertInventoryItem(item));
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            m_log.ErrorFormat(
+                                "[CAPS/FETCH LIBRARY HANDLER] Could not retrieve requested library item {0} for {1}: {2}",
+                                itemId, m_Caps.AgentID, e);
                         }
                     }
-                    catch (Exception e)
+                } else
+                {
+                    // Cool VL seems to invoke this with only "agent_id" and "cap_name"=="FetchLib2" (perhaps for the root folder of the Library?)
+                    // At any rate, this causes an exception and craps out the whole function with no handling.  
+                    // Instead, we'll respond to Cool VL with an empty LLSDFetchInventory response, which has agent_id filled and empty items array.
+                    if (requestmap.ContainsKey("cap_name") && requestmap.ContainsKey("agent_id"))
                     {
+                        UUID agent_id = requestmap["agent_id"].AsUUID();
+                        string cap_name = requestmap["cap_name"].AsString();
+                        // Since we don't understand the request, and nothing was passed for requestmap["items"], 
+                        // rather than crash with an exception, leave llsdReply.items as an empty array.
+                        llsdReply.agent_id = agent_id;
                         m_log.ErrorFormat(
-                            "[CAPS/FETCH LIBRARY HANDLER] Could not retrieve requested library item {0} for {1}: {2}",
-                            itemId, m_Caps.AgentID, e);
+                            "[CAPS/FETCH LIBRARY HANDLER] Did not understand library request {0} for {1}", cap_name, agent_id);
                     }
                 }
 

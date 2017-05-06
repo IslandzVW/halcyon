@@ -781,7 +781,7 @@ namespace OpenSim.Region.Framework.Scenes
             //still have connections establishing, fail the crossing and let them establish
             this.ForEachSittingAvatar(delegate (ScenePresence avatar)
             {
-                if (!avatar.IsFullyInRegion)
+                if (!avatar.CanExitRegion)
                 {
                     // avatar.ControllingClient.SendAlertMessage("Can not move to a new region, still entering this one");
                     ForcePositionInRegion();
