@@ -302,6 +302,9 @@ namespace OpenSim.Region.Framework.Scenes
                 AddPhysicalObject();
             }
 
+            // Taint the map tile if qualifying.
+            m_parentScene.MarkMapTileTainted(sceneObject.RootPart);
+
             // rationalize the group: fix any inconsistency in locked bits, and 
             // clear the default touch action of BUY for any objects not actually for sale, etc
             sceneObject.Rationalize(sceneObject.OwnerID, fromCrossing);
@@ -378,7 +381,7 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
-        /// Delete an object from the scene
+        /// Delete an object from the scene.
         /// </summary>
         /// <returns>true if the object was deleted, false if there was no object to delete</returns>
         public bool RemoveGroupFromSceneGraph(uint localId, bool resultOfObjectLinked, bool fromCrossing)
@@ -406,6 +409,9 @@ namespace OpenSim.Region.Framework.Scenes
                     {
                         foreach (SceneObjectPart part in group.GetParts())
                         {
+                            // Taint the map tile if qualifying.  Note that physical objects are being ignored anyway.
+                            m_parentScene.MarkMapTileTainted(part);
+
                             if (!SceneObjectPartsByLocalID.Remove(part.LocalId))
                             {
                                 m_log.ErrorFormat("[SceneGraph]: DeleteSceneObject: Unable to find part ID {0} of parent {1} in SceneObjectPartsByLocalID", part.LocalId, group.LocalId);
@@ -447,6 +453,8 @@ namespace OpenSim.Region.Framework.Scenes
                     m_updateList[part.LocalId] = new UpdateInfo { Group = group, Part = part, UpdateLevel = level, UpdateFlags = updateFlags | oldInfo.UpdateFlags };
                 }
             }
+
+            m_parentScene.MarkMapTileTainted(OpenSim.Region.Framework.Interfaces.WorldMapTaintReason.PrimChange);
         }
 
         protected internal void RemoveFromUpdateList(SceneObjectGroup obj)
@@ -606,6 +614,12 @@ namespace OpenSim.Region.Framework.Scenes
                     if (group.IsAttachment && !group.IsTempAttachment)
                     {
                         m_parentScene.DetachSingleAttachmentToGround(group.UUID, remoteClient);
+
+                        // Taint the map tile if qualifying.  Note that physical objects are being ignored anyway.
+                        foreach (SceneObjectPart part in group.GetParts())
+                        {
+                            m_parentScene.MarkMapTileTainted(part);
+                        }
                     }
                 }
             }
@@ -877,6 +891,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (!group.PrepareForRezAsAttachment(AttachmentPt, out isTainted, fromCrossing))
                 {
                     return;
+                }
+
+                // Taint the map tile if qualifying.
+                foreach (SceneObjectPart part in group.GetParts())
+                {
+                    m_parentScene.MarkMapTileTainted(part);
                 }
             }
             else
@@ -1551,6 +1571,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
                 {
                     group.Resize(scale, localID);
+
+                    // Taint the map tile if qualifying.
+                    foreach (SceneObjectPart part in group.GetParts())
+                    {
+                        m_parentScene.MarkMapTileTainted(part);
+                    }
                 }
             }
         }
@@ -1563,6 +1589,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
                 {
                     group.GroupResize(scale, localID);
+
+                    // Taint the map tile if qualifying.
+                    foreach (SceneObjectPart part in group.GetParts())
+                    {
+                        m_parentScene.MarkMapTileTainted(part);
+                    }
                 }
             }
         }
@@ -1599,6 +1631,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
                 {
                     group.UpdateSingleRotation(rot, localID);
+
+                    // Taint the map tile if qualifying.
+                    foreach (SceneObjectPart part in group.GetParts())
+                    {
+                        m_parentScene.MarkMapTileTainted(part);
+                    }
                 }
             }
         }
@@ -1618,6 +1656,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
                 {
                     group.UpdateSingleRotation(rot, pos, localID);
+
+                    // Taint the map tile if qualifying.
+                    foreach (SceneObjectPart part in group.GetParts())
+                    {
+                        m_parentScene.MarkMapTileTainted(part);
+                    }
                 }
             }
         }
@@ -1636,6 +1680,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
                 {
                     group.UpdateGroupRotation(rot, true);
+
+                    // Taint the map tile if qualifying.
+                    foreach (SceneObjectPart part in group.GetParts())
+                    {
+                        m_parentScene.MarkMapTileTainted(part);
+                    }
                 }
             }
         }
@@ -1655,6 +1705,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
                 {
                     group.UpdateGroupRotation(pos, rot);
+
+                    // Taint the map tile if qualifying.
+                    foreach (SceneObjectPart part in group.GetParts())
+                    {
+                        m_parentScene.MarkMapTileTainted(part);
+                    }
                 }
             }
         }
@@ -1673,6 +1729,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))
                 {
                     group.UpdateSinglePosition(pos, localID, saveUpdate);
+
+                    // Taint the map tile if qualifying.
+                    foreach (SceneObjectPart part in group.GetParts())
+                    {
+                        m_parentScene.MarkMapTileTainted(part);
+                    }
                 }
             }
         }
@@ -1706,6 +1768,12 @@ namespace OpenSim.Region.Framework.Scenes
                     if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId) && m_parentScene.Permissions.CanObjectEntry(group.UUID, false, pos))
                     {
                         group.UpdateGroupPosition(pos, SaveUpdate);
+
+                        // Taint the map tile if qualifying.
+                        foreach (SceneObjectPart part in group.GetParts())
+                        {
+                            m_parentScene.MarkMapTileTainted(part);
+                        }
                     }
                 }
             }
@@ -1725,6 +1793,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanEditObject(group.UUID, remoteClient.AgentId, (uint)PermissionMask.Modify))
                 {
                     group.UpdateTextureEntry(localID, texture);
+
+                    // Taint the map tile if qualifying.
+                    foreach (SceneObjectPart part in group.GetParts())
+                    {
+                        m_parentScene.MarkMapTileTainted(part);
+                    }
                 }
             }
         }
@@ -1750,6 +1824,9 @@ namespace OpenSim.Region.Framework.Scenes
                         part.ParentGroup.UpdateFlags(UsePhysics, IsTemporary, IsPhantom, VolDetect, blocks);
                     else
                         part.UpdatePrimFlags(UsePhysics, IsTemporary, IsPhantom, VolDetect, blocks);
+                    
+                    // Taint the map tile if qualifying.
+                    m_parentScene.MarkMapTileTainted(part);
                 }
             }
         }
@@ -1784,6 +1861,12 @@ namespace OpenSim.Region.Framework.Scenes
                 if (m_parentScene.Permissions.CanMoveObject(group.UUID, remoteClient.AgentId))// && PermissionsMngr.)
                 {
                     group.GrabMovement(offset, pos, remoteClient);
+
+                    // Taint the map tile if qualifying.
+                    foreach (SceneObjectPart part in group.GetParts())
+                    {
+                        m_parentScene.MarkMapTileTainted(part);
+                    }
                 }
 
                 group.RootPart.ScheduleTerseUpdate();
@@ -1943,6 +2026,12 @@ namespace OpenSim.Region.Framework.Scenes
                     shapeData.ProfileHollow = shapeBlock.ProfileHollow;
 
                     group.UpdateShape(shapeData, primLocalID);
+
+                    // Taint the map tile if qualifying.
+                    foreach (SceneObjectPart part in group.GetParts())
+                    {
+                        m_parentScene.MarkMapTileTainted(part);
+                    }
                 }
             }
         }
@@ -2319,6 +2408,12 @@ namespace OpenSim.Region.Framework.Scenes
 
                     // Signal a new object in the scene 
                     m_parentScene.EventManager.TriggerObjectAddedToScene(copy);
+
+                    // Taint the map tile if qualifying.
+                    foreach (SceneObjectPart part in copy.GetParts())
+                    {
+                        m_parentScene.MarkMapTileTainted(part);
+                    }
 
                     return copy;
                 }

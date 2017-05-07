@@ -34,6 +34,7 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading;
+using System.Timers;
 using log4net;
 using Nini.Config;
 using OpenMetaverse;
@@ -78,15 +79,75 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         private Dictionary<UUID, IWorkItemResult> _currentRequests = new Dictionary<UUID, IWorkItemResult>();
 
+        /// <summary>
+        /// The path to where the generated region tile will be saved and the start of the file name.  Comes from Halcyon.ini, section WorldMap, entry RegionMapTileExportFilename.
+        /// </summary>
+        private string regionTileExportFilename = "";
+
+        private struct MapTileDataForExport {
+            public string filename;
+            public byte[] jpegData;
+        }
+
+        /// <summary>
+        /// Whether or not the map has been tainted and the map tile file needs to be updated.
+        /// </summary>
+        private bool isMapTainted = true;
+        private bool readyToDrawMap = false;
+        /// <summary>
+        /// The minimum amount of time required to pass before the next automatic write of a map tile file to the server.  Keeps the file from being constantly written to in busy situations.
+        /// </summary>
+        private TimeSpan minimumMapPushTime = new TimeSpan(1, 0, 0);
+        /// <summary>
+        /// The last time the map tile file was pushed to the map server.
+        /// </summary>
+        private DateTime lastMapPushTime = new DateTime(0); // Set to 0 initally to make sure the map tile gets drawn asap.
+        /// <summary>
+        /// Used to make sure the map tile file gets updated after a maximum amount of time if it has been tainted.
+        /// </summary>
+        private System.Timers.Timer mapTileUpdateTimer;
+
+        private bool terrainTextureCanTaintMapTile = false;
+        private bool primsCanTaintMapTile = true;
 
         //private int CacheRegionsDistance = 256;
 
         #region INonSharedRegionModule Members
         public virtual void Initialize(IConfigSource config)
         {
-            IConfig startupConfig = config.Configs["Startup"];
-            if (startupConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap")
+            IConfig startupConfig = config.Configs["Startup"]; // Location supported for legacy INI files.
+            IConfig worldmapConfig = config.Configs["WorldMap"];
+            if (
+                (worldmapConfig != null && worldmapConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap")
+                ||
+                (startupConfig != null && startupConfig.GetString("WorldMapModule", "WorldMap") == "WorldMap") // LEGACY
+            )
+            {
                 m_Enabled = true;
+            }
+
+            if (worldmapConfig != null)
+            {
+                regionTileExportFilename = worldmapConfig.GetString("RegionMapTileExportFilename", regionTileExportFilename);
+
+                // Low values could exhaust F&F pools or cause overdue amounts of CPU usage.  No need to refresh the map faster than once a minute anyway.
+                int pushTimeSeconds = Math.Max(60, worldmapConfig.GetInt("MinimumTaintedMapTileWaitTime", (int) minimumMapPushTime.TotalSeconds));
+                minimumMapPushTime = new TimeSpan(0, 0, pushTimeSeconds);
+                m_log.DebugFormat("[WORLD MAP] Got min wait time of {0} seconds which resulted in a span of {1}", pushTimeSeconds, minimumMapPushTime);
+
+                double timerSeconds = (double) Math.Max(0, worldmapConfig.GetInt("MaximumTaintedMapTileWaitTime", 0));
+                m_log.DebugFormat("[WORLD MAP] Got max wait time of {0} seconds", timerSeconds);
+                if (timerSeconds > 0d && regionTileExportFilename.Length > 0)
+                {
+                    mapTileUpdateTimer = new System.Timers.Timer(timerSeconds * 1000.0d);
+                    mapTileUpdateTimer.Elapsed += HandleTaintedMapTimer;
+                    mapTileUpdateTimer.AutoReset = true;
+                    mapTileUpdateTimer.Enabled = false;
+                }
+
+                terrainTextureCanTaintMapTile = worldmapConfig.GetBoolean("TextureOnMapTile", terrainTextureCanTaintMapTile);
+                primsCanTaintMapTile = worldmapConfig.GetBoolean("DrawPrimOnMapTile", primsCanTaintMapTile);
+            }
 
             STPStartInfo reqPoolStartInfo = new STPStartInfo();
             reqPoolStartInfo.MaxWorkerThreads = 2;
@@ -122,12 +183,22 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                 AddHandlers();
             }
+
+            if (mapTileUpdateTimer != null)
+            {
+                mapTileUpdateTimer.Enabled = true;
+            }
         }
 
         public virtual void RemoveRegion (Scene scene)
         {
             if (!m_Enabled)
                 return;
+
+            if (mapTileUpdateTimer != null)
+            {
+                mapTileUpdateTimer.Enabled = false;
+            }
 
             lock (m_scene)
             {
@@ -781,7 +852,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 MemoryStream imgstream = new MemoryStream();
                 Bitmap mapTexture = new Bitmap(1,1);
                 ManagedImage managedImage;
-                Image image = (Image)mapTexture;
+                Image image = mapTexture;
 
                 try
                 {
@@ -1034,8 +1105,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             AssetBase asset = new AssetBase();
             asset.FullID = m_scene.RegionInfo.RegionSettings.TerrainImageID;
             asset.Data = data;
-            asset.Name
-                = "terrainImage_" + m_scene.RegionInfo.RegionID.ToString() + "_" + lastMapRefresh.ToString();
+            asset.Name = "terrainImage_" + m_scene.RegionInfo.RegionID.ToString() + "_" + lastMapRefresh.ToString();
             asset.Description = m_scene.RegionInfo.RegionName;
 
             asset.Type = 0;
@@ -1047,6 +1117,108 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             }
             catch (AssetServerException)
             {
+            }
+
+            readyToDrawMap = true; // This seems to be the most guaranteed place to detect that the region's got all its peices loaded up and is ready to render a map tile.
+
+            if (regionTileExportFilename.Length > 0 && isMapTainted && lastMapPushTime + minimumMapPushTime < DateTime.Now)
+            {
+                lastMapPushTime = DateTime.Now;
+
+                MapTileDataForExport exportData;
+
+                exportData.filename = regionTileExportFilename
+                    .Replace("{X}", String.Format("{0:D}", m_scene.RegionInfo.RegionLocX))
+                    .Replace("{Y}", String.Format("{0:D}", m_scene.RegionInfo.RegionLocY));
+
+                exportData.jpegData = data;
+
+                Util.FireAndForget(ExportMapTileToDisk, exportData); // Just have the disk IO go off and do its thing on its own.
+            }
+        }
+
+        /// <summary>
+        /// Marks the world map as tainted and updates the map tile if enough time has passed.
+        /// </summary>
+        /// <param name="reason">What is the source of the taint?</param>
+        public void MarkMapTileTainted(WorldMapTaintReason reason)
+        {
+            if (regionTileExportFilename.Length <= 0) // If the map tile export path isn't active, don't even worry about doing the work.
+                return;
+
+            if (
+                (reason == WorldMapTaintReason.TerrainTextureChange && !terrainTextureCanTaintMapTile)
+                ||
+                (reason == WorldMapTaintReason.PrimChange && !primsCanTaintMapTile)
+                // Elevation can always taint the map.
+            )
+            {
+                return; // These are not set up in the ini file to be able to show, and therefore taint the map.
+            }
+
+            isMapTainted = true;
+
+            //m_log.Debug("[WORLD MAP] Map tile tainted."); // Can happen A LOT.
+
+            // Skip if the region isn't ready - aka hasn't finished loading initial objects, or if not enough time has passed since the last push to disk.
+            if (readyToDrawMap && lastMapPushTime + minimumMapPushTime < DateTime.Now)
+            {
+                // Delay/reset the timer as the map's getting updated now.
+                if (mapTileUpdateTimer != null)
+                {
+                    mapTileUpdateTimer.Stop();
+                    mapTileUpdateTimer.Start();
+                }
+
+                m_log.Info("[WORLD MAP] Rebuilding map tile on taint as the minimum wait time has passed.");
+
+                // Update the map tile.
+                m_scene.CreateTerrainTexture(false);
+            }
+        }
+
+        /// <summary>
+        /// Fired if the Halcyon.ini entry MaximumTaintedMapTileWaitTime is greater than zero
+        /// </summary>
+        private void HandleTaintedMapTimer(object source, ElapsedEventArgs e)
+        {
+            if (m_Enabled && isMapTainted && lastMapPushTime + minimumMapPushTime < DateTime.Now)
+            {
+                m_log.Info("[WORLD MAP] Rebuilding map tile; map was tainted and the maximum wait time has expired.");
+
+                // Update the map tile.
+                m_scene.CreateTerrainTexture(false);
+            }
+        }
+
+        private readonly object ExportMapTileToDiskLock = new object();
+        private void ExportMapTileToDisk(object o)
+        {
+            var exportData = (MapTileDataForExport)o;
+
+            // Attempt to get a lock, but if that fails, just abort - another request to update the file will come soon enough.
+            if (Monitor.TryEnter(ExportMapTileToDiskLock))
+            {
+                try
+                {
+                    ManagedImage managedImage;
+                    Image image;
+
+                    if (OpenJPEG.DecodeToImage(exportData.jpegData, out managedImage, out image))
+                    {
+                        image.Save(exportData.filename, ImageFormat.Jpeg);
+
+                        isMapTainted = false;
+                    }
+                }
+                catch (Exception e)
+                {
+                    m_log.ErrorFormat("[WORLD MAP]: Failed to export map tile to path '{0}': {1}", exportData.filename, e);
+                }
+                finally
+                {
+                    Monitor.Exit(ExportMapTileToDiskLock);
+                }
             }
         }
 
