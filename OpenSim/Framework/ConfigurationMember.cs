@@ -119,7 +119,7 @@ namespace OpenSim.Framework
             else
             {
                 m_log.Info(
-                    "Required fields for adding a configuration option is invalid. Will not add this option (" +
+                    "[CONFIG]: Required fields for adding a configuration option is invalid. Will not add this option (" +
                     option.configurationKey + ")");
             }
         }
@@ -159,21 +159,21 @@ namespace OpenSim.Framework
         public void performConfigurationRetrieve()
         {
             if (cE > 1)
-                m_log.Error("READING CONFIGURATION COUT: " + cE.ToString());
+                m_log.Error("[CONFIG]: READING CONFIGURATION COUT: " + cE.ToString());
 
 
             configurationPlugin = LoadConfigDll(configurationPluginFilename);
             configurationOptions.Clear();
             if (loadFunction == null)
             {
-                m_log.Error("Load Function for '" + configurationDescription +
+                m_log.Error("[CONFIG]: Load Function for '" + configurationDescription +
                             "' is null. Refusing to run configuration.");
                 return;
             }
 
             if (resultFunction == null)
             {
-                m_log.Error("Result Function for '" + configurationDescription +
+                m_log.Error("[CONFIG]: Result Function for '" + configurationDescription +
                             "' is null. Refusing to run configuration.");
                 return;
             }
@@ -205,7 +205,7 @@ namespace OpenSim.Framework
                 }
                 catch (XmlException e)
                 {
-                    m_log.WarnFormat("[CONFIG] Not using {0}: {1}",
+                    m_log.WarnFormat("[CONFIG]: Not using {0}: {1}",
                             configurationFilename,
                             e.Message.ToString());
                     //m_log.Error("Error loading " + configurationFilename + ": " + e.ToString());
@@ -216,11 +216,11 @@ namespace OpenSim.Framework
             {
                 if (configurationFromXMLNode != null)
                 {
-                    m_log.Info("Loading from XML Node, will not save to the file");
+                    m_log.Info("[CONFIG]: Loading from XML Node, will not save to the file");
                     configurationPlugin.LoadDataFromString(configurationFromXMLNode.OuterXml);
                 }
 
-                m_log.Info("XML Configuration Filename is not valid; will not save to the file.");
+                m_log.Info("[CONFIG]: XML Configuration Filename is not valid; will not save to the file.");
                 useFile = false;
             }
 
@@ -284,10 +284,24 @@ namespace OpenSim.Framework
                         console_result = attribute;
                     }
 
-                    // if the first character is a "$", assume it's the name
-                    // of an environment variable and substitute with the value of that variable
-                    if (console_result.StartsWith("$"))
-                        console_result = Environment.GetEnvironmentVariable(console_result.Substring(1));
+                    // If the first character of a multicharacter string is a "$", assume it's the name of an environment variable and substitute with the value of that variable.
+                    if (console_result.StartsWith("$", StringComparison.InvariantCulture) && console_result.Length > 1)
+                    {
+                        // Using a second $ to be an escape character was experimented with, but that would require modifying the write process to re-apply the escape character.  Over-all escapes seem too fragile, and the below code handles it cleanly.  If the admin wants to use a value that collides with an environment variable, then the admin can make sure to unset it first.
+                        var env_var_key = console_result.Substring(1);
+                        var env_var_value = Environment.GetEnvironmentVariable(env_var_key);
+                        if (env_var_value != null)
+                        {
+                            // Log the use of an environment variable just in case someone didn't expect it.
+                            m_log.Info($"[CONFIG]: Parameter [{configOption.configurationKey}] started with '$'. Value replaced with environment variable '{env_var_key}' value '{env_var_value}'.");
+                            console_result = env_var_value;
+                        }
+                        else
+                        {
+                            // Unless there is no such variable, in which case just move on with the original and let the user know that happened.
+                            m_log.Warn($"[CONFIG]: Parameter [{configOption.configurationKey}] started with '$', however there was no environment variable found with the name '{env_var_key}'.");
+                        }
+                    }
 
                     switch (configOption.configurationType)
                     {
@@ -458,7 +472,7 @@ namespace OpenSim.Framework
                         if (!resultFunction(configOption.configurationKey, return_result))
                         {
                             m_log.Info(
-                                "The handler for the last configuration option denied that input, please try again.");
+                                "[CONFIG]: The handler for the last configuration option denied that input, please try again.");
                             convertSuccess = false;
                             ignoreNextFromConfig = true;
                         }
