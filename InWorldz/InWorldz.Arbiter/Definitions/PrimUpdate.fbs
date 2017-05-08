@@ -1,0 +1,13 @@
+include "HalcyonPrimitive.fbs";
+include "Guid.fbs";
+
+namespace InWorldz.Arbiter.Serialization;
+
+table PrimUpdate {
+	simId:[byte];
+	localId:uint;
+	newHash:ulong;
+	userIds:[Guid];
+}
+
+root_type PrimUpdate;

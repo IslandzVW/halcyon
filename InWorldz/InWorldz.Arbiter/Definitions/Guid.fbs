@@ -1,0 +1,5 @@
+﻿namespace InWorldz.Arbiter.Serialization;
+
+table Guid {
+	bytes:[byte];
+}
