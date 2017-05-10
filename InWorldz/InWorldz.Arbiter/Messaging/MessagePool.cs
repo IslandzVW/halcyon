@@ -26,11 +26,11 @@ namespace InWorldz.Arbiter.Messaging
         /// <summary>
         /// Queues a prim full update
         /// </summary>
-        void QueuePrimUpdate()
+        void QueuePrimUpdate(uint localId, ulong hash)
         {
             lock (_queue)
             {
-                //FindOrGetOutboundMessage(new MessageKey() { })
+                
             }
         }
 

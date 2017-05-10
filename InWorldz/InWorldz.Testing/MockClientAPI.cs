@@ -56,6 +56,8 @@ namespace InWorldz.Testing
         public OpenMetaverse.UUID AgentId { get; set; }
 
         public OpenMetaverse.UUID SessionId { get; set; }
+        
+        public uint LocalId { get; set; }
 
         public OpenMetaverse.UUID SecureSessionId
         {

@@ -10,7 +10,18 @@ namespace InWorldz.Arbiter.Transform
     /// Provides a connection to a transform gateway that can calculate the
     /// visual hash for a primitive group.
     /// </summary>
-    class Gateway
+    internal class Gateway
     {
+        private string _gatewayHost;
+
+        public Gateway(string gatewayHost)
+        {
+            _gatewayHost = gatewayHost;
+        }
+
+        public ulong GetPrimHash()
+        {
+            return 0;
+        }
     }
 }

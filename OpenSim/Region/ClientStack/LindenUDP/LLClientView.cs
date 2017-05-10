@@ -406,6 +406,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             get { return m_activeGroupPowers; }
         }
 
+        public uint LocalId { get; set; }
+        
         public bool IsGroupMember(UUID groupID)
         {
             if (m_groupPowers != null)

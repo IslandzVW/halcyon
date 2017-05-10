@@ -452,6 +452,8 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             get { return m_circuitCode; }
         }
 
+        public uint LocalId { get; set; }
+
 #pragma warning disable 0067 // disable "X is never used"
         public event Action<int> OnSetThrottles;
 

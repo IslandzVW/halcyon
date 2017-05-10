@@ -609,6 +609,8 @@ namespace OpenSim.Framework
 
         ulong ActiveGroupPowers { get; }
 
+        uint LocalId { get; set; }
+
         ulong GetGroupPowers(UUID groupID);
         ulong? GetGroupPowersOrNull(UUID groupID);
 

@@ -65,6 +65,8 @@ namespace InWorldz.Arbiter
         public bool SendLogoutPacketWhenClosing { get; set; }
         public bool DebugCrossings { get; set; }
         public uint CircuitCode { get; }
+        public uint LocalId { get; set; }
+
         public event Action<int> OnSetThrottles;
         public event GenericMessage OnGenericMessage;
         public event ImprovedInstantMessage OnInstantMessage;
