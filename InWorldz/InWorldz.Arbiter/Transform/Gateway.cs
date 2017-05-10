@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
+using OpenSim.Region.Framework.Scenes;
 
 namespace InWorldz.Arbiter.Transform
 {
@@ -19,9 +19,20 @@ namespace InWorldz.Arbiter.Transform
             _gatewayHost = gatewayHost;
         }
 
-        /*public ulong GetPrimHash()
+        public async Task<ulong> GetPrimHash(SceneObjectPart part)
         {
+            using (HttpClient htp = new HttpClient())
+            {
+                HttpClient hc = new HttpClient();
+                HttpResponseMessage result = await hc.GetAsync(_gatewayHost + "/geometry/primhash");
 
-        }*/
+                if (result.IsSuccessStatusCode)
+                {
+                    return ulong.Parse(await result.Content.ReadAsStringAsync());
+                }
+
+                throw new Exception("Server returned error " + result.StatusCode);
+            }
+        }
     }
 }

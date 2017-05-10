@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using InWorldz.Arbiter.Serialization;
+using InWorldz.Arbiter.Transform;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
 using OpenMetaverse.StructuredData;
@@ -16,6 +17,7 @@ namespace InWorldz.Arbiter
     public class VirtualClientView : IClientAPI
     {
         private HashSet<uint> _groupsSeen = new HashSet<uint>();
+        private Gateway _transformGateway;
 
         public Vector3 StartPos { get; set; }
         public OpenMetaverse.UUID AgentId { get; }
@@ -281,7 +283,12 @@ namespace InWorldz.Arbiter
         public event GodlikeMessage OnEstateTelehubRequest;
         public IPEndPoint RemoteEndPoint { get; }
         public bool IsLoggingOut { get; set; }
-        
+
+        public VirtualClientView(Nini.Config.IConfigSource configSource)
+        {
+            string gatewayUrl = configSource.Configs["Network"].GetString("transform_gateway_url", String.Empty);
+            _transformGateway = new Gateway(gatewayUrl);
+        }
 
         public void SetDebugPacketLevel(int newDebug)
         {
@@ -484,7 +491,21 @@ namespace InWorldz.Arbiter
 
         private void SendPartUpdate(SceneObjectPart sop, uint clientFlags, Vector3 lpos)
         {
-            
+            CalculateHash(sop, (hash) =>
+            {
+
+            });
+        }
+
+        private Queue<Tuple<SceneObjectPart, bool, Action<ulong>>> _hashCalcQueue 
+            = new Queue<Tuple<SceneObjectPart, bool, Action<ulong>>>();
+
+        private void CalculateHash(SceneObjectPart sop, Action<ulong> action)
+        {
+            lock (_hashCalcQueue)
+            {
+                _hashCalcQueue.Enqueue(new Tuple<SceneObjectPart, bool, Action<ulong>>(sop, false, action));
+            }
         }
 
         private bool SeeingGroupFirstTime(SceneObjectGroup parentGroup)
