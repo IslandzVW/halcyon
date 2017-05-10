@@ -17,7 +17,6 @@ namespace InWorldz.Arbiter
     {
         private HashSet<uint> _groupsSeen = new HashSet<uint>();
 
-
         public Vector3 StartPos { get; set; }
         public OpenMetaverse.UUID AgentId { get; }
         public OpenMetaverse.UUID SessionId { get; }
@@ -282,6 +281,8 @@ namespace InWorldz.Arbiter
         public event GodlikeMessage OnEstateTelehubRequest;
         public IPEndPoint RemoteEndPoint { get; }
         public bool IsLoggingOut { get; set; }
+        
+
         public void SetDebugPacketLevel(int newDebug)
         {
             throw new NotImplementedException();

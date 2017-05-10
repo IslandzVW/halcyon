@@ -19,9 +19,9 @@ namespace InWorldz.Arbiter.Transform
             _gatewayHost = gatewayHost;
         }
 
-        public ulong GetPrimHash()
+        /*public ulong GetPrimHash()
         {
-            return 0;
-        }
+
+        }*/
     }
 }
