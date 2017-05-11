@@ -1671,6 +1671,13 @@ namespace OpenSim.Region.CoreModules.World.Land
             land_update.ObscureMusic = properties.ObscureMusic;
             land_update.ObscureMedia = properties.ObscureMedia;
 
+            // Parcel limit options present in HTTP request, not in UDP request.
+            land_update._hasParcelLimitData = true;   // not present in ParcelPropertiesUpdatePacket
+            // compatibility values, hopefully not used because _hasParcelLimitData is false.
+            land_update.SeeAvs = properties.SeeAVs;
+            land_update.AnyAvSounds = properties.AnyAVSounds;
+            land_update.GroupAvSounds = properties.GroupAVSounds;
+
             ILandObject land;
             lock (m_landList)
             {

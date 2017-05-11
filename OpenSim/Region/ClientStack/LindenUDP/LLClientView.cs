@@ -10705,6 +10705,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 args.SnapshotID = parcelPropertiesPacket.ParcelData.SnapshotID;
                 args.UserLocation = parcelPropertiesPacket.ParcelData.UserLocation;
                 args.UserLookAt = parcelPropertiesPacket.ParcelData.UserLookAt;
+
+                // Parcel limit options present in HTTP request, not in UDP request.
+                args._hasParcelLimitData = false;   // not present in ParcelPropertiesUpdatePacket
+                // compatibility values, hopefully not used because _hasParcelLimitData is false.
+                args.SeeAvs = true;
+                args.AnyAvSounds = true;
+                args.GroupAvSounds = true;
+
                 handlerParcelPropertiesUpdateRequest(args, parcelPropertiesPacket.ParcelData.LocalID, this);
             }
             return true;

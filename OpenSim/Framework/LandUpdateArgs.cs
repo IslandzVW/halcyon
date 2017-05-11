@@ -56,5 +56,11 @@ namespace OpenSim.Framework
         public bool MediaLoop;
         public bool ObscureMusic;
         public bool ObscureMedia;
+
+        public bool _hasParcelLimitData;
+        // Added together in newer parcel limit data fields
+        public bool SeeAvs;
+        public bool AnyAvSounds;
+        public bool GroupAvSounds;
     }
 }
