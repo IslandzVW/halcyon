@@ -69,24 +69,33 @@ namespace OpenSim.Grid.MessagingServer
 
         public static void Main(string[] args)
         {
+            // Please note that if you are changing something in this function you should check to see if you need to change the other server's Main functions as well.
             ServicePointManager.DefaultConnectionLimit = 12;
 
-            XmlConfigurator.Configure();
+            // Add the arguments supplied when running the application to the configuration
+            var configSource = new ArgvConfigSource(args);
 
-            ArgvConfigSource configSource = new ArgvConfigSource(args);
             configSource.Alias.AddAlias("On", true);
             configSource.Alias.AddAlias("Off", false);
             configSource.Alias.AddAlias("True", true);
             configSource.Alias.AddAlias("False", false);
             configSource.Alias.AddAlias("Yes", true);
             configSource.Alias.AddAlias("No", false);
+
             configSource.AddSwitch("Startup", "background");
+            configSource.AddSwitch("Startup", "pidfile");
 
             m_log.Info("[SERVER]: Launching MessagingServer...");
 
+            var pidFile = new PIDFileManager(configSource.Configs["Startup"].GetString("pidfile", string.Empty));
+            XmlConfigurator.Configure();
+
             OpenMessage_Main messageserver = new OpenMessage_Main();
 
+            pidFile.SetStatus(PIDFileManager.Status.Starting);
             messageserver.Startup();
+
+            pidFile.SetStatus(PIDFileManager.Status.Running);
             messageserver.Work(configSource.Configs["Startup"].GetBoolean("background", false));
         }
 
@@ -103,7 +112,8 @@ namespace OpenSim.Grid.MessagingServer
                 Terminating.WaitOne();
                 Terminating.Close();
             }
-            else {
+            else
+            {
                 m_console.Notice("Enter help for a list of commands\n");
 
                 while (true)

@@ -29,6 +29,7 @@ using System.Net;
 using log4net.Config;
 using log4net;
 using Nini.Config;
+using OpenSim.Framework;
 
 namespace OpenSim.Grid.GridServer
 {
@@ -38,14 +39,11 @@ namespace OpenSim.Grid.GridServer
 
         public static void Main(string[] args)
         {
+            // Please note that if you are changing something in this function you should check to see if you need to change the other server's Main functions as well.
             ServicePointManager.DefaultConnectionLimit = 12;
 
-            m_log.Info("starting up");
-
-            XmlConfigurator.Configure();
-
             // Add the arguments supplied when running the application to the configuration
-            ArgvConfigSource configSource = new ArgvConfigSource(args);
+            var configSource = new ArgvConfigSource(args);
 
             configSource.Alias.AddAlias("On", true);
             configSource.Alias.AddAlias("Off", false);
@@ -55,22 +53,32 @@ namespace OpenSim.Grid.GridServer
             configSource.Alias.AddAlias("No", false);
 
             configSource.AddSwitch("Startup", "background");
+            configSource.AddSwitch("Startup", "pidfile");
+
+            m_log.Info("[SERVER]: Launching GridServer...");
+
+            var pidFile = new PIDFileManager(configSource.Configs["Startup"].GetString("pidfile", string.Empty));
+            XmlConfigurator.Configure();
 
             bool background = configSource.Configs["Startup"].GetBoolean("background", false);
 
+            GridServerBase app;
             if (background)
             {
                 m_log.Info("[GridServer MAIN]: set to background");
-                GridServerBackground app = new GridServerBackground();
-                app.Startup();
-                app.Work();
+                app = new GridServerBackground();
             }
-            else {
+            else
+            {
                 m_log.Info("[GridServer MAIN]: set to foreground");
-                GridServerBase app = new GridServerBase();
-                app.Startup();
-                app.Work();
+                app = new GridServerBase();
             }
+
+            pidFile.SetStatus(PIDFileManager.Status.Starting);
+            app.Startup();
+
+            pidFile.SetStatus(PIDFileManager.Status.Running);
+            app.Work();
         }
     }
 }

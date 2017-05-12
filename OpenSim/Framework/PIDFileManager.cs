@@ -28,17 +28,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace OpenSim.Framework
 {
     /// <summary>
-    /// Creates a file with this processes PID and status as processname.pid
+    /// Creates a file with this processes PID and status as the given pidfile or, if null, processname.pid
     /// </summary>
     public class PIDFileManager
     {
@@ -49,21 +46,29 @@ namespace OpenSim.Framework
             Running
         }
 
-        public PIDFileManager()
+        public string PidFile { get; private set; }
+
+        public PIDFileManager(string pidFile)
         {
+            var thisProcess = Process.GetCurrentProcess();
+
+            PidFile = pidFile;
+            if (string.IsNullOrWhiteSpace(pidFile))
+            {
+                PidFile = $"{Path.GetFileName(thisProcess.MainModule.FileName)}.pid";
+            }
+
             this.SetStatus(Status.Init);
         }
 
         public void SetStatus(Status status)
         {
-            Process thisProcess = Process.GetCurrentProcess();
-            string pidfileName = Path.GetFileName(thisProcess.MainModule.FileName) + ".pid";
-            int pid = Process.GetCurrentProcess().Id;
+            var pid = Process.GetCurrentProcess().Id;
 
-            using (FileStream pidFile = File.OpenWrite(pidfileName))
+            using (FileStream pidFile = File.OpenWrite(PidFile))
             {
-                string pidInfo = ((int)status).ToString() + " " + pid.ToString();
-                byte[] utf8bytes = System.Text.Encoding.UTF8.GetBytes(pidInfo);
+                var pidInfo = $"{((int)status)} {pid}";
+                var utf8bytes = Encoding.UTF8.GetBytes(pidInfo);
 
                 pidFile.Write(utf8bytes, 0, utf8bytes.Length);
             }
