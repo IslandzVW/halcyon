@@ -81,7 +81,7 @@ namespace OpenSim.Grid.UserServer
 
         protected JWTAuthenticator m_jwtAuthenticator;
 
-		private ManualResetEvent Terminating = new ManualResetEvent(false);
+        private ManualResetEvent Terminating = new ManualResetEvent(false);
 
         private bool m_useJwt;
 
@@ -89,17 +89,17 @@ namespace OpenSim.Grid.UserServer
         {
             ServicePointManager.DefaultConnectionLimit = 12;
 
-            PIDFileManager pidFile = new PIDFileManager();
+            var pidFile = new PIDFileManager();
             XmlConfigurator.Configure();
 
-			ArgvConfigSource configSource = new ArgvConfigSource(args);
-			configSource.Alias.AddAlias("On", true);
-			configSource.Alias.AddAlias("Off", false);
-			configSource.Alias.AddAlias("True", true);
-			configSource.Alias.AddAlias("False", false);
-			configSource.Alias.AddAlias("Yes", true);
-			configSource.Alias.AddAlias("No", false);
-			configSource.AddSwitch("Startup", "background");
+            ArgvConfigSource configSource = new ArgvConfigSource(args);
+            configSource.Alias.AddAlias("On", true);
+            configSource.Alias.AddAlias("Off", false);
+            configSource.Alias.AddAlias("True", true);
+            configSource.Alias.AddAlias("False", false);
+            configSource.Alias.AddAlias("Yes", true);
+            configSource.Alias.AddAlias("No", false);
+            configSource.AddSwitch("Startup", "background");
 
             m_log.Info("Launching UserServer...");
 
@@ -109,7 +109,7 @@ namespace OpenSim.Grid.UserServer
             userserver.Startup();
 
             pidFile.SetStatus(PIDFileManager.Status.Running);
-			userserver.Work(configSource.Configs["Startup"].GetBoolean("background", false));
+            userserver.Work(configSource.Configs["Startup"].GetBoolean("background", false));
         }
 
         public OpenUser_Main()
@@ -118,19 +118,21 @@ namespace OpenSim.Grid.UserServer
             MainConsole.Instance = m_console;
         }
 
-		public void Work(bool background)
+        public void Work(bool background)
         {
-			if (background) {
-				Terminating.WaitOne();
-				Terminating.Close();
-			} else {
-				m_console.Notice("Enter help for a list of commands\n");
+            if (background)
+            {
+                Terminating.WaitOne();
+                Terminating.Close();
+            }
+            else {
+                m_console.Notice("Enter help for a list of commands\n");
 
-				while (true)
-				{
-					m_console.Prompt();
-				}
-			}
+                while (true)
+                {
+                    m_console.Prompt();
+                }
+            }
         }
 
         protected override void StartupSpecific()
@@ -196,11 +198,11 @@ namespace OpenSim.Grid.UserServer
         protected virtual void StartupUserServerModules()
         {
             m_log.Info("[STARTUP]: Establishing data connection");
-            
+
             //we only need core components so we can request them from here
             IInterServiceInventoryServices inventoryService;
             TryGet<IInterServiceInventoryServices>(out inventoryService);
-            
+
             CommunicationsManager commsManager = new UserServerCommsManager();
 
             //setup database access service, for now this has to be created before the other modules.
@@ -223,7 +225,7 @@ namespace OpenSim.Grid.UserServer
                 m_jwtAuthenticator = new JWTAuthenticator();
                 m_jwtAuthenticator.Initialize(this);
             }
-            
+
             m_consoleCommandModule = new UserServerCommandModule();
             m_consoleCommandModule.Initialize(this);
 
@@ -289,7 +291,7 @@ namespace OpenSim.Grid.UserServer
             {
                 m_jwtAuthenticator.RegisterHandlers(m_httpServer);
             }
-            
+
 
             m_radmin = new InWorldz.RemoteAdmin.RemoteAdmin(Cfg.SSLPublicCertFile);
             m_radmin.AddCommand("UserService", "Shutdown", UserServerShutdownHandler);
@@ -332,7 +334,7 @@ namespace OpenSim.Grid.UserServer
 
         public override void ShutdownSpecific()
         {
-			Terminating.Set();
+            Terminating.Set();
             m_eventDispatcher.Close();
         }
 
