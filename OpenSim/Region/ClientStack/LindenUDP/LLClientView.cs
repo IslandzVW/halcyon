@@ -4381,6 +4381,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                                        landData.SelectedPrims;
             updateMessage.SimWideTotalPrims = landData.SimwidePrims;
 
+            // Includ parcel privacy settings
+            updateMessage.SeeAVs = landData.SeeAvs;
+            updateMessage.AnyAVSounds = landData.AnyAvSounds;
+            updateMessage.GroupAVSounds = landData.GroupAvSounds;
+
             try
             {
                 IEventQueue eq = Scene.RequestModuleInterface<IEventQueue>();

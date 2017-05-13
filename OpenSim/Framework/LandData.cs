@@ -71,6 +71,9 @@ namespace OpenSim.Framework
                                 (uint)ParcelFlags.AllowDeedToGroup |
                                 (uint)ParcelFlags.CreateObjects | (uint)ParcelFlags.AllowOtherScripts |
                                 (uint)ParcelFlags.SoundLocal | (uint)ParcelFlags.AllowVoiceChat;
+        private bool _seeAvs = true;
+        private bool _anyAvSounds = true;
+        private bool _groupAvSounds = true;
 
         private byte _landingType = 2;  // Blocked = 0, LandingPoint = 1, Anywhere = 2
         private string _name = "Your Parcel";
@@ -416,6 +419,45 @@ namespace OpenSim.Framework
             set
             {
                 _flags = value;
+            }
+        }
+
+        /// <summary>
+        /// Parcel privacy options. Passed by viewer in ParcelPropertiesUpdate, but default/backward-compatible values are all true.
+        /// Stored for viewer use, as additional flags (_flags2) in the database but not really used by the server.
+        /// We could use SeeAvs to affect culling, but don't.
+        /// </summary>
+        public bool SeeAvs
+        {
+            get
+            {
+                return _seeAvs;
+            }
+            set
+            {
+                _seeAvs = value;
+            }
+        }
+        public bool AnyAvSounds
+        {
+            get
+            {
+                return _anyAvSounds;
+            }
+            set
+            {
+                _anyAvSounds = value;
+            }
+        }
+        public bool GroupAvSounds
+        {
+            get
+            {
+                return _groupAvSounds;
+            }
+            set
+            {
+                _groupAvSounds = value;
             }
         }
 
@@ -829,6 +871,9 @@ namespace OpenSim.Framework
             landData._simwideArea = _simwideArea;
             landData._simwidePrims = _simwidePrims;
             landData._dwell = _dwell;
+            landData._seeAvs = _seeAvs;
+            landData._anyAvSounds = _anyAvSounds;
+            landData._groupAvSounds = _groupAvSounds;
 
             landData._parcelAccessList.Clear();
             foreach (ParcelManager.ParcelAccessEntry entry in _parcelAccessList)

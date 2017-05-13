@@ -127,6 +127,7 @@ CREATE TABLE `land` (
   `SalePrice` int(11) default NULL,
   `LandStatus` int(11) default NULL,
   `LandFlags` int(11) default NULL,
+  `LandFlags2` int(11) default NULL,
   `LandingType` int(11) default NULL,
   `MediaAutoScale` int(11) default NULL,
   `MediaTextureUUID` varchar(255) default NULL,

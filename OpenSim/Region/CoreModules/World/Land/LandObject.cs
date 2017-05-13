@@ -242,6 +242,11 @@ namespace OpenSim.Region.CoreModules.World.Land
                         ParcelFlags.CreateGroupObjects |
                         ParcelFlags.AllowAPrimitiveEntry |
                         ParcelFlags.AllowGroupObjectEntry);
+
+                // Allow update of parcel privacy options.
+                newData.SeeAvs = args.SeeAvs;
+                newData.AnyAvSounds = args.AnyAvSounds;
+                newData.GroupAvSounds = args.GroupAvSounds;
             }
 
             if (m_scene.Permissions.CanEditParcel(remote_client.AgentId, this, GroupPowers.LandSetSale))

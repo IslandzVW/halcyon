@@ -52,6 +52,13 @@ namespace OpenSim.Data.MySQL
         //fron scriptbaseclass.  moved here so I dont have to create a circular reference
         private const int PERMISSION_DEBIT = 2;
 
+        // Bit values for the LandFlags2 db field, mapping to LandData bools to a database field.
+        // The server doesn't use these flags but needs to store them for the viewer, 
+        // so this module is the only one that needs to map them back and forth. Mapping is arbitrary.
+        private const uint FLAGS2_SEEAVS = 1;
+        private const uint FLAGS2_ANYAVSOUNDS = 2;
+        private const uint FLAGS2_GRPAVSOUNDS = 4;
+
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private string m_ConnectionString;
@@ -1134,7 +1141,7 @@ namespace OpenSim.Data.MySQL
                             "LocalLandID, Bitmap, Name, Description, " +
                             "OwnerUUID, IsGroupOwned, Area, AuctionID, " +
                             "Category, ClaimDate, ClaimPrice, GroupUUID, " +
-                            "SalePrice, LandStatus, LandFlags, LandingType, " +
+                            "SalePrice, LandStatus, LandFlags, LandFlags2, LandingType, " +
                             "MediaAutoScale, MediaTextureUUID, MediaURL, " +
                             "MusicURL, PassHours, PassPrice, SnapshotUUID, " +
                             "UserLocationX, UserLocationY, UserLocationZ, " +
@@ -1144,7 +1151,7 @@ namespace OpenSim.Data.MySQL
                             "?LocalLandID, ?Bitmap, ?Name, ?Description, " +
                             "?OwnerUUID, ?IsGroupOwned, ?Area, ?AuctionID, " +
                             "?Category, ?ClaimDate, ?ClaimPrice, ?GroupUUID, " +
-                            "?SalePrice, ?LandStatus, ?LandFlags, ?LandingType, " +
+                            "?SalePrice, ?LandStatus, ?LandFlags, ?LandFlags2, ?LandingType, " +
                             "?MediaAutoScale, ?MediaTextureUUID, ?MediaURL, " +
                             "?MusicURL, ?PassHours, ?PassPrice, ?SnapshotUUID, " +
                             "?UserLocationX, ?UserLocationY, ?UserLocationZ, " +
@@ -2019,6 +2026,14 @@ namespace OpenSim.Data.MySQL
                 //Enum. libsecondlife.Parcel.ParcelStatus
             newData.Flags = Convert.ToUInt32(row["LandFlags"]);
 
+            if (!(row["LandFlags2"] is System.DBNull))
+            {
+                uint flags2 = Convert.ToUInt32(row["LandFlags2"]);
+                newData.SeeAvs = (flags2 & FLAGS2_SEEAVS) != 0;
+                newData.AnyAvSounds = (flags2 & FLAGS2_ANYAVSOUNDS) != 0;
+                newData.GroupAvSounds = (flags2 & FLAGS2_GRPAVSOUNDS) != 0;
+            }
+
             newData.LandingType = Convert.ToByte(row["LandingType"]);
             newData.MediaAutoScale = Convert.ToByte(row["MediaAutoScale"]);
             newData.MediaID = new UUID(Convert.ToString(row["MediaTextureUUID"]));
@@ -2223,6 +2238,17 @@ namespace OpenSim.Data.MySQL
             cmd.Parameters.AddWithValue("AuthBuyerID", land.AuthBuyerID);
             cmd.Parameters.AddWithValue("OtherCleanTime", land.OtherCleanTime);
             cmd.Parameters.AddWithValue("Dwell", land.Dwell);
+
+            // The server doesn't use these flags but needs to store them for the viewer, 
+            // so this module is the only one that needs to map them back and forth. Mapping is arbitrary.
+            uint flags2 = 0;
+            if (land.SeeAvs)
+                flags2 |= FLAGS2_SEEAVS;
+            if (land.AnyAvSounds)
+                flags2 |= FLAGS2_ANYAVSOUNDS;
+            if (land.GroupAvSounds)
+                flags2 |= FLAGS2_GRPAVSOUNDS;
+            cmd.Parameters.AddWithValue("LandFlags2", flags2);
         }
 
         /// <summary>
