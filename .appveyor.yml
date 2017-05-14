@@ -24,6 +24,9 @@ after_build:
         }
     - cmd: move bin halcyon
 
+# No tests for now.
+test: off
+
 artifacts:
     - path: halcyon
       name: Halcyon-{version}-{branch}-{build}
