@@ -29,4 +29,4 @@ test: off
 
 artifacts:
     - path: halcyon
-      name: Halcyon-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH)
+      name: Halcyon-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH)-Windows
