@@ -217,7 +217,7 @@ namespace OpenSim.Framework
             }
             
             suppress_console_output_(true);
-            Directory.CreateDirectory("addin-db-001\\addin-dir-data");
+            Directory.CreateDirectory("addin-db-001/addin-dir-data");
             AddinManager.Initialize(dir);
             AddinManager.Registry.Update(null);
             suppress_console_output_(false);
