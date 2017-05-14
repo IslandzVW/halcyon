@@ -20,7 +20,7 @@ after_build:
     - ps: |
         If(Test-Path "bin/OpenSim.Framework.Servers.dll") {
           $halcyon_version = (ls bin/OpenSim.Framework.Servers.dll | % versioninfo).ProductVersion
-          Update-AppveyorBuild -Version "0.$($halcyon_version.Substring(0, $halcyon_version.lastIndexOf('.')))"
+          Update-AppveyorBuild -Version "0.$($halcyon_version.Substring(0, $halcyon_version.lastIndexOf('.')))-$env:APPVEYOR_BUILD_NUMBER"
         }
     - cmd: move bin halcyon
 
@@ -29,4 +29,4 @@ test: off
 
 artifacts:
     - path: halcyon
-      name: Halcyon-$(version)-$(branch)-$(build)
+      name: Halcyon-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH)
