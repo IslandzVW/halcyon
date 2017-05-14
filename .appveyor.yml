@@ -20,7 +20,7 @@ after_build:
     - ps: >-
       If(Test-Path "bin/OpenSim.Framework.Servers.dll") {
         $halcyon_version = (ls bin/OpenSim.Framework.Servers.dll | % versioninfo).ProductVersion
-        Update-AppveyorBuild -Version "0.$($halcyon_version.Substring(0, $halcyon_version.lastIndexOf('.'))"
+        Update-AppveyorBuild -Version "0.$($halcyon_version.Substring(0, $halcyon_version.lastIndexOf('.')))"
       }
     - move bin halcyon
 
