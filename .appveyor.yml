@@ -1,0 +1,29 @@
+version: {build}
+
+image: Visual Studio 2017
+
+configuration: Release
+
+cache:
+    - packages -> **\packages.config
+
+before_build:
+    - IF EXIST runprebuild.bat runprebuild.bat
+    - nuget restore Halcyon.sln
+
+build:
+    parallel: true
+    verbosity: minimal
+    project: Halcyon.sln
+
+after_build:
+    - ps: >-
+      If(Test-Path "bin/OpenSim.Framework.Servers.dll") {
+        $halcyon_version = (ls bin/OpenSim.Framework.Servers.dll | % versioninfo).ProductVersion
+        Update-AppveyorBuild -Version "0.$($halcyon_version.Substring(0, $halcyon_version.lastIndexOf('.'))"
+      }
+    - move bin halcyon
+
+artifacts:
+    - path: halcyon
+      name: Halcyon-{version}-{branch}-{build}
