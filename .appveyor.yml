@@ -1,4 +1,4 @@
-version: {build}
+version: 0.9.00.{build}
 
 image: Visual Studio 2017
 
