@@ -227,6 +227,8 @@ bin/GridServer_Config.xml
 bin/MessagingServer_Config.xml
 bin/UserServer_Config.xml
 bin/Regions
+*.crt
+*.p12
 
 # Other testing folder ignores 
 bin/*.dll
