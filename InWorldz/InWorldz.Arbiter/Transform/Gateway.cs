@@ -2,7 +2,7 @@
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using OpenSim.Region.Framework.Scenes;
+using FlatBuffers;
 
 namespace InWorldz.Arbiter.Transform
 {
@@ -19,13 +19,12 @@ namespace InWorldz.Arbiter.Transform
             _gatewayHost = gatewayHost;
         }
 
-        public async Task<ulong> GetPrimHash(SceneObjectPart part)
+        public async Task<ulong> GetPrimHash(ByteBuffer halcyonPrimBuffer)
         {
             using (HttpClient htp = new HttpClient())
+            using (ByteArrayContent content = new ByteArrayContent(halcyonPrimBuffer.Data))
+            using (HttpResponseMessage result = await htp.PostAsync(_gatewayHost + "/geometry/primhash", content))
             {
-                HttpClient hc = new HttpClient();
-                HttpResponseMessage result = await hc.GetAsync(_gatewayHost + "/geometry/primhash");
-
                 if (result.IsSuccessStatusCode)
                 {
                     return ulong.Parse(await result.Content.ReadAsStringAsync());

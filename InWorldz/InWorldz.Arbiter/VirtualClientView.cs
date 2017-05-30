@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using FlatBuffers;
 using InWorldz.Arbiter.Serialization;
 using InWorldz.Arbiter.Transform;
 using OpenMetaverse;
@@ -480,7 +481,6 @@ namespace InWorldz.Arbiter
             if (SeeingGroupFirstTime(part.ParentGroup))
             {
                 //send the group update
-
             }
             else
             {
@@ -495,6 +495,13 @@ namespace InWorldz.Arbiter
             {
 
             });
+
+            var builder = new FlatBufferBuilder(16); // *TODO: Find a good initial FB size
+            var halPrimOff = Mapper.MapPartToFlatbuffer(builder, sop, true);
+            builder.Finish(halPrimOff.Value);
+            var buffer = builder.DataBuffer;
+
+            // *TODO: Send it off to Gateway
         }
 
         private Queue<Tuple<SceneObjectPart, bool, Action<ulong>>> _hashCalcQueue 

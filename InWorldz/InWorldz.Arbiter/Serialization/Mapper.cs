@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using FlatBuffers;
 using OpenMetaverse;
@@ -83,7 +84,7 @@ namespace InWorldz.Arbiter.Serialization
             {
                 if (! inGroup.ChildParts(i).HasValue) continue;
 
-                SceneObjectPart childPart = Mapper.MapFlatbufferPrimToPart(inGroup.ChildParts(i).Value);
+                SceneObjectPart childPart = MapFlatbufferPrimToPart(inGroup.ChildParts(i).Value);
 
                 int originalLinkNum = childPart.LinkNum;
                 group.AddPart(childPart);
@@ -205,11 +206,11 @@ namespace InWorldz.Arbiter.Serialization
         /// <summary>
         /// Maps the given sceneobjectpart to a flatbuffer primitive
         /// </summary>
-        /// <param name="sop">The scene object to be serialized</param>
         /// <param name="builder">A FlatBufferBuilder that has been reset</param>
+        /// <param name="sop">The scene object to be serialized</param>
         /// <param name="close">Whether to close the buffer or not</param>
         /// <returns>A flatbuffer primitive</returns>
-        public static Offset<HalcyonPrimitive> MapPartToFlatbuffer(SceneObjectPart sop, FlatBufferBuilder builder, bool close=false)
+        public static Offset<HalcyonPrimitive> MapPartToFlatbuffer(FlatBufferBuilder builder, SceneObjectPart sop, bool close=false)
         {
             var angularVelocity = Vector3.CreateVector3(builder, sop.PhysicalAngularVelocity.X, sop.PhysicalAngularVelocity.Y,
                 sop.PhysicalAngularVelocity.Z);
@@ -321,6 +322,34 @@ namespace InWorldz.Arbiter.Serialization
             if (close)
             {
                 HalcyonPrimitive.FinishHalcyonPrimitiveBuffer(builder, offset);
+            }
+
+            return offset;
+        }
+
+        public static Offset<HalcyonGroup> MapGroupToFlatbuffer(FlatBufferBuilder builder, SceneObjectGroup sog, bool close = false)
+        {
+            HalcyonGroup.StartHalcyonGroup(builder);
+            if (sog.RootPart != null)
+            {
+                var root = MapPartToFlatbuffer(builder, sog.RootPart, true);
+                HalcyonGroup.AddRoot(builder, root);
+            }
+            var childParts = new List< Offset<HalcyonPrimitive> >();
+            foreach (SceneObjectPart sop in sog.GetParts())
+            {
+                var child = MapPartToFlatbuffer(builder, sop, true);
+                childParts.Add(child);
+            }
+            if (childParts.Count > 0)
+            {
+                VectorOffset childVec = HalcyonGroup.CreateChildPartsVector(builder, childParts.ToArray());
+                HalcyonGroup.AddChildParts(builder, childVec);
+            }
+            var offset = HalcyonGroup.EndHalcyonGroup(builder);
+            if (close)
+            {
+                HalcyonGroup.FinishHalcyonGroupBuffer(builder, offset);
             }
 
             return offset;
