@@ -14,6 +14,9 @@
 *.mdb 
 *.mdp
 
+# Jetbrains
+.idea/
+
 # Nant
 *.dll.build
 *.exe.build
