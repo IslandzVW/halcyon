@@ -23,14 +23,28 @@ namespace InWorldz.Arbiter.Transform
         {
             using (HttpClient htp = new HttpClient())
             using (ByteArrayContent content = new ByteArrayContent(halcyonPrimBuffer.Data))
-            using (HttpResponseMessage result = await htp.PostAsync(_gatewayHost + "/geometry/primhash", content))
+            using (HttpResponseMessage result = await htp.PostAsync($"{_gatewayHost}/geometry/primhash", content))
             {
                 if (result.IsSuccessStatusCode)
                 {
                     return ulong.Parse(await result.Content.ReadAsStringAsync());
                 }
 
-                throw new Exception("Server returned error " + result.StatusCode);
+                throw new Exception($"Server returned error {result.StatusCode}");
+            }
+        }
+
+        public async Task<ulong> GetObjectGroupHash(ByteBuffer halcyonGroupBuffer)
+        {
+            using (HttpClient htp = new HttpClient())
+            using (ByteArrayContent content = new ByteArrayContent(halcyonGroupBuffer.Data))
+            using (HttpResponseMessage result = await htp.PostAsync($"{_gatewayHost}/geometry/grouphash", content))
+            {
+                if (result.IsSuccessStatusCode)
+                {
+                    return ulong.Parse(await result.Content.ReadAsStringAsync());
+                }
+                throw new Exception($"Server returned error {result.StatusCode}");
             }
         }
     }
