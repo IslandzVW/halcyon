@@ -481,6 +481,7 @@ namespace InWorldz.Arbiter
             if (SeeingGroupFirstTime(part.ParentGroup))
             {
                 //send the group update
+                SendObjectGroupUpdate(part.ParentGroup, clientFlags, lpos);
             }
             else
             {
@@ -502,6 +503,15 @@ namespace InWorldz.Arbiter
             var buffer = builder.DataBuffer;
 
             // *TODO: Send it off to Gateway
+        }
+
+        private void SendObjectGroupUpdate(SceneObjectGroup sog, uint clientFlags, Vector3 lpos)
+        {
+            // queue
+            var builder = new FlatBufferBuilder(32); // *TODO: Find a good initial FB size
+            var halGroupOff = Mapper.MapGroupToFlatbuffer(builder, sog, true);
+            builder.Finish(halGroupOff.Value);
+            var buffer = builder.DataBuffer;
         }
 
         private Queue<Tuple<SceneObjectPart, bool, Action<ulong>>> _hashCalcQueue 
