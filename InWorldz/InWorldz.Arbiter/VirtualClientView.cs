@@ -536,7 +536,7 @@ namespace InWorldz.Arbiter
 
         private void CalculateHash(SceneObjectGroup sog, Action<ulong> action)
         {
-            lock (_hashCalcQueue)
+            lock (_hashCalcGroupQueue)
             {
                 _hashCalcGroupQueue.Enqueue(new Tuple<SceneObjectGroup, bool, Action<ulong>>(sog, false, action));
             }
