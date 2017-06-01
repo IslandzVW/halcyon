@@ -492,29 +492,19 @@ namespace InWorldz.Arbiter
 
         private void SendPartUpdate(SceneObjectPart sop, uint clientFlags, Vector3 lpos)
         {
-            CalculateHash(sop, (hash) =>
+            CalculateHash(sop, async (hash) =>
             {
+                var builder = new FlatBufferBuilder(16); // *TODO: Find a good initial FB size
+                var halPrimOff = Mapper.MapPartToFlatbuffer(builder, sop, true);
+                builder.Finish(halPrimOff.Value);
+                var buffer = builder.DataBuffer;
 
+                Task<ulong> hashTask = _transformGateway.GetPrimHash(buffer);
+                hash = await hashTask;
             });
-
-            var builder = new FlatBufferBuilder(16); // *TODO: Find a good initial FB size
-            var halPrimOff = Mapper.MapPartToFlatbuffer(builder, sop, true);
-            builder.Finish(halPrimOff.Value);
-            var buffer = builder.DataBuffer;
-
-            // *TODO: Send it off to Gateway
         }
 
-        private void SendObjectGroupUpdate(SceneObjectGroup sog, uint clientFlags, Vector3 lpos)
-        {
-            // queue
-            var builder = new FlatBufferBuilder(32); // *TODO: Find a good initial FB size
-            var halGroupOff = Mapper.MapGroupToFlatbuffer(builder, sog, true);
-            builder.Finish(halGroupOff.Value);
-            var buffer = builder.DataBuffer;
-        }
-
-        private Queue<Tuple<SceneObjectPart, bool, Action<ulong>>> _hashCalcQueue 
+        private Queue<Tuple<SceneObjectPart, bool, Action<ulong>>> _hashCalcQueue
             = new Queue<Tuple<SceneObjectPart, bool, Action<ulong>>>();
 
         private void CalculateHash(SceneObjectPart sop, Action<ulong> action)
@@ -522,6 +512,33 @@ namespace InWorldz.Arbiter
             lock (_hashCalcQueue)
             {
                 _hashCalcQueue.Enqueue(new Tuple<SceneObjectPart, bool, Action<ulong>>(sop, false, action));
+            }
+        }
+
+        // *FIXME: This duplicates a lot of the last three declarations. There's likely a good way to
+        //         simplify this.
+        private void SendObjectGroupUpdate(SceneObjectGroup sog, uint clientFlags, Vector3 lpos)
+        {
+            CalculateHash(sog, async (hash) =>
+            {
+                var builder = new FlatBufferBuilder(32); // *TODO: Find a good initial FB size
+                var halGroupOff = Mapper.MapGroupToFlatbuffer(builder, sog, true);
+                builder.Finish(halGroupOff.Value);
+                var buffer = builder.DataBuffer;
+
+                Task<ulong> hashTask = _transformGateway.GetObjectGroupHash(buffer);
+                hash = await hashTask;
+            });
+        }
+        
+        private Queue<Tuple<SceneObjectGroup, bool, Action<ulong>>> _hashCalcGroupQueue
+            = new Queue<Tuple<SceneObjectGroup, bool, Action<ulong>>>();
+
+        private void CalculateHash(SceneObjectGroup sog, Action<ulong> action)
+        {
+            lock (_hashCalcQueue)
+            {
+                _hashCalcGroupQueue.Enqueue(new Tuple<SceneObjectGroup, bool, Action<ulong>>(sog, false, action));
             }
         }
 
