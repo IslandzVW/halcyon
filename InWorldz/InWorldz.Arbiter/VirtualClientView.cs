@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using FlatBuffers;
 using InWorldz.Arbiter.Serialization;
 using InWorldz.Arbiter.Transform;
@@ -15,6 +16,18 @@ using Vector3 = OpenMetaverse.Vector3;
 
 namespace InWorldz.Arbiter
 {
+    internal enum HalcyonObjectType
+    {
+        HAL_PRIM,
+        HAL_OBJECT
+    }
+    internal class SceneObjectDTO
+    {
+        public ByteBuffer Buffer { get; set; }
+        public ulong Hash { get; set; }
+        public HalcyonObjectType HalType { get; set; } = HalcyonObjectType.HAL_PRIM;
+    }
+
     public class VirtualClientView : IClientAPI
     {
         private HashSet<uint> _groupsSeen = new HashSet<uint>();
@@ -287,8 +300,82 @@ namespace InWorldz.Arbiter
 
         public VirtualClientView(Nini.Config.IConfigSource configSource)
         {
-            string gatewayUrl = configSource.Configs["Network"].GetString("transform_gateway_url", String.Empty);
+            string gatewayUrl = configSource.Configs["Network"].GetString("transform_gateway_url", string.Empty);
             _transformGateway = new Gateway(gatewayUrl);
+
+            SetupDataflowWorker();
+        }
+
+        private BufferBlock<SceneObjectDTO> _hashingBuffer;
+
+        private void SetupDataflowWorker()
+        {
+            if (_hashingBuffer != null) return;
+
+            var dataflowOpts = new ExecutionDataflowBlockOptions
+            {
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                BoundedCapacity = 1024 // TODO: Performance tune
+            };
+            var hashBlock = new TransformBlock<SceneObjectDTO, SceneObjectDTO>(
+                new Func<SceneObjectDTO, SceneObjectDTO>(ComputeHash)
+                , dataflowOpts);
+            var sendObjectWithHash = new ActionBlock<SceneObjectDTO>(dto =>
+                {
+
+                }, dataflowOpts);
+            _hashingBuffer.LinkTo(hashBlock);
+            hashBlock.LinkTo(sendObjectWithHash);
+
+            hashBlock.Completion.ContinueWith(delegate { sendObjectWithHash.Complete(); }); // CHECKME: Needed?
+        }
+
+        private SceneObjectDTO ComputeHash(SceneObjectDTO dto)
+        {
+            switch (dto.HalType)
+            {
+                case HalcyonObjectType.HAL_PRIM:
+                    dto.Hash = _transformGateway.GetPrimHash(dto.Buffer);
+                    break;
+                case HalcyonObjectType.HAL_OBJECT:
+                    dto.Hash = _transformGateway.GetObjectGroupHash(dto.Buffer);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            return dto;
+        }
+
+        private static IPropagatorBlock<TInput, TOutput>
+            CreateConcurrentOrderedTransformBlock<TInput, TOutput>(
+                Func<TInput, TOutput> transform)
+        {
+            var queue = new TransformBlock<Task<TOutput>, TOutput>(t => t);
+            var processor = new ActionBlock<Tuple<TInput, Action<TOutput>>>(
+                tuple => tuple.Item2(transform(tuple.Item1)),
+                new ExecutionDataflowBlockOptions
+                {
+                    MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded // TODO: Performance tune
+                });
+            var enqueuer = new ActionBlock<TInput>(
+                async item =>
+                {
+                    var tcs = new TaskCompletionSource<TOutput>();
+                    await processor.SendAsync(
+                        new Tuple<TInput, Action<TOutput>>(item, tcs.SetResult));
+                    await queue.SendAsync(tcs.Task);
+                });
+            enqueuer.Completion.ContinueWith(
+                _ =>
+                {
+                    //if (_.IsFaulted)
+                    //{
+                    //    TODO: ???
+                    //}
+                    queue.Complete();
+                    processor.Complete();
+                });
+            return DataflowBlock.Encapsulate(enqueuer, queue);
         }
 
         public void SetDebugPacketLevel(int newDebug)
@@ -489,7 +576,7 @@ namespace InWorldz.Arbiter
                 SendPartUpdate(part, clientFlags, lpos);
             }
         }
-
+        
         private void SendPartUpdate(SceneObjectPart sop, uint clientFlags, Vector3 lpos)
         {
             var builder = new FlatBufferBuilder(16); // *TODO: Find a good initial FB size
@@ -497,9 +584,10 @@ namespace InWorldz.Arbiter
             builder.Finish(halPrimOff.Value);
             ByteBuffer buffer = builder.DataBuffer;
 
-            CalculateHash(buffer, (hash) =>
+            _hashingBuffer.SendAsync(new SceneObjectDTO()
             {
-                
+                Buffer = buffer,
+                HalType = HalcyonObjectType.HAL_PRIM
             });
         }
 
@@ -510,21 +598,11 @@ namespace InWorldz.Arbiter
             builder.Finish(halGroupOff.Value);
             ByteBuffer buffer = builder.DataBuffer;
 
-            CalculateHash(buffer, (hash) =>
+            _hashingBuffer.SendAsync(new SceneObjectDTO()
             {
-
+                Buffer = buffer,
+                HalType = HalcyonObjectType.HAL_OBJECT
             });
-        }
-
-        private Queue<Tuple<ByteBuffer, bool, Action<ulong>>> _hashCalcQueue
-            = new Queue<Tuple<ByteBuffer, bool, Action<ulong>>>();
-
-        private void CalculateHash(ByteBuffer byteBuffer, Action<ulong> action)
-        {
-            lock (_hashCalcQueue)
-            {
-                _hashCalcQueue.Enqueue(new Tuple<ByteBuffer, bool, Action<ulong>>(byteBuffer, false, action));
-            }
         }
 
         private bool SeeingGroupFirstTime(SceneObjectGroup parentGroup)

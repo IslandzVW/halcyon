@@ -19,30 +19,30 @@ namespace InWorldz.Arbiter.Transform
             _gatewayHost = gatewayHost;
         }
 
-        public async Task<ulong> GetPrimHash(ByteBuffer halcyonPrimBuffer)
+        public ulong GetPrimHash(ByteBuffer halcyonPrimBuffer)
         {
             using (HttpClient htp = new HttpClient())
             using (ByteArrayContent content = new ByteArrayContent(halcyonPrimBuffer.Data))
-            using (HttpResponseMessage result = await htp.PostAsync($"{_gatewayHost}/geometry/primhash", content))
+            using (HttpResponseMessage result = htp.PostAsync($"{_gatewayHost}/geometry/primhash", content).Result)
             {
                 if (result.IsSuccessStatusCode)
                 {
-                    return ulong.Parse(await result.Content.ReadAsStringAsync());
+                    return ulong.Parse(result.Content.ReadAsStringAsync().Result);
                 }
 
                 throw new Exception($"Server returned error {result.StatusCode}");
             }
         }
 
-        public async Task<ulong> GetObjectGroupHash(ByteBuffer halcyonGroupBuffer)
+        public ulong GetObjectGroupHash(ByteBuffer halcyonGroupBuffer)
         {
             using (HttpClient htp = new HttpClient())
             using (ByteArrayContent content = new ByteArrayContent(halcyonGroupBuffer.Data))
-            using (HttpResponseMessage result = await htp.PostAsync($"{_gatewayHost}/geometry/grouphash", content))
+            using (HttpResponseMessage result = htp.PostAsync($"{_gatewayHost}/geometry/grouphash", content).Result)
             {
                 if (result.IsSuccessStatusCode)
                 {
-                    return ulong.Parse(await result.Content.ReadAsStringAsync());
+                    return ulong.Parse(result.Content.ReadAsStringAsync().Result);
                 }
                 throw new Exception($"Server returned error {result.StatusCode}");
             }
