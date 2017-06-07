@@ -317,6 +317,7 @@ namespace InWorldz.Arbiter
                 MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
                 BoundedCapacity = 1024 // TODO: Performance tune
             };
+            _hashingBuffer = new BufferBlock<SceneObjectDTO>();
             var hashBlock = new TransformBlock<SceneObjectDTO, SceneObjectDTO>(
                 new Func<SceneObjectDTO, SceneObjectDTO>(ComputeHash)
                 , dataflowOpts);
