@@ -1253,8 +1253,14 @@ namespace OpenSim.Framework.Servers.HttpServer
             {
 //                m_log.DebugFormat(
 //                    "[BASE HTTP SERVER]: Got query paremeter {0}={1}", queryname, request.QueryString[queryname]);
-                keysvals.Add(queryname, request.QueryString[queryname]);
-                requestVars.Add(queryname, keysvals[queryname]);
+
+                // HttpRequest.QueryString.AllKeys returns a one-item array, with a null only,
+                // if passed something without an '=' in the query, such as URL/?abc or URL/?abc+def
+                if (queryname != null)
+                {
+                    keysvals.Add(queryname, request.QueryString[queryname]);
+                    requestVars.Add(queryname, keysvals[queryname]);
+                }
             }
 
             foreach (string headername in rHeaders)
