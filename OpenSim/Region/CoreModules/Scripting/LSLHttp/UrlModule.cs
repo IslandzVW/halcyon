@@ -522,7 +522,8 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                 //set to address of port forwarding router
                 requestData.headers["x-remote-ip"] = httpRequest.RemoteIPEndPoint.ToString();
                 requestData.headers["x-path-info"] = pathInfo;
-                requestData.headers["x-query-string"] = queryString;
+                requestData.headers["x-query-string"] = requestData.uri;    // raw (SL-compatible)
+                requestData.headers["x-query-string-compat"] = queryString; // processed (old Halcyon scripts)
                 requestData.headers["x-script-url"] = urlData.url;
 
                 lock (m_RequestMap)
