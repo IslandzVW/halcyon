@@ -87,6 +87,9 @@ namespace OpenSim.Grid.UserServer
 
         public static void Main(string[] args)
         {
+            // Under any circumstance other than an explicit exit the exit code should be 1.
+            Environment.ExitCode = 1;
+
             ServicePointManager.DefaultConnectionLimit = 12;
 
             PIDFileManager pidFile = new PIDFileManager();

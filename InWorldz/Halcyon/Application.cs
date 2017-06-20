@@ -65,6 +65,9 @@ namespace OpenSim
         //could move our main function into OpenSimMain and kill this class
         public static void Main(string[] args)
         {
+            // Under any circumstance other than an explicit exit the exit code should be 1.
+            Environment.ExitCode = 1;
+
             // First line, hook the appdomain to the crash reporter
             AppDomain.CurrentDomain.UnhandledException +=
                 new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);

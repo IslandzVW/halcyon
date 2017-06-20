@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Net;
 using log4net.Config;
 using log4net;
@@ -38,6 +39,9 @@ namespace OpenSim.Grid.GridServer
 
         public static void Main(string[] args)
         {
+            // Under any circumstance other than an explicit exit the exit code should be 1.
+            Environment.ExitCode = 1;
+
             ServicePointManager.DefaultConnectionLimit = 12;
 
 			m_log.Info ("starting up");
