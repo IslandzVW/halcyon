@@ -506,7 +506,7 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                         String[] keys = (String[])de.Value;
                         foreach (String key in keys)
                         {
-                            if (request.ContainsKey(key))
+                            if ((key != null) && request.ContainsKey(key))
                             {
                                 string val = (String)request[key];
                                 queryString = queryString + key + "=" + val + "&";
@@ -518,11 +518,15 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
                     }
                 }
 
+                // Grab the raw unprocessed original query string, if any.
+                int rawQueryPos = httpRequest.Url.Query.IndexOf('?');
+                string rawQueryStr = (rawQueryPos < 0) ? httpRequest.Url.Query : httpRequest.Url.Query.Substring(rawQueryPos + 1);
+
                 //if this machine is behind DNAT/port forwarding, currently this is being
                 //set to address of port forwarding router
                 requestData.headers["x-remote-ip"] = httpRequest.RemoteIPEndPoint.ToString();
                 requestData.headers["x-path-info"] = pathInfo;
-                requestData.headers["x-query-string"] = requestData.uri;    // raw (SL-compatible)
+                requestData.headers["x-query-string"] = rawQueryStr;        // raw original (SL-compatible)
                 requestData.headers["x-query-string-compat"] = queryString; // processed (old Halcyon scripts)
                 requestData.headers["x-script-url"] = urlData.url;
 
