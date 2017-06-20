@@ -36,6 +36,8 @@ using OpenMetaverse.Imaging;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
 using OpenSim.Region.Interfaces;
+using System.Runtime.InteropServices;
+using System.Drawing.Imaging;
 
 namespace OpenSim.Region.CoreModules.World.WorldMap
 {
@@ -53,10 +55,46 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
     public struct DrawStruct
     {
-        public DrawRoutine dr;
-        public Rectangle rect;
         public SolidBrush brush;
         public face[] trns;
+    }
+
+    public struct DrawStruct2
+    {
+        public float sort_order;
+        public SolidBrush brush;
+        public Point[] vertices;
+    }
+
+    /// <summary>
+    /// A very fast, but special purpose, tool for doing lots of drawing operations.
+    /// </summary>
+    public class DirectBitmap : IDisposable
+    {
+        public Bitmap Bitmap { get; private set; }
+        public Int32[] Bits { get; private set; }
+        public bool Disposed { get; private set; }
+        public int Height { get; private set; }
+        public int Width { get; private set; }
+
+        protected GCHandle BitsHandle { get; private set; }
+
+        public DirectBitmap(int width, int height)
+        {
+            Width = width;
+            Height = height;
+            Bits = new Int32[width * height];
+            BitsHandle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
+            Bitmap = new Bitmap(width, height, width * 4, PixelFormat.Format32bppPArgb, BitsHandle.AddrOfPinnedObject());
+        }
+
+        public void Dispose()
+        {
+            if (Disposed) return;
+            Disposed = true;
+            Bitmap.Dispose();
+            BitsHandle.Free();
+        }
     }
 
     public class MapImageModule : IMapImageGenerator, IRegionModule
@@ -68,20 +106,68 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
         private IConfigSource m_config;
         private IMapTileTerrainRenderer terrainRenderer;
 
+        private bool drawPrimVolume = true;
+        private bool textureTerrain = false;
+
+        private byte[] imageData = null;
+
+        private DirectBitmap mapbmp = new DirectBitmap(256, 256);
+
         #region IMapImageGenerator Members
 
-        public byte[] WriteJpeg2000Image(string gradientmap)
+        public byte[] WriteJpeg2000Image()
         {
-            byte[] imageData = null;
+            if (terrainRenderer != null)
+            {
+                terrainRenderer.TerrainToBitmap(mapbmp);
+            }
 
-            bool drawPrimVolume = true;
-            bool textureTerrain = false;
+            if (drawPrimVolume)
+            {
+                DrawObjectVolume(m_scene, mapbmp);
+            }
+
+            int t = Environment.TickCount;
+            try
+            {
+                imageData = OpenJPEG.EncodeFromImage(mapbmp.Bitmap, true);
+            }
+            catch (Exception e) // LEGIT: Catching problems caused by OpenJPEG p/invoke
+            {
+                m_log.Error("Failed generating terrain map: " + e);
+            }
+            t = Environment.TickCount - t;
+            m_log.InfoFormat("[MAPTILE] encoding of image needed {0}ms", t);
+
+            return imageData;
+        }
+
+        #endregion
+
+        #region IRegionModule Members
+
+        public void Initialize(Scene scene, IConfigSource source)
+        {
+            m_scene = scene;
+            m_config = source;
 
             try
             {
-                IConfig startupConfig = m_config.Configs["Startup"];
-                drawPrimVolume = startupConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
-                textureTerrain = startupConfig.GetBoolean("TextureOnMapTile", textureTerrain);
+                IConfig startupConfig = m_config.Configs["Startup"]; // Location supported for legacy INI files.
+                IConfig worldmapConfig = m_config.Configs["WorldMap"];
+
+                if (startupConfig.GetString("MapImageModule", "MapImageModule") !=
+                    "MapImageModule")
+                    return;
+                
+                // Go find the parameters in the new location and if not found go looking in the old.
+                drawPrimVolume = (worldmapConfig != null && worldmapConfig.Contains("DrawPrimOnMapTile")) ?
+                    worldmapConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume) :
+                    startupConfig.GetBoolean("DrawPrimOnMapTile", drawPrimVolume);
+
+                textureTerrain = (worldmapConfig != null && worldmapConfig.Contains("TextureOnMapTile")) ?
+                    worldmapConfig.GetBoolean("TextureOnMapTile", textureTerrain) :
+                    startupConfig.GetBoolean("TextureOnMapTile", textureTerrain);
             }
             catch
             {
@@ -97,46 +183,6 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                 terrainRenderer = new ShadedMapTileRenderer();
             }
             terrainRenderer.Initialize(m_scene, m_config);
-
-            Bitmap mapbmp = new Bitmap(256, 256);
-            //long t = System.Environment.TickCount;
-            //for (int i = 0; i < 10; ++i) {
-                terrainRenderer.TerrainToBitmap(mapbmp);
-            //}
-            //t = System.Environment.TickCount - t;
-            //m_log.InfoFormat("[MAPTILE] generation of 10 maptiles needed {0} ms", t);
-
-
-            if (drawPrimVolume)
-            {
-                DrawObjectVolume(m_scene, mapbmp);
-            }
-
-            try
-            {
-                imageData = OpenJPEG.EncodeFromImage(mapbmp, true);
-            }
-            catch (Exception e) // LEGIT: Catching problems caused by OpenJPEG p/invoke
-            {
-                m_log.Error("Failed generating terrain map: " + e);
-            }
-
-            return imageData;
-        }
-
-        #endregion
-
-        #region IRegionModule Members
-
-        public void Initialize(Scene scene, IConfigSource source)
-        {
-            m_scene = scene;
-            m_config = source;
-
-            IConfig startupConfig = m_config.Configs["Startup"];
-            if (startupConfig.GetString("MapImageModule", "MapImageModule") !=
-                    "MapImageModule")
-                return;
 
             m_scene.RegisterModuleInterface<IMapImageGenerator>(this);
         }
@@ -161,424 +207,492 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
         #endregion
 
-// TODO: unused:
-//         private void ShadeBuildings(Bitmap map)
-//         {
-//             lock (map)
-//             {
-//                 lock (m_scene.Entities)
-//                 {
-//                     foreach (EntityBase entity in m_scene.Entities.Values)
-//                     {
-//                         if (entity is SceneObjectGroup)
-//                         {
-//                             SceneObjectGroup sog = (SceneObjectGroup) entity;
-//
-//                             foreach (SceneObjectPart primitive in sog.Children.Values)
-//                             {
-//                                 int x = (int) (primitive.AbsolutePosition.X - (primitive.Scale.X / 2));
-//                                 int y = (int) (primitive.AbsolutePosition.Y - (primitive.Scale.Y / 2));
-//                                 int w = (int) primitive.Scale.X;
-//                                 int h = (int) primitive.Scale.Y;
-//
-//                                 int dx;
-//                                 for (dx = x; dx < x + w; dx++)
-//                                 {
-//                                     int dy;
-//                                     for (dy = y; dy < y + h; dy++)
-//                                     {
-//                                         if (x < 0 || y < 0)
-//                                             continue;
-//                                         if (x >= map.Width || y >= map.Height)
-//                                             continue;
-//
-//                                         map.SetPixel(dx, dy, Color.DarkGray);
-//                                     }
-//                                 }
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-
-        private Bitmap DrawObjectVolume(Scene whichScene, Bitmap mapbmp)
+        private static readonly SolidBrush DefaultBrush = new SolidBrush(Color.Black);
+        private static SolidBrush GetFaceBrush(SceneObjectPart part, uint face)
         {
-            int tc = 0;
-            double[,] hm = whichScene.Heightmap.GetDoubles();
-            tc = Environment.TickCount;
+            // Block sillyness that would cause an exception.
+            if (face >= OpenMetaverse.Primitive.TextureEntry.MAX_FACES)
+                return DefaultBrush;
+
+            var facetexture = part.Shape.Textures.GetFace(face);
+            // GetFace throws a generic exception if the parameter is greater than MAX_FACES.
+
+            // TODO: compute a better color from the texture data AND the color applied.
+
+            return new SolidBrush(Color.FromArgb(
+                Math.Max(0, Math.Min(255, (int)(facetexture.RGBA.R * 255f))),
+                Math.Max(0, Math.Min(255, (int)(facetexture.RGBA.G * 255f))),
+                Math.Max(0, Math.Min(255, (int)(facetexture.RGBA.B * 255f)))
+            ));
+            // FromARGB can throw an exception if a parameter is outside 0-255, but that is prevented.
+        }
+
+        private static float ZOfCrossDiff(ref Vector3 P, ref Vector3 Q, ref Vector3 R)
+        {
+            // let A = Q - P
+            // let B = R - P
+            // Vz = AxBy - AyBx
+            //    = (Qx - Px)(Ry - Py) - (Qy - Py)(Rx - Px)
+            return (Q.X - P.X)* (R.Y - P.Y) - (Q.Y - P.Y) * (R.X - P.X);
+        }
+
+        private static DirectBitmap DrawObjectVolume(Scene whichScene, DirectBitmap mapbmp)
+        {
+            int time_start = Environment.TickCount;//, time_start_temp = time_start;
+            //int time_prep = 0, time_filtering = 0, time_vertex_calcs = 0, time_sort_height_calc = 0;
+            //int time_obb_norm = 0, time_obb_calc = 0, time_obb_brush = 0, time_obb_addtolist = 0;
+            //int time_sorting = 0, time_drawing = 0;
+            //int sop_count = 0, sop_count_filtered = 0;
+
             m_log.Info("[MAPTILE]: Generating Maptile Step 2: Object Volume Profile");
-            List<EntityBase> objs = whichScene.GetEntities();
-            Dictionary<uint, DrawStruct> z_sort = new Dictionary<uint, DrawStruct>();
-            //SortedList<float, RectangleDrawStruct> z_sort = new SortedList<float, RectangleDrawStruct>();
-            List<float> z_sortheights = new List<float>();
-            List<uint> z_localIDs = new List<uint>();
 
-            lock (objs)
+            float scale_factor = (float)mapbmp.Height / OpenSim.Framework.Constants.RegionSize;
+
+            SceneObjectGroup sog;
+            Vector3 pos;
+            Quaternion rot;
+
+            Vector3 rotated_radial_scale;
+            Vector3 radial_scale;
+
+            DrawStruct2 drawdata;
+
+            var drawdata_for_sorting = new List<DrawStruct2>();
+
+            var vertices = new Vector3[8];
+
+            // Get all the faces for valid prims and prep them for drawing.
+            var entities = whichScene.GetEntities(); // GetEntities returns a new list of entities, so no threading issues.
+            //time_prep += Environment.TickCount - time_start_temp;
+            foreach (EntityBase obj in entities)
             {
-                foreach (EntityBase obj in objs)
+                // Only SOGs till have the needed parts.
+                sog = obj as SceneObjectGroup;
+                if (sog == null)
+                    continue;
+
+                foreach (var part in sog.GetParts())
                 {
-                    // Only draw the contents of SceneObjectGroup
-                    if (obj is SceneObjectGroup)
+                    //++sop_count;
+                    /* * * * * * * * * * * * * * * * * * */
+                    // FILTERING PASS
+                    /* * * * * * * * * * * * * * * * * * */
+                    //time_start_temp = Environment.TickCount;
+
+                    if (
+                        // get the null checks out of the way
+                        part == null ||
+                        part.Shape == null ||
+                        part.Shape.Textures == null ||
+                        part.Shape.Textures.DefaultTexture == null ||
+
+                        // Make sure the object isn't temp or phys
+                        (part.Flags & (PrimFlags.Physics | PrimFlags.Temporary | PrimFlags.TemporaryOnRez)) != 0 ||
+
+                        // Draw only if the object is at least 1 meter wide in all directions
+                        part.Scale.X <= 1f || part.Scale.Y <= 1f || part.Scale.Z <= 1f ||
+
+                        // Eliminate trees from this since we don't really have a good tree representation
+                        part.Shape.PCode == (byte)PCode.Tree || part.Shape.PCode == (byte)PCode.NewTree || part.Shape.PCode == (byte)PCode.Grass
+                    )
+                        continue;
+
+                    pos = part.GetWorldPosition();
+
+                    if (
+                        // skip prim in non-finite position
+                        Single.IsNaN(pos.X) || Single.IsNaN(pos.Y) ||
+                        Single.IsInfinity(pos.X) || Single.IsInfinity(pos.Y) ||
+
+                        // skip prim outside of region (REVISIT: prims can be outside of region and still overlap into the region.)
+                        pos.X < 0f || pos.X >= 256f || pos.Y < 0f || pos.Y >= 256f ||
+
+                        // skip prim Z at or above 256m above the terrain at that position.
+                        pos.Z >= (whichScene.Heightmap.GetRawHeightAt((int)pos.X, (int)pos.Y) + 256f)
+                    )
+                        continue;
+
+                    rot = part.GetWorldRotation();
+
+                    radial_scale.X = part.Shape.Scale.X * 0.5f;
+                    radial_scale.Y = part.Shape.Scale.Y * 0.5f;
+                    radial_scale.Z = part.Shape.Scale.Z * 0.5f;
+
+                    //time_filtering += Environment.TickCount - time_start_temp;
+
+                    //++sop_count_filtered;
+
+                    /* * * * * * * * * * * * * * * * * * */
+                    // OBB VERTEX COMPUTATION
+                    /* * * * * * * * * * * * * * * * * * */
+                    //time_start_temp = Environment.TickCount;
+                    /*
+                    Vertex pattern:
+                    # XYZ
+                    0 --+
+                    1 +-+
+                    2 +++
+                    3 -++
+                    4 ---
+                    5 +--
+                    6 ++-
+                    7 -+-
+                    */
+                    rotated_radial_scale.X = -radial_scale.X;
+                    rotated_radial_scale.Y = -radial_scale.Y;
+                    rotated_radial_scale.Z = radial_scale.Z;
+                    rotated_radial_scale *= rot;
+                    vertices[0].X = pos.X + rotated_radial_scale.X;
+                    vertices[0].Y = pos.Y + rotated_radial_scale.Y;
+                    vertices[0].Z = pos.Z + rotated_radial_scale.Z;
+
+                    rotated_radial_scale.X = radial_scale.X;
+                    rotated_radial_scale.Y = -radial_scale.Y;
+                    rotated_radial_scale.Z = radial_scale.Z;
+                    rotated_radial_scale *= rot;
+                    vertices[1].X = pos.X + rotated_radial_scale.X;
+                    vertices[1].Y = pos.Y + rotated_radial_scale.Y;
+                    vertices[1].Z = pos.Z + rotated_radial_scale.Z;
+
+                    rotated_radial_scale.X = radial_scale.X;
+                    rotated_radial_scale.Y = radial_scale.Y;
+                    rotated_radial_scale.Z = radial_scale.Z;
+                    rotated_radial_scale *= rot;
+                    vertices[2].X = pos.X + rotated_radial_scale.X;
+                    vertices[2].Y = pos.Y + rotated_radial_scale.Y;
+                    vertices[2].Z = pos.Z + rotated_radial_scale.Z;
+
+                    rotated_radial_scale.X = -radial_scale.X;
+                    rotated_radial_scale.Y = radial_scale.Y;
+                    rotated_radial_scale.Z = radial_scale.Z;
+                    rotated_radial_scale *= rot;
+                    vertices[3].X = pos.X + rotated_radial_scale.X;
+                    vertices[3].Y = pos.Y + rotated_radial_scale.Y;
+                    vertices[3].Z = pos.Z + rotated_radial_scale.Z;
+
+                    rotated_radial_scale.X = -radial_scale.X;
+                    rotated_radial_scale.Y = -radial_scale.Y;
+                    rotated_radial_scale.Z = -radial_scale.Z;
+                    rotated_radial_scale *= rot;
+                    vertices[4].X = pos.X + rotated_radial_scale.X;
+                    vertices[4].Y = pos.Y + rotated_radial_scale.Y;
+                    vertices[4].Z = pos.Z + rotated_radial_scale.Z;
+
+                    rotated_radial_scale.X = radial_scale.X;
+                    rotated_radial_scale.Y = -radial_scale.Y;
+                    rotated_radial_scale.Z = -radial_scale.Z;
+                    rotated_radial_scale *= rot;
+                    vertices[5].X = pos.X + rotated_radial_scale.X;
+                    vertices[5].Y = pos.Y + rotated_radial_scale.Y;
+                    vertices[5].Z = pos.Z + rotated_radial_scale.Z;
+
+                    rotated_radial_scale.X = radial_scale.X;
+                    rotated_radial_scale.Y = radial_scale.Y;
+                    rotated_radial_scale.Z = -radial_scale.Z;
+                    rotated_radial_scale *= rot;
+                    vertices[6].X = pos.X + rotated_radial_scale.X;
+                    vertices[6].Y = pos.Y + rotated_radial_scale.Y;
+                    vertices[6].Z = pos.Z + rotated_radial_scale.Z;
+
+                    rotated_radial_scale.X = -radial_scale.X;
+                    rotated_radial_scale.Y = radial_scale.Y;
+                    rotated_radial_scale.Z = -radial_scale.Z;
+                    rotated_radial_scale *= rot;
+                    vertices[7].X = pos.X + rotated_radial_scale.X;
+                    vertices[7].Y = pos.Y + rotated_radial_scale.Y;
+                    vertices[7].Z = pos.Z + rotated_radial_scale.Z;
+
+                    //time_vertex_calcs += Environment.TickCount - time_start_temp;
+
+
+                    /* * * * * * * * * * * * * * * * * * */
+                    // SORT HEIGHT CALC
+                    /* * * * * * * * * * * * * * * * * * */
+                    //time_start_temp = Environment.TickCount;
+
+                    // Sort faces by AABB top height, which by nature will always be the maximum Z value of all upwards facing face vertices, but is also simply the highest vertex.
+                    drawdata.sort_order =
+                        Math.Max(vertices[0].Z,
+                            Math.Max(vertices[1].Z,
+                                Math.Max(vertices[2].Z,
+                                    Math.Max(vertices[3].Z,
+                                        Math.Max(vertices[4].Z,
+                                            Math.Max(vertices[5].Z,
+                                                Math.Max(vertices[6].Z,
+                                                    vertices[7].Z
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    ;
+
+                    //time_sort_height_calc += Environment.TickCount - time_start_temp;
+
+
+                    /* * * * * * * * * * * * * * * * * * */
+                    // OBB DRAWING PREPARATION PASS
+                    /* * * * * * * * * * * * * * * * * * */
+
+                    // Compute face 0 of OBB and add if facing up.
+                    //time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[1], vertices[0]), Vector3.Subtract(vertices[3], vertices[0])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[0], ref vertices[1], ref vertices[3]) > 0)
                     {
-                        SceneObjectGroup mapdot = (SceneObjectGroup)obj;
-                        Color mapdotspot = Color.Gray; // Default color when prim color is white
-                        // Loop over prim in group
-                        foreach (SceneObjectPart part in mapdot.GetParts())
-                        {
-                            if (part == null)
-                                continue;
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
 
-                            // Draw if the object is at least 1 meter wide in any direction
-                            if (part.Scale.X > 1f || part.Scale.Y > 1f || part.Scale.Z > 1f)
-                            {
-                                // Try to get the RGBA of the default texture entry..
-                                //
-                                try
-                                {
-                                    // get the null checks out of the way
-                                    // skip the ones that break
-                                    if (part == null)
-                                        continue;
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 0);
+                        //time_obb_brush += Environment.TickCount - time_start_temp;
 
-                                    if (part.Shape == null)
-                                        continue;
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.vertices = new Point[4];
+                        drawdata.vertices[0].X = (int)(vertices[0].X * scale_factor);
+                        drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[0].Y * scale_factor);
 
-                                    if (part.Shape.PCode == (byte)PCode.Tree || part.Shape.PCode == (byte)PCode.NewTree || part.Shape.PCode == (byte)PCode.Grass)
-                                        continue; // eliminates trees from this since we don't really have a good tree representation
-                                    // if you want tree blocks on the map comment the above line and uncomment the below line
-                                    //mapdotspot = Color.PaleGreen;
+                        drawdata.vertices[1].X = (int)(vertices[1].X * scale_factor);
+                        drawdata.vertices[1].Y = mapbmp.Height - (int)(vertices[1].Y * scale_factor);
 
-                                    if (part.Shape.Textures == null)
-                                        continue;
+                        drawdata.vertices[2].X = (int)(vertices[2].X * scale_factor);
+                        drawdata.vertices[2].Y = mapbmp.Height - (int)(vertices[2].Y * scale_factor);
 
-                                    if (part.Shape.Textures.DefaultTexture == null)
-                                        continue;
+                        drawdata.vertices[3].X = (int)(vertices[3].X * scale_factor);
+                        drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[3].Y * scale_factor);
+                        //time_obb_calc += Environment.TickCount - time_start_temp;
 
-                                    Color4 texcolor = part.Shape.Textures.DefaultTexture.RGBA;
-
-                                    // Not sure why some of these are null, oh well.
-
-                                    int colorr = 255 - (int)(texcolor.R * 255f);
-                                    int colorg = 255 - (int)(texcolor.G * 255f);
-                                    int colorb = 255 - (int)(texcolor.B * 255f);
-
-                                    if (!(colorr == 255 && colorg == 255 && colorb == 255))
-                                    {
-                                        //Try to set the map spot color
-                                        try
-                                        {
-                                            // If the color gets goofy somehow, skip it *shakes fist at Color4
-                                            mapdotspot = Color.FromArgb(colorr, colorg, colorb);
-                                        }
-                                        catch (ArgumentException)
-                                        {
-                                        }
-                                    }
-                                }
-                                catch (IndexOutOfRangeException)
-                                {
-                                    // Windows Array
-                                }
-                                catch (ArgumentOutOfRangeException)
-                                {
-                                    // Mono Array
-                                }
-
-                                Vector3 pos = part.GetWorldPosition();
-
-                                // skip prim outside of retion
-                                if (pos.X < 0.0f || pos.X >= 256.0f || pos.Y < 0.0f || pos.Y >= 256.0f)
-                                    continue;
-
-                                // skip prim in non-finite position
-                                if (Single.IsNaN(pos.X) || Single.IsNaN(pos.Y) ||
-                                    Single.IsInfinity(pos.X) || Single.IsInfinity(pos.Y))
-                                    continue;
-
-                                // Figure out if object is under 256m above the height of the terrain
-                                bool isBelow256AboveTerrain = false;
-
-                                try
-                                {
-                                    isBelow256AboveTerrain = (pos.Z < ((float)hm[(int)pos.X, (int)pos.Y] + 256f));
-                                }
-                                catch (Exception)
-                                {
-                                }
-
-                                if (isBelow256AboveTerrain)
-                                {
-                                    // Translate scale by rotation so scale is represented properly when object is rotated
-                                    Vector3 lscale = new Vector3(part.Shape.Scale.X, part.Shape.Scale.Y, part.Shape.Scale.Z);
-                                    Vector3 scale = new Vector3();
-                                    Vector3 tScale = new Vector3();
-                                    Vector3 axPos = new Vector3(pos.X,pos.Y,pos.Z);
-
-                                    Quaternion llrot = part.GetWorldRotation();
-                                    Quaternion rot = new Quaternion(llrot.W, llrot.X, llrot.Y, llrot.Z);
-                                    scale = lscale * rot;
-
-                                    // negative scales don't work in this situation
-                                    scale.X = Math.Abs(scale.X);
-                                    scale.Y = Math.Abs(scale.Y);
-                                    scale.Z = Math.Abs(scale.Z);
-
-                                    // This scaling isn't very accurate and doesn't take into account the face rotation :P
-                                    int mapdrawstartX = (int)(pos.X - scale.X);
-                                    int mapdrawstartY = (int)(pos.Y - scale.Y);
-                                    int mapdrawendX = (int)(pos.X + scale.X);
-                                    int mapdrawendY = (int)(pos.Y + scale.Y);
-
-                                    // If object is beyond the edge of the map, don't draw it to avoid errors
-                                    if (mapdrawstartX < 0 || mapdrawstartX > 255 || mapdrawendX < 0 || mapdrawendX > 255
-                                                          || mapdrawstartY < 0 || mapdrawstartY > 255 || mapdrawendY < 0
-                                                          || mapdrawendY > 255)
-                                        continue;
-
-#region obb face reconstruction part duex
-                                    Vector3[] vertexes = new Vector3[8];
-
-                                    // float[] distance = new float[6];
-                                    Vector3[] FaceA = new Vector3[6]; // vertex A for Facei
-                                    Vector3[] FaceB = new Vector3[6]; // vertex B for Facei
-                                    Vector3[] FaceC = new Vector3[6]; // vertex C for Facei
-                                    Vector3[] FaceD = new Vector3[6]; // vertex D for Facei
-
-                                    tScale = new Vector3(lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[0] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-                                    // vertexes[0].x = pos.X + vertexes[0].x;
-                                    //vertexes[0].y = pos.Y + vertexes[0].y;
-                                    //vertexes[0].z = pos.Z + vertexes[0].z;
-
-                                    FaceA[0] = vertexes[0];
-                                    FaceB[3] = vertexes[0];
-                                    FaceA[4] = vertexes[0];
-
-                                    tScale = lscale;
-                                    scale = ((tScale * rot));
-                                    vertexes[1] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[1].x = pos.X + vertexes[1].x;
-                                    // vertexes[1].y = pos.Y + vertexes[1].y;
-                                    //vertexes[1].z = pos.Z + vertexes[1].z;
-
-                                    FaceB[0] = vertexes[1];
-                                    FaceA[1] = vertexes[1];
-                                    FaceC[4] = vertexes[1];
-
-                                    tScale = new Vector3(lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
-
-                                    vertexes[2] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    //vertexes[2].x = pos.X + vertexes[2].x;
-                                    //vertexes[2].y = pos.Y + vertexes[2].y;
-                                    //vertexes[2].z = pos.Z + vertexes[2].z;
-
-                                    FaceC[0] = vertexes[2];
-                                    FaceD[3] = vertexes[2];
-                                    FaceC[5] = vertexes[2];
-
-                                    tScale = new Vector3(lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[3] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    //vertexes[3].x = pos.X + vertexes[3].x;
-                                    // vertexes[3].y = pos.Y + vertexes[3].y;
-                                    // vertexes[3].z = pos.Z + vertexes[3].z;
-
-                                    FaceD[0] = vertexes[3];
-                                    FaceC[1] = vertexes[3];
-                                    FaceA[5] = vertexes[3];
-
-                                    tScale = new Vector3(-lscale.X, lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[4] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[4].x = pos.X + vertexes[4].x;
-                                    // vertexes[4].y = pos.Y + vertexes[4].y;
-                                    // vertexes[4].z = pos.Z + vertexes[4].z;
-
-                                    FaceB[1] = vertexes[4];
-                                    FaceA[2] = vertexes[4];
-                                    FaceD[4] = vertexes[4];
-
-                                    tScale = new Vector3(-lscale.X, lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[5] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[5].x = pos.X + vertexes[5].x;
-                                    // vertexes[5].y = pos.Y + vertexes[5].y;
-                                    // vertexes[5].z = pos.Z + vertexes[5].z;
-
-                                    FaceD[1] = vertexes[5];
-                                    FaceC[2] = vertexes[5];
-                                    FaceB[5] = vertexes[5];
-
-                                    tScale = new Vector3(-lscale.X, -lscale.Y, lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[6] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[6].x = pos.X + vertexes[6].x;
-                                    // vertexes[6].y = pos.Y + vertexes[6].y;
-                                    // vertexes[6].z = pos.Z + vertexes[6].z;
-
-                                    FaceB[2] = vertexes[6];
-                                    FaceA[3] = vertexes[6];
-                                    FaceB[4] = vertexes[6];
-
-                                    tScale = new Vector3(-lscale.X, -lscale.Y, -lscale.Z);
-                                    scale = ((tScale * rot));
-                                    vertexes[7] = (new Vector3((pos.X + scale.X), (pos.Y + scale.Y), (pos.Z + scale.Z)));
-
-                                    // vertexes[7].x = pos.X + vertexes[7].x;
-                                    // vertexes[7].y = pos.Y + vertexes[7].y;
-                                    // vertexes[7].z = pos.Z + vertexes[7].z;
-
-                                    FaceD[2] = vertexes[7];
-                                    FaceC[3] = vertexes[7];
-                                    FaceD[5] = vertexes[7];
-#endregion
-
-                                    //int wy = 0;
-
-                                    //bool breakYN = false; // If we run into an error drawing, break out of the
-                                    // loop so we don't lag to death on error handling
-                                    DrawStruct ds = new DrawStruct();
-                                    ds.brush = new SolidBrush(mapdotspot);
-                                    //ds.rect = new Rectangle(mapdrawstartX, (255 - mapdrawstartY), mapdrawendX - mapdrawstartX, mapdrawendY - mapdrawstartY);
-
-                                    ds.trns = new face[FaceA.Length];
-
-                                    for (int i = 0; i < FaceA.Length; i++)
-                                    {
-                                        Point[] working = new Point[5];
-                                        working[0] = project(FaceA[i], axPos);
-                                        working[1] = project(FaceB[i], axPos);
-                                        working[2] = project(FaceD[i], axPos);
-                                        working[3] = project(FaceC[i], axPos);
-                                        working[4] = project(FaceA[i], axPos);
-
-                                        face workingface = new face();
-                                        workingface.pts = working;
-
-                                        ds.trns[i] = workingface;
-                                    }
-
-                                    z_sort.Add(part.LocalId, ds);
-                                    z_localIDs.Add(part.LocalId);
-                                    z_sortheights.Add(pos.Z);
-
-                                    //for (int wx = mapdrawstartX; wx < mapdrawendX; wx++)
-                                    //{
-                                        //for (wy = mapdrawstartY; wy < mapdrawendY; wy++)
-                                        //{
-                                            //m_log.InfoFormat("[MAPDEBUG]: {0},{1}({2})", wx, (255 - wy),wy);
-                                            //try
-                                            //{
-                                                // Remember, flip the y!
-                                            //    mapbmp.SetPixel(wx, (255 - wy), mapdotspot);
-                                            //}
-                                            //catch (ArgumentException)
-                                            //{
-                                            //    breakYN = true;
-                                            //}
-
-                                            //if (breakYN)
-                                            //    break;
-                                        //}
-
-                                        //if (breakYN)
-                                        //    break;
-                                    //}
-                                } // Object is within 256m Z of terrain
-                            } // object is at least a meter wide
-                        } // loop over group children
-                    } // entitybase is sceneobject group
-                } // foreach loop over entities
-
-                float[] sortedZHeights = z_sortheights.ToArray();
-                uint[] sortedlocalIds = z_localIDs.ToArray();
-
-                // Sort prim by Z position
-                Array.Sort(sortedZHeights, sortedlocalIds);
-
-                Graphics g = Graphics.FromImage(mapbmp);
-
-                for (int s = 0; s < sortedZHeights.Length; s++)
-                {
-                    if (z_sort.ContainsKey(sortedlocalIds[s]))
+                        //time_start_temp = Environment.TickCount;
+                        drawdata_for_sorting.Add(drawdata);
+                        //time_obb_addtolist += Environment.TickCount - time_start_temp;
+                    }
+                    else
                     {
-                        DrawStruct rectDrawStruct = z_sort[sortedlocalIds[s]];
-                        for (int r = 0; r < rectDrawStruct.trns.Length; r++ )
-                        {
-                            g.FillPolygon(rectDrawStruct.brush,rectDrawStruct.trns[r].pts);
-                        }
-                        //g.FillRectangle(rectDrawStruct.brush , rectDrawStruct.rect);
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
+                    }
+
+                    // Compute face 1 of OBB and add if facing up.
+                    //time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[5], vertices[4]), Vector3.Subtract(vertices[0], vertices[4])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[4], ref vertices[5], ref vertices[0]) > 0)
+                    {
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 1);
+                        //time_obb_brush += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.vertices = new Point[4];
+                        drawdata.vertices[0].X = (int)(vertices[4].X * scale_factor);
+                        drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[4].Y * scale_factor);
+
+                        drawdata.vertices[1].X = (int)(vertices[5].X * scale_factor);
+                        drawdata.vertices[1].Y = mapbmp.Height - (int)(vertices[5].Y * scale_factor);
+
+                        drawdata.vertices[2].X = (int)(vertices[1].X * scale_factor);
+                        drawdata.vertices[2].Y = mapbmp.Height - (int)(vertices[1].Y * scale_factor);
+
+                        drawdata.vertices[3].X = (int)(vertices[0].X * scale_factor);
+                        drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[0].Y * scale_factor);
+                        //time_obb_calc += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata_for_sorting.Add(drawdata);
+                        //time_obb_addtolist += Environment.TickCount - time_start_temp;
+                    }
+                    else
+                    {
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
+                    }
+
+                    // Compute face 2 of OBB and add if facing up.
+                    //time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[6], vertices[5]), Vector3.Subtract(vertices[1], vertices[5])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[5], ref vertices[6], ref vertices[1]) > 0)
+                    {
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 2);
+                        //time_obb_brush += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.vertices = new Point[4];
+                        drawdata.vertices[0].X = (int)(vertices[5].X * scale_factor);
+                        drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[5].Y * scale_factor);
+
+                        drawdata.vertices[1].X = (int)(vertices[6].X * scale_factor);
+                        drawdata.vertices[1].Y = mapbmp.Height - (int)(vertices[6].Y * scale_factor);
+
+                        drawdata.vertices[2].X = (int)(vertices[2].X * scale_factor);
+                        drawdata.vertices[2].Y = mapbmp.Height - (int)(vertices[2].Y * scale_factor);
+
+                        drawdata.vertices[3].X = (int)(vertices[1].X * scale_factor);
+                        drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[1].Y * scale_factor);
+                        //time_obb_calc += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata_for_sorting.Add(drawdata);
+                        //time_obb_addtolist += Environment.TickCount - time_start_temp;
+                    }
+                    else
+                    {
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
+                    }
+
+                    // Compute face 3 of OBB and add if facing up.
+                    //time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[7], vertices[6]), Vector3.Subtract(vertices[2], vertices[6])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[6], ref vertices[7], ref vertices[2]) > 0)
+                    {
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 3);
+                        //time_obb_brush += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.vertices = new Point[4];
+                        drawdata.vertices[0].X = (int)(vertices[6].X * scale_factor);
+                        drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[6].Y * scale_factor);
+
+                        drawdata.vertices[1].X = (int)(vertices[7].X * scale_factor);
+                        drawdata.vertices[1].Y = mapbmp.Height - (int)(vertices[7].Y * scale_factor);
+
+                        drawdata.vertices[2].X = (int)(vertices[3].X * scale_factor);
+                        drawdata.vertices[2].Y = mapbmp.Height - (int)(vertices[3].Y * scale_factor);
+
+                        drawdata.vertices[3].X = (int)(vertices[2].X * scale_factor);
+                        drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[2].Y * scale_factor);
+                        //time_obb_calc += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata_for_sorting.Add(drawdata);
+                        //time_obb_addtolist += Environment.TickCount - time_start_temp;
+                    }
+                    else
+                    {
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
+                    }
+
+                    // Compute face 4 of OBB and add if facing up.
+                    //time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[4], vertices[7]), Vector3.Subtract(vertices[3], vertices[7])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[7], ref vertices[4], ref vertices[3]) > 0)
+                    {
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 4);
+                        //time_obb_brush += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.vertices = new Point[4];
+                        drawdata.vertices[0].X = (int)(vertices[7].X * scale_factor);
+                        drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[7].Y * scale_factor);
+
+                        drawdata.vertices[1].X = (int)(vertices[4].X * scale_factor);
+                        drawdata.vertices[1].Y = mapbmp.Height - (int)(vertices[4].Y * scale_factor);
+
+                        drawdata.vertices[2].X = (int)(vertices[0].X * scale_factor);
+                        drawdata.vertices[2].Y = mapbmp.Height - (int)(vertices[0].Y * scale_factor);
+
+                        drawdata.vertices[3].X = (int)(vertices[3].X * scale_factor);
+                        drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[3].Y * scale_factor);
+                        //time_obb_calc += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata_for_sorting.Add(drawdata);
+                        //time_obb_addtolist += Environment.TickCount - time_start_temp;
+                    }
+                    else
+                    {
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
+                    }
+
+                    // Compute face 5 of OBB and add if facing up.
+                    //time_start_temp = Environment.TickCount;
+                    //if (Vector3.Cross(Vector3.Subtract(vertices[6], vertices[7]), Vector3.Subtract(vertices[4], vertices[7])).Z > 0)
+                    if (ZOfCrossDiff(ref vertices[7], ref vertices[6], ref vertices[4]) > 0)
+                    {
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.brush = GetFaceBrush(part, 5);
+                        //time_obb_brush += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata.vertices = new Point[4];
+                        drawdata.vertices[0].X = (int)(vertices[7].X * scale_factor);
+                        drawdata.vertices[0].Y = mapbmp.Height - (int)(vertices[7].Y * scale_factor);
+
+                        drawdata.vertices[1].X = (int)(vertices[6].X * scale_factor);
+                        drawdata.vertices[1].Y = mapbmp.Height - (int)(vertices[6].Y * scale_factor);
+
+                        drawdata.vertices[2].X = (int)(vertices[5].X * scale_factor);
+                        drawdata.vertices[2].Y = mapbmp.Height - (int)(vertices[5].Y * scale_factor);
+
+                        drawdata.vertices[3].X = (int)(vertices[4].X * scale_factor);
+                        drawdata.vertices[3].Y = mapbmp.Height - (int)(vertices[4].Y * scale_factor);
+                        //time_obb_calc += Environment.TickCount - time_start_temp;
+
+                        //time_start_temp = Environment.TickCount;
+                        drawdata_for_sorting.Add(drawdata);
+                        //time_obb_addtolist += Environment.TickCount - time_start_temp;
+                    }
+                    else
+                    {
+                        //time_obb_norm += Environment.TickCount - time_start_temp;
                     }
                 }
+            }
 
-                g.Dispose();
-            } // lock entities objs
+            // Sort faces by Z position
+            //time_start_temp = Environment.TickCount;
+            drawdata_for_sorting.Sort((h1, h2) => h1.sort_order.CompareTo(h2.sort_order));;
+            //time_sorting = Environment.TickCount - time_start_temp;
 
-            m_log.Info("[MAPTILE]: Generating Maptile Step 2: Done in " + (Environment.TickCount - tc) + " ms");
+            // Draw the faces
+            //time_start_temp = Environment.TickCount;
+            using (Graphics g = Graphics.FromImage(mapbmp.Bitmap))
+            {
+                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.None;
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+
+                for (int s = 0; s < drawdata_for_sorting.Count; s++)
+                {
+                    g.FillPolygon(drawdata_for_sorting[s].brush, drawdata_for_sorting[s].vertices);
+                }
+            }
+            //time_drawing = Environment.TickCount - time_start_temp;
+
+            //m_log.InfoFormat("[MAPTILE]: Generating Maptile Step 2 (Objects): Processed {0} entities, {1} prims, {2} used for map drawing, resulting in {3} faces to draw.",
+            //    entities.Count, sop_count, sop_count_filtered, drawdata_for_sorting.Count
+            //);
+            m_log.InfoFormat("[MAPTILE]: Generating Maptile Step 2 (Objects): Timing: " +
+                "total time: {0}ms",// +
+                //"prepping took {1}ms, " +
+                //"filtering prims took {2}ms, " +
+                //"calculating vertices took {3}ms, " +
+                //"computing sorting height took {4}ms, " +
+                //"calculating OBB normal took {5}ms, " +
+                //"getting OBB face colors took {6}ms, " +
+                //"calculating OBBs took {7}ms, " +
+                //"adding OBBs to list took {8}ms, " +
+                //"sorting took {9}ms, " +
+                //"drawing took {10}ms, " +
+                Environment.TickCount - time_start//,
+                //time_prep, time_filtering, time_vertex_calcs, time_sort_height_calc,
+                //time_obb_norm, time_obb_brush, time_obb_calc, time_obb_addtolist,
+                //time_sorting, time_drawing
+            );
+
             return mapbmp;
         }
 
-        private Point project(Vector3 point3d, Vector3 originpos)
-        {
-            Point returnpt = new Point();
-            //originpos = point3d;
-            //int d = (int)(256f / 1.5f);
-
-            //Vector3 topos = new Vector3(0, 0, 0);
-           // float z = -point3d.z - topos.z;
-
-            returnpt.X = (int)point3d.X;//(int)((topos.x - point3d.x) / z * d);
-            returnpt.Y = (int)(255 - point3d.Y);//(int)(255 - (((topos.y - point3d.y) / z * d)));
-
-            return returnpt;
-        }
-
-// TODO: unused:
-//         #region Deprecated Maptile Generation.  Adam may update this
-//         private Bitmap TerrainToBitmap(string gradientmap)
-//         {
-//             Bitmap gradientmapLd = new Bitmap(gradientmap);
-//
-//             int pallete = gradientmapLd.Height;
-//
-//             Bitmap bmp = new Bitmap(m_scene.Heightmap.Width, m_scene.Heightmap.Height);
-//             Color[] colours = new Color[pallete];
-//
-//             for (int i = 0; i < pallete; i++)
-//             {
-//                 colours[i] = gradientmapLd.GetPixel(0, i);
-//             }
-//
-//             lock (m_scene.Heightmap)
-//             {
-//                 ITerrainChannel copy = m_scene.Heightmap;
-//                 for (int y = 0; y < copy.Height; y++)
-//                 {
-//                     for (int x = 0; x < copy.Width; x++)
-//                     {
-//                         // 512 is the largest possible height before colours clamp
-//                         int colorindex = (int) (Math.Max(Math.Min(1.0, copy[x, y] / 512.0), 0.0) * (pallete - 1));
-//
-//                         // Handle error conditions
-//                         if (colorindex > pallete - 1 || colorindex < 0)
-//                             bmp.SetPixel(x, copy.Height - y - 1, Color.Red);
-//                         else
-//                             bmp.SetPixel(x, copy.Height - y - 1, colours[colorindex]);
-//                     }
-//                 }
-//                 ShadeBuildings(bmp);
-//                 return bmp;
-//             }
-//         }
-//         #endregion
     }
 }

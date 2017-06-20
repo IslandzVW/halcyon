@@ -48,10 +48,10 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
             // m_config = config; // not used currently
         }
 
-        public void TerrainToBitmap(Bitmap mapbmp)
+        public void TerrainToBitmap(DirectBitmap mapbmp)
         {
             int tc = Environment.TickCount;
-            m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain");
+            m_log.Info("[MAPTILE]: Generating Maptile Step 1: Terrain (Shaded)");
 
             double[,] hm = m_scene.Heightmap.GetDoubles();
             bool ShadowDebugContinue = true;
@@ -98,7 +98,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
 
                         Color color = Color.FromArgb((int)heightvalue, 100, (int)heightvalue);
 
-                        mapbmp.SetPixel(x, yr, color);
+                        mapbmp.Bitmap.SetPixel(x, yr, color);
 
                         try
                         {
@@ -178,7 +178,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                     {
                                         if ((x - 1 > 0) && (yr + 1 < 256))
                                         {
-                                            color = mapbmp.GetPixel(x - 1, yr + 1);
+                                            color = mapbmp.Bitmap.GetPixel(x - 1, yr + 1);
                                             int r = color.R;
                                             int g = color.G;
                                             int b = color.B;
@@ -186,7 +186,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                                                    (g - hfdiffi > 0) ? g - hfdiffi : 0,
                                                                    (b - hfdiffi > 0) ? b - hfdiffi : 0);
 
-                                            mapbmp.SetPixel(x-1, yr+1, color);
+                                            mapbmp.Bitmap.SetPixel(x-1, yr+1, color);
                                         }
                                     }
                                 }
@@ -200,7 +200,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                 terraincorruptedwarningsaid = true;
                             }
                             color = Color.Black;
-                            mapbmp.SetPixel(x, yr, color);
+                            mapbmp.Bitmap.SetPixel(x, yr, color);
                         }
                     }
                     else
@@ -221,7 +221,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                         try
                         {
                             Color water = Color.FromArgb((int)heightvalue, (int)heightvalue, 255);
-                            mapbmp.SetPixel(x, yr, water);
+                            mapbmp.Bitmap.SetPixel(x, yr, water);
                         }
                         catch (ArgumentException)
                         {
@@ -231,7 +231,7 @@ namespace OpenSim.Region.CoreModules.World.WorldMap
                                 terraincorruptedwarningsaid = true;
                             }
                             Color black = Color.Black;
-                            mapbmp.SetPixel(x, (256 - y) - 1, black);
+                            mapbmp.Bitmap.SetPixel(x, (256 - y) - 1, black);
                         }
                     }
                 }

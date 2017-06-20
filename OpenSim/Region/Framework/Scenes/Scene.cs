@@ -1849,6 +1849,39 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
+        /// Marks the world map as tainted and updates the map tile if enough time has passed.
+        /// </summary>
+        /// <param name="reason">What is the source of the taint?</param>
+        public override void MarkMapTileTainted(WorldMapTaintReason reason)
+        {
+            IWorldMapModule mapModule = RequestModuleInterface<IWorldMapModule>();
+
+            if (mapModule != null)
+            {
+                mapModule.MarkMapTileTainted(reason);
+            }
+        }
+
+        /// <summary>
+        /// If the prim qualifies to make a mark on the map, mark the world map as tainted and update the map tile if enough time has passed.
+        /// </summary>
+        /// <param name="part">The SOP that is being looked at for possibly being the source of the taint.</param>
+        public override void MarkMapTileTainted(SceneObjectPart part)
+        {
+            if (
+                part.Shape.PCode != (byte)PCode.Tree && part.Shape.PCode != (byte)PCode.NewTree && part.Shape.PCode != (byte)PCode.Grass
+                && (part.Flags & (PrimFlags.Physics | PrimFlags.Temporary | PrimFlags.TemporaryOnRez)) == 0
+                && part.Scale.X > 1f && part.Scale.Y > 1f && part.Scale.Z > 1f
+                && part.AbsolutePosition.Z - GetGroundAt((int)part.AbsolutePosition.X, (int)part.AbsolutePosition.Y) <= 256f
+            )
+            {
+                // Object qualifies to show on the world map.
+                // See MapImageModule::DrawObjectVolume for details on how this is checked.
+                MarkMapTileTainted(WorldMapTaintReason.PrimChange);
+            }
+        }
+
+        /// <summary>
         /// Register this region with a grid service
         /// </summary>
         /// <exception cref="System.Exception">Thrown if registration of the region itself fails.</exception>
@@ -1896,7 +1929,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (terrain == null)
                 return;
 
-            byte[] data = terrain.WriteJpeg2000Image("defaultstripe.png");
+            byte[] data = terrain.WriteJpeg2000Image();
             if (data != null)
             {
                 IWorldMapModule mapModule = RequestModuleInterface<IWorldMapModule>();
