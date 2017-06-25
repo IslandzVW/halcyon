@@ -4247,7 +4247,14 @@ namespace OpenSim.Region.Framework.Scenes
                         reason = "success";
                         return allGroups;
                     }
+                } else
+                {
+                    m_log.ErrorFormat("[SCENE]: RezObject could not fetch asset {0} for '{1}' in '{2}' owned by {3}", item.AssetID, item.Name, sourcePart.ParentGroup.Name, sourcePart.OwnerID);
                 }
+
+            } else
+            {
+                m_log.ErrorFormat("[SCENE]: Missing item for '{0}' owned by {1}", sourcePart.ParentGroup.Name, sourcePart.OwnerID);
             }
 
             reason = "item";
