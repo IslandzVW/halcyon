@@ -88,7 +88,12 @@ namespace OpenSim.Framework.Servers.HttpServer
             RequestData.Add("http-method", HttpRequest.HttpMethod);
 
             foreach (string queryname in querystringkeys)
-                RequestData.Add(queryname, HttpRequest.QueryString[queryname]);
+            {
+                // HttpRequest.QueryString.AllKeys returns a one-item array, with a null only,
+                // if passed something without an '=' in the query, such as URL/?abc or URL/?abc+def
+                if (queryname != null)
+                    RequestData.Add(queryname, HttpRequest.QueryString[queryname]);
+            }
 
             foreach (string headername in rHeaders)
                 headervals[headername] = HttpRequest.Headers[headername];
