@@ -1408,6 +1408,19 @@ namespace OpenSim.Region.CoreModules.Capabilities
                                 return LLSDHelpers.SerializeLLSDReply(response);
                             }
                         }
+                        else
+                        {
+                            m_log.ErrorFormat("[CAPS]: CopyInventoryFromNotecard could not find asset {0} for '{1}' owned by {2}", notecardItem.AssetID, notecardItem.Name, notecardItem.Owner);
+                        }
+                    }
+                    else
+                    {
+                        if (notecardItem == null)
+                            m_log.ErrorFormat("[CAPS]: CopyInventoryFromNotecard could not find notecard {0} in object {1} item {2} in folder {3} for {4}",
+                                notecardID, objectID, itemID, folderID, m_agentID);
+                        else
+                        if (notecardItem.Owner != m_agentID)
+                            m_log.ErrorFormat("[CAPS]: CopyInventoryFromNotecard notecard '{0}' owned by {1} NOT {2}", notecardItem.Name, notecardItem.Owner, m_agentID);
                     }
                 }
                 catch (Exception e)
