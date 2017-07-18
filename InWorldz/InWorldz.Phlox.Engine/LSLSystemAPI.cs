@@ -14500,6 +14500,9 @@ namespace InWorldz.Phlox.Engine
 
         public string GetNumberOfNotecardLines(SceneObjectPart part, string name)
         {
+            const int ERROR_DELAY = 100;
+            const int LONG_DELAY = 50;
+            const int FAST_DELAY = 25;
             TaskInventoryDictionary itemsDictionary = (TaskInventoryDictionary)part.TaskInventory.Clone();
 
             UUID assetID = UUID.Zero;
@@ -14520,7 +14523,7 @@ namespace InWorldz.Phlox.Engine
             {
                 // => complain loudly, as specified by the LSL docs
                 ScriptShoutError("Notecard '" + name + "' could not be found.");
-
+                ScriptSleep(ERROR_DELAY);
                 return UUID.Zero.ToString();
             }
 
@@ -14533,7 +14536,7 @@ namespace InWorldz.Phlox.Engine
             {
                 AsyncCommands.
                 DataserverPlugin.DataserverReply(reqIdentifier, NotecardCache.GetLines(assetID).ToString());
-                ScriptSleep(100);
+                ScriptSleep(FAST_DELAY);
                 return tid.ToString();
             }
 
@@ -14542,6 +14545,7 @@ namespace InWorldz.Phlox.Engine
                 if (a == null || a.Type != 7)
                 {
                     ScriptShoutError("Notecard '" + name + "' could not be found.");
+                    ScriptSleep(ERROR_DELAY);
                     return;
                 }
 
@@ -14552,7 +14556,7 @@ namespace InWorldz.Phlox.Engine
 
             NotecardCache.CacheCheck(); //this must be done in the script engine thread to avoid race conditions
 
-            ScriptSleep(100);
+            ScriptSleep(LONG_DELAY);
             return tid.ToString();
         }
         public string llGetNumberOfNotecardLines(string name)
@@ -14577,7 +14581,9 @@ namespace InWorldz.Phlox.Engine
 
         private string GetNotecardSegment(SceneObjectPart part, string name, int line, int startOffset, int maxLength)
         {
-            const int DELAY = 25;
+            const int LONG_DELAY = 25;
+            const int FAST_DELAY = 1;
+            const int LINES_PER_DELAY = 16; // every 16 lines, delay FAST_DELAY
 
             TaskInventoryDictionary itemsDictionary = (TaskInventoryDictionary)part.TaskInventory.Clone();
 
@@ -14612,7 +14618,8 @@ namespace InWorldz.Phlox.Engine
             {
                 AsyncCommands.
                 DataserverPlugin.DataserverReply(reqIdentifier, NotecardCache.GetLine(assetID, line, startOffset, maxLength));
-                ScriptSleep(DELAY);
+                if (((line % LINES_PER_DELAY) == 0) && (startOffset == 0))
+                    ScriptSleep(FAST_DELAY);
                 return tid.ToString();
             }
 
@@ -14630,7 +14637,7 @@ namespace InWorldz.Phlox.Engine
 
             NotecardCache.CacheCheck(); //this must be done in the script engine thread to avoid race conditions
 
-            ScriptSleep(DELAY);
+            ScriptSleep(LONG_DELAY);
             return tid.ToString();
         }
 
