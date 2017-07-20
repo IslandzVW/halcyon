@@ -157,6 +157,12 @@ namespace OpenSim.Framework.Communications.Capabilities
                                     // the LLSD map/array types in the array need to be deserialized
                                     // but first we need to know the right class to deserialize them into.
                                 }
+                                else if (enumerator.Value is Boolean && field.FieldType == typeof(int))
+                                {
+                                    // LLSD booleans aren't actually booleans, they are ints with a value of 0 or 1
+                                    int i = (bool)enumerator.Value ? 1 : 0;
+                                    field.SetValue(obj, (object)i);
+                                }
                                 else
                                 {
                                     field.SetValue(obj, enumerator.Value);
