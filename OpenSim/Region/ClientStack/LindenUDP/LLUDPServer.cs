@@ -954,13 +954,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 //            m_log.WarnFormat("[LLUDPSERVER]: HandleUseCircuitCode, client {0}, circuit code {1}, session {2}", UCC.CircuitCode.ID, UCC.CircuitCode.Code, UCC.CircuitCode.SessionID);
             try
             {
+                UUID agentID = UCC.CircuitCode.ID;
+                uint circuitCode = UCC.CircuitCode.Code;
+                UUID sessionID = UCC.CircuitCode.SessionID;
+
                 IPEndPoint remoteEndPoint = (IPEndPoint)array[0];
                 // Begin the process of adding the client to the simulator
-                if (AddNewClient(UCC, remoteEndPoint))
+                if (!AddNewClient(UCC, remoteEndPoint))
                 {
-                    // Acknowledge the UseCircuitCode packet
-                    SendAckImmediate(remoteEndPoint, UCC.Header.Sequence);
+                    m_log.WarnFormat("[LLUDPSERVER]: HandleUseCircuitCode could not add new client for {0}: cc={1} ses={2}", agentID, circuitCode, sessionID);
                 }
+                // Acknowledge the UseCircuitCode packet regardless.
+                SendAckImmediate(remoteEndPoint, UCC.Header.Sequence);
             }
             finally
             {
@@ -1012,7 +1017,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             {
                 if (e.CircuitAlreadyExisted)
                 {
-                    m_log.WarnFormat("[LLUDPSERVER]: Ignoring duplicate UDP connection request. {0}", e.Message);
+                    m_log.WarnFormat("[LLUDPSERVER]: Duplicate UDP connection request. {0}", e.Message);
 
                     //if the circuit matches, we can ACK the UCC since the client should be
                     //able to communicate with the current circuit

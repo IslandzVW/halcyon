@@ -157,8 +157,8 @@ namespace OpenSim.Region.Framework.Connection
                 else
                 {
                     conn = new AvatarConnection(circuitData, reason);
-                    _connectionsByUserId.Add(circuitData.AgentID, conn);
                     conn.OnConnectionTerminated += conn_OnConnectionTerminated;
+                    _connectionsByUserId.Add(circuitData.AgentID, conn);
                 }
             }
 
