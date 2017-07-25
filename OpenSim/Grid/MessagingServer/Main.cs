@@ -70,6 +70,10 @@ namespace OpenSim.Grid.MessagingServer
         public static void Main(string[] args)
         {
             // Please note that if you are changing something in this function you should check to see if you need to change the other server's Main functions as well.
+
+            // Under any circumstance other than an explicit exit the exit code should be 1.
+            Environment.ExitCode = 1;
+
             ServicePointManager.DefaultConnectionLimit = 12;
 
             // Add the arguments supplied when running the application to the configuration
@@ -189,7 +193,7 @@ namespace OpenSim.Grid.MessagingServer
                     System.Threading.Thread.Sleep(delay * 1000);
 
                 // Do this on a new thread so the actual shutdown call returns successfully.
-                Task.Factory.StartNew(() => Shutdown());
+                Task.Factory.StartNew(Shutdown);
             }
             catch (Exception e)
             {

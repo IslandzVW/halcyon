@@ -1012,7 +1012,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// Given float seconds, this will restart the region.
         /// </summary>
         /// <param name="seconds">float indicating duration before restart.</param>
-        public virtual void Restart(int seconds)
+        public override void Restart(int seconds)
         {
             // RestartNow() does immediate restarting.
             if (seconds == -1)
@@ -1066,23 +1066,24 @@ namespace OpenSim.Region.Framework.Scenes
         // This causes the region to restart immediatley.
         public void RestartNow()
         {
-            // Let's issue a full server shutdown and let ZooKeeper take care of the restart.
-            m_log.Error("[REGION]: Firing Region Shutdown Command");
-            MainConsole.Instance.RunCommand("shutdown");
+            // Let's issue a full server restart request.
+            m_log.Error("[REGION]: Firing Region Restart Command");
+            MainConsole.Instance.RunCommand("restart");
         }
 
         public void SetSceneCoreDebug(bool ScriptEngine, bool CollisionEvents, bool PhysicsEngine)
         {
-            if (m_scripts_enabled != !ScriptEngine)
+            if (m_scripts_enabled == ScriptEngine)
             {
                 if (ScriptEngine)
                 {
                     m_log.Info("Stopping all Scripts in Scene");
                     foreach (EntityBase ent in Entities)
                     {
-                        if (ent is SceneObjectGroup)
+                        var sceneObjectGroup = ent as SceneObjectGroup;
+                        if (sceneObjectGroup != null)
                         {
-                            ((SceneObjectGroup) ent).RemoveScriptInstances();
+                            sceneObjectGroup.RemoveScriptInstances();
                         }
                     }
                 }
@@ -1848,6 +1849,39 @@ namespace OpenSim.Region.Framework.Scenes
         }
 
         /// <summary>
+        /// Marks the world map as tainted and updates the map tile if enough time has passed.
+        /// </summary>
+        /// <param name="reason">What is the source of the taint?</param>
+        public override void MarkMapTileTainted(WorldMapTaintReason reason)
+        {
+            IWorldMapModule mapModule = RequestModuleInterface<IWorldMapModule>();
+
+            if (mapModule != null)
+            {
+                mapModule.MarkMapTileTainted(reason);
+            }
+        }
+
+        /// <summary>
+        /// If the prim qualifies to make a mark on the map, mark the world map as tainted and update the map tile if enough time has passed.
+        /// </summary>
+        /// <param name="part">The SOP that is being looked at for possibly being the source of the taint.</param>
+        public override void MarkMapTileTainted(SceneObjectPart part)
+        {
+            if (
+                part.Shape.PCode != (byte)PCode.Tree && part.Shape.PCode != (byte)PCode.NewTree && part.Shape.PCode != (byte)PCode.Grass
+                && (part.Flags & (PrimFlags.Physics | PrimFlags.Temporary | PrimFlags.TemporaryOnRez)) == 0
+                && part.Scale.X > 1f && part.Scale.Y > 1f && part.Scale.Z > 1f
+                && part.AbsolutePosition.Z - GetGroundAt((int)part.AbsolutePosition.X, (int)part.AbsolutePosition.Y) <= 256f
+            )
+            {
+                // Object qualifies to show on the world map.
+                // See MapImageModule::DrawObjectVolume for details on how this is checked.
+                MarkMapTileTainted(WorldMapTaintReason.PrimChange);
+            }
+        }
+
+        /// <summary>
         /// Register this region with a grid service
         /// </summary>
         /// <exception cref="System.Exception">Thrown if registration of the region itself fails.</exception>
@@ -1895,7 +1929,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (terrain == null)
                 return;
 
-            byte[] data = terrain.WriteJpeg2000Image("defaultstripe.png");
+            byte[] data = terrain.WriteJpeg2000Image();
             if (data != null)
             {
                 IWorldMapModule mapModule = RequestModuleInterface<IWorldMapModule>();

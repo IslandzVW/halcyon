@@ -788,12 +788,23 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                     {
                         if (m_updateTimes.ContainsKey(part.LocalId))
                         {
-                            m_updateTimes.Remove(part.LocalId);
                             sendKill = true;
+                            // If we are going to send a kill, it is for the complete object.
+                            // We are telling the viewer to nuke everything it knows about ALL of 
+                            // the prims, not just the child prim. So we need to remove ALL of the 
+                            // prims from m_updateTimes before continuing.
+                            IReadOnlyCollection<SceneObjectPart> sogPrims = part.ParentGroup.GetParts();
+                            foreach (SceneObjectPart prim in sogPrims)
+                            {
+                                m_updateTimes.Remove(prim.LocalId);
+                            }
                         }
                     }
 
                     //Only send the kill object packet if we have seen this object
+                    //Note: I'm not sure we should be sending a kill at all in this case. -Jim
+                    //      The viewer has already hidden the object if outside DD, and the
+                    //      KillObject causes the viewer to discard its cache of the objects.
                     if (sendKill)
                         m_presence.ControllingClient.SendNonPermanentKillObject(m_presence.Scene.RegionInfo.RegionHandle,
                             part.ParentGroup.RootPart.LocalId);

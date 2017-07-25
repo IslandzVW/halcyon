@@ -511,6 +511,9 @@ namespace OpenSim.Region.CoreModules.World.Terrain
                 m_scene.PhysicsScene.SetTerrain(m_channel.GetFloatsSerialized(), m_channel.IncrementRevisionNumber());
                 m_scene.SaveTerrain();
 
+                // Mark the worldmap as tainted so that the push to the map tile server can happen when the time comes.
+                m_scene.MarkMapTileTainted(WorldMapTaintReason.TerrainElevationChange);
+
                 // Clients who look at the map will never see changes after they looked at the map, so i've commented this out.
                 //m_scene.CreateTerrainTexture(true);
             }

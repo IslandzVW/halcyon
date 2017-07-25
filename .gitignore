@@ -245,6 +245,7 @@ bin/Terrain/OpenSim.Region.CoreModules.World.Terrain.DefaultEffects.dll
 bin/crashes
 bin/Grid
 bin/GridLogin
+bin/Regions-Test
 bin2
 bin3
 bin4
