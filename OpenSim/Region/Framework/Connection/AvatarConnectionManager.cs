@@ -157,8 +157,8 @@ namespace OpenSim.Region.Framework.Connection
                 else
                 {
                     conn = new AvatarConnection(circuitData, reason);
-                    _connectionsByUserId.Add(circuitData.AgentID, conn);
                     conn.OnConnectionTerminated += conn_OnConnectionTerminated;
+                    _connectionsByUserId[circuitData.AgentID] = conn;
                 }
             }
 
@@ -246,7 +246,7 @@ namespace OpenSim.Region.Framework.Connection
                     udpCircuit.AfterAttachedToConnection(conn.CircuitData);
 
                     if (udpCircuit.RemoteEndPoint.Port != 0)
-                        _connectionsByEndpoint.Add(udpCircuit.RemoteEndPoint, conn);
+                        _connectionsByEndpoint[udpCircuit.RemoteEndPoint] = conn;
                 }
                 else
                 {
