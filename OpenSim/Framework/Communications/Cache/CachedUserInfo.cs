@@ -315,7 +315,7 @@ namespace OpenSim.Framework.Communications.Cache
             return folderInfo;
         }
 
-        public InventoryItemBase FindItem(UUID itemId)
+        public InventoryItemBase FindItem(UUID itemId, bool quiet=false)
         {
             try
             {
@@ -326,7 +326,8 @@ namespace OpenSim.Framework.Communications.Cache
             }
             catch (InventoryStorageException e)
             {
-                m_log.ErrorFormat("[INVENTORY] Could not find requested item {0}: {1}", itemId, e);
+                if ((!quiet) || !e.ErrorDetails.Contains("Item was not found")) // don't report "not found" when quiet == true
+                    m_log.ErrorFormat("[INVENTORY] Could not find requested item {0}: {1}", itemId, e);
             }
 
             return null;

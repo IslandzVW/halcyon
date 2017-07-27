@@ -8177,7 +8177,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 #endregion
 
-                bool haveAllObjects = false;
+                // Use a copy of the 
+                List<RezMultipleAttachmentsFromInvPacket.ObjectDataBlock> attachmentsData = null;
                 lock (_rezMultupleAttachmentsData)
                 {
                     if (rez.HeaderData.CompoundMsgID != _rezMutipleAttachmentsTransactionId)
@@ -8190,13 +8191,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     _rezMultupleAttachmentsData.AddRange(rez.ObjectData);
                     if (rez.HeaderData.TotalObjects == _rezMultupleAttachmentsData.Count)
                     {
-                        haveAllObjects = true;
+                        // we have them all, ready to send off. Create a local copy use outside the lock.
+                        attachmentsData = new List<RezMultipleAttachmentsFromInvPacket.ObjectDataBlock>(_rezMultupleAttachmentsData);
                     }
                 }
 
-                if (haveAllObjects)
+                if (attachmentsData != null)    // we have them all, ready to send off
                 {
-                    handlerRezMultipleAttachments(this, rez.HeaderData, _rezMultupleAttachmentsData.ToArray());
+                    handlerRezMultipleAttachments(this, rez.HeaderData, attachmentsData.ToArray());
                 }
             }
 
