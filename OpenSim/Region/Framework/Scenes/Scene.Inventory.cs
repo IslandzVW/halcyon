@@ -1546,7 +1546,7 @@ namespace OpenSim.Region.Framework.Scenes
             }
 
             //verify this user actually owns the item
-            InventoryItemBase item = userInfo.FindItem(itemID);
+            InventoryItemBase item = userInfo.FindItem(itemID, true); // find it quietly since this is a remove
 
             if (item == null)
             {
