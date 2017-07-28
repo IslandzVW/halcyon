@@ -677,7 +677,7 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         /// <param name="drawDistance">DD in meters</param>
         /// <returns>List of known neighbors</returns>
-        public List<SimpleRegionInfo> GetKnownNeighborsWithinClientDD(uint drawDistance)
+        public List<SimpleRegionInfo> GetKnownNeighborsWithinClientDD(uint drawDistance, uint maxRange)
         {
             drawDistance = Math.Max(drawDistance, 64);
 
@@ -685,7 +685,7 @@ namespace OpenSim.Region.Framework.Scenes
 
             uint xmin, xmax, ymin, ymax;
             var regionInfo = _scene.RegionInfo;
-            Util.GetDrawDistanceBasedRegionRectangle(drawDistance, regionInfo.RegionLocX, regionInfo.RegionLocY, out xmin, out xmax, out ymin, out ymax);
+            Util.GetDrawDistanceBasedRegionRectangle(drawDistance, maxRange, regionInfo.RegionLocX, regionInfo.RegionLocY, out xmin, out xmax, out ymin, out ymax);
 
             uint gridsize = xmax - xmin + 1;
             uint center = (xmax - xmin) / 2;
@@ -737,37 +737,5 @@ namespace OpenSim.Region.Framework.Scenes
             }
         }
 
-        /// <summary>
-        /// Returns the count of neighbors we are aware of that are within the given client draw distance from any
-        /// of our edges
-        /// </summary>
-        /// <param name="drawDistance">DD in meters</param>
-        /// <returns>Number of known neighbors</returns>
-        public int GetKnownNeighborCountWithinClientDD(uint drawDistance)
-        {
-            if (drawDistance == 0)
-                throw new ArgumentOutOfRangeException("drawDistance can't be 0");
-
-            drawDistance = Math.Min(drawDistance, MAX_DRAW_DISTANCE);
-
-            uint xmin, xmax, ymin, ymax;
-            var regionInfo = _scene.RegionInfo;
-            Util.GetDrawDistanceBasedRegionRectangle(drawDistance, regionInfo.RegionLocX, regionInfo.RegionLocY, out xmin, out xmax, out ymin, out ymax);
-
-            int neighborCount = 0;
-            lock (_knownNeighbors)
-            {
-                foreach (KnownNeighborRegion neighbor in _knownNeighbors.Values)
-                {
-                    if (Util.IsWithinDDRectangle(neighbor.RegionInfo.RegionLocX, neighbor.RegionInfo.RegionLocY,
-                        xmin, xmax, ymin, ymax))
-                    {
-                        neighborCount++;
-                    }
-                }
-            }
-
-            return neighborCount;
-        }
     }
 }

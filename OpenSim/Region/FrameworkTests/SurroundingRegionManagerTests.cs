@@ -363,8 +363,8 @@ namespace OpenSim.Region.FrameworkTests
             Assert.NotNull(srm.GetKnownNeighborAt(1001, 1001));
 
             //try a surrounding query
-            Assert.AreEqual(8, srm.GetKnownNeighborsWithinClientDD(1).Count);
-            Assert.AreEqual(8, srm.GetKnownNeighborsWithinClientDD(256).Count);
+            Assert.AreEqual(8, srm.GetKnownNeighborsWithinClientDD(1, 2).Count);
+            Assert.AreEqual(8, srm.GetKnownNeighborsWithinClientDD(256, 2).Count);
         }
 
         [Test]
@@ -453,11 +453,11 @@ namespace OpenSim.Region.FrameworkTests
 
 
             //try a surrounding query
-            Assert.AreEqual(8, srm.GetKnownNeighborsWithinClientDD(1).Count);
-            Assert.AreEqual(8, srm.GetKnownNeighborsWithinClientDD(256).Count);
-            Assert.AreEqual(24, srm.GetKnownNeighborsWithinClientDD(257).Count);
-            Assert.AreEqual(24, srm.GetKnownNeighborsWithinClientDD(512).Count);
-            Assert.AreEqual(24, srm.GetKnownNeighborsWithinClientDD(1024).Count);
+            Assert.AreEqual(8, srm.GetKnownNeighborsWithinClientDD(1, 2).Count);
+            Assert.AreEqual(8, srm.GetKnownNeighborsWithinClientDD(256, 2).Count);
+            Assert.AreEqual(24, srm.GetKnownNeighborsWithinClientDD(257, 2).Count);
+            Assert.AreEqual(24, srm.GetKnownNeighborsWithinClientDD(512, 2).Count);
+            Assert.AreEqual(24, srm.GetKnownNeighborsWithinClientDD(1024, 2).Count);
         }
     }
 }

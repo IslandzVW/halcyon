@@ -3833,7 +3833,7 @@ namespace OpenSim.Region.Framework.Scenes
 
                     uint xmin, xmax, ymin, ymax;
 
-                    Util.GetDrawDistanceBasedRegionRectangle((uint)client.DrawDistance, regionX, regionY,
+                    Util.GetDrawDistanceBasedRegionRectangle((uint)client.DrawDistance, 0, regionX, regionY,
                         out xmin, out xmax, out ymin, out ymax);
 
                     if (!Util.IsWithinDDRectangle(destinationRegion.RegionLocX, destinationRegion.RegionLocY, xmin, xmax, ymin, ymax))

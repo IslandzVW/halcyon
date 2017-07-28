@@ -1104,7 +1104,7 @@ namespace OpenSim.Region.Communications.OGS1
             Task<List<SimpleRegionInfo>> requestTask = new Task<List<SimpleRegionInfo>>(() =>
                 {
                     uint xmin, xmax, ymin, ymax;
-                    Util.GetDrawDistanceBasedRegionRectangle((uint)maxDD, x, y, out xmin, out xmax, out ymin, out ymax);
+                    Util.GetDrawDistanceBasedRegionRectangle((uint)maxDD, 0, x, y, out xmin, out xmax, out ymin, out ymax);
 
                     Hashtable block = MapBlockQuery((int)xmin, (int)ymin, (int)xmax, (int)ymax);
                     if (block == null)

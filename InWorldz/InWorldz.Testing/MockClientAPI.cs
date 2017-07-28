@@ -132,6 +132,12 @@ namespace InWorldz.Testing
             set { }
         }
 
+        public uint NeighborsRange
+        {
+            get { return 1; }
+            set { }
+        }
+
         public uint CircuitCode { get; set; }
 
 #pragma warning disable 0067 // disable "X is never used"

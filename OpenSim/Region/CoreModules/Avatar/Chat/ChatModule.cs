@@ -634,6 +634,35 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
             
         }
 
+        private void ShowNeighborsRange(IClientAPI client, bool updated)
+        {
+            foreach (Scene scene in m_scenes)
+            {
+                SendSystemChat(client, "Neighbors range from {0} is {1}{2}.",
+                    scene.RegionInfo.RegionName, updated?"now ":"", client.NeighborsRange);
+            }
+        }
+
+        private bool NeighborsRange(IClientAPI client, string arg)
+        {
+            foreach (Scene scene in m_scenes)
+            {
+                try
+                {
+                    uint range = Convert.ToUInt32(arg);
+                    if ((range == 1) || (range == 2))
+                    {
+                        client.NeighborsRange = range;
+                        return true;
+                    }
+                }
+                catch (Exception) {
+                    SendClientChat(client, "Expected a neighbors range of 1 or 2.");
+                }
+            }
+            return false;   // if we get here, it wasn't updated.
+        }
+
         private void HandleChatCommand(IClientAPI client, OSChatMessage c, string[] args)
         {
             SendClientChat(client, "{0}", string.Join(" ",args));
@@ -672,6 +701,28 @@ namespace OpenSim.Region.CoreModules.Avatar.Chat
                         }
                     }
                     SendSystemChat(client, "Region chat command was not recognized. Did you intend? /!debug crossings");
+                    break;
+
+                case "/!neighbor":  // lets allow some variations on the spelling etc. for 'muricans :p
+                case "/!neighbors":
+                case "/!neighbour":
+                case "/!neighbours":
+                    if ((args.Length > 1) && ((args[1] == "range") || (args[1] == "show")))
+                    {
+                        if (args.Length > 2)
+                        {
+                            if (NeighborsRange(client, args[2]))    // if changed
+                            {
+                                ScenePresence avatar;
+                                if ((client.Scene as Scene).TryGetAvatar(c.SenderUUID, out avatar))
+                                    avatar.UpdateForDrawDistanceChange();   // update the visible neighbors
+                                ShowNeighborsRange(client, true);
+                            }
+                            break;
+                        }
+                    }
+                    // else show the current value
+                    ShowNeighborsRange(client, false);
                     break;
 
                 default:

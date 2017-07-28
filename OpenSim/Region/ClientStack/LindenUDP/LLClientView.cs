@@ -173,6 +173,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private bool m_DebugCrossings = false;
 
+        private uint m_NeighborsRange = 2;
+
         // Used to adjust Sun Orbit values so Linden based viewers properly position sun
         private const float m_sunPainDaHalfOrbitalCutoff = 4.712388980384689858f;
 
@@ -543,6 +545,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             get { return m_DebugCrossings; }
             set { m_DebugCrossings = value;  }
+        }
+
+
+        public uint NeighborsRange
+        {
+            get { return m_NeighborsRange; }
+            set {
+                if ((value == 1) || (value == 2))   // only legal values
+                    m_NeighborsRange = value;
+                else // 0 or anything else sets it to default
+                    m_NeighborsRange = 2;   // default neighbors range is 2 regions away
+            }
         }
 
         public IPEndPoint RemoteEndPoint 
