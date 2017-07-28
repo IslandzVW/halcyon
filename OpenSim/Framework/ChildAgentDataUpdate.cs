@@ -252,7 +252,8 @@ namespace OpenSim.Framework
     [Flags]
     public enum PresenceFlags
     {
-        DebugCrossings = (1 << 0)
+        DebugCrossings = (1 << 0),
+        LimitNeighbors = (1 << 1)   // when set, neighbors range is only 1
     }
 
     public class AgentData : IAgentData

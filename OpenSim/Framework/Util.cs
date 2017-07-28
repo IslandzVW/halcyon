@@ -2422,7 +2422,7 @@ namespace OpenSim.Framework
         /// <param name="xmax">Outputs the X maximum for the DD rectangle</param>
         /// <param name="ymin">Outputs the Y minimum for the DD rectangle</param>
         /// <param name="ymax">Outputs the Y maximum for the DD rectangle</param>
-        public static void GetDrawDistanceBasedRegionRectangle(uint drawDistance, uint regionLocX, uint regionLocY, 
+        public static void GetDrawDistanceBasedRegionRectangle(uint drawDistance, uint maxRange, uint regionLocX, uint regionLocY, 
             out uint xmin, out uint xmax, out uint ymin, out uint ymax)
         {
             uint ddRegionWidth = GetRegionUnitsFromDD(drawDistance);
@@ -2431,6 +2431,18 @@ namespace OpenSim.Framework
             xmax = regionLocX + ddRegionWidth;
             ymin = ddRegionWidth > regionLocY ? 0U : regionLocY - ddRegionWidth;
             ymax = regionLocY + ddRegionWidth;
+
+            if (maxRange > 0)   // apply it
+            {
+                if ((regionLocX - xmin) > maxRange)
+                    xmin = regionLocX - maxRange;
+                if ((regionLocY - ymin) > maxRange)
+                    ymin = regionLocY - maxRange;
+                if ((xmax - regionLocX) > maxRange)
+                    xmax = regionLocX + maxRange;
+                if ((ymax - regionLocY) > maxRange)
+                    ymax = regionLocY + maxRange;
+            }
         }
 
         /// <summary>
