@@ -364,7 +364,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             int totalBytes = resend + land + wind + cloud + task + texture + asset + state;
             int totalBits = totalBytes * 8;
             int totalKBits = totalBits / 1024;
-            m_log.DebugFormat("[UDP]: Throttle task={0} of {1} Kbps", (task * 8) / 1024, totalKBits);
+            // m_log.DebugFormat("[UDP]: Throttle task={0} of {1} Kbps", (task * 8) / 1024, totalKBits);
 
             //m_log.InfoFormat("[LLUDP] Client {0} throttle {1}", AgentID, total); 
             //m_log.DebugFormat("[LLUDPCLIENT]: {0} is setting throttles. Resend={1}, Land={2}, Wind={3}, Cloud={4}, Task={5}, Texture={6}, Asset={7}, State={8}, Total={9}",
@@ -444,10 +444,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_unpackedThrottles = throttles;
             }
 
-            m_log.DebugFormat("[THROTTLE]: Task throttle resend={0} and task={1} kpbs of {2} kbps.",
-                m_throttleCategories[(int)ThrottleOutPacketType.Resend].DripRate * 8 / 1024,
-                m_throttleCategories[(int)ThrottleOutPacketType.Task].DripRate * 8 / 1024,
-                m_throttle.DripRate * 8 / 1024);
+            //m_log.DebugFormat("[THROTTLE]: Task throttle resend={0} and task={1} kpbs of {2} kbps.",
+            //    m_throttleCategories[(int)ThrottleOutPacketType.Resend].DripRate * 8 / 1024,
+            //    m_throttleCategories[(int)ThrottleOutPacketType.Task].DripRate * 8 / 1024,
+            //    m_throttle.DripRate * 8 / 1024);
             return throttles;
         }
 
