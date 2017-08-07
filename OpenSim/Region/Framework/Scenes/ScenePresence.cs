@@ -3733,6 +3733,7 @@ namespace OpenSim.Region.Framework.Scenes
 
         // Neighbor regions bandwidth percentage (as float).
         private const float NEIGHBORS_BANDWIDTH_PERCENTAGE = 0.60f;
+        private const float MINIMUM_BANDWIDTH_PERCENTAGE = 0.10f;
         private float CalculateNeighborBandwidthMultiplier()
         {
             int innacurateNeighbors = this.m_remotePresences.GetRemotePresenceCount();
@@ -3740,7 +3741,8 @@ namespace OpenSim.Region.Framework.Scenes
             if (innacurateNeighbors != 0)
             {
                 //only allow a percentage of our bandwidth to be used for neighbor regions
-                return NEIGHBORS_BANDWIDTH_PERCENTAGE / (float)innacurateNeighbors;
+                float multiplier = NEIGHBORS_BANDWIDTH_PERCENTAGE / (float)innacurateNeighbors;
+                return (multiplier < MINIMUM_BANDWIDTH_PERCENTAGE) ? MINIMUM_BANDWIDTH_PERCENTAGE : multiplier;
             }
             else
             {
