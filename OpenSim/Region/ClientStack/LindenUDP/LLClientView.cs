@@ -5777,11 +5777,6 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         /// <param name="throttles"></param>
         public void SetChildAgentThrottle(byte[] throttles)
         {
-            float total = 0;
-            foreach (float throttle in throttles)
-                total += throttle;
-            m_log.DebugFormat("[LLCV]: SetChildAgentThrottle: [0]={0} total={1}", throttles[0], total);
-
             if (m_udpClient.SetThrottles(throttles)) //if throttle changed reset updates
             {
                 m_maxUpdates = m_udpServer.PrimUpdatesPerCallback;

@@ -444,6 +444,10 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_unpackedThrottles = throttles;
             }
 
+            m_log.DebugFormat("[THROTTLE]: Task throttle resend={0} and task={1} kpbs of {2} kbps.",
+                m_throttleCategories[(int)ThrottleOutPacketType.Resend].DripRate * 8 / 1024,
+                m_throttleCategories[(int)ThrottleOutPacketType.Task].DripRate * 8 / 1024,
+                m_throttle.DripRate * 8 / 1024);
             return throttles;
         }
 
