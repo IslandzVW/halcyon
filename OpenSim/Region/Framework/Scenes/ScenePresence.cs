@@ -3731,18 +3731,20 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene.SendOutChildAgentUpdates(agentpos, this);
         }
 
+        // Neighbor regions bandwidth percentage (as float).
+        private const float NEIGHBORS_BANDWIDTH_PERCENTAGE = 0.60f;
         private float CalculateNeighborBandwidthMultiplier()
         {
             int innacurateNeighbors = this.m_remotePresences.GetRemotePresenceCount();
 
             if (innacurateNeighbors != 0)
             {
-                //only allow 30% of our bandwidth to be used for neighbor regions
-                return 0.30f / (float)innacurateNeighbors;
+                //only allow a percentage of our bandwidth to be used for neighbor regions
+                return NEIGHBORS_BANDWIDTH_PERCENTAGE / (float)innacurateNeighbors;
             }
             else
             {
-                return 0.30f;
+                return NEIGHBORS_BANDWIDTH_PERCENTAGE;
             }
         }
 
