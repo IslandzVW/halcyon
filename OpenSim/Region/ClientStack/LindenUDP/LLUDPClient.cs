@@ -373,9 +373,12 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             // Update the token buckets with new throttle values
             TokenBucket bucket;
             int oldRate = m_throttle.DripRate;
+            // DripRates are in bytes per second, throttles for encoding to viewer are in bits per second.
+            int oldKBits = (oldRate * 8) / 1024;    // convert to bits then KBits
             bool throttleChanged = (m_throttle.DripRate != m_throttle.NormalizedDripRate(totalBytes));
-            if (throttleChanged) m_log.InfoFormat("[LLUDPCLIENT]: Viewer agent bandwidth throttle request {0} kbps -> {1} kbps.", oldRate, totalKBits);
+            if (throttleChanged) m_log.InfoFormat("[LLUDPCLIENT]: Viewer agent bandwidth throttle request {0} kbps -> {1} kbps.", oldKBits, totalKBits);
 
+            // Bucket drip/burst rates are in bytes per second (stored internally as bytes per millisecond)
             bucket = m_throttle;
             bucket.DripRate = totalBytes;
             bucket.MaxBurst = totalBytes;
