@@ -316,30 +316,38 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 adjData = throttleData;
             }
 
-            // 0.125f converts from bits to bytes
-            int resend = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int land = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int wind = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int cloud = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int task = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int texture = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f); pos += 4;
-            int asset = (int)(BitConverter.ToSingle(adjData, pos) * 0.125f);
+            // These adjData values come in from the viewer in bits. (Not Kbits, not bytes, not Kbytes.)
+            int resend = (int)(BitConverter.ToSingle(adjData, pos)); pos += 4;
+            int land = (int)(BitConverter.ToSingle(adjData, pos)); pos += 4;
+            int wind = (int)(BitConverter.ToSingle(adjData, pos)); pos += 4;
+            int cloud = (int)(BitConverter.ToSingle(adjData, pos)); pos += 4;
+            int task = (int)(BitConverter.ToSingle(adjData, pos)); pos += 4;
+            int texture = (int)(BitConverter.ToSingle(adjData, pos)); pos += 4;
+            int asset = (int)(BitConverter.ToSingle(adjData, pos));
+            // m_log.DebugFormat("[LLUDPCLIENT]: throttles: Resend={0}, Land={1}, Wind={2}, Cloud={3}, Task={4}, Texture={5}, Asset={6}, Total={7}", resend, land, wind, cloud, task, texture, asset, resend + land + wind + cloud + task + texture + asset);
 
-            //int totalKbps = ((resend + land + wind + cloud + task + texture + asset)/1024)*8;   // save this original value for below
+            // undo LL's 50% hack first, this yields original bps rates (from viewer preferences).
+            resend = (int)(resend / 1.5f);
+            land = (int)(land / 1.5f);
+            wind = (int)(wind / 1.5f);
+            cloud = (int)(cloud / 1.5f);
+            task = (int)(task / 1.5f);
+            texture = (int)(texture / 1.5f);
+            asset = (int)(asset / 1.5f);
+
+            // convert from bits to bytes (sometimes not multiples of 8)
+            resend = (resend + 7)/8;
+            land = (land + 7) / 8;
+            wind = (wind + 7) / 8;
+            cloud = (cloud + 7) / 8;
+            task = (task + 7) / 8;
+            texture = (texture + 7) / 8;
+            asset = (asset + 7) / 8;
+            // Now these category sizes are in bytes, for server use, including matching units for MTU check.
 
             // State is a subcategory of task that we allocate a percentage to
             int state = (int)((float)task * STATE_TASK_PERCENTAGE);
             task -= state;
-
-            //subtract 33% from the total to make up for LL's 50% hack
-            resend = (int)(resend * 0.6667);
-            land = (int)(land * 0.6667);
-            wind = (int)(wind * 0.6667);
-            cloud = (int)(cloud * 0.6667);
-            task = (int)(task * 0.6667);
-            texture = (int)(texture * 0.6667);
-            asset = (int)(asset * 0.6667);
-            state = (int)(state * 0.6667);
 
             // Make sure none of the throttles are set below our packet MTU,
             // otherwise a throttle could become permanently clogged
@@ -352,21 +360,28 @@ namespace OpenSim.Region.ClientStack.LindenUDP
             asset = Math.Max(asset, LLUDPServer.MTU);
             state = Math.Max(state, LLUDPServer.MTU);
 
-            int total = resend + land + wind + cloud + task + texture + asset + state;
+            // Let's calculate some convenience totals.
+            int totalBytes = resend + land + wind + cloud + task + texture + asset + state;
+            int totalBits = totalBytes * 8;
+            int totalKBits = totalBits / 1024;
+            // m_log.DebugFormat("[UDP]: Throttle task={0} of {1} Kbps", (task * 8) / 1024, totalKBits);
 
             //m_log.InfoFormat("[LLUDP] Client {0} throttle {1}", AgentID, total); 
             //m_log.DebugFormat("[LLUDPCLIENT]: {0} is setting throttles. Resend={1}, Land={2}, Wind={3}, Cloud={4}, Task={5}, Texture={6}, Asset={7}, State={8}, Total={9}",
-            //    AgentID, resend, land, wind, cloud, task, texture, asset, state, total);
+            //    AgentID, resend, land, wind, cloud, task+state, texture, asset, state, total);
 
             // Update the token buckets with new throttle values
             TokenBucket bucket;
+            int oldRate = m_throttle.DripRate;
+            // DripRates are in bytes per second, throttles for encoding to viewer are in bits per second.
+            int oldKBits = (oldRate * 8) / 1024;    // convert to bits then KBits
+            bool throttleChanged = (m_throttle.DripRate != m_throttle.NormalizedDripRate(totalBytes));
+            if (throttleChanged) m_log.InfoFormat("[LLUDPCLIENT]: Viewer agent bandwidth throttle request {0} kbps -> {1} kbps.", oldKBits, totalKBits);
 
-            bool throttleChanged = (m_throttle.DripRate != m_throttle.NormalizedDripRate(total));
-//            if (throttleChanged) m_log.InfoFormat("[LLUDPCLIENT]: Viewer agent bandwidth throttle request for {0} to {1} kbps.", this.AgentID, totalKbps);
-
+            // Bucket drip/burst rates are in bytes per second (stored internally as bytes per millisecond)
             bucket = m_throttle;
-            bucket.DripRate = total;
-            bucket.MaxBurst = total;
+            bucket.DripRate = totalBytes;
+            bucket.MaxBurst = totalBytes;
 
             bucket = m_throttleCategories[(int)ThrottleOutPacketType.Resend];
             bucket.DripRate = resend;
@@ -415,19 +430,24 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 float[] fthrottles = new float[THROTTLE_CATEGORY_COUNT - 1];
                 int i = 0;
 
-                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Resend].DripRate;
-                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Land].DripRate;
-                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Wind].DripRate;
-                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Cloud].DripRate;
-                fthrottles[i++] = (float)(m_throttleCategories[(int)ThrottleOutPacketType.Task].DripRate +
-                                          m_throttleCategories[(int)ThrottleOutPacketType.State].DripRate);
-                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Texture].DripRate;
-                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Asset].DripRate;
+                // DripRates are in bytes per second, throttles for encoding to viewer are in bits per second.
+                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Resend].DripRate * 8;
+                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Land].DripRate * 8;
+                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Wind].DripRate * 8;
+                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Cloud].DripRate * 8;
+                fthrottles[i++] = (float)(m_throttleCategories[(int)ThrottleOutPacketType.Task].DripRate * 8 +
+                                          m_throttleCategories[(int)ThrottleOutPacketType.State].DripRate * 8);
+                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Texture].DripRate * 8;
+                fthrottles[i++] = (float)m_throttleCategories[(int)ThrottleOutPacketType.Asset].DripRate * 8;
 
                 throttles = new UnpackedThrottles(fthrottles);
                 m_unpackedThrottles = throttles;
             }
 
+            //m_log.DebugFormat("[THROTTLE]: Task throttle resend={0} and task={1} kpbs of {2} kbps.",
+            //    m_throttleCategories[(int)ThrottleOutPacketType.Resend].DripRate * 8 / 1024,
+            //    m_throttleCategories[(int)ThrottleOutPacketType.Task].DripRate * 8 / 1024,
+            //    m_throttle.DripRate * 8 / 1024);
             return throttles;
         }
 

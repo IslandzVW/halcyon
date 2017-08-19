@@ -1077,6 +1077,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private Int32 m_LastQueueFill = 0;
         private Int32 m_maxUpdates = 0;
         private bool m_lastSentFull = false;
+        private Int32 m_prevOutboundQueueSize = 0;
 
         private void EmptyQueueProcessUpdates(ThrottleOutPacketTypeFlags categories)
         {
@@ -1093,13 +1094,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         evt.Set();
                     }
 
+                    m_LastQueueFill = 0;
                     return;
                 }
 
                 int lastLatency = 0;
                 if (m_maxUpdates == 0 || m_LastQueueFill == 0)
                 {
-                    m_maxUpdates = m_udpServer.PrimUpdatesPerCallback;
+                    if (m_maxUpdates == 0)
+                        m_maxUpdates = m_udpServer.PrimUpdatesPerCallback;
                 }
                 else
                 {
@@ -1149,7 +1152,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_lastSentFull = sentAllTerse || sentAllFull;
 
                 //if (lastLatency > 35)
-               //     m_log.DebugFormat("[LLCV]: Last latency {0}, Max Updates {1}, Queue Size: {2}", lastLatency, m_maxUpdates, m_udpClient.OutboundQueueSize);
+                if ((m_udpClient.OutboundQueueSize > 0) && (m_udpClient.OutboundQueueSize != m_prevOutboundQueueSize))
+                {
+                    // m_log.DebugFormat("[LLCV]: Last latency {0}, Max Updates {1}, Queue Size: {2}", lastLatency, m_maxUpdates, m_udpClient.OutboundQueueSize);
+                    m_prevOutboundQueueSize = m_udpClient.OutboundQueueSize;
+                }
             }
         }
 
@@ -3564,6 +3571,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         (ushort)(Scene.TimeDilation * ushort.MaxValue);
 
                 int max = Math.Min(m_primFullUpdates.Count, updatesToSend);
+                // m_log.DebugFormat("[ProcessPrimFullUpdates]: m_primFullUpdates={0} updatesToSend={1} max={2}", m_primFullUpdates.Count, updatesToSend, max);
 
                 outPacket.ObjectData = new ObjectUpdatePacket.ObjectDataBlock[max];
 
