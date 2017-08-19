@@ -7,13 +7,15 @@ Halcyon was originally based on the OpenSimulator project but was forked in 2010
 [wiki]: https://github.com/InWorldz/halcyon/wiki
 [physxnet]: https://github.com/InWorldz/PhysX.net
 
-# Build Status
+## Build Status
+
+###### Latest release: [https://github.com/InWorldz/halcyon/releases](https://github.com/InWorldz/halcyon/releases)
 ###### Current status: [![Build status](https://ci.appveyor.com/api/projects/status/8nn67w43r2586y1k?svg=true)](https://ci.appveyor.com/project/appurist/halcyon) 
 ###### Master branch: [![Build status](https://ci.appveyor.com/api/projects/status/8nn67w43r2586y1k/branch/master?svg=true)](https://ci.appveyor.com/project/appurist/halcyon/branch/master)
 
 For building and installation instructions, please see the [Halcyon wiki][wiki].
 
-# Tested operating systems
+## Tested operating systems
 At this time, only the following 64 bit operating systems are being tested against:
 
 * Microsoft Windows 7
