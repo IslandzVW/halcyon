@@ -28,7 +28,7 @@ after_build:
           Update-AppveyorBuild -Version "0.$($halcyon_version.Substring(0, $halcyon_version.lastIndexOf('.')))-$env:APPVEYOR_BUILD_NUMBER"
         }
     - cmd: move bin halcyon
-	
+
 # No tests for now.
 test: off
 
