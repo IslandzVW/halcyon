@@ -311,12 +311,22 @@ namespace OpenSim.Framework.Servers
         /// </summary>      
         public virtual void Shutdown()
         {
+            // Use a status of 64 (0b01000000) to indicate that this "error" is an explicit shutdown and not a real error.
+            Shutdown(64);
+        }
+
+        /// <summary>
+        /// Shutdown the server with the specified exit code.
+        /// </summary>
+        /// <param name="exitCode">The exit code to be returned once shutdown has completed.</param>
+        public void Shutdown(int exitCode)
+        {
             ShutdownSpecific();
-            
+
             m_log.Info("[SHUTDOWN]: Shutdown processing on main thread complete.  Exiting...");
             RemovePIDFile();
-            
-            Environment.Exit(0);
+
+            Environment.Exit(exitCode);
         }
 
         private void HandleQuit(string module, string[] args)

@@ -51,7 +51,7 @@ namespace OpenSim.Grid.MessagingServer
 {
     /// <summary>
     /// </summary>
-    public class OpenMessage_Main : BaseOpenSimServer , IGridServiceCore
+    public class OpenMessage_Main : BaseOpenSimServer, IGridServiceCore
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -63,31 +63,44 @@ namespace OpenSim.Grid.MessagingServer
 
         private UserDataBaseService m_userDataBaseService;
 
-		private ManualResetEvent Terminating = new ManualResetEvent(false);
+        private ManualResetEvent Terminating = new ManualResetEvent(false);
 
         private InWorldz.RemoteAdmin.RemoteAdmin m_radmin;
 
         public static void Main(string[] args)
         {
+            // Please note that if you are changing something in this function you should check to see if you need to change the other server's Main functions as well.
+
+            // Under any circumstance other than an explicit exit the exit code should be 1.
+            Environment.ExitCode = 1;
+
             ServicePointManager.DefaultConnectionLimit = 12;
 
-            XmlConfigurator.Configure();
+            // Add the arguments supplied when running the application to the configuration
+            var configSource = new ArgvConfigSource(args);
 
-			ArgvConfigSource configSource = new ArgvConfigSource(args);
-			configSource.Alias.AddAlias("On", true);
-			configSource.Alias.AddAlias("Off", false);
-			configSource.Alias.AddAlias("True", true);
-			configSource.Alias.AddAlias("False", false);
-			configSource.Alias.AddAlias("Yes", true);
-			configSource.Alias.AddAlias("No", false);
-			configSource.AddSwitch("Startup", "background");
+            configSource.Alias.AddAlias("On", true);
+            configSource.Alias.AddAlias("Off", false);
+            configSource.Alias.AddAlias("True", true);
+            configSource.Alias.AddAlias("False", false);
+            configSource.Alias.AddAlias("Yes", true);
+            configSource.Alias.AddAlias("No", false);
+
+            configSource.AddSwitch("Startup", "background");
+            configSource.AddSwitch("Startup", "pidfile");
 
             m_log.Info("[SERVER]: Launching MessagingServer...");
 
+            var pidFile = new PIDFileManager(configSource.Configs["Startup"].GetString("pidfile", string.Empty));
+            XmlConfigurator.Configure();
+
             OpenMessage_Main messageserver = new OpenMessage_Main();
 
+            pidFile.SetStatus(PIDFileManager.Status.Starting);
             messageserver.Startup();
-			messageserver.Work(configSource.Configs["Startup"].GetBoolean("background", false));
+
+            pidFile.SetStatus(PIDFileManager.Status.Running);
+            messageserver.Work(configSource.Configs["Startup"].GetBoolean("background", false));
         }
 
         public OpenMessage_Main()
@@ -96,24 +109,27 @@ namespace OpenSim.Grid.MessagingServer
             MainConsole.Instance = m_console;
         }
 
-		private void Work(bool background)
+        private void Work(bool background)
         {
-			if (background) {
-				Terminating.WaitOne();
-				Terminating.Close();
-			} else {
-				m_console.Notice("Enter help for a list of commands\n");
+            if (background)
+            {
+                Terminating.WaitOne();
+                Terminating.Close();
+            }
+            else
+            {
+                m_console.Notice("Enter help for a list of commands\n");
 
-				while (true)
-				{
-					m_console.Prompt();
-				}
-			}
+                while (true)
+                {
+                    m_console.Prompt();
+                }
+            }
         }
 
         private void registerWithUserServer()
         {
-            retry:
+        retry:
 
             if (m_userServerModule.registerWithUserServer())
             {
@@ -177,7 +193,7 @@ namespace OpenSim.Grid.MessagingServer
                     System.Threading.Thread.Sleep(delay * 1000);
 
                 // Do this on a new thread so the actual shutdown call returns successfully.
-                Task.Factory.StartNew(() => Shutdown());
+                Task.Factory.StartNew(Shutdown);
             }
             catch (Exception e)
             {
@@ -210,7 +226,7 @@ namespace OpenSim.Grid.MessagingServer
             m_userDataBaseService.AddPlugin(Cfg.DatabaseProvider, Cfg.DatabaseConnect);
 
             //Register the database access service so modules can fetch it
-           // RegisterInterface<UserDataBaseService>(m_userDataBaseService);
+            // RegisterInterface<UserDataBaseService>(m_userDataBaseService);
 
             m_userServerModule = new InterMessageUserServerModule(Cfg, this);
             m_userServerModule.Initialize();
@@ -255,7 +271,7 @@ namespace OpenSim.Grid.MessagingServer
 
         public override void ShutdownSpecific()
         {
-			Terminating.Set();
+            Terminating.Set();
             m_userServerModule.deregisterWithUserServer();
         }
 

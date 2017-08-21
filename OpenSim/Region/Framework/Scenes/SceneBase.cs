@@ -161,6 +161,16 @@ namespace OpenSim.Region.Framework.Scenes
         /// </summary>
         public abstract void LoadWorldMap();
 
+
+        /// <summary>
+        /// Marks the world map as tainted and updates the map tile if enough time has passed.
+        /// </summary>
+        public abstract void MarkMapTileTainted(WorldMapTaintReason reason);
+        /// <summary>
+        /// If the prim qualifies to make a mark on the map, mark the world map as tainted and update the map tile if enough time has passed.
+        /// </summary>
+        public abstract void MarkMapTileTainted(SceneObjectPart part);
+
         #endregion
 
         #region Add/Remove Agent/Avatar

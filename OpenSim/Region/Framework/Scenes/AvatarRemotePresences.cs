@@ -70,6 +70,10 @@ namespace OpenSim.Region.Framework.Scenes
         /// The last number of regions we were able to see into given the user's draw distance
         /// </summary>
         private uint _lastDrawDistanceFactor;
+        /// <summary>
+        /// Similar to _lastDrawDistanceFactor, the previous value for the neighbors range
+        /// </summary>
+        private uint _lastNeighborsRange;
 
         /// <summary>
         /// Semaphore held during large ops to ensure only one major change happens at a time
@@ -82,6 +86,7 @@ namespace OpenSim.Region.Framework.Scenes
             _scene = currentRegion;
             _sp = sp;
             _lastDrawDistanceFactor = Util.GetRegionUnitsFromDD((uint)sp.DrawDistance);
+            _lastNeighborsRange = 0;
 
             _scene.EventManager.OnMakeRootAgent += EventManager_OnMakeRootAgent;
             _scene.EventManager.OnMakeChildAgent += EventManager_OnMakeChildAgent;
@@ -129,7 +134,7 @@ namespace OpenSim.Region.Framework.Scenes
                 //set up our initial connections to neighbors
                 //let the task run async in the background
                 const int CROSSING_RESYNC_DELAY = 500;
-                this.CalculateAndResyncNeighbors((uint)presence.DrawDistance, CROSSING_RESYNC_DELAY);
+                this.CalculateAndResyncNeighbors((uint)presence.DrawDistance, presence.ControllingClient.NeighborsRange, CROSSING_RESYNC_DELAY);
             }
         }
 
@@ -203,7 +208,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             // on any neighbor change, we need to recalculate all neighbors because 
             // visibility rules may have resulted in more than one new neighbor.
-            await CalculateAndResyncNeighbors((uint)_sp.DrawDistance, 0);
+            await CalculateAndResyncNeighbors((uint)_sp.DrawDistance, _sp.ControllingClient.NeighborsRange, 0);
         }
 
         /// <summary>
@@ -264,7 +269,7 @@ namespace OpenSim.Region.Framework.Scenes
         {
             // on any neighbor change, we need to recalculate all neighbors because 
             // visibility rules may have resulted in more than one new neighbor.
-            await CalculateAndResyncNeighbors((uint)_sp.DrawDistance, 0);
+            await CalculateAndResyncNeighbors((uint)_sp.DrawDistance, _sp.ControllingClient.NeighborsRange, 0);
         }
 
         /// <summary>
@@ -503,15 +508,17 @@ namespace OpenSim.Region.Framework.Scenes
             if (_sp.IsBot) return;
 
             uint factor = Util.GetRegionUnitsFromDD(newDrawDistance);
-            if (_lastDrawDistanceFactor == factor)
+            uint maxRange = _sp.ControllingClient.NeighborsRange;
+
+            if ((_lastDrawDistanceFactor == factor) && (_lastNeighborsRange == maxRange))
             {
                 //nothing to do
                 return;
             }
 
             _lastDrawDistanceFactor = factor;
-
-            await CalculateAndResyncNeighbors(newDrawDistance, 0);
+            _lastNeighborsRange = maxRange;
+            await CalculateAndResyncNeighbors(newDrawDistance, maxRange, 0);
         }
 
         /// <summary>
@@ -520,15 +527,15 @@ namespace OpenSim.Region.Framework.Scenes
         /// <param name="newDrawDistance">The new DD for the user</param>
         /// <param name="resyncDelay">Delay before executing the resync. We  delay on a region crossing because the viewer locks up sometimes when freeing memory</param>
         /// <returns></returns>
-        private async Task CalculateAndResyncNeighbors(uint newDrawDistance, int resyncDelay)
+        private async Task CalculateAndResyncNeighbors(uint newDrawDistance, uint maxRange, int resyncDelay)
         {
             uint xmin, xmax, ymin, ymax;
 
-            Util.GetDrawDistanceBasedRegionRectangle((uint)newDrawDistance, _scene.RegionInfo.RegionLocX,
+            Util.GetDrawDistanceBasedRegionRectangle((uint)newDrawDistance, maxRange, _scene.RegionInfo.RegionLocX,
                 _scene.RegionInfo.RegionLocY, out xmin, out xmax, out ymin, out ymax);
 
             //get our current neighbor list
-            List<SimpleRegionInfo> knownNeighborsList = _scene.SurroundingRegions.GetKnownNeighborsWithinClientDD(newDrawDistance);
+            List<SimpleRegionInfo> knownNeighborsList = _scene.SurroundingRegions.GetKnownNeighborsWithinClientDD(newDrawDistance, maxRange);
             Dictionary<ulong, SimpleRegionInfo> knownNeighborsDict = new Dictionary<ulong, SimpleRegionInfo>();
             foreach (var neighbor in knownNeighborsList)
             {

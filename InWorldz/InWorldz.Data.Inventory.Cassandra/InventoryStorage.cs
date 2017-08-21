@@ -2374,7 +2374,16 @@ namespace InWorldz.Data.Inventory.Cassandra
 
             try
             {
-                _log.DebugFormat("[Inworldz.Data.Inventory.Cassandra] Purge of item {0} '{1}' for user {2} requested", item.ID, item.Name, item.Owner);
+                string invType;
+                if (item.AssetType == (int)AssetType.Link)
+                    invType = "link";
+                else
+                if (item.AssetType == (int)AssetType.LinkFolder)
+                    invType = "folder link";
+                else
+                    invType = "type "+item.AssetType.ToString();
+
+                _log.WarnFormat("[Inworldz.Data.Inventory.Cassandra] Purge of {0} id={1} asset={2} '{3}' for user={4}", invType, item.ID, item.AssetID, item.Name, item.Owner);
                 PurgeItemInternal(item, timeStamp);
             }
             catch (Exception e)

@@ -447,6 +447,12 @@ namespace OpenSim.Region.CoreModules.Agent.BotManager
             set { }
         }
 
+        public uint NeighborsRange
+        {
+            get { return 1U; }
+            set { }
+        }
+
         public uint CircuitCode
         {
             get { return m_circuitCode; }

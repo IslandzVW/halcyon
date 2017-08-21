@@ -29,6 +29,30 @@ namespace OpenSim.Region.Framework.Interfaces
 {        
     public interface IWorldMapModule
     {
-        void LazySaveGeneratedMaptile(byte[] data, bool temporary);        
+        void LazySaveGeneratedMaptile(byte[] data, bool temporary);
+
+        /// <summary>
+        /// Marks the world map as tainted and updates the map tile if enough time has passed.
+        /// </summary>
+        /// <param name="reason">What is the source of the taint?</param>
+        void MarkMapTileTainted(WorldMapTaintReason reason);
+    }
+
+    /// <summary>
+    /// Defines the various ways the world map could be tainted and need updating.
+    /// </summary>
+    public enum WorldMapTaintReason {
+        /// <summary>
+        /// Terrain heightmap data was edited, reloaded, or otherwise modified.
+        /// </summary>
+        TerrainElevationChange,
+        /// <summary>
+        /// Terrain texture information was changed.  Could be any of the textures or their repective ehights were adjusted.
+        /// </summary>
+        TerrainTextureChange,
+        /// <summary>
+        /// A prim was changed that qualifies to taint the map.  Please be sure of that before using this value.
+        /// </summary>
+        PrimChange,
     }
 }

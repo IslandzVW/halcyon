@@ -796,10 +796,7 @@ namespace OpenSim.Region.CoreModules.Agent.SceneView
                             IReadOnlyCollection<SceneObjectPart> sogPrims = part.ParentGroup.GetParts();
                             foreach (SceneObjectPart prim in sogPrims)
                             {
-                                if (m_updateTimes.ContainsKey(prim.LocalId))
-                                {
-                                    m_updateTimes.Remove(prim.LocalId);
-                                }
+                                m_updateTimes.Remove(prim.LocalId);
                             }
                         }
                     }

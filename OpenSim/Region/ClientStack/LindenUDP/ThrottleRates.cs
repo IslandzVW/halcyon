@@ -38,22 +38,26 @@ namespace OpenSim.Region.ClientStack.LindenUDP
     /// </summary>
     public sealed class ThrottleRates
     {
+        // Viewer rates in Kbps for a total bandwidth value of 1000 kbps:
+        // BW_PRESET_1000[] = { 100, 100,  20,  20, 310, 310, 140 };
+        // We'll use the same (but store in bytes not Kbits).
+
         /// <summary>Drip rate for resent packets</summary>
-        public int Resend = 12500;
+        public int Resend = 12500;  // 100Kbps / 8b per B
         /// <summary>Drip rate for terrain packets</summary>
-        public int Land = 1400;
+        public int Land = 12500;    // 100Kbps / 8b per B
         /// <summary>Drip rate for wind packets</summary>
-        public int Wind = 1400;
+        public int Wind = 2500;     //  20Kbps / 8b per B
         /// <summary>Drip rate for cloud packets</summary>
-        public int Cloud = 1400;
+        public int Cloud = 2500;    //  20Kbps / 8b per B
         /// <summary>Drip rate for task packets</summary>
-        public int Task = 1400;
+        public int Task = 38750;    // 310Kbps / 8b per B
         /// <summary>Drip rate for texture packets</summary>
-        public int Texture = 1400;
+        public int Texture = 38750; // 310Kbps / 8b per B
         /// <summary>Drip rate for asset packets</summary>
-        public int Asset = 1400;
+        public int Asset = 17500;   // 140Kbps / 8b per B
         /// <summary>Drip rate for state packets</summary>
-        public int State = 1400;
+        public int State = 31000;    // 80% of Task
         /// <summary>Drip rate for the parent token bucket</summary>
         public int Total;
 

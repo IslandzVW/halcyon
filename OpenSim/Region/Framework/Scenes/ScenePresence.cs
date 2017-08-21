@@ -1719,6 +1719,11 @@ namespace OpenSim.Region.Framework.Scenes
             return IsAtTarget(target, MOVE_TO_TARGET_TOLERANCE * 2.0f);
         }
 
+        public void UpdateForDrawDistanceChange()
+        {
+            m_remotePresences.HandleDrawDistanceChanged((uint)m_DrawDistance);
+        }
+
         /// <summary>
         /// This is the event handler for client movement.   If a client is moving, this event is triggering.
         /// </summary>
@@ -1819,7 +1824,7 @@ namespace OpenSim.Region.Framework.Scenes
             if (m_DrawDistance != agentData.Far)
             {
                 m_DrawDistance = agentData.Far;
-                m_remotePresences.HandleDrawDistanceChanged((uint)agentData.Far);
+                UpdateForDrawDistanceChange();
             }
 
             if ((flags & (uint) AgentManager.ControlFlags.AGENT_CONTROL_STAND_UP) != 0)
@@ -3726,18 +3731,22 @@ namespace OpenSim.Region.Framework.Scenes
             m_scene.SendOutChildAgentUpdates(agentpos, this);
         }
 
+        // Neighbor regions bandwidth percentage (as float).
+        private const float NEIGHBORS_BANDWIDTH_PERCENTAGE = 0.60f;
+        private const float MINIMUM_BANDWIDTH_PERCENTAGE = 0.10f;
         private float CalculateNeighborBandwidthMultiplier()
         {
             int innacurateNeighbors = this.m_remotePresences.GetRemotePresenceCount();
 
             if (innacurateNeighbors != 0)
             {
-                //only allow 30% of our bandwidth to be used for neighbor regions
-                return 0.30f / (float)innacurateNeighbors;
+                //only allow a percentage of our bandwidth to be used for neighbor regions
+                float multiplier = NEIGHBORS_BANDWIDTH_PERCENTAGE / (float)innacurateNeighbors;
+                return (multiplier < MINIMUM_BANDWIDTH_PERCENTAGE) ? MINIMUM_BANDWIDTH_PERCENTAGE : multiplier;
             }
             else
             {
-                return 0.30f;
+                return NEIGHBORS_BANDWIDTH_PERCENTAGE;
             }
         }
 
@@ -4161,6 +4170,8 @@ namespace OpenSim.Region.Framework.Scenes
             cAgent.Throttles = ControllingClient.GetThrottlesPacked(1.0f);
 
             cAgent.PresenceFlags = 0;
+            if (ControllingClient.NeighborsRange == 1)
+                cAgent.PresenceFlags |= (ulong)PresenceFlags.LimitNeighbors;
             if (ControllingClient.DebugCrossings)
                 cAgent.PresenceFlags |= (ulong)PresenceFlags.DebugCrossings;
             if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
@@ -4263,6 +4274,7 @@ namespace OpenSim.Region.Framework.Scenes
                 ControllingClient.SetChildAgentThrottle(cAgent.Throttles);
 
             ControllingClient.DebugCrossings = (cAgent.PresenceFlags & (ulong)PresenceFlags.DebugCrossings) != 0;
+            ControllingClient.NeighborsRange = ((cAgent.PresenceFlags & (ulong)PresenceFlags.LimitNeighbors) != 0) ? 1U : 2U;
 
             if (m_scene.Permissions.IsGod(new UUID(cAgent.AgentID)))
                 m_godlevel = cAgent.GodLevel;

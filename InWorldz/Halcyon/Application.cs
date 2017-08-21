@@ -65,6 +65,9 @@ namespace OpenSim
         //could move our main function into OpenSimMain and kill this class
         public static void Main(string[] args)
         {
+            // Under any circumstance other than an explicit exit the exit code should be 1.
+            Environment.ExitCode = 1;
+
             // First line, hook the appdomain to the crash reporter
             AppDomain.CurrentDomain.UnhandledException +=
                 new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
@@ -72,8 +75,12 @@ namespace OpenSim
             ServicePointManager.DefaultConnectionLimit = 12;
 
             // Add the arguments supplied when running the application to the configuration
-            ArgvConfigSource configSource = new ArgvConfigSource(args);
+            var configSource = new ArgvConfigSource(args);
 
+            configSource.AddSwitch("Startup", "pidfile");
+            var pidFile = new PIDFileManager(configSource.Configs["Startup"].GetString("pidfile", string.Empty));
+
+            pidFile.SetStatus(PIDFileManager.Status.Starting);
             // Configure Log4Net
             configSource.AddSwitch("Startup", "logconfig");
             string logConfigFile = configSource.Configs["Startup"].GetString("logconfig", String.Empty);
@@ -136,6 +143,7 @@ namespace OpenSim
             if (background)
             {
                 m_sim = new OpenSimBackground(configSource);
+                pidFile.SetStatus(PIDFileManager.Status.Running);
                 m_sim.Startup();
             }
             else
@@ -144,6 +152,7 @@ namespace OpenSim
                           
                 m_sim.Startup();
 
+                pidFile.SetStatus(PIDFileManager.Status.Running);
                 while (true)
                 {
                     try

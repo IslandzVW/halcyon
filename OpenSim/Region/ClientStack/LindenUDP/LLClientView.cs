@@ -173,6 +173,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
 
         private bool m_DebugCrossings = false;
 
+        private uint m_NeighborsRange = 2;
+
         // Used to adjust Sun Orbit values so Linden based viewers properly position sun
         private const float m_sunPainDaHalfOrbitalCutoff = 4.712388980384689858f;
 
@@ -543,6 +545,18 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         {
             get { return m_DebugCrossings; }
             set { m_DebugCrossings = value;  }
+        }
+
+
+        public uint NeighborsRange
+        {
+            get { return m_NeighborsRange; }
+            set {
+                if ((value == 1) || (value == 2))   // only legal values
+                    m_NeighborsRange = value;
+                else // 0 or anything else sets it to default
+                    m_NeighborsRange = 2;   // default neighbors range is 2 regions away
+            }
         }
 
         public IPEndPoint RemoteEndPoint 
@@ -1063,6 +1077,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
         private Int32 m_LastQueueFill = 0;
         private Int32 m_maxUpdates = 0;
         private bool m_lastSentFull = false;
+        private Int32 m_prevOutboundQueueSize = 0;
 
         private void EmptyQueueProcessUpdates(ThrottleOutPacketTypeFlags categories)
         {
@@ -1079,13 +1094,15 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         evt.Set();
                     }
 
+                    m_LastQueueFill = 0;
                     return;
                 }
 
                 int lastLatency = 0;
                 if (m_maxUpdates == 0 || m_LastQueueFill == 0)
                 {
-                    m_maxUpdates = m_udpServer.PrimUpdatesPerCallback;
+                    if (m_maxUpdates == 0)
+                        m_maxUpdates = m_udpServer.PrimUpdatesPerCallback;
                 }
                 else
                 {
@@ -1135,7 +1152,11 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 m_lastSentFull = sentAllTerse || sentAllFull;
 
                 //if (lastLatency > 35)
-               //     m_log.DebugFormat("[LLCV]: Last latency {0}, Max Updates {1}, Queue Size: {2}", lastLatency, m_maxUpdates, m_udpClient.OutboundQueueSize);
+                if ((m_udpClient.OutboundQueueSize > 0) && (m_udpClient.OutboundQueueSize != m_prevOutboundQueueSize))
+                {
+                    // m_log.DebugFormat("[LLCV]: Last latency {0}, Max Updates {1}, Queue Size: {2}", lastLatency, m_maxUpdates, m_udpClient.OutboundQueueSize);
+                    m_prevOutboundQueueSize = m_udpClient.OutboundQueueSize;
+                }
             }
         }
 
@@ -3550,6 +3571,7 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                         (ushort)(Scene.TimeDilation * ushort.MaxValue);
 
                 int max = Math.Min(m_primFullUpdates.Count, updatesToSend);
+                // m_log.DebugFormat("[ProcessPrimFullUpdates]: m_primFullUpdates={0} updatesToSend={1} max={2}", m_primFullUpdates.Count, updatesToSend, max);
 
                 outPacket.ObjectData = new ObjectUpdatePacket.ObjectDataBlock[max];
 
@@ -8177,7 +8199,8 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                 }
                 #endregion
 
-                bool haveAllObjects = false;
+                // Use a copy of the 
+                List<RezMultipleAttachmentsFromInvPacket.ObjectDataBlock> attachmentsData = null;
                 lock (_rezMultupleAttachmentsData)
                 {
                     if (rez.HeaderData.CompoundMsgID != _rezMutipleAttachmentsTransactionId)
@@ -8190,13 +8213,14 @@ namespace OpenSim.Region.ClientStack.LindenUDP
                     _rezMultupleAttachmentsData.AddRange(rez.ObjectData);
                     if (rez.HeaderData.TotalObjects == _rezMultupleAttachmentsData.Count)
                     {
-                        haveAllObjects = true;
+                        // we have them all, ready to send off. Create a local copy use outside the lock.
+                        attachmentsData = new List<RezMultipleAttachmentsFromInvPacket.ObjectDataBlock>(_rezMultupleAttachmentsData);
                     }
                 }
 
-                if (haveAllObjects)
+                if (attachmentsData != null)    // we have them all, ready to send off
                 {
-                    handlerRezMultipleAttachments(this, rez.HeaderData, _rezMultupleAttachmentsData.ToArray());
+                    handlerRezMultipleAttachments(this, rez.HeaderData, attachmentsData.ToArray());
                 }
             }
 
