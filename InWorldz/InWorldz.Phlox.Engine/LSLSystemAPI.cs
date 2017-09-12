@@ -8754,8 +8754,9 @@ namespace InWorldz.Phlox.Engine
             var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
-                part.SetCameraEyeOffset(new Vector3((float)eyeOffset.X, (float)eyeOffset.Y, (float)eyeOffset.Z));
-                part.SetCameraAtOffset(new Vector3((float)cameraAt.X, (float)cameraAt.Y, (float)cameraAt.Z));
+                Vector3 localPos = part.IsRootPart() ? Vector3.Zero : part.OffsetPosition;
+                part.SetCameraEyeOffset(new Vector3(localPos + eyeOffset));
+                part.SetCameraAtOffset(new Vector3(localPos + cameraAt));
             }
         }
 
