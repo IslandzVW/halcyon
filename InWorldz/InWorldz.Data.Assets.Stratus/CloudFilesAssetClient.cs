@@ -485,7 +485,7 @@ namespace InWorldz.Data.Assets.Stratus
             }
             if (asset.Data.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE)
             {
-                statBigAsset++;
+                if (stream == null) statBigAsset++; // only increment if this is the followup call
                 return false;
             }
 
@@ -549,10 +549,7 @@ namespace InWorldz.Data.Assets.Stratus
 
                     using (assetStream = worker.StoreAsset(wireAsset))
                     {
-                        m_log.Warn("Delaying 35 seconds for slow asset store similation for " + asset.FullID);
-                        Thread.Sleep(35000);    // sleep longer than the 
-                        if (this.CacheAssetIfAppropriate(asset.FullID, assetStream, wireAsset))
-                            statPutCached++;
+                        this.CacheAssetIfAppropriate(asset.FullID, assetStream, wireAsset);
                     }
                 }
                 catch (AssetAlreadyExistsException)
