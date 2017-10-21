@@ -521,20 +521,10 @@ namespace InWorldz.Data.Assets.Stratus
             }
         }
 
-        public void StoreAsset(AssetBase asset)
+        private void StoreCFAsset(AssetBase asset, StratusAsset wireAsset)
         {
-            if (asset == null) throw new ArgumentNullException("asset cannot be null");
-            if (asset.FullID == OpenMetaverse.UUID.Zero) throw new ArgumentException("assets must not have a null ID");
-
             bool isRetry = false;
 
-            StratusAsset wireAsset = StratusAsset.FromAssetBase(asset);
-
-            //for now we're not going to use compression etc, so set to zero
-            wireAsset.StorageFlags = 0;
-
-            statTotal++;
-            statPut++;
             Util.Retry(2, new List<Type> { typeof(AssetAlreadyExistsException), typeof(UnrecoverableAssetServerException) }, () =>
             {
                 CloudFilesAssetWorker worker;
@@ -557,21 +547,12 @@ namespace InWorldz.Data.Assets.Stratus
                         throw new System.Net.WebException("Timeout for unit testing", System.Net.WebExceptionStatus.Timeout);
                     }
 
-                    //attempt to cache the full (wire) asset in case the StoreAsset call takes a while or throws (or both)
-                    bool isCached = false;
-                    // Call this with a null stream in order to pre-cache the asset before the StoreAsset delay.
-                    // Makes the asset available immediately after upload in spite of CF write delays.
-                    if (this.CacheAssetIfAppropriate(asset.FullID, null, wireAsset))
-                    {
-                        statPutCached++;
-                        isCached = true;
-                    }
-
                     using (assetStream = worker.StoreAsset(wireAsset))
                     {
-                        if (!isCached)  // full asset didn't fit, try to cache the stream
-                            if (this.CacheAssetIfAppropriate(asset.FullID, assetStream, wireAsset))
-                                statPutCached++;
+                        m_log.Warn("Delaying 35 seconds for slow asset store similation for " + asset.FullID);
+                        Thread.Sleep(35000);    // sleep longer than the 
+                        if (this.CacheAssetIfAppropriate(asset.FullID, assetStream, wireAsset))
+                            statPutCached++;
                     }
                 }
                 catch (AssetAlreadyExistsException)
@@ -624,6 +605,31 @@ namespace InWorldz.Data.Assets.Stratus
                     _asyncAssetWorkers.ReturnObject(worker);
                 }
             });
+        }
+
+        public void StoreAsset(AssetBase asset)
+        {
+            if (asset == null) throw new ArgumentNullException("asset cannot be null");
+            if (asset.FullID == OpenMetaverse.UUID.Zero) throw new ArgumentException("assets must not have a null ID");
+
+            StratusAsset wireAsset = StratusAsset.FromAssetBase(asset);
+
+            //for now we're not going to use compression etc, so set to zero
+            wireAsset.StorageFlags = 0;
+
+            //attempt to cache the full (wire) asset in case the CF StoreAsset call takes a while or throws (or both)
+            // Call this with a null stream in order to pre-cache the asset before the StoreAsset delay.
+            // Makes the asset available immediately after upload in spite of CF write delays.
+            if (this.CacheAssetIfAppropriate(asset.FullID, null, wireAsset))
+            {
+                statPutCached++;
+            }
+
+            statTotal++;
+            statPut++;
+
+            // Now do the actual CF storage asychronously so as to not block the caller.
+            _threadPool.QueueWorkItem(() => StoreCFAsset(asset, wireAsset));
         }
 
         private static void ReportThrowStorageError(AssetBase asset, Exception e)
