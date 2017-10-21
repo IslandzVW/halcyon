@@ -211,10 +211,14 @@ namespace OpenSim.Framework
             //insert the new item
             _storage.Add(kvp);
 
-            if (!removed)
+            if (_objectSizes != null)
             {
+                if (_objectSizes.ContainsKey(key))  // replaced
+                {
+                    _totalSize -= _objectSizes[key];
+                }
                 _totalSize += size;
-                if (_objectSizes != null) _objectSizes[key] = size;
+                _objectSizes[key] = size;
             }
 
             if (_lastAccessedTime != null)
