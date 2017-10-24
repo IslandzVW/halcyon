@@ -36,8 +36,6 @@ using System.Reflection;
 namespace OpenSim
 {
     using System;
-    using System.IO;
-    using System.Reflection;
    
     public class VersionInfo
     {
