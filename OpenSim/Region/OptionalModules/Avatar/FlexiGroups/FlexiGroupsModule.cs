@@ -228,7 +228,6 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             client.OnInstantMessage += OnInstantMessage;
 
             //client.OnRegionHandShakeReply += OnRegionHandShakeReply;
-//            SendAgentGroupDataUpdate(client, client.AgentId); // should NOT be called for child agents, so let logins handle this via IGroupsModule interface
         }
 
         /*private void OnRegionHandShakeReply(IClientAPI client)
@@ -806,7 +805,7 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
 
         private void OnCompleteMovementToRegion(ScenePresence SP)
         {
-            SendAgentGroupDataUpdate(SP.ControllingClient, SP.UUID);
+            // SendAgentGroupDataUpdate(SP.ControllingClient, SP.UUID);
         }
 
         #endregion
