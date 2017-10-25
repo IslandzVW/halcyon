@@ -472,43 +472,41 @@ namespace InWorldz.Data.Assets.Stratus
             return rawAsset;
         }
 
+        // Updated to allow a null to be passed for the stream so that we can add the asset to the cache before a write completes.
+        // (It may be called again with both once the write completes.)
         // Returns true if it added it to the cache
         private bool CacheAssetIfAppropriate(OpenMetaverse.UUID assetId, System.IO.MemoryStream stream, StratusAsset asset)
         {
             if (!Config.Settings.Instance.CFUseCache) return false;
-            if (stream.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE)
+            if ((stream != null) && (stream.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE))
             {
                 statBigStream++;
                 return false;
             }
             if (asset.Data.Length > Config.Constants.MAX_CACHEABLE_ASSET_SIZE)
             {
-                statBigAsset++;
+                if (stream == null) statBigAsset++; // only increment if this is the followup call
                 return false;
             }
 
             lock (_assetCache)
             {
-                if (!_assetCache.HasAsset(assetId))
+
+                //we do not yet have this asset. we need to make a determination if caching the stream
+                //or caching the asset would be more beneficial
+                if ((stream == null) || (stream.Length > Config.Constants.MAX_STREAM_CACHE_SIZE))
                 {
-                    //we do not yet have this asset. we need to make a determination if caching the stream
-                    //or caching the asset would be more beneficial
-                    if (stream.Length > Config.Constants.MAX_STREAM_CACHE_SIZE)
-                    {
-                        //asset is too big for caching the stream to have any theoretical benefit.
-                        //instead we cache the asset itself
-                        _assetCache.CacheAssetData(assetId, asset);
-                    }
-                    else
-                    {
-                        //caching the stream should make for faster retrival and collection
-                        _assetCache.CacheAssetData(assetId, stream);
-                    }
-                    return true;    // now cached, in one form or the other
+                    //asset is too big for caching the stream to have any theoretical benefit.
+                    //instead we cache the asset itself
+                    _assetCache.CacheAssetData(assetId, asset);
+                }
+                else
+                {
+                    //caching the stream should make for faster retrival and collection
+                    _assetCache.CacheAssetData(assetId, stream);
                 }
             }
-            statDupUpdate++;
-            return false;
+            return true;    // now cached, in one form or the other
         }
 
         private Dictionary<string, string> GetAssetMetadata(OpenMetaverse.UUID assetId, CloudFilesAssetWorker worker)
@@ -523,20 +521,10 @@ namespace InWorldz.Data.Assets.Stratus
             }
         }
 
-        public void StoreAsset(AssetBase asset)
+        private void StoreCFAsset(AssetBase asset, StratusAsset wireAsset)
         {
-            if (asset == null) throw new ArgumentNullException("asset cannot be null");
-            if (asset.FullID == OpenMetaverse.UUID.Zero) throw new ArgumentException("assets must not have a null ID");
-
             bool isRetry = false;
 
-            StratusAsset wireAsset = StratusAsset.FromAssetBase(asset);
-
-            //for now we're not going to use compression etc, so set to zero
-            wireAsset.StorageFlags = 0;
-
-            statTotal++;
-            statPut++;
             Util.Retry(2, new List<Type> { typeof(AssetAlreadyExistsException), typeof(UnrecoverableAssetServerException) }, () =>
             {
                 CloudFilesAssetWorker worker;
@@ -561,10 +549,7 @@ namespace InWorldz.Data.Assets.Stratus
 
                     using (assetStream = worker.StoreAsset(wireAsset))
                     {
-                        //cache the stored asset to eliminate roudtripping when
-                        //someone performs an upload
-                        if (this.CacheAssetIfAppropriate(asset.FullID, assetStream, wireAsset))
-                            statPutCached++;
+                        this.CacheAssetIfAppropriate(asset.FullID, assetStream, wireAsset);
                     }
                 }
                 catch (AssetAlreadyExistsException)
@@ -617,6 +602,31 @@ namespace InWorldz.Data.Assets.Stratus
                     _asyncAssetWorkers.ReturnObject(worker);
                 }
             });
+        }
+
+        public void StoreAsset(AssetBase asset)
+        {
+            if (asset == null) throw new ArgumentNullException("asset cannot be null");
+            if (asset.FullID == OpenMetaverse.UUID.Zero) throw new ArgumentException("assets must not have a null ID");
+
+            StratusAsset wireAsset = StratusAsset.FromAssetBase(asset);
+
+            //for now we're not going to use compression etc, so set to zero
+            wireAsset.StorageFlags = 0;
+
+            //attempt to cache the full (wire) asset in case the CF StoreAsset call takes a while or throws (or both)
+            // Call this with a null stream in order to pre-cache the asset before the StoreAsset delay.
+            // Makes the asset available immediately after upload in spite of CF write delays.
+            if (this.CacheAssetIfAppropriate(asset.FullID, null, wireAsset))
+            {
+                statPutCached++;
+            }
+
+            statTotal++;
+            statPut++;
+
+            // Now do the actual CF storage asychronously so as to not block the caller.
+            _threadPool.QueueWorkItem(() => StoreCFAsset(asset, wireAsset));
         }
 
         private static void ReportThrowStorageError(AssetBase asset, Exception e)

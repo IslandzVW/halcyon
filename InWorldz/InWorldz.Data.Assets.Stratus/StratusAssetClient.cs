@@ -283,7 +283,6 @@ namespace InWorldz.Data.Assets.Stratus
         //see IAssetReceiver
         public void AssetNotFound(OpenMetaverse.UUID assetID, AssetRequestInfo data)
         {
-            m_log.WarnFormat("[InWorldz.Stratus]: Asset not found {0}", assetID);
             this.HandleAssetCallback(assetID, data, null);
         }
 
