@@ -14685,20 +14685,22 @@ namespace InWorldz.Phlox.Engine
         /// <param name="lastname">Avatar last name</param>
         public void iwAvatarName2Key(string firstname, string lastname)
         {
-            const int LONG_DELAY = 5000;
+            const int LONG_DELAY = 1000;
             const int SHORT_DELAY = 100;
             int delay = LONG_DELAY;
+            UUID agentID = UUID.Zero;
 
             try
             {
-                UUID agentID = World.CommsManager.UserService.Name2Key(firstname, lastname);
-                if (agentID != UUID.Zero)
+                ScenePresence avatar = World.GetScenePresence(firstname, lastname);
+                if (avatar != null)
                 {
-                    // local avatars are cached lookups, so don't penalize if local
-                    ScenePresence avatar = World.GetScenePresence(agentID);
-                    if (avatar != null) 
-                        if (!avatar.IsChildAgent)   // just this region
-                            delay = SHORT_DELAY;    // see Mantis #2263
+                    agentID = avatar.UUID;
+                    delay = SHORT_DELAY;    // see Mantis #2263
+                }
+                else
+                {
+                    agentID = World.CommsManager.UserService.Name2Key(firstname, lastname);
                 }
                 m_ScriptEngine.SysReturn(this.m_itemID, agentID.ToString(), delay);
             }

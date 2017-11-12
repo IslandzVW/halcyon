@@ -5391,6 +5391,16 @@ namespace OpenSim.Region.Framework.Scenes
             return m_sceneGraph.GetScenePresences(filter);
         }
 
+        public ScenePresence GetScenePresence(string first, string last)
+        {
+            string name = first + " " + last;
+            ScenePresence avatar = null;
+            if (TryGetAvatarByName(name, out avatar))
+                return avatar;
+
+            return null;
+        }
+
         /// <summary>
         /// Request a scene presence by UUID
         /// </summary>
