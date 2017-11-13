@@ -14692,15 +14692,24 @@ namespace InWorldz.Phlox.Engine
 
             try
             {
-                ScenePresence avatar = World.GetScenePresence(firstname, lastname);
-                if (avatar != null)
+                if (!String.IsNullOrWhiteSpace(firstname))
                 {
-                    agentID = avatar.UUID;
-                    delay = SHORT_DELAY;    // see Mantis #2263
-                }
-                else
-                {
-                    agentID = World.CommsManager.UserService.Name2Key(firstname, lastname);
+                    if (String.IsNullOrWhiteSpace(lastname))
+                        lastname = "Resident";
+                    else
+                        lastname = lastname.Trim();
+                    firstname = firstname.Trim();
+
+                    ScenePresence avatar = World.GetScenePresence(firstname, lastname);
+                    if (avatar != null)
+                    {
+                        agentID = avatar.UUID;
+                        delay = SHORT_DELAY;    // see Mantis #2263
+                    }
+                    else
+                    {
+                        agentID = World.CommsManager.UserService.Name2Key(firstname, lastname);
+                    }
                 }
                 m_ScriptEngine.SysReturn(this.m_itemID, agentID.ToString(), delay);
             }
