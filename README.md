@@ -9,7 +9,7 @@ Halcyon was originally based on the OpenSimulator project but was forked in 2010
 
 ###### Latest release: [https://github.com/InWorldz/halcyon/releases](https://github.com/InWorldz/halcyon/releases)
 
-For building and installation instructions, please see the [Halcyon wiki](wiki).
+For building and installation instructions, please see the [Halcyon wiki](https://github.com/InWorldz/halcyon/wiki).
 
 InWorldz: [https://inworldz.com/](https://inworldz.com/)
 
