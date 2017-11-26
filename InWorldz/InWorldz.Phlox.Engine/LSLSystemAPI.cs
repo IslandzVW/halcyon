@@ -5968,8 +5968,8 @@ namespace InWorldz.Phlox.Engine
                     if (targetlandObj == null)
                         return;
 
-                    // if push disabled, script must be owned by the land owner.  That includes group-deeded land (script object must be deeded too).
-                    if (m_host.OwnerID == targetlandObj.landData.OwnerID)
+                    // if push disabled, script must be owned by the land owner.  That includes group-deeded land (script object must be deeded too).  It will also work if the script is owned by an estate owner or manager.
+                    if (m_host.OwnerID == targetlandObj.landData.OwnerID || World.IsEstateManager(m_host.OwnerID))
                     {
                         pushAllowed = true;
                     }
@@ -5987,8 +5987,8 @@ namespace InWorldz.Phlox.Engine
                         // Parcel push restriction
                         if ((targetlandObj.landData.Flags & (uint)ParcelFlags.RestrictPushObject) == (uint)ParcelFlags.RestrictPushObject)
                         {
-                            // if push disabled, script must be owned by the land owner.  That includes group-deeded land (script object must be deeded too).
-                            if (m_host.OwnerID == targetlandObj.landData.OwnerID)
+                            // if push disabled, script must be owned by the land owner.  That includes group-deeded land (script object must be deeded too).  It will also work if the script is owned by an estate owner or manager.
+                            if (m_host.OwnerID == targetlandObj.landData.OwnerID || World.IsEstateManager(m_host.OwnerID))
                             {
                                 pushAllowed = true;
                             }
