@@ -6,32 +6,35 @@ configuration: Release
 
 skip_commits:
   files:
-    - doc/*
-    - README.md
+  - doc/*
+  - README.md
+  - .gitignore
+  - LICENSE
 
 cache:
-    - packages -> **\packages.config
+- packages -> **\packages.config
+- '%LocalAppData%\NuGet\Cache'
 
 before_build:
-    - IF EXIST runprebuild.bat runprebuild.bat
-    - nuget restore Halcyon.sln
+- IF EXIST runprebuild.bat runprebuild.bat
+- nuget restore Halcyon.sln
 
 build:
-    parallel: true
-    verbosity: minimal
-    project: Halcyon.sln
+  parallel: true
+  verbosity: minimal
+  project: Halcyon.sln
 
 after_build:
-    - ps: |
-        If(Test-Path "bin/OpenSim.Framework.Servers.dll") {
-          $halcyon_version = (ls bin/OpenSim.Framework.Servers.dll | % versioninfo).ProductVersion
-          Update-AppveyorBuild -Version "0.$($halcyon_version.Substring(0, $halcyon_version.lastIndexOf('.')))-$env:APPVEYOR_BUILD_NUMBER"
-        }
-    - cmd: move bin halcyon
+- ps: |
+  If(Test-Path "bin/OpenSim.Framework.Servers.dll") {
+    $halcyon_version = (ls bin/OpenSim.Framework.Servers.dll | % versioninfo).ProductVersion
+    Update-AppveyorBuild -Version "0.$($halcyon_version.Substring(0, $halcyon_version.lastIndexOf('.')))-$env:APPVEYOR_BUILD_NUMBER"
+  }
+- cmd: move bin halcyon
 
 # No tests for now.
 test: off
 
 artifacts:
-    - path: halcyon
-      name: Halcyon-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH)-Windows
+- path: halcyon
+  name: Halcyon-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH)-Windows
