@@ -249,6 +249,7 @@ namespace OpenSim.Framework.Console
         {
             DoExpire();
 
+            var post = DecodePostString(request["body"].ToString());
             var reply = new Hashtable();
 
             reply["str_response_string"] = string.Empty;
@@ -292,12 +293,16 @@ namespace OpenSim.Framework.Console
             }
             else if (request.ContainsKey("USER") && request.ContainsKey("PASS"))
             {
-                string username = post["USER"].ToString();
-                string password = post["PASS"].ToString();
+                var username = post["USER"].ToString();
+                var password = post["PASS"].ToString();
 
                 // Validate the username/password pair
                 if (Util.AuthenticateAsSystemUser(username, password) == false)
+                {
+                    m_log.Warn($"Failure to authenticate for remote administration from {headers["remote_addr"]} as operating system user '{username}'");
+                    Thread.Sleep(2000);
                     return reply;
+                }
 
                 m_log.Warn($"[REMOTECONSOLE] StartSession access granted via legacy system username and password to '{username}' from '{headers["remote_addr"]}'.");
             }

@@ -191,9 +191,9 @@ namespace OpenSim.Framework
                 return false;
             #else
                 // Is the username the same as the logged in user and do they have the password correct?
-                PrincipalContext pc = new PrincipalContext(ContextType.Machine);
-                bool isValid =
-                    (username.Equals(System.Environment.UserName) &&
+                var pc = new PrincipalContext(ContextType.Machine);
+                var isValid =
+                    (username.Equals(Environment.UserName) &&
                     pc.ValidateCredentials(username, password));
 
                 return (isValid);

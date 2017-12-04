@@ -184,8 +184,8 @@ namespace InWorldz.RemoteAdmin
         private object SessionLoginWithPassword(IList args, IPEndPoint remoteClient)
         {
             UUID sessionId;
-            string username = (string)args[0];
-            string password = (string)args[1];
+            var username = (string)args[0];
+            var password = (string)args[1];
 
             // Is the username the same as the logged in user and do they have the password correct?
             if ( Util.AuthenticateAsSystemUser(username, password))
@@ -198,6 +198,8 @@ namespace InWorldz.RemoteAdmin
             }
             else
             {
+                m_log.Warn($"Failure to authenticate for remote administration from {remoteClient} as operating system user '{username}'");
+                System.Threading.Thread.Sleep(2000);
                 throw new Exception("Invalid Username or Password");
             }
 
