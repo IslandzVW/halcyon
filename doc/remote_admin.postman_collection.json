@@ -149,7 +149,7 @@
 					},
 					"response": [
 						{
-							"id": "93cce335-56d0-439d-ab2d-bc42247dcfc9",
+							"id": "16cb3a46-3e64-4cfb-8109-6b2b41e92074",
 							"name": "ExampleLogin",
 							"originalRequest": {
 								"url": "http://localhost:9991/xmlrpc/RemoteAdmin",
@@ -326,7 +326,7 @@
 					},
 					"response": [
 						{
-							"id": "b23f8b80-f983-49b0-961f-aeb97c83caa5",
+							"id": "f6ad291d-89cf-4d98-8d5e-7123e00c3a04",
 							"name": "ExampleLogin",
 							"originalRequest": {
 								"url": "http://localhost:9991/xmlrpc/RemoteAdmin",
@@ -503,7 +503,7 @@
 					},
 					"response": [
 						{
-							"id": "8b4e579b-c537-4ce8-a0f1-be7089e3813f",
+							"id": "b81ceaa7-5bb4-45e8-b404-c92e115787a4",
 							"name": "ExampleLogin",
 							"originalRequest": {
 								"url": "http://localhost:9991/xmlrpc/RemoteAdmin",
@@ -623,7 +623,7 @@
 					},
 					"response": [
 						{
-							"id": "74ee02e5-af9a-4c94-a06f-e7bb82b57017",
+							"id": "06b67a3f-de08-4f8e-861d-11e70f959a8b",
 							"name": "ExampleLogin",
 							"originalRequest": {
 								"url": "http://localhost:9991/xmlrpc/RemoteAdmin",
@@ -741,6 +741,26 @@
 					"response": []
 				},
 				{
+					"name": "XMLRPC Region Server Restart (active region, default timeout)",
+					"request": {
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.Restart</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
 					"name": "XMLRPC Region Server Restart (specified region, default timeout)",
 					"request": {
 						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
@@ -755,6 +775,66 @@
 						"body": {
 							"mode": "raw",
 							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.Restart</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param><!-- UUID of region on server. -->\n            <value><string>1337886a-bdd6-4b2e-bede-d3d3bb1184a9</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Region Server Shutdown (active region, default timeout)",
+					"request": {
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.Shutdown</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Region Server Shutdown (active region, 10 sec)",
+					"request": {
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.Shutdown</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param><!-- Time to wait until shut down, alerting users every minute. -->\n            <value><int>10</int><!-- seconds --></value>\n        </param>\n    </params>\n</methodCall>"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "XMLRPC Region Server Shutdown (specified region, default timeout)",
+					"request": {
+						"url": "{{PROTOCOL}}://{{REGION_URL}}:{{REGION_PORT}}/xmlrpc/RemoteAdmin",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\"?>\n<methodCall>\n    <methodName>Region.Shutdown</methodName>\n    <params>\n        <param>\n            <value><string>{{rpc_login_key}}</string></value>\n        </param>\n        <param><!-- UUID of region on server. -->\n            <value><string>1337886a-bdd6-4b2e-bede-d3d3bb1184a9</string></value>\n        </param>\n    </params>\n</methodCall>"
 						},
 						"description": ""
 					},
@@ -960,7 +1040,7 @@
 					},
 					"response": [
 						{
-							"id": "57dab8fe-5248-4c19-9bef-203317c22123",
+							"id": "e0c4ba39-dff3-4352-85de-779544774536",
 							"name": "ExampleLogin",
 							"originalRequest": {
 								"url": "http://localhost:9991/xmlrpc/RemoteAdmin",

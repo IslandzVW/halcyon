@@ -118,6 +118,8 @@ namespace InWorldz.RemoteAdmin
         private ulong countdownTimeEnd;
         private Scene rebootedScene;
         private Timer shutdownCounter;
+
+        // Region.Restart(string sessionid, optional string regionid = ACTIVE_REGION)
         private object RegionRestartHandler(IList args, IPEndPoint remoteClient)
         {
             m_admin.CheckSessionValid(new UUID((string)args[0]));
@@ -127,16 +129,41 @@ namespace InWorldz.RemoteAdmin
                 throw new Exception("remote shutdown already in progress");
             }
 
-            var regionID = new UUID(Convert.ToString(args[1]));
+            string regionIDInput = "";
 
-            if (!m_app.SceneManager.TryGetScene(regionID, out rebootedScene))
-                throw new Exception("region not found");
+            // Make the region ID optional.
+            regionIDInput = Convert.ToString(args[1]); // There's more in the args than what's passed, so this might not be the ID much less a UUID!.
 
-            countdownTimeEnd = 1; // Mark a shutdown in progress.
-            rebootedScene.Restart(30);
-            return true;
+            if (regionIDInput.Length > 0)
+            {
+                UUID regionID;
+                try
+                {
+                    regionID = new UUID(regionIDInput);
+                    if (!m_app.SceneManager.TryGetScene(regionID, out rebootedScene)) // It is a UUID, see if that's an active region.
+                        throw new Exception("region not found");
+                }
+                catch (FormatException) // Not a UUID, use the active region.
+                {
+                    rebootedScene = m_app.SceneManager.CurrentOrFirstScene;
+                }
+            }
+            else
+            {
+                rebootedScene = m_app.SceneManager.CurrentOrFirstScene;
+            }
+
+            if (rebootedScene != null)
+            {
+                countdownTimeEnd = 1; // Mark a shutdown in progress.
+                rebootedScene.Restart(30);
+                return true;
+            }
+
+            throw new Exception("no active region");
         }
 
+        // Region.Shutdown(string sessionid, optional string regionid, optional int delay)
         public object RegionShutdownHandler(IList args, IPEndPoint remoteClient)
         {
             m_admin.CheckSessionValid(new UUID((string)args[0]));
@@ -146,15 +173,47 @@ namespace InWorldz.RemoteAdmin
                 throw new Exception("remote shutdown already in progress");
             }
 
+            if (countdownTimeEnd > 0)
+            {
+                throw new Exception("remote shutdown already in progress");
+            }
+
+            string regionIDInput = "";
+            int delay = 30;
+
+            // Make the region ID and delay optional.  Though if both are sepcified they have to be in order of ID then delay.
+            // Note that there are always more entries in the args array than were sent.
+            if (args[1] is Int32) // Delay was provided.
+            {
+                delay = Math.Max(0, Convert.ToInt32(args[1]));
+                // And region ID is not expected.
+            }
+            else if (args[1] is String) // Region ID was provided.
+            {
+                regionIDInput = Convert.ToString(args[1]);
+
+                // Try for both entries.
+                if (args.Count >= 3 && args[2] is Int32)
+                {
+                    delay = Math.Max(0, Convert.ToInt32(args[2]));
+                }
+                // else Only the region ID was specified.
+            }
+
             try
             {
                 string message;
 
-                var regionID = new UUID(Convert.ToString(args[1]));
-                int delay = Math.Max(0, Convert.ToInt32(args[2]));
-
-                if (!m_app.SceneManager.TryGetScene(regionID, out rebootedScene))
-                    throw new Exception("Region not found");
+                if (regionIDInput.Length > 0)
+                {
+                    var regionID = new UUID(regionIDInput);
+                    if (!m_app.SceneManager.TryGetScene(regionID, out rebootedScene))
+                        throw new Exception("Region not found");
+                }
+                else
+                {
+                    rebootedScene = m_app.SceneManager.CurrentOrFirstScene;
+                }
 
                 message = GenerateShutdownMessage(delay);
 
