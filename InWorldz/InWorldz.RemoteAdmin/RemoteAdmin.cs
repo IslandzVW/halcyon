@@ -31,33 +31,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Xml;
 using System.Net;
-using System.Reflection;
 using System.Timers;
-
-using log4net;
-using Nini.Config;
-using Nwc.XmlRpc;
-
-using OpenMetaverse;
 using InWorldz.JWT;
-
-using OpenSim;
+using Nwc.XmlRpc;
+using OpenMetaverse;
 using OpenSim.Framework;
-using OpenSim.Framework.Communications;
-using OpenSim.Framework.Communications.Cache;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
-using OpenSim.Region.CoreModules.World.Terrain;
-using OpenSim.Region.Framework.Interfaces;
-using OpenSim.Region.Framework.Scenes;
 
 namespace InWorldz.RemoteAdmin
 {
     public class RemoteAdmin
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private Timer sessionTimer;
         private Dictionary<UUID, DateTime> m_activeSessions = 
@@ -132,15 +118,15 @@ namespace InWorldz.RemoteAdmin
 
         public XmlRpcResponse XmlRpcCommand(XmlRpcRequest request, IPEndPoint remoteClient)
         {
-            XmlRpcResponse response = new XmlRpcResponse();
-            Hashtable responseData = new Hashtable();
+            var response = new XmlRpcResponse();
+            var responseData = new Hashtable();
 
             try
             {
                 responseData["Status"] = "Success";
-                responseData["Value"] = String.Empty;
+                responseData["Value"] = string.Empty;
 
-                XmlMethodHandler handler = LookupCommand(request.MethodNameObject, request.MethodNameMethod);
+                var handler = LookupCommand(request.MethodNameObject, request.MethodNameMethod);
 
                 if (handler != null)
                 {
@@ -152,7 +138,7 @@ namespace InWorldz.RemoteAdmin
                     // Code set in accordance with http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php
                     response.SetFault(
                         XmlRpcErrorCodes.SERVER_ERROR_METHOD,
-                        String.Format("Requested method [{0}] not found", request.MethodNameObject + "." + request.MethodNameMethod));
+                        string.Format("Requested method [{0}] not found", request.MethodNameObject + "." + request.MethodNameMethod));
                 }
             }
             catch (Exception e)
@@ -178,17 +164,17 @@ namespace InWorldz.RemoteAdmin
         // If a session has been inactive for 10 minutes, time it out.
         private void sessionTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            List<UUID> expiredSessions = new List<UUID>();
+            var expiredSessions = new List<UUID>();
 
             lock (m_activeSessions)
             {
-                foreach (UUID key in m_activeSessions.Keys)
+                foreach (var key in m_activeSessions.Keys)
                 {
                     if ((DateTime.Now - m_activeSessions[key]) > TimeSpan.FromMinutes(10))
                         expiredSessions.Add(key);
                 }
 
-                foreach (UUID key in expiredSessions)
+                foreach (var key in expiredSessions)
                 {
                     m_activeSessions.Remove(key);
                 }
@@ -227,33 +213,29 @@ namespace InWorldz.RemoteAdmin
             {
                 throw new Exception("Invalid Token Scope");
             }
-            else
+
+            lock (m_activeSessions)
             {
-                lock (m_activeSessions)
-                {
-                    sessionId = UUID.Random();
-                    m_activeSessions.Add(sessionId, DateTime.Now);
-                }
+                sessionId = UUID.Random();
+                m_activeSessions.Add(sessionId, DateTime.Now);
             }
 
-            return (sessionId.ToString());
+            return sessionId.ToString();
         }
 
         private object SessionLogout(IList args, IPEndPoint remoteClient)
         {
-            UUID sessionId = new UUID((string)args[0]);
+            var sessionId = new UUID((string)args[0]);
 
             lock (m_activeSessions)
             {
                 if (m_activeSessions.ContainsKey(sessionId))
                 {
                     m_activeSessions.Remove(sessionId);
-                    return (true);
+                    return true;
                 }
-                else
-                {
-                    return (false);
-                }
+
+                return false;
             }
         }
 
@@ -261,9 +243,9 @@ namespace InWorldz.RemoteAdmin
         {
             CheckSessionValid(new UUID((string)args[0]));
 
-            string command = (string)args[1];
+            var command = (string)args[1];
             MainConsole.Instance.RunCommand(command);
-            return String.Empty;
+            return string.Empty;
         }
 
         public void Dispose()
