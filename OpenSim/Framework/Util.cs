@@ -452,10 +452,11 @@ namespace OpenSim.Framework
             }
 
             // Windows 2000 / Pre-SP2 XP
-            if (Environment.OSVersion.Version.Major == 5 &&
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT &&
+                Environment.OSVersion.Version.Major == 5 &&
                 Environment.OSVersion.Version.Minor == 0)
             {
-                reason = "Please update to Windows XP Service Pack 2 or Halcyon";
+                reason = "Please update to Windows XP Service Pack 2 or newer OS";
                 return false;
             }
 
