@@ -625,8 +625,15 @@ namespace InWorldz.Data.Assets.Stratus
             statTotal++;
             statPut++;
 
-            // Now do the actual CF storage asychronously so as to not block the caller.
-            _threadPool.QueueWorkItem(() => StoreCFAsset(asset, wireAsset));
+            if (Config.Settings.Instance.UseAsyncStore)
+            {
+                // Now do the actual CF storage asychronously so as to not block the caller.
+                _threadPool.QueueWorkItem(() => StoreCFAsset(asset, wireAsset));
+            } else
+            {
+                // This is a blocking write, session/caller will be blocked awaiting completion.
+                StoreCFAsset(asset, wireAsset);
+            }
         }
 
         private static void ReportThrowStorageError(AssetBase asset, Exception e)
