@@ -64,6 +64,7 @@ namespace InWorldz.Data.Assets.Stratus.Config
         public int CFCacheSize { get; set; }
         public bool DisableWritebackCache { get; set; }
         public bool EnableCFOverwrite { get; set; }
+        public bool UseAsyncStore { get; set; }
 
         //Settings that are for use during unit tests only
         public bool UnitTest_ThrowTimeout { get; set; }
