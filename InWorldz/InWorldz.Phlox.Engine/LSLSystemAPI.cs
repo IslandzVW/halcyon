@@ -14728,7 +14728,7 @@ namespace InWorldz.Phlox.Engine
         public void iwMakeNotecard(string notecardName, LSL_List contents)
         {
             const int DELAY = 5000;
-            const int MAX_LENGTH = 16384;
+            const int MAX_LENGTH = 65536;   // 64K characters (including newlines)
 
             try
             {
