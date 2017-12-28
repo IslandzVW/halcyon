@@ -385,6 +385,7 @@ namespace OpenSim.Region.CoreModules.Scripting.HttpRequest
                     }
                     else
                     {
+                        DecrementObjectQueue(sogId);
                         return UUID.Zero;
                     }
                 }
