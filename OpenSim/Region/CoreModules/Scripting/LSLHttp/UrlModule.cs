@@ -169,6 +169,8 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             string uri = "/lslhttp/" + urlcode.ToString() + "/";
             m_HttpServer.AddStreamHandler(new AsyncRequestHandler("POST", uri, AsyncHttpRequest, "HTTP-IN-POST", "Http In Request Handler (Asynch)"));
             m_HttpServer.AddStreamHandler(new AsyncRequestHandler("GET", uri, AsyncHttpRequest,  "HTTP-IN-GET", "Http In Request Handler (Asynch)")); 
+            m_HttpServer.AddStreamHandler(new AsyncRequestHandler("PUT", uri, AsyncHttpRequest,  "HTTP-IN-PUT", "Http In Request Handler (Asynch)")); 
+            m_HttpServer.AddStreamHandler(new AsyncRequestHandler("DELETE", uri, AsyncHttpRequest,  "HTTP-IN-DELETE", "Http In Request Handler (Asynch)")); 
 
             engine.PostScriptEvent(itemID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_GRANTED", url });
 
@@ -210,8 +212,10 @@ namespace OpenSim.Region.CoreModules.Scripting.LSLHttp
             }
 
             string uri = "/lslhttps/" + urlcode.ToString() + "/";
-            m_HttpServer.AddStreamHandler(new AsyncRequestHandler("POST", uri, AsyncHttpRequest));
-            m_HttpServer.AddStreamHandler(new AsyncRequestHandler("GET", uri, AsyncHttpRequest));
+            m_HttpServer.AddStreamHandler(new AsyncRequestHandler("POST", uri, AsyncHttpRequest, "HTTP-IN-POST", "Http In Request Handler (Asynch)"));
+            m_HttpServer.AddStreamHandler(new AsyncRequestHandler("GET", uri, AsyncHttpRequest, "HTTP-IN-GET", "Http In Request Handler (Asynch)"));
+            m_HttpServer.AddStreamHandler(new AsyncRequestHandler("PUT", uri, AsyncHttpRequest,  "HTTP-IN-PUT", "Http In Request Handler (Asynch)")); 
+            m_HttpServer.AddStreamHandler(new AsyncRequestHandler("DELETE", uri, AsyncHttpRequest,  "HTTP-IN-DELETE", "Http In Request Handler (Asynch)")); 
 
             engine.PostScriptEvent(itemID, "http_request", new Object[] { urlcode.ToString(), "URL_REQUEST_GRANTED", url });
 
