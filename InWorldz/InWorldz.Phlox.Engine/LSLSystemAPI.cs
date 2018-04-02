@@ -10261,11 +10261,14 @@ namespace InWorldz.Phlox.Engine
                         face = rules.GetLSLIntegerItem(idx++);
 
                         string specular_tex = rules.Data[idx++].ToString();
+                        if (specular_tex == "")
+                            specular_tex = UUID.Zero.ToString();
+
                         UUID SpecularTextureID = InventoryKey(specular_tex, (int)AssetType.Texture);
                         if (SpecularTextureID == UUID.Zero)
                             UUID.TryParse(specular_tex, out SpecularTextureID);
-                        if (SpecularTextureID == UUID.Zero)
-                            return;
+
+                        // UUID.Zero is valid.  It means to clear the specular settings.
                         specular_tex = SpecularTextureID.ToString();
 
                         LSL_Vector specular_repeats = rules.GetVector3Item(idx++);
@@ -10305,11 +10308,14 @@ namespace InWorldz.Phlox.Engine
                         face = rules.GetLSLIntegerItem(idx++);
 
                         string normal_tex = rules.Data[idx++].ToString();
+                        if (normal_tex == "")
+                            normal_tex = UUID.Zero.ToString();
+
                         UUID NormaLTextureID = InventoryKey(normal_tex, (int)AssetType.Texture);
                         if (NormaLTextureID == UUID.Zero)
                             UUID.TryParse(normal_tex, out NormaLTextureID);
-                        if (NormaLTextureID == UUID.Zero)
-                            return;
+
+                        // UUID.Zero is valid.  It means to clear the normal settings.
                         normal_tex = NormaLTextureID.ToString();
 
                         LSL_Vector normal_repeats = rules.GetVector3Item(idx++);
