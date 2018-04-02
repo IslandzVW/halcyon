@@ -37,7 +37,7 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.FrameworkTests
 {
-    internal class SceneUtil
+    public class SceneUtil
     {
         private readonly static Random rand = new Random();
 
