@@ -11880,6 +11880,11 @@ namespace InWorldz.Phlox.Engine
                         break;
 
                     case ScriptBaseClass.PRIM_MEDIA_WHITELIST:
+                        if (me.WhiteList == null)
+                        {
+                            res.Add("");
+                            break;
+                        }
                         string[] urls = (string[])me.WhiteList.Clone();
 
                         for (int j = 0; j < urls.Length; j++)
