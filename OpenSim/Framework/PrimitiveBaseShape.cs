@@ -1358,7 +1358,7 @@ namespace OpenSim.Framework
                 newEntry.InteractPermissions = entry.InteractPermissions;
                 newEntry.Width = entry.Width;
                 if (entry.WhiteList != null)
-                    entry.WhiteList.CopyTo(newEntry.WhiteList, 0);
+                    newEntry.WhiteList = (string[])entry.WhiteList.Clone();
                 else
                     entry.WhiteList = null;
                 newEntry.Width = entry.Width;
