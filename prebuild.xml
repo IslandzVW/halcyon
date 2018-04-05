@@ -1870,6 +1870,7 @@
       <Reference name="System.Data.SQLite" path="../../bin/"/>
       <Reference name="SmartThreadPool"/>
       <Reference name="nunit.framework" path="../../bin/"/>
+      <Reference name="OpenSim.Region.FrameworkTests"/>
       <Files>
         <Match buildAction="EmbeddedResource" path="Resources" pattern="*.addin.xml" recurse="true"/>
         <Match path="Tests" pattern="*.cs" recurse="true"/>
