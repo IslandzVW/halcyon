@@ -4817,6 +4817,11 @@ namespace OpenSim.Region.Framework.Scenes
         public void RequestTeleportToLocation(ScenePresence avatar, ulong regionHandle, Vector3 position,
                                                       Vector3 lookAt, OpenMetaverse.TeleportFlags teleportFlags)
         {
+            if (avatar.IsInTransit || avatar.IsChildAgent)
+            {
+                m_log.DebugFormat("[SCENE COMMUNICATION SERVICE]: RequestTeleportToLocation cannot teleport {0} [{1}], not in region.", avatar.Name, avatar.UUID);
+                return;
+            }
             if (!Permissions.CanTeleport(avatar.UUID))
                 return;
 
@@ -4993,12 +4998,14 @@ namespace OpenSim.Region.Framework.Scenes
                         message.AppendLine(ex.Message);
                     }
 
-                    avatar.ControllingClient.SendTeleportFailed(message.ToString());
+                    if (avatar.ControllingClient != null) // null if the avatar is already in transit/gone
+                        avatar.ControllingClient.SendTeleportFailed(message.ToString());
                 }
                 catch (Exception e)
                 {
                     m_log.ErrorFormat("[SCENE]: Teleport failed for {0} {1}", avatar.Name, e);
-                    avatar.ControllingClient.SendTeleportFailed(e.Message);
+                    if (avatar.ControllingClient != null) // null if the avatar is already in transit/gone
+                        avatar.ControllingClient.SendTeleportFailed(e.Message);
                 }
             }
         }
@@ -5382,6 +5389,16 @@ namespace OpenSim.Region.Framework.Scenes
         public List<ScenePresence> GetScenePresences(FilterAvatarList filter)
         {
             return m_sceneGraph.GetScenePresences(filter);
+        }
+
+        public ScenePresence GetScenePresence(string first, string last)
+        {
+            string name = first + " " + last;
+            ScenePresence avatar = null;
+            if (TryGetAvatarByName(name, out avatar))
+                return avatar;
+
+            return null;
         }
 
         /// <summary>

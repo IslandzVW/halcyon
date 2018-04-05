@@ -1532,13 +1532,16 @@ namespace OpenSim.Region.Framework.Scenes
         public void CompleteMovement()
         {
             int completeMovementStart = Environment.TickCount;
-            this.AgentInRegion = AgentInRegionFlags.None;
+            m_log.InfoFormat("[SCENE PRESENCE]: CompleteMovement received for {0} ({1}) in region {2} status={3}",
+                UUID.ToString(), Name, Scene.RegionInfo.RegionName, (uint)this.AgentInRegion);
+            DumpDebug("CompleteMovement", "n/a");
+
+            if (this.AgentInRegion != AgentInRegionFlags.None)
+                return; // Duplicate parallel request? Avoid duplicate online notifications and other problems.
+
+            // this.AgentInRegion is initialized to AgentInRegionFlags.None
             try
             {
-                m_log.InfoFormat("[SCENE PRESENCE]: CompleteMovement received for {0} ({1}) in region {2} status={3}", 
-                    UUID.ToString(), Name, Scene.RegionInfo.RegionName, (uint)this.AgentInRegion);
-                DumpDebug("CompleteMovement", "n/a");
-
                 Vector3 look = Velocity;
                 if (m_isChildAgent)
                 {

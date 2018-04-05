@@ -26,20 +26,14 @@
  */
 
 using System;
-using System.Xml;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-using OpenMetaverse;
-using Nini.Config;
+using System.Xml;
 using InWorldz.JWT;
-using OpenSim.Framework;
+using Nini.Config;
+using OpenMetaverse;
 using OpenSim.Framework.Servers.HttpServer;
-using log4net;
 
 namespace OpenSim.Framework.Console
 {
@@ -48,14 +42,14 @@ namespace OpenSim.Framework.Console
         public int last;
         public long lastLineSeen;
         public bool newConnection = true;
-        public AsyncHttpRequest request = null;
+        public AsyncHttpRequest request;
     }
 
     // A console that uses REST interfaces
     //
     public class RemoteConsole : CommandConsole
     {
-        private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog m_log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private IHttpServer m_Server;
         private IConfigSource m_Config;
@@ -108,7 +102,7 @@ namespace OpenSim.Framework.Console
 
         internal void ResponseReady()
         {
-            List<AsyncHttpRequest> requests = new List<AsyncHttpRequest>();
+            var requests = new List<AsyncHttpRequest>();
 
             lock (m_Connections)
             {
@@ -136,7 +130,7 @@ namespace OpenSim.Framework.Console
                 while (m_Scrollback.Count >= 1000)
                     m_Scrollback.RemoveAt(0);
                 m_LineNumber++;
-                m_Scrollback.Add(String.Format("{0}", m_LineNumber) + ":" + level + ":" + text);
+                m_Scrollback.Add(string.Format("{0}", m_LineNumber) + ":" + level + ":" + text);
             }
 
             FireOnOutput(text.Trim());
@@ -165,7 +159,7 @@ namespace OpenSim.Framework.Console
                 if (m_InputData.Count == 0)
                 {
                     m_DataEvent.Reset();
-                    return String.Empty;
+                    return string.Empty;
                 }
 
                 cmdinput = m_InputData[0];
@@ -188,7 +182,7 @@ namespace OpenSim.Framework.Console
                         if (cmd[i].Contains(" "))
                             cmd[i] = "\"" + cmd[i] + "\"";
                     }
-                    return String.Empty;
+                    return string.Empty;
                 }
             }
             return cmdinput;
@@ -221,20 +215,20 @@ namespace OpenSim.Framework.Console
 
         private void DoExpire()
         {
-            List<UUID> expired = new List<UUID>();
-            List<AsyncHttpRequest> requests = new List<AsyncHttpRequest>();
+            var expired = new List<UUID>();
+            var requests = new List<AsyncHttpRequest>();
 
             lock (m_Connections)
             {
-                foreach (KeyValuePair<UUID, ConsoleConnection> kvp in m_Connections)
+                foreach (var kvp in m_Connections)
                 {
-                    if (System.Environment.TickCount - kvp.Value.last > 500000)
+                    if (Environment.TickCount - kvp.Value.last > 500000)
                         expired.Add(kvp.Key);
                 }
 
-                foreach (UUID id in expired)
+                foreach (var id in expired)
                 {
-                    ConsoleConnection connection = m_Connections[id];
+                    var connection = m_Connections[id];
                     m_Connections.Remove(id);
                     CloseConnection(id);
                     if (connection.request != null)
@@ -245,7 +239,7 @@ namespace OpenSim.Framework.Console
                 }
             }
 
-            foreach (AsyncHttpRequest request in requests)
+            foreach (var request in requests)
             {
                 request.SendResponse(ProcessEvents(request));
             }
@@ -255,10 +249,10 @@ namespace OpenSim.Framework.Console
         {
             DoExpire();
 
-            Hashtable post = DecodePostString(request["body"].ToString());
-            Hashtable reply = new Hashtable();
+            var post = DecodePostString(request["body"].ToString());
+            var reply = new Hashtable();
 
-            reply["str_response_string"] = String.Empty;
+            reply["str_response_string"] = string.Empty;
             reply["int_response_code"] = 401;
             reply["content_type"] = "text/plain";
 
@@ -299,12 +293,16 @@ namespace OpenSim.Framework.Console
             }
             else if (request.ContainsKey("USER") && request.ContainsKey("PASS"))
             {
-                string username = post["USER"].ToString();
-                string password = post["PASS"].ToString();
+                var username = post["USER"].ToString();
+                var password = post["PASS"].ToString();
 
                 // Validate the username/password pair
                 if (Util.AuthenticateAsSystemUser(username, password) == false)
+                {
+                    m_log.Warn($"Failure to authenticate for remote administration from {headers["remote_addr"]} as operating system user '{username}'");
+                    Thread.Sleep(2000);
                     return reply;
+                }
 
                 m_log.Warn($"[REMOTECONSOLE] StartSession access granted via legacy system username and password to '{username}' from '{headers["remote_addr"]}'.");
             }
@@ -313,38 +311,38 @@ namespace OpenSim.Framework.Console
                 return reply;
             }
 
-            ConsoleConnection c = new ConsoleConnection();
-            c.last = System.Environment.TickCount;
+            var c = new ConsoleConnection();
+            c.last = Environment.TickCount;
             c.lastLineSeen = 0;
 
-            UUID sessionID = UUID.Random();
+            var sessionID = UUID.Random();
 
             lock (m_Connections)
             {
                 m_Connections[sessionID] = c;
             }
 
-            string uri = "/ReadResponses/" + sessionID.ToString() + "/";
-            IRequestHandler handler = new AsyncRequestHandler("POST", uri, AsyncReadResponses);
+            var uri = "/ReadResponses/" + sessionID + "/";
+            var handler = new AsyncRequestHandler("POST", uri, AsyncReadResponses);
             m_Server.AddStreamHandler(handler);
 
-            XmlDocument xmldoc = new XmlDocument();
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, String.Empty, String.Empty);
+            var xmldoc = new XmlDocument();
+            var xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, string.Empty, string.Empty);
 
             xmldoc.AppendChild(xmlnode);
-            XmlElement rootElement = xmldoc.CreateElement(String.Empty, "ConsoleSession", String.Empty);
+            var rootElement = xmldoc.CreateElement(string.Empty, "ConsoleSession", string.Empty);
 
             xmldoc.AppendChild(rootElement);
 
-            XmlElement id = xmldoc.CreateElement(String.Empty, "SessionID", String.Empty);
+            var id = xmldoc.CreateElement(string.Empty, "SessionID", string.Empty);
             id.AppendChild(xmldoc.CreateTextNode(sessionID.ToString()));
 
             rootElement.AppendChild(id);
 
-            XmlElement prompt = xmldoc.CreateElement(String.Empty, "Prompt", String.Empty);
-            prompt.AppendChild(xmldoc.CreateTextNode(DefaultPrompt));
+            var promptEl = xmldoc.CreateElement(string.Empty, "Prompt", string.Empty);
+            promptEl.AppendChild(xmldoc.CreateTextNode(DefaultPrompt));
 
-            rootElement.AppendChild(prompt);
+            rootElement.AppendChild(promptEl);
 
             rootElement.AppendChild(MainConsole.Instance.Commands.GetXml(xmldoc));
 
@@ -360,10 +358,10 @@ namespace OpenSim.Framework.Console
         {
             DoExpire();
 
-            Hashtable post = DecodePostString(request["body"].ToString());
-            Hashtable reply = new Hashtable();
+            var post = DecodePostString(request["body"].ToString());
+            var reply = new Hashtable();
 
-            reply["str_response_string"] = String.Empty;
+            reply["str_response_string"] = string.Empty;
             reply["int_response_code"] = 404;
             reply["content_type"] = "text/plain";
 
@@ -433,15 +431,15 @@ namespace OpenSim.Framework.Console
                 }
             }
 
-            XmlDocument xmldoc = new XmlDocument();
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, String.Empty, String.Empty);
+            var xmldoc = new XmlDocument();
+            var xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, string.Empty, string.Empty);
 
             xmldoc.AppendChild(xmlnode);
-            XmlElement rootElement = xmldoc.CreateElement(String.Empty, "ConsoleSession", String.Empty);
+            var rootElement = xmldoc.CreateElement(string.Empty, "ConsoleSession", string.Empty);
 
             xmldoc.AppendChild(rootElement);
 
-            XmlElement res = xmldoc.CreateElement(String.Empty, "Result", String.Empty);
+            var res = xmldoc.CreateElement(string.Empty, "Result", string.Empty);
             res.AppendChild(xmldoc.CreateTextNode("OK"));
 
             rootElement.AppendChild(res);
@@ -460,10 +458,10 @@ namespace OpenSim.Framework.Console
         {
             DoExpire();
 
-            Hashtable post = DecodePostString(request["body"].ToString());
-            Hashtable reply = new Hashtable();
+            var post = DecodePostString(request["body"].ToString());
+            var reply = new Hashtable();
 
-            reply["str_response_string"] = String.Empty;
+            reply["str_response_string"] = string.Empty;
             reply["int_response_code"] = 404;
             reply["content_type"] = "text/plain";
 
@@ -531,15 +529,15 @@ namespace OpenSim.Framework.Console
                 m_InputData.Add(post["COMMAND"].ToString());
             }
 
-            XmlDocument xmldoc = new XmlDocument();
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, String.Empty, String.Empty);
+            var xmldoc = new XmlDocument();
+            var xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, string.Empty, string.Empty);
 
             xmldoc.AppendChild(xmlnode);
-            XmlElement rootElement = xmldoc.CreateElement(String.Empty, "ConsoleSession", String.Empty);
+            var rootElement = xmldoc.CreateElement(string.Empty, "ConsoleSession", string.Empty);
 
             xmldoc.AppendChild(rootElement);
 
-            XmlElement res = xmldoc.CreateElement(String.Empty, "Result", String.Empty);
+            var res = xmldoc.CreateElement(string.Empty, "Result", string.Empty);
             res.AppendChild(xmldoc.CreateTextNode("OK"));
 
             rootElement.AppendChild(res);
@@ -554,7 +552,7 @@ namespace OpenSim.Framework.Console
 
         private Hashtable DecodePostString(string data)
         {
-            Hashtable result = new Hashtable();
+            var result = new Hashtable();
 
             string[] terms = data.Split(new char[] { '&' });
 
@@ -565,7 +563,7 @@ namespace OpenSim.Framework.Console
                     continue;
 
                 string name = System.Web.HttpUtility.UrlDecode(elems[0]);
-                string value = String.Empty;
+                string value = string.Empty;
 
                 if (elems.Length > 1)
                     value = System.Web.HttpUtility.UrlDecode(elems[1]);
@@ -580,19 +578,21 @@ namespace OpenSim.Framework.Console
         {
             try
             {
-                string uri = "/ReadResponses/" + id.ToString() + "/";
+                string uri = "/ReadResponses/" + id + "/";
                 m_Server.RemoveStreamHandler("POST", uri);
             }
+#pragma warning disable RECS0022 // A catch clause that catches System.Exception and has an empty body
             catch (Exception)
             {
             }
+#pragma warning restore RECS0022 // A catch clause that catches System.Exception and has an empty body
         }
 
         public void AsyncReadResponses(IHttpServer server, string path, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
-            int pos1 = path.IndexOf("/");               // /ReadResponses
-            int pos2 = path.IndexOf("/", pos1 + 1);     // /ReadResponses/
-            int pos3 = path.IndexOf("/", pos2 + 1);     // /ReadResponses/<UUID>/
+            int pos1 = path.IndexOf("/", StringComparison.InvariantCulture);               // /ReadResponses
+            int pos2 = path.IndexOf("/", pos1 + 1, StringComparison.InvariantCulture);     // /ReadResponses/
+            int pos3 = path.IndexOf("/", pos2 + 1, StringComparison.InvariantCulture);     // /ReadResponses/<UUID>/
             int len = pos3 - pos2 - 1;
             string uri_tmp = path.Substring(pos2 + 1, len);
 
@@ -642,8 +642,7 @@ namespace OpenSim.Framework.Console
                 return;
 
             // Create the new request
-            AsyncHttpRequest newRequest = 
-                new AsyncHttpRequest(server, httpRequest, httpResponse, sessionID, TimeoutHandler, 60 * 1000);
+            var newRequest = new AsyncHttpRequest(server, httpRequest, httpResponse, sessionID, TimeoutHandler, 60 * 1000);
             AsyncHttpRequest currentRequest = null;
 
             lock (m_Connections)
@@ -683,13 +682,15 @@ namespace OpenSim.Framework.Console
 
         private Hashtable ProcessEvents(AsyncHttpRequest pRequest)
         {
-            UUID sessionID = pRequest.AgentID;
+            var sessionID = pRequest.AgentID;
 
             // Is there data to send back?  Then send it.
             if (HasEvents(pRequest.RequestID, sessionID))
+            {
                 return (GetEvents(pRequest.RequestID, sessionID));
-            else
-                return (NoEvents(pRequest.RequestID, sessionID));
+            }
+
+            return (NoEvents(pRequest.RequestID, sessionID));
         }
 
         private bool HasEvents(UUID RequestID, UUID sessionID)
@@ -702,11 +703,9 @@ namespace OpenSim.Framework.Console
                     return false;
                 c = m_Connections[sessionID];
             }
-            c.last = System.Environment.TickCount;
-            if (c.lastLineSeen < m_LineNumber)
-                return true;
+            c.last = Environment.TickCount;
 
-            return false;
+            return c.lastLineSeen < m_LineNumber;
         }
 
         private Hashtable GetEvents(UUID RequestID, UUID sessionID)
@@ -716,21 +715,25 @@ namespace OpenSim.Framework.Console
             lock (m_Connections)
             {
                 if (!m_Connections.ContainsKey(sessionID))
+                {
                     return NoEvents(RequestID, UUID.Zero);
+                }
                 c = m_Connections[sessionID];
             }
 
-            c.last = System.Environment.TickCount;
+            c.last = Environment.TickCount;
             if (c.lastLineSeen >= m_LineNumber)
+            {
                 return NoEvents(RequestID, UUID.Zero);
+            }
 
-            Hashtable result = new Hashtable();
+            var result = new Hashtable();
 
-            XmlDocument xmldoc = new XmlDocument();
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, String.Empty, String.Empty);
+            var xmldoc = new XmlDocument();
+            var xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration, string.Empty, string.Empty);
 
             xmldoc.AppendChild(xmlnode);
-            XmlElement rootElement = xmldoc.CreateElement(String.Empty, "ConsoleSession", String.Empty);
+            var rootElement = xmldoc.CreateElement(string.Empty, "ConsoleSession", string.Empty);
 
             if (c.newConnection)
             {
@@ -747,7 +750,7 @@ namespace OpenSim.Framework.Console
 
                 for (long i = sendStart; i < m_LineNumber; i++)
                 {
-                    XmlElement res = xmldoc.CreateElement(String.Empty, "Line", String.Empty);
+                    var res = xmldoc.CreateElement(string.Empty, "Line", string.Empty);
                     long line = i + 1;
                     res.SetAttribute("Number", line.ToString());
                     res.AppendChild(xmldoc.CreateTextNode(m_Scrollback[(int)(i - startLine)]));
@@ -772,13 +775,13 @@ namespace OpenSim.Framework.Console
 
         private Hashtable NoEvents(UUID RequestID, UUID id)
         {
-            Hashtable result = new Hashtable();
+            var result = new Hashtable();
 
-            XmlDocument xmldoc = new XmlDocument();
-            XmlNode xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,  String.Empty, String.Empty);
+            var xmldoc = new XmlDocument();
+            var xmlnode = xmldoc.CreateNode(XmlNodeType.XmlDeclaration,  string.Empty, string.Empty);
 
             xmldoc.AppendChild(xmlnode);
-            XmlElement rootElement = xmldoc.CreateElement(String.Empty, "ConsoleSession", String.Empty);
+            var rootElement = xmldoc.CreateElement(string.Empty, "ConsoleSession", string.Empty);
 
             xmldoc.AppendChild(rootElement);
 

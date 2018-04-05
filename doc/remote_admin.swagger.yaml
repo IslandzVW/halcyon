@@ -265,18 +265,39 @@ paths:
 # * session.login_with_password(string username, string password)
 # * session.logout(string sessionID)
 # * Console.Command(string sessionID, string command)
+
 ### Region methods:
-# * Region.SendAlert(string sessionID, string regionName, string message)
-# * Region.Restart(string sessionID, string regionUUID) - restarts in 30 seconds.
-# * Region.Shutdown(string sessionid, string regionUUID, int delayInSeconds)
-# * Region.Backup(string sessionid, string regionName, string fileName, boolean storeAssets)
-# * Region.Restore(string sessionid, string regionName, string fileName, boolean allowUserReassignment, boolean skipErrorGroups)
-# * Region.SaveOAR(string sessionid, string regionName, string fileName, boolean storeAssets)
-# * Region.LoadOAR(string sessionid, string regionName, string fileName, boolean allowUserReassignment, boolean skipErrorGroups)
-# * Region.ChangeParcelFlags(string sessionid, string regionName, string enable["","enable"], int mask)
+# * Region.SendAlert(string sessionID, string message) - send on active region.
+# * Region.SendAlert(string sessionID, string regionName, string message) - send on specified region.
+
+# * Region.Restart(string sessionID) - restarts active region in 30 seconds.
+# * Region.Restart(string sessionID, string regionUUID) - restarts specified region on server in 30 seconds.
+
+# * Region.Shutdown(string sessionid) - shutdown active region in 30 seconds.
+# * Region.Shutdown(string sessionid, int delayInSeconds) - shutdown active region.
+# * Region.Shutdown(string sessionid, string regionUUID) - shutdown specified region on server region in 30 seconds.
+# * Region.Shutdown(string sessionid, string regionUUID, int delayInSeconds) - shutdown specified region on server region.
+
+# * Region.Backup(string sessionid, string fileName, boolean storeAssets) - backup active region.
+# * Region.Backup(string sessionid, string regionName, string fileName, boolean storeAssets) - backup specified region.
+
+# * Region.Restore(string sessionid, string fileName, boolean allowUserReassignment, boolean skipErrorGroups) - restore active region.
+# * Region.Restore(string sessionid, string regionName, string fileName, boolean allowUserReassignment, boolean skipErrorGroups) - restore specified region.
+
+# * Region.SaveOAR(string sessionid, string fileName, boolean storeAssets) - save from active region.
+# * Region.SaveOAR(string sessionid, string regionName, string fileName, boolean storeAssets) - save from specified region.
+
+# * Region.LoadOAR(string sessionid, string fileName, boolean allowUserReassignment, boolean skipErrorGroups) - load into active region.
+# * Region.LoadOAR(string sessionid, string regionName, string fileName, boolean allowUserReassignment, boolean skipErrorGroups) - load into specified region.
+
+# * Region.ChangeParcelFlags(string sessionid, string enable["","enable"], int mask) - change flags for parcel on active region.
+# * Region.ChangeParcelFlags(string sessionid, string regionName, string enable["","enable"], int mask) - change flags for parcel on specified region.
+
 ### Grid server methods
 # * GridService.Shutdown(string sessionid, int delayInSeconds)
+
 ### Messaging server methods
 # * MessagingService.Shutdown(string sessionid, int delayInSeconds)
+
 ### User server methods
 # * UserService.Shutdown(string sessionid, int delayInSeconds)

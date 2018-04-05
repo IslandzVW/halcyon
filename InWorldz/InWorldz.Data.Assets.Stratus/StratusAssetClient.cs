@@ -79,6 +79,7 @@ namespace InWorldz.Data.Assets.Stratus
                 Config.Settings.Instance.CFSupport = stratusConfig.GetBoolean("CFSupport", true);
                 Config.Settings.Instance.LegacySupport = stratusConfig.GetBoolean("LegacySupport", false);
                 Config.Settings.Instance.WhipURL = stratusConfig.GetString("WhipURL", null);
+                Config.Settings.Instance.UseAsyncStore = stratusConfig.GetBoolean("UseAsyncStore", false);
 
                 if (Config.Settings.Instance.LegacySupport == true && Config.Settings.Instance.WhipURL == null)
                 {
@@ -283,7 +284,6 @@ namespace InWorldz.Data.Assets.Stratus
         //see IAssetReceiver
         public void AssetNotFound(OpenMetaverse.UUID assetID, AssetRequestInfo data)
         {
-            m_log.WarnFormat("[InWorldz.Stratus]: Asset not found {0}", assetID);
             this.HandleAssetCallback(assetID, data, null);
         }
 

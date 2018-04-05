@@ -5968,8 +5968,8 @@ namespace InWorldz.Phlox.Engine
                     if (targetlandObj == null)
                         return;
 
-                    // if push disabled, script must be owned by the land owner.  That includes group-deeded land (script object must be deeded too).
-                    if (m_host.OwnerID == targetlandObj.landData.OwnerID)
+                    // if push disabled, script must be owned by the land owner.  That includes group-deeded land (script object must be deeded too).  It will also work if the script is owned by an estate owner or manager.
+                    if (m_host.OwnerID == targetlandObj.landData.OwnerID || World.IsEstateManager(m_host.OwnerID))
                     {
                         pushAllowed = true;
                     }
@@ -5987,8 +5987,8 @@ namespace InWorldz.Phlox.Engine
                         // Parcel push restriction
                         if ((targetlandObj.landData.Flags & (uint)ParcelFlags.RestrictPushObject) == (uint)ParcelFlags.RestrictPushObject)
                         {
-                            // if push disabled, script must be owned by the land owner.  That includes group-deeded land (script object must be deeded too).
-                            if (m_host.OwnerID == targetlandObj.landData.OwnerID)
+                            // if push disabled, script must be owned by the land owner.  That includes group-deeded land (script object must be deeded too).  It will also work if the script is owned by an estate owner or manager.
+                            if (m_host.OwnerID == targetlandObj.landData.OwnerID || World.IsEstateManager(m_host.OwnerID))
                             {
                                 pushAllowed = true;
                             }
@@ -8754,8 +8754,9 @@ namespace InWorldz.Phlox.Engine
             var parts = GetLinkPrimsOnly(linknumber);
             foreach (SceneObjectPart part in parts)
             {
-                part.SetCameraEyeOffset(new Vector3((float)eyeOffset.X, (float)eyeOffset.Y, (float)eyeOffset.Z));
-                part.SetCameraAtOffset(new Vector3((float)cameraAt.X, (float)cameraAt.Y, (float)cameraAt.Z));
+                Vector3 localPos = part.IsRootPart() ? Vector3.Zero : part.OffsetPosition;
+                part.SetCameraEyeOffset(new Vector3(localPos + eyeOffset));
+                part.SetCameraAtOffset(new Vector3(localPos + cameraAt));
             }
         }
 
@@ -8779,9 +8780,9 @@ namespace InWorldz.Phlox.Engine
                 return String.Empty;
             }
             StringBuilder ret = new StringBuilder();
-            foreach (object o in src.Data)
+            for (int index = 0; index < src.Data.Length; ++index)
             {
-                ret.Append(o.ToString());
+                ret.Append(src.GetLSLStringItem(index));
                 ret.Append(seperator);
             }
             ret.Length -= seperator.Length;
@@ -14684,20 +14685,31 @@ namespace InWorldz.Phlox.Engine
         /// <param name="lastname">Avatar last name</param>
         public void iwAvatarName2Key(string firstname, string lastname)
         {
-            const int LONG_DELAY = 5000;
+            const int LONG_DELAY = 1000;
             const int SHORT_DELAY = 100;
             int delay = LONG_DELAY;
+            UUID agentID = UUID.Zero;
 
             try
             {
-                UUID agentID = World.CommsManager.UserService.Name2Key(firstname, lastname);
-                if (agentID != UUID.Zero)
+                if (!String.IsNullOrWhiteSpace(firstname))
                 {
-                    // local avatars are cached lookups, so don't penalize if local
-                    ScenePresence avatar = World.GetScenePresence(agentID);
-                    if (avatar != null) 
-                        if (!avatar.IsChildAgent)   // just this region
-                            delay = SHORT_DELAY;    // see Mantis #2263
+                    if (String.IsNullOrWhiteSpace(lastname))
+                        lastname = "Resident";
+                    else
+                        lastname = lastname.Trim();
+                    firstname = firstname.Trim();
+
+                    ScenePresence avatar = World.GetScenePresence(firstname, lastname);
+                    if (avatar != null)
+                    {
+                        agentID = avatar.UUID;
+                        delay = SHORT_DELAY;    // see Mantis #2263
+                    }
+                    else
+                    {
+                        agentID = World.CommsManager.UserService.Name2Key(firstname, lastname);
+                    }
                 }
                 m_ScriptEngine.SysReturn(this.m_itemID, agentID.ToString(), delay);
             }
@@ -14716,7 +14728,7 @@ namespace InWorldz.Phlox.Engine
         public void iwMakeNotecard(string notecardName, LSL_List contents)
         {
             const int DELAY = 5000;
-            const int MAX_LENGTH = 16384;
+            const int MAX_LENGTH = 65536;   // 64K characters (including newlines)
 
             try
             {
