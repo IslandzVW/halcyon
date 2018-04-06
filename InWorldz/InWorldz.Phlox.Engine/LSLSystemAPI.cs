@@ -142,7 +142,7 @@ namespace InWorldz.Phlox.Engine
         }
 
 
-        protected void ScriptSleep(int delay)   // in milliseconds
+        protected virtual void ScriptSleep(int delay)   // in milliseconds
         {
             if (_thisScript.ScriptState.RunState != VM.RuntimeState.Status.Syscall)
             {
