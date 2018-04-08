@@ -26,13 +26,8 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Reflection;
-using System.IO;
-using System.Web;
-using System.Xml;
 using log4net;
 using Mono.Addins;
 using Nini.Config;
@@ -40,15 +35,11 @@ using OpenMetaverse;
 using OpenMetaverse.Messages.Linden;
 using OpenMetaverse.StructuredData;
 using OpenSim.Framework;
-using OpenSim.Framework.Communications.Capabilities;
-using OpenSim.Framework.Servers;
 using OpenSim.Framework.Servers.HttpServer;
 using OpenSim.Region.Framework.Interfaces;
 using OpenSim.Region.Framework.Scenes;
-using OpenSim.Services.Interfaces;
 
 using Caps = OpenSim.Framework.Communications.Capabilities.Caps;
-using OSDArray = OpenMetaverse.StructuredData.OSDArray;
 using OSDMap = OpenMetaverse.StructuredData.OSDMap;
 
 namespace OpenSim.Region.CoreModules.World.Media.Moap
@@ -231,15 +222,22 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
         /// <param name="me">If null, then the media entry is cleared.</param>
         public void SetMediaEntry(SceneObjectPart part, int face, MediaEntry me)
         {
-            //            m_log.DebugFormat("[MOAP]: SetMediaEntry for {0}, face {1}", part.Name, face);
-            int numFaces = part.GetNumberOfSides();
-            if (part.Shape.Media == null)
-                part.Shape.Media = new PrimitiveBaseShape.PrimMedia(numFaces);
-            else
-                part.Shape.Media.Resize(numFaces);
-
             if (!CheckFaceParam(part, face))
                 return;
+
+            int numFaces = part.GetNumberOfSides();
+
+            if (part.Shape.Media == null)
+            {
+                if (me == null)
+                    return; // Nothing to do
+
+                part.Shape.Media = new PrimitiveBaseShape.PrimMedia(numFaces);
+            }
+
+            // If it doesn't exist set the default params for it
+            if (part.Shape.Media[face] == null)
+                me.InteractPermissions = MediaPermission.All;
 
             // ClearMediaEntry passes null for me so it must not be ignored!
             lock (part.Shape.Media)

@@ -79,7 +79,7 @@ namespace OpenSim.Region.FrameworkTests
             part.LinkNum = 4;
             part.LocalId = localId;
             part.Material = 0x1;
-            part.MediaUrl = "http://bam";
+            part.MediaUrl = null;
             part.NextOwnerMask = 0x0234;
             part.CreatorID = UUID.Random();
             part.ObjectFlags = 10101;
@@ -143,45 +143,7 @@ namespace OpenSim.Region.FrameworkTests
             shape.LightFalloff = 7474;
             shape.LightIntensity = 0.0f;
             shape.LightRadius = 10.0f;
-            shape.Media = new OpenSim.Framework.PrimitiveBaseShape.PrimMedia();
-            shape.Media.New(2);
-            shape.Media[0] = new MediaEntry
-            {
-                AutoLoop = true,
-                AutoPlay = true,
-                AutoScale = true,
-                AutoZoom = true,
-                ControlPermissions = MediaPermission.All,
-                Controls = MediaControls.Standard,
-                CurrentURL = "bam.com",
-                EnableAlterntiveImage = true,
-                EnableWhiteList = false,
-                Height = 1,
-                HomeURL = "anotherbam.com",
-                InteractOnFirstClick = true,
-                InteractPermissions = MediaPermission.Group,
-                WhiteList = new string[] { "yo mamma" },
-                Width = 5
-            };
-            shape.Media[1] = new MediaEntry
-            {
-                AutoLoop = true,
-                AutoPlay = true,
-                AutoScale = true,
-                AutoZoom = true,
-                ControlPermissions = MediaPermission.All,
-                Controls = MediaControls.Standard,
-                CurrentURL = "kabam.com",
-                EnableAlterntiveImage = true,
-                EnableWhiteList = true,
-                Height = 1,
-                HomeURL = "anotherbam.com",
-                InteractOnFirstClick = true,
-                InteractPermissions = MediaPermission.Group,
-                WhiteList = new string[] { "ur mamma" },
-                Width = 5
-            };
-
+            shape.Media = null;
             shape.PathBegin = 3;
             shape.PathCurve = 127;
             shape.PathEnd = 10;
