@@ -55,17 +55,84 @@ namespace InWorldz.Phlox.Engine.Tests
         }
 
         [Test]
-        public void TestPrimMediaClear()
+        public void TestMoapPrimMediaClear()
         {
 
-            api.llClearPrimMedia(0);
-/*
-            var expectedResult = new LSLList(new List<object> { UUID.Zero.ToString(), new Vector3(1, 1, 0), new Vector3(0, 0, 0), 0 });
-            var rules = new LSLList(new List<object> { ScriptBaseClass.PRIM_NORMAL, 0 });
-            LSLList asList = lslSystemApi.llGetPrimitiveParams(rules);
-            Assert.That(asList.ToString(), Is.EqualTo(expectedResult.ToString()));
-*/
+            int clearResult = api.llClearPrimMedia(0);
+            Assert.AreEqual(clearResult, ScriptBaseClass.LSL_STATUS_OK);
         }
 
+        [Test]
+        public void TestMoapLinkMediaClearWithLinkThis()
+        {
+            // https://bugs.inworldz.com/mantis/view.php?id=3374
+            int clearResult = api.llClearLinkMedia(ScriptBaseClass.LINK_THIS, 0);
+            Assert.AreEqual(clearResult, ScriptBaseClass.LSL_STATUS_OK);
+        }
+
+        [Test]
+        public void TestMoapGetPrimMediaParams()
+        {
+            // https://bugs.inworldz.com/mantis/view.php?id=3375
+            LSLList details = new LSLList(new List<object> {
+                ScriptBaseClass.PRIM_MEDIA_CONTROLS,
+                ScriptBaseClass.PRIM_MEDIA_CURRENT_URL,
+                ScriptBaseClass.PRIM_MEDIA_HOME_URL,
+                ScriptBaseClass.PRIM_MEDIA_AUTO_LOOP,
+                ScriptBaseClass.PRIM_MEDIA_AUTO_PLAY,
+                ScriptBaseClass.PRIM_MEDIA_AUTO_SCALE,
+                ScriptBaseClass.PRIM_MEDIA_AUTO_ZOOM,
+                ScriptBaseClass.PRIM_MEDIA_WIDTH_PIXELS,
+                ScriptBaseClass.PRIM_MEDIA_HEIGHT_PIXELS,
+                ScriptBaseClass.PRIM_MEDIA_WHITELIST_ENABLE,
+                ScriptBaseClass.PRIM_MEDIA_WHITELIST,
+                ScriptBaseClass.PRIM_MEDIA_PERMS_INTERACT,
+                ScriptBaseClass.PRIM_MEDIA_PERMS_CONTROL
+            });
+
+            int clearResult = api.llClearPrimMedia(0);
+            Assert.AreEqual(clearResult, ScriptBaseClass.LSL_STATUS_OK);
+
+            var setResult = api.llSetPrimMediaParams(0, new LSLList(
+                new List<object> { ScriptBaseClass.PRIM_MEDIA_CURRENT_URL, "https://example.com" }));
+            Assert.AreEqual(setResult, ScriptBaseClass.LSL_STATUS_OK);
+
+            string expectedDefaults = "[0,https://example.com,,0,0,0,0,0,0,0,,7,0]";
+            LSLList defaults = api.llGetPrimMediaParams(0, details);
+            Assert.That(defaults.ToString(), Is.EqualTo(expectedDefaults));
+        }
+
+        [Test]
+        public void TestMoapGetLinkMedia()
+        {
+            // https://bugs.inworldz.com/mantis/view.php?id=3375
+            LSLList details = new LSLList(new List<object> {
+                ScriptBaseClass.PRIM_MEDIA_CONTROLS,
+                ScriptBaseClass.PRIM_MEDIA_CURRENT_URL,
+                ScriptBaseClass.PRIM_MEDIA_HOME_URL,
+                ScriptBaseClass.PRIM_MEDIA_AUTO_LOOP,
+                ScriptBaseClass.PRIM_MEDIA_AUTO_PLAY,
+                ScriptBaseClass.PRIM_MEDIA_AUTO_SCALE,
+                ScriptBaseClass.PRIM_MEDIA_AUTO_ZOOM,
+                ScriptBaseClass.PRIM_MEDIA_WIDTH_PIXELS,
+                ScriptBaseClass.PRIM_MEDIA_HEIGHT_PIXELS,
+                ScriptBaseClass.PRIM_MEDIA_WHITELIST_ENABLE,
+                ScriptBaseClass.PRIM_MEDIA_WHITELIST,
+                ScriptBaseClass.PRIM_MEDIA_PERMS_INTERACT,
+                ScriptBaseClass.PRIM_MEDIA_PERMS_CONTROL
+            });
+
+
+            int clearResult = api.llClearPrimMedia(0);
+            Assert.AreEqual(clearResult, ScriptBaseClass.LSL_STATUS_OK);
+
+            var setResult = api.llSetPrimMediaParams(0, new LSLList(
+                new List<object> { ScriptBaseClass.PRIM_MEDIA_CURRENT_URL, "https://example.com" }));
+            Assert.AreEqual(setResult, ScriptBaseClass.LSL_STATUS_OK);
+
+            string expectedDefaults = "[0,https://example.com,,0,0,0,0,0,0,0,,7,0]";
+            LSLList defaults = api.llGetLinkMedia(ScriptBaseClass.LINK_THIS, 0, details);
+            Assert.That(defaults.ToString(), Is.EqualTo(expectedDefaults));
+        }
     }
 }
