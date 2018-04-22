@@ -2280,7 +2280,7 @@ namespace OpenSim.Data.MySQL
             if (!(row["Media"] is System.DBNull))
             {
                 byte[] media = (byte[])row["Media"];
-                s.Media = PrimitiveBaseShape.PrimMedia.FromXml(UTF8Encoding.UTF8.GetString(media, 0, media.Length));
+                s.Media = PrimitiveBaseShape.MediaList.FromXml(UTF8Encoding.UTF8.GetString(media, 0, media.Length));
             }
 
             if (!(row["Materials"] is System.DBNull))

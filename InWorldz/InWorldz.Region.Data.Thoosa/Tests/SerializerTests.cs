@@ -184,10 +184,10 @@ namespace InWorldz.Region.Data.Thoosa.Tests
             var sop2 = Util.RandomSOP("Child1", 2);
             var sop3 = Util.RandomSOP("Child2", 3);
 
-            sop1.Shape.Media = new PrimitiveBaseShape.PrimMedia(3);
-            sop1.Shape.Media[0] = null;
-            sop1.Shape.Media[1] = new MediaEntry();
-            sop1.Shape.Media[2] = null;
+            sop1.Shape.Media = new PrimitiveBaseShape.MediaList(3);
+            sop1.Shape.Media.Add(null);
+            sop1.Shape.Media.Add(new MediaEntry());
+            sop1.Shape.Media.Add(null);
 
             SceneObjectGroup group = new SceneObjectGroup(sop1);
             group.AddPart(sop2);
