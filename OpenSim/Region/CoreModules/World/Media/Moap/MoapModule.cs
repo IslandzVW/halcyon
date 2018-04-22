@@ -49,20 +49,13 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
     {
         private static readonly ILog m_log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public string Name 
-        { 
-            get { return "MoapModule"; } 
-        }
-        
-        public Type ReplaceableInterface 
-        { 
-            get { return null; } 
-        }
+        public string Name { get { return "MoapModule"; } }
+        public Type ReplaceableInterface { get { return null; } }
 
         /// <summary>
         /// Is this module enabled?
         /// </summary>
-        protected bool m_isEnabled;
+        protected bool m_isEnabled = true;
 
         /// <summary>
         /// The scene to which this module is attached
@@ -91,11 +84,12 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
 
         public void Initialize(IConfigSource configSource)
         {
-            m_isEnabled = true;
             IConfig config = configSource.Configs["MediaOnAPrim"];
 
-            if (config != null)
-                m_isEnabled = config.GetBoolean("Enabled", m_isEnabled);
+            if (config != null && !config.GetBoolean("Enabled", false))
+                m_isEnabled = false;
+//            else
+//                m_log.Debug("[MOAP]: Initialised module.")l
         }
 
         public void AddRegion(Scene scene)
@@ -107,7 +101,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
             m_scene.RegisterModuleInterface<IMoapModule>(this);
         }
 
-        public void RemoveRegion(Scene scene) { }
+        public void RemoveRegion(Scene scene) {}
 
         public void RegionLoaded(Scene scene)
         {
@@ -142,9 +136,10 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 m_omCapUrls[agentID] = omCapUrl;
 
                 // Even though we're registering for POST we're going to get GETS and UPDATES too
-                IRequestHandler handler = new RestStreamHandler("POST", omCapUrl, HandleObjectMediaMessage);
-                caps.RegisterHandler("ObjectMedia", handler);
-
+                caps.RegisterHandler(
+                    "ObjectMedia",
+                    new RestStreamHandler(
+                        "POST", omCapUrl, HandleObjectMediaMessage, "ObjectMedia", agentID.ToString()));
             }
 
             string omuCapUrl = "/CAPS/" + UUID.Random();
@@ -155,8 +150,10 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 m_omuCapUrls[agentID] = omuCapUrl;
 
                 // Even though we're registering for POST we're going to get GETS and UPDATES too
-                IRequestHandler handler = new RestStreamHandler("POST", omuCapUrl, HandleObjectMediaNavigateMessage);
-                caps.RegisterHandler("ObjectMediaNavigate", handler);
+                caps.RegisterHandler(
+                    "ObjectMediaNavigate",
+                    new RestStreamHandler(
+                        "POST", omuCapUrl, HandleObjectMediaNavigateMessage, "ObjectMediaNavigate", agentID.ToString()));
             }
         }
 
@@ -179,13 +176,20 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
 
         protected void OnSceneObjectPartCopy(SceneObjectPart copy, SceneObjectPart original, bool userExposed)
         {
-            if (original.Shape.Media == null)
+            if (original.Shape.Media != null)
             {
-                copy.Shape.Media = null;
-            }
-            else
-            {
-                copy.Shape.Media = new PrimitiveBaseShape.PrimMedia(original.Shape.Media);
+                PrimitiveBaseShape.MediaList dupeMedia = new PrimitiveBaseShape.MediaList();
+                lock (original.Shape.Media)
+                {
+                    foreach (MediaEntry me in original.Shape.Media)
+            		{
+                        if (me != null)
+                            dupeMedia.Add(MediaEntry.FromOSD(me.GetOSD()));
+                        else
+                            dupeMedia.Add(null);
+            		}
+        		}
+                copy.Shape.Media = dupeMedia;
             }
         }
 
@@ -193,21 +197,23 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
         {
             MediaEntry me = null;
 
-            if (!CheckFaceParam(part, face))
-                return null;
+            CheckFaceParam(part, face);
 
-            if (part.Shape.Media == null)
-                return null;    // no media entries
+            List<MediaEntry> media = part.Shape.Media;
 
-            if (face >= part.Shape.Media.Count)
-                return null;    // out of range
-
-            me = part.Shape.Media[face];
-            if (me == null)     // no media entry for that face
-                return null;
+            if (null == media)
+            {
+                me = null;
+            }
+            else
+            {
+                lock (media)
+                    me = media[face];
 
             // TODO: Really need a proper copy constructor down in libopenmetaverse
+                if (me != null)
             me = MediaEntry.FromOSD(me.GetOSD());
+            }
 
             //            m_log.DebugFormat("[MOAP]: GetMediaEntry for {0} face {1} found {2}", part.Name, face, me);
 
@@ -222,24 +228,18 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
         /// <param name="me">If null, then the media entry is cleared.</param>
         public void SetMediaEntry(SceneObjectPart part, int face, MediaEntry me)
         {
-            if (!CheckFaceParam(part, face))
-                return;
+//            m_log.DebugFormat("[MOAP]: SetMediaEntry for {0}, face {1}", part.Name, face);
 
-            int numFaces = part.GetNumberOfSides();
+            CheckFaceParam(part, face);
 
-            if (part.Shape.Media == null)
+            if (null == part.Shape.Media)
             {
                 if (me == null)
-                    return; // Nothing to do
-
-                part.Shape.Media = new PrimitiveBaseShape.PrimMedia(numFaces);
+                    return;
+                else
+                    part.Shape.Media = new PrimitiveBaseShape.MediaList(new MediaEntry[part.GetNumberOfSides()]);
             }
 
-            // If it doesn't exist set the default params for it
-            if (part.Shape.Media[face] == null)
-                me.InteractPermissions = MediaPermission.All;
-
-            // ClearMediaEntry passes null for me so it must not be ignored!
             lock (part.Shape.Media)
                 part.Shape.Media[face] = me;
 
@@ -247,6 +247,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
 
             SetPartMediaFlags(part, face, me != null);
 
+            // Arguably, we could avoid sending a full update to the avatar that just changed the texture.
             part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
             part.TriggerScriptChangedEvent(Changed.MEDIA);
         }
@@ -323,27 +324,24 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 m_log.WarnFormat(
                     "[MOAP]: Received a GET ObjectMediaRequest for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return String.Empty;
+                return string.Empty;
             }
 
+            if (null == part.Shape.Media)
+                return string.Empty;
+
             ObjectMediaResponse resp = new ObjectMediaResponse();
+
             resp.PrimID = primId;
 
             lock (part.Shape.Media)
-            {
-                if (null == part.Shape.Media)
-                    return String.Empty;
+                    resp.FaceMedia = part.Shape.Media.ToArray ();
 
-                resp.FaceMedia = part.Shape.Media.CopyArray();
-                if (null == resp.FaceMedia)
-                    return String.Empty;
-            }
-
-            resp.Version = part.MediaUrl;
+            	resp.Version = part.MediaUrl;
 
             string rawResp = OSDParser.SerializeLLSDXmlString(resp.Serialize());
 
-            //            m_log.DebugFormat("[MOAP]: Got HandleObjectMediaRequestGet raw response is [{0}]", rawResp);
+//            m_log.DebugFormat("[MOAP]: Got HandleObjectMediaRequestGet raw response is [{0}]", rawResp);
 
             return rawResp;
         }
@@ -365,7 +363,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 m_log.WarnFormat(
                     "[MOAP]: Received an UPDATE ObjectMediaRequest for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return String.Empty;
+                return string.Empty;
             }
 
             //            m_log.DebugFormat("[MOAP]: Received {0} media entries for prim {1}", omu.FaceMedia.Length, primId);
@@ -382,7 +380,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 m_log.WarnFormat(
                     "[MOAP]: Received {0} media entries from client for prim {1} {2} but this prim has only {3} faces.  Dropping request.",
                     omu.FaceMedia.Length, part.Name, part.UUID, part.GetNumberOfSides());
-                return String.Empty;
+                return string.Empty;
             }
 
             UUID agentId = default(UUID);
@@ -390,10 +388,12 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
             lock (m_omCapUsers)
                 agentId = m_omCapUsers[path];
 
-            if (null == part.Shape.Media)
+            List<MediaEntry> media = part.Shape.Media;
+
+            if (null == media)
             {
                 //                m_log.DebugFormat("[MOAP]: Setting all new media list for {0}", part.Name);
-                part.Shape.Media = new PrimitiveBaseShape.PrimMedia(omu.FaceMedia);
+                part.Shape.Media = new PrimitiveBaseShape.MediaList(omu.FaceMedia);
 
                 for (int i = 0; i < omu.FaceMedia.Length; i++)
                 {
@@ -421,17 +421,17 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 // directly.
                 Primitive.TextureEntry te = part.Shape.Textures;
 
-                lock (part.Shape.Media)
+                lock (media)
                 {
-                    for (int i = 0; i < part.Shape.Media.Count; i++)
+                    for (int i = 0; i < media.Count; i++)
                     {
                         if (m_scene.Permissions.CanControlPrimMedia(agentId, part.UUID, i))
                         {
-                            part.Shape.Media[i] = omu.FaceMedia[i];
+                            media[i] = omu.FaceMedia[i];
 
                             // When a face is cleared this is done by setting the MediaFlags in the TextureEntry via a normal
                             // texture update, so we don't need to worry about clearing MediaFlags here.
-                            if (null == part.Shape.Media[i])
+                            if (null == media[i])
                                 continue;
 
                             SetPartMediaFlags(part, i, true);
@@ -453,11 +453,9 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
             UpdateMediaUrl(part, agentId);
 
             // Arguably, we could avoid sending a full update to the avatar that just changed the texture.
-            part.ScheduleFullUpdate(PrimUpdateFlags.MediaURL);
+            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
 
-            part.TriggerScriptChangedEvent(Changed.MEDIA);
-
-            return String.Empty;
+            return string.Empty;
         }
 
         /// <summary>
@@ -487,7 +485,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 m_log.WarnFormat(
                     "[MOAP]: Received an ObjectMediaNavigateMessage for prim {0} but this doesn't exist in region {1}",
                     primId, m_scene.RegionInfo.RegionName);
-                return String.Empty;
+                return string.Empty;
             }
 
             UUID agentId = default(UUID);
@@ -496,7 +494,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 agentId = m_omuCapUsers[path];
 
             if (!m_scene.Permissions.CanInteractWithPrimMedia(agentId, part.UUID, omn.Face))
-                return String.Empty;
+                return string.Empty;
 
             //            m_log.DebugFormat(
             //                "[MOAP]: Received request to update media entry for face {0} on prim {1} {2} to {3}", 
@@ -504,7 +502,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
 
             // If media has never been set for this prim, then just return.
             if (null == part.Shape.Media)
-                return String.Empty;
+                return string.Empty;
 
             MediaEntry me = null;
 
@@ -513,7 +511,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
 
             // Do the same if media has not been set up for a specific face
             if (null == me)
-                return String.Empty;
+                return string.Empty;
 
             if (me.EnableWhiteList)
             {
@@ -523,7 +521,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                     //                        "[MOAP]: Blocking change of face {0} on prim {1} {2} to {3} since it's not on the enabled whitelist", 
                     //                        omn.Face, part.Name, part.UUID, omn.URL);
 
-                    return String.Empty;
+                    return string.Empty;
                 }
             }
 
@@ -531,8 +529,7 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
 
             UpdateMediaUrl(part, agentId);
 
-            part.ScheduleFullUpdate(PrimUpdateFlags.Shape);
-
+            part.ScheduleFullUpdate(PrimUpdateFlags.FindBest);
             part.TriggerScriptChangedEvent(Changed.MEDIA);
 
             return OSDParser.SerializeLLSDXmlString(new OSD());
@@ -543,12 +540,15 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
         /// </summary>
         /// <param name="part"></param>
         /// <param name="face"></param>
-        protected bool CheckFaceParam(SceneObjectPart part, int face)
+        protected void CheckFaceParam(SceneObjectPart part, int face)
         {
             if (face < 0)
-                return false;
+                throw new ArgumentException("Face cannot be less than zero");
 
-            return (face < part.GetNumberOfSides());
+            int maxFaces = part.GetNumberOfSides() - 1;
+            if (face > maxFaces)
+                throw new ArgumentException(
+                    string.Format("Face argument was {0} but max is {1}", face, maxFaces));
         }
 
         /// <summary>
@@ -584,6 +584,9 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
         /// <returns>true if the url matches an entry on the whitelist, false otherwise</returns>
         protected bool CheckUrlAgainstWhitelist(string rawUrl, string[] whitelist)
         {
+            if (whitelist == null)
+                return false;
+
             Uri url = new Uri(rawUrl);
 
             foreach (string origWlUrl in whitelist)
@@ -601,9 +604,9 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                 {
                     wlUrl = wlUrl.Substring(1);
 
-                    if (url.Host.Contains(wlUrl))
-                    {
-                        //                        m_log.DebugFormat("[MOAP]: Whitelist URL {0} matches {1}", origWlUrl, rawUrl);
+                    if (url.Host.Contains (wlUrl)) 
+					{
+                        // m_log.DebugFormat("[MOAP]: Whitelist URL {0} matches {1}", origWlUrl, rawUrl);
                         return true;
                     }
                 }
@@ -612,8 +615,8 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
                     string urlToMatch = url.Authority + url.AbsolutePath;
 
                     if (urlToMatch.StartsWith(wlUrl))
-                    {
-                        //                        m_log.DebugFormat("[MOAP]: Whitelist URL {0} matches {1}", origWlUrl, rawUrl);
+					{
+                        // m_log.DebugFormat("[MOAP]: Whitelist URL {0} matches {1}", origWlUrl, rawUrl);
                         return true;
                     }
                 }
@@ -622,4 +625,4 @@ namespace OpenSim.Region.CoreModules.World.Media.Moap
             return false;
         }
     }
-} 
+}

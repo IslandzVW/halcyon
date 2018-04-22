@@ -79,9 +79,9 @@ namespace InWorldz.Region.Data.Thoosa.Tests
             shape.LightFalloff = 7474;
             shape.LightIntensity = 0.0f;
             shape.LightRadius = 10.0f;
-            shape.Media = new OpenSim.Framework.PrimitiveBaseShape.PrimMedia();
-            shape.Media.New(2);
-            shape.Media[0] = new MediaEntry
+            shape.Media = new OpenSim.Framework.PrimitiveBaseShape.MediaList();
+
+            shape.Media.Add(new MediaEntry
             {
                 AutoLoop = true,
                 AutoPlay = true,
@@ -98,8 +98,8 @@ namespace InWorldz.Region.Data.Thoosa.Tests
                 InteractPermissions = MediaPermission.Group,
                 WhiteList = new string[] { "yo mamma" },
                 Width = 5
-            };
-            shape.Media[1] = new MediaEntry
+            });
+            shape.Media.Add(new MediaEntry
             {
                 AutoLoop = true,
                 AutoPlay = true,
@@ -116,7 +116,7 @@ namespace InWorldz.Region.Data.Thoosa.Tests
                 InteractPermissions = MediaPermission.Group,
                 WhiteList = new string[] { "ur mamma" },
                 Width = 5
-            };
+            });
 
             shape.PathBegin = 3;
             shape.PathCurve = 127;

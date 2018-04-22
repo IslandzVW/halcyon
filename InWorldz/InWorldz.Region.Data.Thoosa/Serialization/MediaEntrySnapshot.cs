@@ -135,7 +135,7 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
             };
         }
 
-        public static MediaEntrySnapshot[] SnapshotArrayFromList(OpenSim.Framework.PrimitiveBaseShape.PrimMedia mediaList)
+        public static MediaEntrySnapshot[] SnapshotArrayFromList(OpenSim.Framework.PrimitiveBaseShape.MediaList mediaList)
         {
             if (mediaList == null) return null;
 
@@ -149,16 +149,16 @@ namespace InWorldz.Region.Data.Thoosa.Serialization
             return snapList;
         }
 
-        public static OpenSim.Framework.PrimitiveBaseShape.PrimMedia SnapshotArrayToList(MediaEntrySnapshot[] snapList)
+        public static OpenSim.Framework.PrimitiveBaseShape.MediaList SnapshotArrayToList(MediaEntrySnapshot[] snapList)
         {
-            if (snapList == null) return null;
+            if (snapList == null)
+                return null;
 
-            var mediaList = new OpenSim.Framework.PrimitiveBaseShape.PrimMedia(snapList.Length);
-            mediaList.New(snapList.Length);
-            int index = 0;
+            var mediaList = new OpenSim.Framework.PrimitiveBaseShape.MediaList(snapList.Length);
+
             foreach (var snap in snapList)
             {
-                mediaList[index++] = (snap != null) ? snap.ToMediaEntry() : null;
+                mediaList.Add(snap == null ? null : snap.ToMediaEntry());
             }
 
             return mediaList;

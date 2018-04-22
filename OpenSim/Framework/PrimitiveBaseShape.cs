@@ -305,7 +305,8 @@ namespace OpenSim.Framework
         /// </summary>
         /// Do not change this value directly - always do it through an IMoapModule.
         /// Lock before manipulating.
-        public PrimMedia Media { get; set; }
+//        public PrimMedia Media { get; set; }
+        public MediaList Media { get; set; }
 
         #endregion
 
@@ -462,7 +463,8 @@ namespace OpenSim.Framework
         {
             PrimitiveBaseShape shape = (PrimitiveBaseShape)MemberwiseClone();
             shape.TextureEntryBytes = (byte[])TextureEntryBytes.Clone();
-            shape.Media = new PrimMedia(Media);
+//            shape.Media = new PrimMedia(Media);
+            shape.Media = new MediaList(Media);
             shape.RenderMaterials = RenderMaterials.Copy();
 
             return shape;
@@ -1271,6 +1273,7 @@ namespace OpenSim.Framework
             return prim;
         }
 
+     /*
         /// <summary>
         /// Encapsulates a list of media entries.
         /// </summary>
@@ -1499,5 +1502,123 @@ namespace OpenSim.Framework
                 ReadXml(reader.ReadInnerXml());
             }
         }
+*/
+
+        /// <summary>
+        /// Encapsulates a list of media entries.
+        /// </summary>
+        /// This class is necessary because we want to replace auto-serialization of MediaEntry with something more
+        /// OSD like and less vulnerable to change.
+        public class MediaList : List<MediaEntry>, IXmlSerializable
+        {
+            public const string MEDIA_TEXTURE_TYPE = "sl";
+
+            public MediaList() : base() { }
+            public MediaList(IEnumerable<MediaEntry> collection) : base(collection) { }
+            public MediaList(int capacity) : base(capacity) { }
+
+            public XmlSchema GetSchema()
+            {
+                return null;
+            }
+
+            public string ToXml()
+            {
+                lock (this)
+                {
+                    using (StringWriter sw = new StringWriter())
+                    {
+                        using (XmlTextWriter xtw = new XmlTextWriter(sw))
+                        {
+                            xtw.WriteStartElement("OSMedia");
+                            xtw.WriteAttributeString("type", MEDIA_TEXTURE_TYPE);
+                            xtw.WriteAttributeString("version", "0.1");
+
+                            OSDArray meArray = new OSDArray();
+                            foreach (MediaEntry me in this)
+                            {
+                                OSD osd = (null == me ? new OSD() : me.GetOSD());
+                                meArray.Add(osd);
+                            }
+
+                            xtw.WriteStartElement("OSData");
+                            xtw.WriteRaw(OSDParser.SerializeLLSDXmlString(meArray));
+                            xtw.WriteEndElement();
+
+                            xtw.WriteEndElement();
+
+                            xtw.Flush();
+                            return sw.ToString();
+                        }
+                    }
+                }
+            }
+
+            public void WriteXml(XmlWriter writer)
+            {
+                writer.WriteRaw(ToXml());
+            }
+
+            public static MediaList FromXml(string rawXml)
+            {
+                MediaList ml = new MediaList();
+                ml.ReadXml(rawXml);
+                if (ml.Count == 0)
+                    return null;
+                return ml;
+            }
+
+            public void ReadXml(string rawXml)
+            {
+                try
+                {
+                    using (StringReader sr = new StringReader(rawXml))
+                    {
+                        using (XmlTextReader xtr = new XmlTextReader(sr))
+                        {
+                            xtr.ProhibitDtd = true;
+
+                            xtr.MoveToContent();
+
+                            string type = xtr.GetAttribute("type");
+                            //m_log.DebugFormat("[MOAP]: Loaded media texture entry with type {0}", type);
+
+                            if (type != MEDIA_TEXTURE_TYPE)
+                                return;
+
+                            xtr.ReadStartElement("OSMedia");
+                            OSD osdp = OSDParser.DeserializeLLSDXml(xtr.ReadInnerXml());
+                            if (osdp == null || !(osdp is OSDArray))
+                                return;
+
+                            OSDArray osdMeArray = osdp as OSDArray;
+                            if (osdMeArray.Count == 0)
+                                return;
+
+                            foreach (OSD osdMe in osdMeArray)
+                            {
+                                MediaEntry me = (osdMe is OSDMap ? MediaEntry.FromOSD(osdMe) : new MediaEntry());
+                                Add(me);
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    m_log.Debug("PrimitiveBaseShape] error decoding MOAP xml");
+                }
+            }
+
+            public void ReadXml(XmlReader reader)
+            {
+                if (reader.IsEmptyElement)
+                    return;
+
+                ReadXml(reader.ReadInnerXml());
+            }
+        }
+
+
+
     }
 }
