@@ -1496,7 +1496,7 @@ namespace OpenSim.Framework.Servers.HttpServer
 
             try
             {
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
                 m_httpListener = new HttpListener();
                 m_httpListener.Prefixes.Add(Protocol + "+:" + Port.ToString() + "/");
