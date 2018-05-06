@@ -6,6 +6,7 @@
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{595D67F3-B413-4A43-8568-5B5930E3B31D}</ProjectGuid>
+    <OutputPath>..\..\..\bin\</OutputPath>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>OpenSim.GridLaunch</RootNamespace>
