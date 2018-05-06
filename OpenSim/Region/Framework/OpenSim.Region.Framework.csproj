@@ -1,0 +1,658 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+	<PropertyGroup>
+	  <ProjectType>Local</ProjectType>
+	  <ProductVersion>14.0.23107.0</ProductVersion>
+	  <SchemaVersion>2.0</SchemaVersion>
+	  <ProjectGuid>{C98F6D97-0000-0000-0000-000000000000}</ProjectGuid>
+	  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	  <ApplicationIcon></ApplicationIcon>
+	  <AssemblyKeyContainerName>
+	  </AssemblyKeyContainerName>
+	  <AssemblyName>OpenSim.Region.Framework</AssemblyName>
+	  <DefaultClientScript>JScript</DefaultClientScript>
+	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
+	  <DelaySign>false</DelaySign>
+	  <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+	  <OutputPath>../../../bin/</OutputPath>
+	  <OutputType>Library</OutputType>
+	  <AppDesignerFolder></AppDesignerFolder>
+	  <RootNamespace>OpenSim.Region.Framework</RootNamespace>
+	  <StartupObject></StartupObject>
+	  <StartArguments></StartArguments>
+	  <FileUpgradeFlags>
+	  </FileUpgradeFlags>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE;DEBUG</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>True</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>False</Optimize>
+	  <OutputPath>..\..\..\bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>False</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>True</Optimize>
+	  <OutputPath>..\..\..\bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Reference Include="C5" >
+		  <Name>C5</Name>
+		<HintPath>..\..\..\bin\C5.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="DotNetOpenMail" >
+		  <Name>DotNetOpenMail</Name>
+		<HintPath>..\..\..\bin\DotNetOpenMail.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="LibreMetaverse" >
+		  <Name>LibreMetaverse</Name>
+		<HintPath>..\..\..\bin\LibreMetaverse.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="LibreMetaverse.StructuredData" >
+		  <Name>LibreMetaverse.StructuredData</Name>
+		<HintPath>..\..\..\bin\LibreMetaverse.StructuredData.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="LibreMetaverse.Types" >
+		  <Name>LibreMetaverse.Types</Name>
+		<HintPath>..\..\..\bin\LibreMetaverse.Types.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="log4net" >
+		  <Name>log4net</Name>
+		<HintPath>..\..\..\bin\log4net.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Mono.Addins" >
+		  <Name>Mono.Addins</Name>
+		<HintPath>..\..\..\bin\Mono.Addins.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Nini" >
+		  <Name>Nini</Name>
+		<HintPath>..\..\..\bin\Nini.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="SmartThreadPool" >
+		  <Name>SmartThreadPool</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System" >
+		  <Name>System</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Collections.Immutable" >
+		  <Name>System.Collections.Immutable</Name>
+		<HintPath>..\..\..\bin\System.Collections.Immutable.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Core" >
+		  <Name>System.Core</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Drawing" >
+		  <Name>System.Drawing</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Runtime.Remoting" >
+		  <Name>System.Runtime.Remoting</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Web" >
+		  <Name>System.Web</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml" >
+		  <Name>System.Xml</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="XmlRpcCS" >
+		  <Name>XmlRpcCS</Name>
+		<HintPath>..\..\..\bin\XmlRpcCS.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Data\OpenSim.Data.csproj">
+		<Name>OpenSim.Data</Name>
+		<Project>{7E218E2D-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Framework\OpenSim.Framework.csproj">
+		<Name>OpenSim.Framework</Name>
+		<Project>{BCCDBB55-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Framework\Communications\OpenSim.Framework.Communications.csproj">
+		<Name>OpenSim.Framework.Communications</Name>
+		<Project>{663117AE-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Framework\Communications\OpenSim.Framework.Communications.csproj">
+		<Name>OpenSim.Framework.Communications</Name>
+		<Project>{663117AE-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Framework\Console\OpenSim.Framework.Console.csproj">
+		<Name>OpenSim.Framework.Console</Name>
+		<Project>{0ED8EBE8-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Framework\Servers\OpenSim.Framework.Servers.csproj">
+		<Name>OpenSim.Framework.Servers</Name>
+		<Project>{726D540D-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Framework\Servers\HttpServer\OpenSim.Framework.Servers.HttpServer.csproj">
+		<Name>OpenSim.Framework.Servers.HttpServer</Name>
+		<Project>{159EC5C2-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Framework\Statistics\OpenSim.Framework.Statistics.csproj">
+		<Name>OpenSim.Framework.Statistics</Name>
+		<Project>{9E387B00-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Interfaces\OpenSim.Region.Interfaces.csproj">
+		<Name>OpenSim.Region.Interfaces</Name>
+		<Project>{C96A0E21-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Physics\Manager\OpenSim.Region.Physics.Manager.csproj">
+		<Name>OpenSim.Region.Physics.Manager</Name>
+		<Project>{FDCF8D3D-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Services\Interfaces\OpenSim.Services.Interfaces.csproj">
+		<Name>OpenSim.Services.Interfaces</Name>
+		<Project>{08ECE473-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="MessageStoringCompilationListener.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ModuleLoader.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ScriptRuntimeInformation.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ScriptStartFlags.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ScriptStateSource.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="StorageManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="AvatarTransit\AvatarTransitController.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="AvatarTransit\AvatarTransitException.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="AvatarTransit\InTransitAvatar.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="AvatarTransit\ITransitState.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="AvatarTransit\TransitArguments.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="AvatarTransit\TransitStage.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="AvatarTransit\TransitStateBase.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="AvatarTransit\TransitType.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="AvatarTransit\SendStates\SendAvatarException.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="AvatarTransit\SendStates\SendAvatarState.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="AvatarTransit\SendStates\TransitBeginState.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Connection\AttachUdpCircuitException.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Connection\AvatarConnection.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Connection\AvatarConnectionManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Connection\ConnectionAlreadyEstablishedException.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Connection\EstablishedBy.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IAgentAssetTransactions.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IAvatarFactory.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IBotManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ICapabilitiesModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ICapsControl.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IChatModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ICloudModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ICommand.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ICommandableModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ICommander.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ICompilationListener.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IDialogModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IDynamicTextureManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IEmailModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IEntityCreator.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IEntityInventory.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IEnvironmentModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IEstateDataStore.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IEstateModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IEventQueue.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IFriendsModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IGetEmailModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IGodsModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IGroupsModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IHttpRequests.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IInterregionComms.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IInventoryArchiverModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IInventoryTransferModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IJ2KDecoder.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ILandChannel.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ILandObject.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IMessageTransferModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IMoapModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IMuteListModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\INonSharedRegionModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IPresenceModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IRegionArchiverModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IRegionConsole.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IRegionDataStore.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IRegionModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IRegionModuleBase.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IRegionModulesController.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IRegionSerializerModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ISceneView.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IScriptModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IServiceRequest.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ISharedRegionModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ISimulatorFeaturesModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ISoundModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ISunModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ITerrain.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ITerrainEffect.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ITerrainModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\ITextureSender.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IUrlModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IUserManagement.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IVegetationModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IWindModelPlugin.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IWindModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IWorldComm.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IWorldMapModule.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IXfer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IXMLRPC.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Interfaces\IXmlRpcRouter.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\AnimationSet.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\AsyncSceneObjectGroupDeleter.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\AttachFlags.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\AvatarAnimations.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\AvatarPartsCollection.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\AvatarRemotePresence.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\AvatarRemotePresences.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\BinBVHAnimation.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\CoalescedObject.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\EntityBase.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\EntityManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\EstablishPresenceResult.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\EventManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\GroupPartsCollection.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\KnownNeighborRegion.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\NeighborStateChangeType.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\RegionStatsHandler.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\RemotePresenceState.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\ReturnInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Scene.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Scene.Inventory.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Scene.PacketHandlers.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Scene.Permissions.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneBase.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneCommunicationService.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneGraph.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneObjectGroup.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneObjectGroup.Inventory.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneObjectPart.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneObjectPartInventory.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneObjectPartMeshCost.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneObjectPartPhysicsSummary.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\ScenePresence.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneTransaction.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SceneTransactionManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\ScriptEvents.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SimStatsReporter.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SitTargetInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\SurroundingRegionManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\TerrainChannel.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\TerrainUtil.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\UndoState.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\UuidGatherer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Scripting\IScriptEngineInterface.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Scripting\IScriptHost.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Scripting\NullScriptHost.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Scripting\ScriptEngineLoader.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Serialization\CoalescedSceneObjectSerializer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Serialization\ICoalescedObjectSerializer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Serialization\IInventoryObjectSerializer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Serialization\IMiscObjectSerializer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Serialization\ISceneObjectSerializer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Serialization\ISerializationEngine.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Serialization\SceneObjectSerializer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Serialization\SceneXmlLoader.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Serialization\SerializationFlags.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Types\BasicQuadTreeNode.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Scenes\Types\UpdateQueue.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	</ItemGroup>
+	<Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+	<PropertyGroup>
+	  <PreBuildEvent>
+	  </PreBuildEvent>
+	  <PostBuildEvent>
+	  </PostBuildEvent>
+	</PropertyGroup>
+</Project>
