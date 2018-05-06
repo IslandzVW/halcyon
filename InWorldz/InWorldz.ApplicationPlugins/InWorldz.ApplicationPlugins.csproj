@@ -208,7 +208,7 @@
 	  <EmbeddedResource Include="Resources\InWorldz.ApplicationPlugins.addin.xml">
 	  </EmbeddedResource>
 	</ItemGroup>
-	<Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+	<Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 	<PropertyGroup>
 	  <PreBuildEvent>
 	  </PreBuildEvent>
