@@ -1,0 +1,418 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Halcyon", "InWorldz\Halcyon\Halcyon.csproj", "{E586BF1E-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.ApplicationPlugins", "InWorldz\InWorldz.ApplicationPlugins\InWorldz.ApplicationPlugins.csproj", "{8C26FC85-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.Arbiter", "InWorldz\InWorldz.Arbiter\InWorldz.Arbiter.csproj", "{E1C1E370-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.Data.Assets.Stratus", "InWorldz\InWorldz.Data.Assets.Stratus\InWorldz.Data.Assets.Stratus.csproj", "{6C18EAD6-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.Data.Inventory.Cassandra", "InWorldz\InWorldz.Data.Inventory.Cassandra\InWorldz.Data.Inventory.Cassandra.csproj", "{62DC97F5-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.JWT", "InWorldz\JWT\InWorldz.JWT.csproj", "{D4CA6D90-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.Phlox.Engine", "InWorldz\InWorldz.Phlox.Engine\InWorldz.Phlox.Engine.csproj", "{BDE863EA-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.PhysxPhysics", "InWorldz\InWorldz.PhysxPhysics\InWorldz.PhysxPhysics.csproj", "{B1A7EE12-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.Region.Data.Thoosa", "InWorldz\InWorldz.Region.Data.Thoosa\InWorldz.Region.Data.Thoosa.csproj", "{154ACBDF-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.RemoteAdmin", "InWorldz\InWorldz.RemoteAdmin\InWorldz.RemoteAdmin.csproj", "{11DB5C08-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.Testing", "InWorldz\InWorldz.Testing\InWorldz.Testing.csproj", "{C58F0EA3-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.VivoxVoice", "InWorldz\InWorldz.VivoxVoice\InWorldz.VivoxVoice.csproj", "{127DBEDD-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MOSES.FreeSwitchVoice", "MOSES\FreeSwitchVoice\MOSES.FreeSwitchVoice.csproj", "{69378D9D-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.ApplicationPlugins.CreateCommsManager", "OpenSim\ApplicationPlugins\CreateCommsManager\OpenSim.ApplicationPlugins.CreateCommsManager.csproj", "{A7C552E7-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.ApplicationPlugins.LoadRegions", "OpenSim\ApplicationPlugins\LoadRegions\OpenSim.ApplicationPlugins.LoadRegions.csproj", "{E4BEC9DC-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.ApplicationPlugins.RegionModulesController", "OpenSim\ApplicationPlugins\RegionModulesController\OpenSim.ApplicationPlugins.RegionModulesController.csproj", "{9EC3C654-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.ApplicationPlugins.ScriptEngine", "OpenSim\ApplicationPlugins\ScriptEngine\OpenSim.ApplicationPlugins.ScriptEngine.csproj", "{C9CB329A-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Base", "OpenSim\Base\OpenSim.Base.csproj", "{08BF5FD8-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Client.Linden", "OpenSim\Client\Linden\OpenSim.Client.Linden.csproj", "{C0216636-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Data", "OpenSim\Data\OpenSim.Data.csproj", "{7E218E2D-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Data.MySQL", "OpenSim\Data\MySQL\OpenSim.Data.MySQL.csproj", "{1E894ECD-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Data.Null", "OpenSim\Data\Null\OpenSim.Data.Null.csproj", "{8D314DCC-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework", "OpenSim\Framework\OpenSim.Framework.csproj", "{BCCDBB55-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.AssetLoader.Filesystem", "OpenSim\Framework\AssetLoader\Filesystem\OpenSim.Framework.AssetLoader.Filesystem.csproj", "{384A4FAB-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.Communications", "OpenSim\Framework\Communications\OpenSim.Framework.Communications.csproj", "{663117AE-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.Configuration.HTTP", "OpenSim\Framework\Configuration\HTTP\OpenSim.Framework.Configuration.HTTP.csproj", "{604890B5-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.Configuration.XML", "OpenSim\Framework\Configuration\XML\OpenSim.Framework.Configuration.XML.csproj", "{8B8C8A90-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.Console", "OpenSim\Framework\Console\OpenSim.Framework.Console.csproj", "{0ED8EBE8-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.RegionLoader.Filesystem", "OpenSim\Framework\RegionLoader\Filesystem\OpenSim.Framework.RegionLoader.Filesystem.csproj", "{75D4AD13-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.RegionLoader.Web", "OpenSim\Framework\RegionLoader\Web\OpenSim.Framework.RegionLoader.Web.csproj", "{B75F4E8C-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.Serialization", "OpenSim\Framework\Serialization\OpenSim.Framework.Serialization.csproj", "{BD63E665-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.Servers", "OpenSim\Framework\Servers\OpenSim.Framework.Servers.csproj", "{726D540D-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.Servers.HttpServer", "OpenSim\Framework\Servers\HttpServer\OpenSim.Framework.Servers.HttpServer.csproj", "{159EC5C2-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.Statistics", "OpenSim\Framework\Statistics\OpenSim.Framework.Statistics.csproj", "{9E387B00-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Framework.Tests", "OpenSim\Framework\Tests\OpenSim.Framework.Tests.csproj", "{FA62D900-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Grid.Framework", "OpenSim\Grid\Framework\OpenSim.Grid.Framework.csproj", "{A1A8DB47-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Grid.GridServer", "OpenSim\Grid\GridServer\OpenSim.Grid.GridServer.csproj", "{66891B26-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Grid.GridServer.Modules", "OpenSim\Grid\GridServer.Modules\OpenSim.Grid.GridServer.Modules.csproj", "{830DDC85-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Grid.MessagingServer", "OpenSim\Grid\MessagingServer\OpenSim.Grid.MessagingServer.csproj", "{5F527C2C-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Grid.MessagingServer.Modules", "OpenSim\Grid\MessagingServer.Modules\OpenSim.Grid.MessagingServer.Modules.csproj", "{A1141017-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Grid.UserServer", "OpenSim\Grid\UserServer\OpenSim.Grid.UserServer.csproj", "{BCD77D47-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Grid.UserServer.Modules", "OpenSim\Grid\UserServer.Modules\OpenSim.Grid.UserServer.Modules.csproj", "{3FE314F2-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.ClientStack", "OpenSim\Region\ClientStack\OpenSim.Region.ClientStack.csproj", "{F6653B7E-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.ClientStack.LindenUDP", "OpenSim\Region\ClientStack\LindenUDP\OpenSim.Region.ClientStack.LindenUDP.csproj", "{E7F1E4AB-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.Communications.Local", "OpenSim\Region\Communications\Local\OpenSim.Region.Communications.Local.csproj", "{2D487033-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.Communications.OGS1", "OpenSim\Region\Communications\OGS1\OpenSim.Region.Communications.OGS1.csproj", "{420077D8-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.CoreModules", "OpenSim\Region\CoreModules\OpenSim.Region.CoreModules.csproj", "{B60B8DCD-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.CoreModules.World.Terrain.DefaultEffects", "OpenSim\Region\CoreModules\World\Terrain\DefaultEffects\OpenSim.Region.CoreModules.World.Terrain.DefaultEffects.csproj", "{CE56B4D1-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.Framework", "OpenSim\Region\Framework\OpenSim.Region.Framework.csproj", "{C98F6D97-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.FrameworkTests", "OpenSim\Region\FrameworkTests\OpenSim.Region.FrameworkTests.csproj", "{5870B678-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.Interfaces", "OpenSim\Region\Interfaces\OpenSim.Region.Interfaces.csproj", "{C96A0E21-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.OptionalModules", "OpenSim\Region\OptionalModules\OpenSim.Region.OptionalModules.csproj", "{BAF8E8F2-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.Physics.BasicPhysicsPlugin", "OpenSim\Region\Physics\BasicPhysicsPlugin\OpenSim.Region.Physics.BasicPhysicsPlugin.csproj", "{99BF4264-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.Physics.ConvexDecompositionDotNet", "OpenSim\Region\Physics\ConvexDecompositionDotNet\OpenSim.Region.Physics.ConvexDecompositionDotNet.csproj", "{405EC0BC-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.Physics.Manager", "OpenSim\Region\Physics\Manager\OpenSim.Region.Physics.Manager.csproj", "{FDCF8D3D-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.Physics.Meshing", "OpenSim\Region\Physics\Meshing\OpenSim.Region.Physics.Meshing.csproj", "{3C65EEA1-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.ScriptEngine.Shared", "OpenSim\Region\ScriptEngine\Shared\OpenSim.Region.ScriptEngine.Shared.csproj", "{F93F91AD-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.ScriptEngine.Shared.Api", "OpenSim\Region\ScriptEngine\Shared\Api\Implementation\OpenSim.Region.ScriptEngine.Shared.Api.csproj", "{C18E3417-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Region.ScriptEngine.Shared.Api.Runtime", "OpenSim\Region\ScriptEngine\Shared\Api\Runtime\OpenSim.Region.ScriptEngine.Shared.Api.Runtime.csproj", "{FC92C9C9-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.ScriptEngine.Shared", "OpenSim\ScriptEngine\Shared\OpenSim.ScriptEngine.Shared.csproj", "{8D75866F-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.ScriptEngine.Shared.Script", "OpenSim\ScriptEngine\Shared.Script\OpenSim.ScriptEngine.Shared.Script.csproj", "{87965470-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Servers.Base", "OpenSim\Servers\Base\OpenSim.Servers.Base.csproj", "{89CACACA-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Services.AssetService", "OpenSim\Services\AssetService\OpenSim.Services.AssetService.csproj", "{7FDD1B76-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Services.Base", "OpenSim\Services\Base\OpenSim.Services.Base.csproj", "{A54AE47C-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Services.Interfaces", "OpenSim\Services\Interfaces\OpenSim.Services.Interfaces.csproj", "{08ECE473-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.Services.UserService", "OpenSim\Services\UserService\OpenSim.Services.UserService.csproj", "{AE37B02D-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.TestSuite", "OpenSim\TestSuite\OpenSim.TestSuite.csproj", "{022C27A5-0000-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSimProfile.Modules", "OpenSimProfile\Modules\OpenSimProfile.Modules.csproj", "{CD7723CB-0000-0000-0000-000000000000}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E586BF1E-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{E586BF1E-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{E586BF1E-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{E586BF1E-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{8C26FC85-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{8C26FC85-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{8C26FC85-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{8C26FC85-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{E1C1E370-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{E1C1E370-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{E1C1E370-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{E1C1E370-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{6C18EAD6-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{6C18EAD6-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{6C18EAD6-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{6C18EAD6-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{62DC97F5-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{62DC97F5-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{62DC97F5-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{62DC97F5-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{D4CA6D90-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{D4CA6D90-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{D4CA6D90-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{D4CA6D90-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{BDE863EA-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{BDE863EA-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{BDE863EA-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{BDE863EA-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{B1A7EE12-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{B1A7EE12-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{B1A7EE12-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{B1A7EE12-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{154ACBDF-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{154ACBDF-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{154ACBDF-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{154ACBDF-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{11DB5C08-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{11DB5C08-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{11DB5C08-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{11DB5C08-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{C58F0EA3-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{C58F0EA3-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{C58F0EA3-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{C58F0EA3-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{127DBEDD-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{127DBEDD-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{127DBEDD-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{127DBEDD-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{69378D9D-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{69378D9D-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{69378D9D-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{69378D9D-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{A7C552E7-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{A7C552E7-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{A7C552E7-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{A7C552E7-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{E4BEC9DC-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{E4BEC9DC-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{E4BEC9DC-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{E4BEC9DC-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{9EC3C654-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{9EC3C654-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{9EC3C654-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{9EC3C654-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{C9CB329A-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{C9CB329A-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{C9CB329A-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{C9CB329A-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{08BF5FD8-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{08BF5FD8-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{08BF5FD8-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{08BF5FD8-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{C0216636-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{C0216636-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{C0216636-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{C0216636-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{7E218E2D-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{7E218E2D-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{7E218E2D-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{7E218E2D-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{1E894ECD-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{1E894ECD-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{1E894ECD-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{1E894ECD-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{8D314DCC-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{8D314DCC-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{8D314DCC-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{8D314DCC-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{BCCDBB55-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{BCCDBB55-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{BCCDBB55-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{BCCDBB55-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{384A4FAB-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{384A4FAB-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{384A4FAB-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{384A4FAB-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{663117AE-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{663117AE-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{663117AE-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{663117AE-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{604890B5-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{604890B5-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{604890B5-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{604890B5-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{8B8C8A90-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{8B8C8A90-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{8B8C8A90-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{8B8C8A90-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{0ED8EBE8-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{0ED8EBE8-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{0ED8EBE8-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{0ED8EBE8-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{75D4AD13-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{75D4AD13-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{75D4AD13-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{75D4AD13-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{B75F4E8C-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{B75F4E8C-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{B75F4E8C-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{B75F4E8C-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{BD63E665-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{BD63E665-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{BD63E665-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{BD63E665-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{726D540D-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{726D540D-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{726D540D-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{726D540D-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{159EC5C2-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{159EC5C2-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{159EC5C2-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{159EC5C2-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{9E387B00-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{9E387B00-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{9E387B00-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{9E387B00-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{FA62D900-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{FA62D900-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{FA62D900-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{FA62D900-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{A1A8DB47-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{A1A8DB47-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{A1A8DB47-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{A1A8DB47-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{66891B26-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{66891B26-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{66891B26-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{66891B26-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{830DDC85-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{830DDC85-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{830DDC85-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{830DDC85-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{5F527C2C-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{5F527C2C-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{5F527C2C-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{5F527C2C-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{A1141017-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{A1141017-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{A1141017-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{A1141017-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{BCD77D47-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{BCD77D47-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{BCD77D47-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{BCD77D47-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{3FE314F2-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{3FE314F2-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{3FE314F2-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{3FE314F2-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{F6653B7E-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{F6653B7E-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{F6653B7E-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{F6653B7E-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{E7F1E4AB-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{E7F1E4AB-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{E7F1E4AB-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{E7F1E4AB-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{2D487033-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{2D487033-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{2D487033-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{2D487033-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{420077D8-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{420077D8-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{420077D8-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{420077D8-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{B60B8DCD-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{B60B8DCD-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{B60B8DCD-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{B60B8DCD-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{CE56B4D1-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{CE56B4D1-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{CE56B4D1-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{CE56B4D1-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{C98F6D97-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{C98F6D97-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{C98F6D97-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{C98F6D97-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{5870B678-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{5870B678-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{5870B678-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{5870B678-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{C96A0E21-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{C96A0E21-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{C96A0E21-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{C96A0E21-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{BAF8E8F2-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{BAF8E8F2-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{BAF8E8F2-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{BAF8E8F2-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{99BF4264-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{99BF4264-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{99BF4264-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{99BF4264-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{405EC0BC-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{405EC0BC-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{405EC0BC-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{405EC0BC-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{FDCF8D3D-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{FDCF8D3D-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{FDCF8D3D-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{FDCF8D3D-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{3C65EEA1-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{3C65EEA1-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{3C65EEA1-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{3C65EEA1-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{F93F91AD-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{F93F91AD-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{F93F91AD-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{F93F91AD-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{C18E3417-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{C18E3417-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{C18E3417-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{C18E3417-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{FC92C9C9-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{FC92C9C9-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{FC92C9C9-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{FC92C9C9-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{8D75866F-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{8D75866F-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{8D75866F-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{8D75866F-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{87965470-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{87965470-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{87965470-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{87965470-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{89CACACA-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{89CACACA-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{89CACACA-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{89CACACA-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{7FDD1B76-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{7FDD1B76-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{7FDD1B76-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{7FDD1B76-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{A54AE47C-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{A54AE47C-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{A54AE47C-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{A54AE47C-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{08ECE473-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{08ECE473-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{08ECE473-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{08ECE473-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{AE37B02D-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{AE37B02D-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{AE37B02D-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{AE37B02D-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{022C27A5-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{022C27A5-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{022C27A5-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{022C27A5-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+		{CD7723CB-0000-0000-0000-000000000000}.Debug|x64.ActiveCfg = Debug|x64
+		{CD7723CB-0000-0000-0000-000000000000}.Debug|x64.Build.0 = Debug|x64
+		{CD7723CB-0000-0000-0000-000000000000}.Release|x64.ActiveCfg = Release|x64
+		{CD7723CB-0000-0000-0000-000000000000}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+EndGlobal
