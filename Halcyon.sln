@@ -24,7 +24,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.Testing", "InWorld
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InWorldz.VivoxVoice", "InWorldz\InWorldz.VivoxVoice\InWorldz.VivoxVoice.csproj", "{127DBEDD-0000-0000-0000-000000000000}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MOSES.FreeSwitchVoice", "MOSES\FreeSwitchVoice\MOSES.FreeSwitchVoice.csproj", "{69378D9D-0000-0000-0000-000000000000}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MOSES.FreeSwitchVoice", "MOSES\FreeswitchVoice\MOSES.FreeSwitchVoice.csproj", "{69378D9D-0000-0000-0000-000000000000}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.ApplicationPlugins.CreateCommsManager", "OpenSim\ApplicationPlugins\CreateCommsManager\OpenSim.ApplicationPlugins.CreateCommsManager.csproj", "{A7C552E7-0000-0000-0000-000000000000}"
 EndProject
