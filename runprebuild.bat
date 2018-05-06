@@ -1,1 +1,1 @@
-call runprebuild2015.bat
+@copy /Y lib\*.* bin\
