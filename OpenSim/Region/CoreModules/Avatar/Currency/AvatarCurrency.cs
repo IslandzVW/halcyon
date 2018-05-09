@@ -521,8 +521,9 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
             int posx = (int)(pos.X + 0.5);
             int posy = (int)(pos.Y + 0.5);
             int posz = (int)(pos.Z + 0.5);
-            string description = String.Format("{0} in {1} at <{2},{3},{4}>", 
-                objName, part.ParentGroup.Scene.RegionInfo.RegionName, posx, posy, posz);
+            string description = String.Format("Paid {0} via {1} in {2} at <{3},{4},{5}>",
+                resolveAgentName(destAvatarID), objName, 
+                part.ParentGroup.Scene.RegionInfo.RegionName, posx, posy, posz);
             int transType = (int)MoneyTransactionType.ObjectPays;
 
             if (amount > 0)
