@@ -1,8 +1,19 @@
 version: 0.9.00.{build}
 
-image: Visual Studio 2017
+image:
+- Visual Studio 2017
+- Ubuntu
 
 configuration: Release
+
+platform:
+- x64
+
+pull_requests:
+  do_not_increment_build_number: true
+
+nuget:
+  disable_publish_on_pr: true
 
 skip_commits:
   files:
@@ -16,25 +27,45 @@ cache:
 - '%LocalAppData%\NuGet\Cache'
 
 before_build:
-- IF EXIST runprebuild.bat runprebuild.bat
+- ps: |
+    if ($isLinux) {
+      $env:COMPILED_BY = "Mono"
+      $env:EDITION = "mono"
+    } else {
+      $env:COMPILED_BY = "VS2017"
+      $env:EDITION = "dotnet"
+    }
+- cmd: IF EXIST runprebuild.bat runprebuild.bat
+- sh: if [ -x runprebuild.sh ]; then ./runprebuild.sh; fi
 - nuget restore Halcyon.sln
 
 build:
   parallel: true
   verbosity: minimal
   project: Halcyon.sln
+  publish_nuget: false
+  publish_nuget_symbols: false
+
+for:
+-
+  matrix:
+    only:
+    - image: Ubuntu
+  build_script:
+  - msbuild Halcyon.sln
 
 after_build:
 - ps: |
-    If(Test-Path "bin/OpenSim.Framework.Servers.dll") {
+    If (Test-Path "bin/OpenSim.Framework.Servers.dll") {
       $halcyon_version = (ls bin/OpenSim.Framework.Servers.dll | % versioninfo).ProductVersion
       Update-AppveyorBuild -Version "0.$($halcyon_version.Substring(0, $halcyon_version.lastIndexOf('.')))-$env:APPVEYOR_BUILD_NUMBER"
     }
-- cmd: move bin halcyon
+- ps: Rename-Item -Path bin -NewName halcyon
 
 # No tests for now.
 test: off
 
 artifacts:
 - path: halcyon
-  name: Halcyon-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH)-Windows
+  name: Halcyon-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH)-$(EDITION)
+  type: zip
