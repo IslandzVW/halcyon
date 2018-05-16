@@ -53,7 +53,7 @@ using Amib.Threading;
 using System.Drawing;
 using System.Runtime.InteropServices;
 
-#if !__MonoCS__
+#if !_MONO_CLI_FLAG_
 using System.DirectoryServices.AccountManagement;
 #endif
 
@@ -186,7 +186,7 @@ namespace OpenSim.Framework
         /// <param name='password'>string</param>
         public static bool AuthenticateAsSystemUser(string username, string password)
         {
-            #if __MonoCS__
+            #if _MONO_CLI_FLAG_
                 // TODO: find a way to check the user info cross platform.  In the mean time better security by NOT allowing remote admin.
                 return false;
             #else
