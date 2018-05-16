@@ -291,7 +291,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             InventoryFolderBase folder = new InventoryFolderBase();
             folder.ID = UUID.Random();
             folder.Name = "Root Folder";
-            folder.Level = InventoryFolderBase.FolderLevel.TopLevel;
+            folder.Level = InventoryFolderBase.FolderLevel.Root;
             folder.Owner = userId;
             folder.ParentID = UUID.Zero;
             folder.Type = (short)OpenMetaverse.FolderType.Root;
@@ -344,7 +344,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             InventoryFolderBase folder = new InventoryFolderBase();
             folder.ID = UUID.Random();
             folder.Name = "Root Folder";
-            folder.Level = InventoryFolderBase.FolderLevel.TopLevel;
+            folder.Level = InventoryFolderBase.FolderLevel.Root;
             folder.Owner = userId;
             folder.ParentID = UUID.Zero;
             folder.Type = (short)OpenMetaverse.FolderType.Root;
@@ -420,7 +420,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             InventoryFolderBase folder = new InventoryFolderBase();
             folder.ID = UUID.Random();
             folder.Name = "Root Folder";
-            folder.Level = InventoryFolderBase.FolderLevel.TopLevel;
+            folder.Level = InventoryFolderBase.FolderLevel.Root;
             folder.Owner = userId;
             folder.ParentID = UUID.Zero;
             folder.Type = (short)OpenMetaverse.FolderType.Root;
@@ -470,7 +470,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             InventoryFolderBase folder1 = new InventoryFolderBase();
             folder1.ID = UUID.Random();
             folder1.Name = "Folder1";
-            folder1.Level = InventoryFolderBase.FolderLevel.TopLevel;
+            folder1.Level = InventoryFolderBase.FolderLevel.Root;
             folder1.Owner = userId;
             folder1.ParentID = UUID.Zero;
             folder1.Type = (short)OpenMetaverse.FolderType.Root;
@@ -480,7 +480,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             InventoryFolderBase folder2 = new InventoryFolderBase();
             folder2.ID = UUID.Random();
             folder2.Name = "Folder1";
-            folder2.Level = InventoryFolderBase.FolderLevel.TopLevel;
+            folder2.Level = InventoryFolderBase.FolderLevel.Root;
             folder2.Owner = userId;
             folder2.ParentID = UUID.Zero;
             folder2.Type = (short)OpenMetaverse.FolderType.Root;
@@ -559,7 +559,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             InventoryFolderBase folder1 = new InventoryFolderBase();
             folder1.ID = UUID.Random();
             folder1.Name = "Folder1";
-            folder1.Level = InventoryFolderBase.FolderLevel.TopLevel;
+            folder1.Level = InventoryFolderBase.FolderLevel.Root;
             folder1.Owner = userId;
             folder1.ParentID = UUID.Zero;
             folder1.Type = (short)OpenMetaverse.FolderType.Root;
@@ -632,7 +632,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             InventoryFolderBase folder1 = new InventoryFolderBase();
             folder1.ID = UUID.Parse("F1EAE367-3A88-48B2-A226-AB3234EE506B");
             folder1.Name = "Folder1";
-            folder1.Level = InventoryFolderBase.FolderLevel.TopLevel;
+            folder1.Level = InventoryFolderBase.FolderLevel.Root;
             folder1.Owner = userId;
             folder1.ParentID = UUID.Zero;
             folder1.Type = (short)OpenMetaverse.FolderType.Root;
@@ -730,7 +730,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             InventoryFolderBase folder1 = new InventoryFolderBase();
             folder1.ID = UUID.Random();
             folder1.Name = "Folder1";
-            folder1.Level = InventoryFolderBase.FolderLevel.TopLevel;
+            folder1.Level = InventoryFolderBase.FolderLevel.Root;
             folder1.Owner = userId;
             folder1.ParentID = UUID.Zero;
             folder1.Type = (short)OpenMetaverse.FolderType.Root;
@@ -741,7 +741,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             InventoryFolderBase folder2 = new InventoryFolderBase();
             folder2.ID = UUID.Random();
             folder2.Name = "Folder2";
-            folder2.Level = InventoryFolderBase.FolderLevel.TopLevel;
+            folder2.Level = InventoryFolderBase.FolderLevel.Root;
             folder2.Owner = userId;
             folder2.ParentID = UUID.Zero;
             folder2.Type = (short)OpenMetaverse.FolderType.Root;
@@ -803,7 +803,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             InventoryFolderBase rootFolder = new InventoryFolderBase();
             rootFolder.ID = UUID.Random();
             rootFolder.Name = "Root Folder";
-            rootFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
+            rootFolder.Level = InventoryFolderBase.FolderLevel.Root;
             rootFolder.Owner = userId;
             rootFolder.ParentID = UUID.Zero;
             rootFolder.Type = (short)OpenMetaverse.FolderType.Root;
@@ -862,7 +862,7 @@ namespace InWorldz.Data.Inventory.Cassandra
             InventoryFolderBase rootFolder = new InventoryFolderBase();
             rootFolder.ID = UUID.Random();
             rootFolder.Name = "Root Folder";
-            rootFolder.Level = InventoryFolderBase.FolderLevel.TopLevel;
+            rootFolder.Level = InventoryFolderBase.FolderLevel.Root;
             rootFolder.Owner = userId;
             rootFolder.ParentID = UUID.Zero;
             rootFolder.Type = (short)OpenMetaverse.FolderType.Root;

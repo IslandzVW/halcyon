@@ -112,7 +112,7 @@
     <Compile Include="trees\RedBlackTreeDictionary.cs">
     </Compile>
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>"$(SolutionDir)PreProcess\$(OutDir)PreProcess.exe"</PreBuildEvent>
     <PostBuildEvent>

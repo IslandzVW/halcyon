@@ -1,0 +1,457 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+	<PropertyGroup>
+	  <ProjectType>Local</ProjectType>
+	  <ProductVersion>14.0.23107.0</ProductVersion>
+	  <SchemaVersion>2.0</SchemaVersion>
+	  <ProjectGuid>{663117AE-0000-0000-0000-000000000000}</ProjectGuid>
+	  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	  <ApplicationIcon></ApplicationIcon>
+	  <AssemblyKeyContainerName>
+	  </AssemblyKeyContainerName>
+	  <AssemblyName>OpenSim.Framework.Communications</AssemblyName>
+	  <DefaultClientScript>JScript</DefaultClientScript>
+	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
+	  <DelaySign>false</DelaySign>
+	  <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+	  <OutputPath>../../../bin/</OutputPath>
+	  <OutputType>Library</OutputType>
+	  <AppDesignerFolder></AppDesignerFolder>
+	  <RootNamespace>OpenSim.Framework.Communications</RootNamespace>
+	  <StartupObject></StartupObject>
+	  <StartArguments></StartArguments>
+	  <FileUpgradeFlags>
+	  </FileUpgradeFlags>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE;DEBUG</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>True</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>False</Optimize>
+	  <OutputPath>..\..\..\bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>False</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>True</Optimize>
+	  <OutputPath>..\..\..\bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Reference Include="CSJ2K" >
+		  <Name>CSJ2K</Name>
+		<HintPath>..\..\..\bin\CSJ2K.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="GlynnTucker.Cache" >
+		  <Name>GlynnTucker.Cache</Name>
+		<HintPath>..\..\..\bin\GlynnTucker.Cache.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="InWorldz.Whip.Client" >
+		  <Name>InWorldz.Whip.Client</Name>
+		<HintPath>..\..\..\bin\InWorldz.Whip.Client.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="LibreMetaverse" >
+		  <Name>LibreMetaverse</Name>
+		<HintPath>..\..\..\bin\LibreMetaverse.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="LibreMetaverse.StructuredData" >
+		  <Name>LibreMetaverse.StructuredData</Name>
+		<HintPath>..\..\..\bin\LibreMetaverse.StructuredData.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="LibreMetaverse.Types" >
+		  <Name>LibreMetaverse.Types</Name>
+		<HintPath>..\..\..\bin\LibreMetaverse.Types.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="log4net" >
+		  <Name>log4net</Name>
+		<HintPath>..\..\..\bin\log4net.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Nini" >
+		  <Name>Nini</Name>
+		<HintPath>..\..\..\bin\Nini.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="protobuf-net" >
+		  <Name>protobuf-net</Name>
+		<HintPath>..\..\..\bin\protobuf-net.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="SmartThreadPool" >
+		  <Name>SmartThreadPool</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System" >
+		  <Name>System</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Core" >
+		  <Name>System.Core</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Web" >
+		  <Name>System.Web</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml" >
+		  <Name>System.Xml</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="XmlRpcCS" >
+		  <Name>XmlRpcCS</Name>
+		<HintPath>..\..\..\bin\XmlRpcCS.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\InWorldz\JWT\InWorldz.JWT.csproj">
+		<Name>InWorldz.JWT</Name>
+		<Project>{D4CA6D90-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Data\OpenSim.Data.csproj">
+		<Name>OpenSim.Data</Name>
+		<Project>{7E218E2D-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\OpenSim.Framework.csproj">
+		<Name>OpenSim.Framework</Name>
+		<Project>{BCCDBB55-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\AssetLoader\Filesystem\OpenSim.Framework.AssetLoader.Filesystem.csproj">
+		<Name>OpenSim.Framework.AssetLoader.Filesystem</Name>
+		<Project>{384A4FAB-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Console\OpenSim.Framework.Console.csproj">
+		<Name>OpenSim.Framework.Console</Name>
+		<Project>{0ED8EBE8-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Servers\OpenSim.Framework.Servers.csproj">
+		<Name>OpenSim.Framework.Servers</Name>
+		<Project>{726D540D-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Servers\HttpServer\OpenSim.Framework.Servers.HttpServer.csproj">
+		<Name>OpenSim.Framework.Servers.HttpServer</Name>
+		<Project>{159EC5C2-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Statistics\OpenSim.Framework.Statistics.csproj">
+		<Name>OpenSim.Framework.Statistics</Name>
+		<Project>{9E387B00-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="CommunicationsManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="GenericAsyncResult.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IAuthentication.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IAvatarService.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IGridServices.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IHyperlink.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IInterServiceInventoryServices.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IInventoryServices.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IMessagingService.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="InventoryServiceBase.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ISecureInventoryService.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IUserAdminService.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IUserService.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="RestClient.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserProfileManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserProfileManagerData.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UserSpecificNetworkRequestParams.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Cache\AssetCache.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Cache\AuthedSessionCache.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Cache\CachedUserInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Cache\LibraryRootFolder.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Cache\UserProfileException.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Cache\WHIPAssetClient.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\Caps.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\CapsHandler.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\CapsHandlers.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSD.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDArray.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDAssetUploadComplete.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDAssetUploadRequest.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDAssetUploadResponse.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDCapEvent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDEmpty.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDEnvironmentSettings.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDHelpers.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDInventoryItem.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDItemUpdate.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDMapLayer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDMapLayerResponse.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDMapRequest.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDMethod.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDMethodString.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDParcelVoiceInfoResponse.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDRemoteParcelResponse.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDScriptCompileFail.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDScriptCompileSuccess.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDStreamHandler.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDTaskInventoryUploadComplete.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDTaskScriptUpdate.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDTaskScriptUploadComplete.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDTest.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDType.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Capabilities\LLSDVoiceAccountResponse.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Clients\AuthClient.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Clients\GridClient.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Clients\InventoryClient.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Clients\RegionClient.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="JWT\AuthenticationException.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="JWT\AuthenticationFailureCause.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="JWT\JWTUserAuthenticationGateway.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Limit\IRequestLimitStrategy.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Limit\NullLimitStrategy.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Limit\RepeatLimitStrategy.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Limit\TimeLimitStrategy.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Messages\AgentPutMessage.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Messages\FriendsListRequest.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Messages\FriendsListResponse.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Messages\ObjectPostMessage.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Messages\PackedAgentPrefs.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Messages\PackedAnimation.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Messages\PackedAppearance.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Messages\PackedGroupMembership.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Messages\PackedWearable.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Osp\OspInventoryWrapperPlugin.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Osp\OspResolver.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Properties\AssemblyInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Services\GridInfoService.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Services\LoginResponse.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Services\LoginService.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="XMPP\XmppError.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="XMPP\XmppIqStanza.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="XMPP\XmppMessageStanza.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="XMPP\XmppPresenceStanza.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="XMPP\XmppSerializer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="XMPP\XmppStanza.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="XMPP\XmppWriter.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <EmbeddedResource Include="Resources\AssetCache.addin.xml">
+	  </EmbeddedResource>
+	</ItemGroup>
+	<Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+	<PropertyGroup>
+	  <PreBuildEvent>
+	  </PreBuildEvent>
+	  <PostBuildEvent>
+	  </PostBuildEvent>
+	</PropertyGroup>
+</Project>

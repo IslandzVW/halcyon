@@ -1,0 +1,211 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+	<PropertyGroup>
+	  <ProjectType>Local</ProjectType>
+	  <ProductVersion>14.0.23107.0</ProductVersion>
+	  <SchemaVersion>2.0</SchemaVersion>
+	  <ProjectGuid>{8D75866F-0000-0000-0000-000000000000}</ProjectGuid>
+	  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	  <ApplicationIcon></ApplicationIcon>
+	  <AssemblyKeyContainerName>
+	  </AssemblyKeyContainerName>
+	  <AssemblyName>OpenSim.ScriptEngine.Shared</AssemblyName>
+	  <DefaultClientScript>JScript</DefaultClientScript>
+	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
+	  <DelaySign>false</DelaySign>
+	  <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+	  <OutputPath>../../../bin/</OutputPath>
+	  <OutputType>Library</OutputType>
+	  <AppDesignerFolder></AppDesignerFolder>
+	  <RootNamespace>OpenSim.ScriptEngine.Shared</RootNamespace>
+	  <StartupObject></StartupObject>
+	  <StartArguments></StartArguments>
+	  <FileUpgradeFlags>
+	  </FileUpgradeFlags>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE;DEBUG</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>True</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>False</Optimize>
+	  <OutputPath>..\..\..\bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>False</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>True</Optimize>
+	  <OutputPath>..\..\..\bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Reference Include="LibreMetaverse" >
+		  <Name>LibreMetaverse</Name>
+		<HintPath>..\..\..\bin\LibreMetaverse.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="LibreMetaverse.Types" >
+		  <Name>LibreMetaverse.Types</Name>
+		<HintPath>..\..\..\bin\LibreMetaverse.Types.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="log4net" >
+		  <Name>log4net</Name>
+		<HintPath>..\..\..\bin\log4net.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Nini" >
+		  <Name>Nini</Name>
+		<HintPath>..\..\..\bin\Nini.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System" >
+		  <Name>System</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Data" >
+		  <Name>System.Data</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Web" >
+		  <Name>System.Web</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml" >
+		  <Name>System.Xml</Name>
+		<Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Base\OpenSim.Base.csproj">
+		<Name>OpenSim.Base</Name>
+		<Project>{08BF5FD8-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Framework\OpenSim.Framework.csproj">
+		<Name>OpenSim.Framework</Name>
+		<Project>{BCCDBB55-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Framework\Communications\OpenSim.Framework.Communications.csproj">
+		<Name>OpenSim.Framework.Communications</Name>
+		<Project>{663117AE-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Framework\Console\OpenSim.Framework.Console.csproj">
+		<Name>OpenSim.Framework.Console</Name>
+		<Project>{0ED8EBE8-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Region\CoreModules\OpenSim.Region.CoreModules.csproj">
+		<Name>OpenSim.Region.CoreModules</Name>
+		<Project>{B60B8DCD-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Region\Framework\OpenSim.Region.Framework.csproj">
+		<Name>OpenSim.Region.Framework</Name>
+		<Project>{C98F6D97-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Region\Physics\Manager\OpenSim.Region.Physics.Manager.csproj">
+		<Name>OpenSim.Region.Physics.Manager</Name>
+		<Project>{FDCF8D3D-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Region\ScriptEngine\Shared\OpenSim.Region.ScriptEngine.Shared.csproj">
+		<Name>OpenSim.Region.ScriptEngine.Shared</Name>
+		<Project>{F93F91AD-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Shared.Script\OpenSim.ScriptEngine.Shared.Script.csproj">
+		<Name>OpenSim.ScriptEngine.Shared.Script</Name>
+		<Project>{87965470-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="EventParams.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IScriptCommandProvider.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IScriptCompiler.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IScriptEngine.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IScriptEngineComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IScriptEngineRegionComponent.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IScriptEventProvider.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IScriptExecutor.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IScriptLoader.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IScriptScheduler.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="RegionInfoStructure.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ScriptMetaData.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ScriptStructure.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="Properties\AssemblyInfo.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	</ItemGroup>
+	<Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+	<PropertyGroup>
+	  <PreBuildEvent>
+	  </PreBuildEvent>
+	  <PostBuildEvent>
+	  </PostBuildEvent>
+	</PropertyGroup>
+</Project>

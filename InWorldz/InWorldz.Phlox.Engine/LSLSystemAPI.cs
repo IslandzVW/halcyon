@@ -10259,14 +10259,21 @@ namespace InWorldz.Phlox.Engine
                             return;
 
                         face = rules.GetLSLIntegerItem(idx++);
-
                         string specular_tex = rules.Data[idx++].ToString();
+
+                        // First see if its the name of a texture in inventory
                         UUID SpecularTextureID = InventoryKey(specular_tex, (int)AssetType.Texture);
+
+                        // If we got UUID.Zero back its not a texture name.  Try and parse it as a UUID
+                        // If that fails we'll return an error (should shout one according to the specs)
                         if (SpecularTextureID == UUID.Zero)
-                            UUID.TryParse(specular_tex, out SpecularTextureID);
-                        if (SpecularTextureID == UUID.Zero)
-                            return;
-                        specular_tex = SpecularTextureID.ToString();
+                        {
+                            if (UUID.TryParse(specular_tex, out SpecularTextureID) == false)
+                                return;
+
+                            // UUID.Zero here is valid.  It means to clear the normal settings.
+                            specular_tex = SpecularTextureID.ToString();
+                        }
 
                         LSL_Vector specular_repeats = rules.GetVector3Item(idx++);
                         LSL_Vector specular_offsets = rules.GetVector3Item(idx++);
@@ -10303,14 +10310,21 @@ namespace InWorldz.Phlox.Engine
                             return;
 
                         face = rules.GetLSLIntegerItem(idx++);
-
                         string normal_tex = rules.Data[idx++].ToString();
-                        UUID NormaLTextureID = InventoryKey(normal_tex, (int)AssetType.Texture);
-                        if (NormaLTextureID == UUID.Zero)
-                            UUID.TryParse(normal_tex, out NormaLTextureID);
-                        if (NormaLTextureID == UUID.Zero)
-                            return;
-                        normal_tex = NormaLTextureID.ToString();
+
+                        // First see if its the name of a texture in inventory
+                        UUID NormalTextureID = InventoryKey(normal_tex, (int)AssetType.Texture);
+
+                        // If we got UUID.Zero back its not a texture name.  Try and parse it as a UUID
+                        // If that fails we'll return an error (should shout one according to the specs)
+                        if (NormalTextureID == UUID.Zero)
+                        {
+                            if (UUID.TryParse(normal_tex, out NormalTextureID) == false)
+                                return;
+
+                            // UUID.Zero here is valid.  It means to clear the normal settings.
+                            normal_tex = NormalTextureID.ToString();
+                        }
 
                         LSL_Vector normal_repeats = rules.GetVector3Item(idx++);
                         LSL_Vector normal_offsets = rules.GetVector3Item(idx++);
@@ -11880,6 +11894,11 @@ namespace InWorldz.Phlox.Engine
                         break;
 
                     case ScriptBaseClass.PRIM_MEDIA_WHITELIST:
+                        if (me.WhiteList == null)
+                        {
+                            res.Add("");
+                            break;
+                        }
                         string[] urls = (string[])me.WhiteList.Clone();
 
                         for (int j = 0; j < urls.Length; j++)
@@ -13248,7 +13267,7 @@ namespace InWorldz.Phlox.Engine
                             list.Add((string)(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaURL));
                             break;
                         case ParcelMediaCommandEnum.Desc:
-                            list.Add((string)(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).Description));
+                            list.Add((string)(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaDescription));
                             break;
                         case ParcelMediaCommandEnum.Texture:
                             list.Add((string)(World.GetLandData(m_host.AbsolutePosition.X, m_host.AbsolutePosition.Y).MediaID.ToString()));

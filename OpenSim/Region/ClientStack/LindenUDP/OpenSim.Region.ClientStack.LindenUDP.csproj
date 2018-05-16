@@ -1,0 +1,244 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+	<PropertyGroup>
+	  <ProjectType>Local</ProjectType>
+	  <ProductVersion>14.0.23107.0</ProductVersion>
+	  <SchemaVersion>2.0</SchemaVersion>
+	  <ProjectGuid>{E7F1E4AB-0000-0000-0000-000000000000}</ProjectGuid>
+	  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	  <ApplicationIcon></ApplicationIcon>
+	  <AssemblyKeyContainerName>
+	  </AssemblyKeyContainerName>
+	  <AssemblyName>OpenSim.Region.ClientStack.LindenUDP</AssemblyName>
+	  <DefaultClientScript>JScript</DefaultClientScript>
+	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
+	  <DelaySign>false</DelaySign>
+	  <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+	  <OutputPath>../../../../bin/</OutputPath>
+	  <OutputType>Library</OutputType>
+	  <AppDesignerFolder></AppDesignerFolder>
+	  <RootNamespace>OpenSim.Region.ClientStack.LindenUDP</RootNamespace>
+	  <StartupObject></StartupObject>
+	  <StartArguments></StartArguments>
+	  <FileUpgradeFlags>
+	  </FileUpgradeFlags>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE;DEBUG</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>True</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>False</Optimize>
+	  <OutputPath>..\..\..\..\bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <BaseAddress>285212672</BaseAddress>
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	  <ConfigurationOverrideFile>
+	  </ConfigurationOverrideFile>
+	  <DefineConstants>TRACE</DefineConstants>
+	  <DocumentationFile></DocumentationFile>
+	  <DebugSymbols>False</DebugSymbols>
+	  <FileAlignment>4096</FileAlignment>
+	  <Optimize>True</Optimize>
+	  <OutputPath>..\..\..\..\bin\</OutputPath>
+	  <RegisterForComInterop>False</RegisterForComInterop>
+	  <RemoveIntegerChecks>False</RemoveIntegerChecks>
+	  <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+	  <WarningLevel>4</WarningLevel>
+	  <NoStdLib>False</NoStdLib>
+	  <NoWarn></NoWarn>
+	  <PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Reference Include="C5" >
+		  <Name>C5</Name>
+		<HintPath>..\..\..\..\bin\C5.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="LibreMetaverse" >
+		  <Name>LibreMetaverse</Name>
+		<HintPath>..\..\..\..\bin\LibreMetaverse.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="LibreMetaverse.StructuredData" >
+		  <Name>LibreMetaverse.StructuredData</Name>
+		<HintPath>..\..\..\..\bin\LibreMetaverse.StructuredData.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="LibreMetaverse.Types" >
+		  <Name>LibreMetaverse.Types</Name>
+		<HintPath>..\..\..\..\bin\LibreMetaverse.Types.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="log4net" >
+		  <Name>log4net</Name>
+		<HintPath>..\..\..\..\bin\log4net.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Nini" >
+		  <Name>Nini</Name>
+		<HintPath>..\..\..\..\bin\Nini.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Nini" >
+		  <Name>Nini</Name>
+		<HintPath>..\..\..\..\bin\Nini.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="SmartThreadPool" >
+		  <Name>SmartThreadPool</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System" >
+		  <Name>System</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Core" >
+		  <Name>System.Core</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Drawing" >
+		  <Name>System.Drawing</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="System.Xml" >
+		  <Name>System.Xml</Name>
+		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="XmlRpcCS" >
+		  <Name>XmlRpcCS</Name>
+		<HintPath>..\..\..\..\bin\XmlRpcCS.dll</HintPath>
+		<Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\Data\OpenSim.Data.csproj">
+		<Name>OpenSim.Data</Name>
+		<Project>{7E218E2D-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\..\Framework\OpenSim.Framework.csproj">
+		<Name>OpenSim.Framework</Name>
+		<Project>{BCCDBB55-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\..\Framework\Communications\OpenSim.Framework.Communications.csproj">
+		<Name>OpenSim.Framework.Communications</Name>
+		<Project>{663117AE-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\..\Framework\Console\OpenSim.Framework.Console.csproj">
+		<Name>OpenSim.Framework.Console</Name>
+		<Project>{0ED8EBE8-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\..\Framework\Servers\OpenSim.Framework.Servers.csproj">
+		<Name>OpenSim.Framework.Servers</Name>
+		<Project>{726D540D-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\..\Framework\Statistics\OpenSim.Framework.Statistics.csproj">
+		<Name>OpenSim.Framework.Statistics</Name>
+		<Project>{9E387B00-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\OpenSim.Region.ClientStack.csproj">
+		<Name>OpenSim.Region.ClientStack</Name>
+		<Project>{F6653B7E-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Communications\Local\OpenSim.Region.Communications.Local.csproj">
+		<Name>OpenSim.Region.Communications.Local</Name>
+		<Project>{2D487033-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\CoreModules\OpenSim.Region.CoreModules.csproj">
+		<Name>OpenSim.Region.CoreModules</Name>
+		<Project>{B60B8DCD-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Framework\OpenSim.Region.Framework.csproj">
+		<Name>OpenSim.Region.Framework</Name>
+		<Project>{C98F6D97-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\..\Physics\Manager\OpenSim.Region.Physics.Manager.csproj">
+		<Name>OpenSim.Region.Physics.Manager</Name>
+		<Project>{FDCF8D3D-0000-0000-0000-000000000000}</Project>
+		<Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+		<Private>False</Private>
+	  </ProjectReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="IncomingPacket.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="IncomingPacketHistoryCollection.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="J2KImage.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="LLClientView.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="LLFileTransfer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="LLImageManager.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="LLUDPClient.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="LLUDPServer.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="OpenSimUDPBase.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="ThrottleRates.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="TokenBucket.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UnackedPacketCollection.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	  <Compile Include="UnpackedThrottles.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	</ItemGroup>
+	<Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+	<PropertyGroup>
+	  <PreBuildEvent>
+	  </PreBuildEvent>
+	  <PostBuildEvent>
+	  </PostBuildEvent>
+	</PropertyGroup>
+</Project>

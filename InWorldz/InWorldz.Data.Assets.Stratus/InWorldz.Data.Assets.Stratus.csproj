@@ -1,0 +1,277 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>14.0.23107.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{6C18EAD6-0000-0000-0000-000000000000}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>InWorldz.Data.Assets.Stratus</AssemblyName>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <OutputPath>../../bin/</OutputPath>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>
+    </AppDesignerFolder>
+    <RootNamespace>InWorldz.Data.Assets.Stratus</RootNamespace>
+    <StartupObject>
+    </StartupObject>
+    <StartArguments>
+    </StartArguments>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>False</Optimize>
+    <OutputPath>..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>False</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>True</Optimize>
+    <OutputPath>..\..\bin\</OutputPath>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <RemoveIntegerChecks>False</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>False</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="C5">
+      <Name>C5</Name>
+      <HintPath>..\..\bin\C5.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="KellermanSoftware.Compare-NET-Objects">
+      <Name>KellermanSoftware.Compare-NET-Objects</Name>
+      <HintPath>..\..\bin\KellermanSoftware.Compare-NET-Objects.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="LibreMetaverse">
+      <Name>LibreMetaverse</Name>
+      <HintPath>..\..\bin\LibreMetaverse.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="LibreMetaverse.Types">
+      <Name>LibreMetaverse.Types</Name>
+      <HintPath>..\..\bin\LibreMetaverse.Types.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="log4net">
+      <Name>log4net</Name>
+      <HintPath>..\..\bin\log4net.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Nini">
+      <Name>Nini</Name>
+      <HintPath>..\..\bin\Nini.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="nunit.framework">
+      <Name>nunit.framework</Name>
+      <HintPath>..\..\bin\nunit.framework.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="openstacknet">
+      <Name>openstacknet</Name>
+      <HintPath>..\..\bin\openstacknet.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="protobuf-net">
+      <Name>protobuf-net</Name>
+      <HintPath>..\..\bin\protobuf-net.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SimpleRESTServices">
+      <Name>SimpleRESTServices</Name>
+      <HintPath>..\..\bin\SimpleRESTServices.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SmartThreadPool">
+      <Name>SmartThreadPool</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System">
+      <Name>System</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <Name>System.Drawing</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Remoting">
+      <Name>System.Runtime.Remoting</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Web">
+      <Name>System.Web</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml">
+      <Name>System.Xml</Name>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Tools">
+      <Name>Tools</Name>
+      <HintPath>..\..\bin\Tools.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\OpenSim\Base\OpenSim.Base.csproj">
+      <Name>OpenSim.Base</Name>
+      <Project>{08BF5FD8-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\OpenSim\Framework\OpenSim.Framework.csproj">
+      <Name>OpenSim.Framework</Name>
+      <Project>{BCCDBB55-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\OpenSim\Framework\Communications\OpenSim.Framework.Communications.csproj">
+      <Name>OpenSim.Framework.Communications</Name>
+      <Project>{663117AE-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\OpenSim\Framework\Console\OpenSim.Framework.Console.csproj">
+      <Name>OpenSim.Framework.Console</Name>
+      <Project>{0ED8EBE8-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\OpenSim\Framework\Servers\OpenSim.Framework.Servers.csproj">
+      <Name>OpenSim.Framework.Servers</Name>
+      <Project>{726D540D-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\OpenSim\Region\ClientStack\OpenSim.Region.ClientStack.csproj">
+      <Name>OpenSim.Region.ClientStack</Name>
+      <Project>{F6653B7E-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\OpenSim\Region\CoreModules\OpenSim.Region.CoreModules.csproj">
+      <Name>OpenSim.Region.CoreModules</Name>
+      <Project>{B60B8DCD-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\OpenSim\Region\Framework\OpenSim.Region.Framework.csproj">
+      <Name>OpenSim.Region.Framework</Name>
+      <Project>{C98F6D97-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\OpenSim\Region\Interfaces\OpenSim.Region.Interfaces.csproj">
+      <Name>OpenSim.Region.Interfaces</Name>
+      <Project>{C96A0E21-0000-0000-0000-000000000000}</Project>
+      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\InWorldz.Data.Assets.Stratus.addin.xml">
+    </EmbeddedResource>
+    <Compile Include="CloudFilesAssetClient.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CloudFilesAssetWorker.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StratusAsset.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StratusAssetClient.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StratusPlugin.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Cache\Cache.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Cache\CacheEntry.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Cache\DiskWriteBackCache.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\Constants.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\Settings.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CoreExt\ExtendedCloudFilesProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CoreExt\ExtendedJsonRestServices.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\AssetCacheTests.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\AssetClassTests.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\CloudFilesTest.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tests\DiskWriteBackCacheTests.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

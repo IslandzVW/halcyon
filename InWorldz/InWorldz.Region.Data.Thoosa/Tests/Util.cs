@@ -208,6 +208,7 @@ namespace InWorldz.Region.Data.Thoosa.Tests
             part.UUID = UUID.Random();
             part.Velocity = Util.RandomVector();
             part.FromItemID = UUID.Random();
+            part.ServerFlags |= (uint)ServerPrimFlags.SitTargetStateSaved;  // This one has been migrated to the new sit target storage
 
             part.SetSitTarget(true, Util.RandomVector(), Util.RandomQuat(), false);
 

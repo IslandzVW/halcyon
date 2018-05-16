@@ -15,6 +15,7 @@
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <OutputPath>..\..\..\..\bin\</OutputPath>
     <OutputType>Library</OutputType>
     <AppDesignerFolder></AppDesignerFolder>
     <RootNamespace>OpenSim.Framework.Servers.Tests</RootNamespace>
@@ -126,7 +127,7 @@
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>

@@ -37,7 +37,7 @@ using OpenSim.Region.Framework.Scenes;
 
 namespace OpenSim.Region.FrameworkTests
 {
-    internal class SceneUtil
+    public class SceneUtil
     {
         private readonly static Random rand = new Random();
 
@@ -113,7 +113,7 @@ namespace OpenSim.Region.FrameworkTests
             part.TouchName = "DoIt";
             part.UUID = UUID.Random();
             part.Velocity = SceneUtil.RandomVector();
-            part.FromItemID = UUID.Random();
+            part.FromItemID = UUID.Zero;    // Always zero for child prims, non-zero for root prims associated with inventory items, after being rezzed only.
 
             part.SetSitTarget(true, SceneUtil.RandomVector(), SceneUtil.RandomQuat(), false);
 

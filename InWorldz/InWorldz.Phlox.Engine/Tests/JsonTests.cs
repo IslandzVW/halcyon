@@ -6,6 +6,7 @@ using Nini.Ini;
 using OpenMetaverse;
 using System.Collections.Generic;
 using OpenSim.Region.ScriptEngine.Shared.ScriptBase;
+using OpenSim.Region.Framework.Scenes;
 
 namespace InWorldz.Phlox.Engine.Tests
 {
@@ -14,6 +15,7 @@ namespace InWorldz.Phlox.Engine.Tests
     public class JsonTests
     {
         LSLSystemAPI lslSystemApi;
+        Scene world;
 
         [TestFixtureSetUp]
         public void Setup()
@@ -21,9 +23,15 @@ namespace InWorldz.Phlox.Engine.Tests
             var iniDoc = new IniDocument();
             var configSource = new IniConfigSource(iniDoc);
             configSource.AddConfig("InWorldz.Phlox");
-            var world = SceneHelper.CreateScene(9000, 1000, 1000);
+            world = SceneHelper.CreateScene(9000, 1000, 1000);
             var engine = new MockScriptEngine(world, configSource);
             lslSystemApi = new LSLSystemAPI(engine, null, 0, UUID.Zero);
+        }
+
+        [TestFixtureTearDown]
+        public void Teardown()
+        {
+            SceneHelper.TearDownScene(world);
         }
 
         [Test]
