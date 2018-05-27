@@ -47,6 +47,7 @@ namespace OpenSim.Framework
         public uint HttpPort = ConfigSettings.DefaultUserServerHttpPort;
         public bool HttpSSL = ConfigSettings.DefaultUserServerHttpSSL;
         public uint DefaultUserLevel = 0;
+        public string DeletedUserAccount = String.Empty;
 
         public string LibraryName = String.Empty;
         public string LibraryXmlfile = String.Empty;
@@ -151,6 +152,8 @@ namespace OpenSim.Framework
                                                 "Known good region X", "1000", false);
             m_configMember.addConfigurationOption("default_Y", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Known good region Y", "1000", false);
+            m_configMember.addConfigurationOption("deleted_user_account", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "Dummy account UUID for deleted users", "1f7d5b12-2241-48fb-8837-9124af453fb5", true);
             m_configMember.addConfigurationOption("map_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                 "Map server URI?", String.Empty, false);
             m_configMember.addConfigurationOption("profile_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
@@ -212,6 +215,9 @@ namespace OpenSim.Framework
                     break;
                 case "default_Y":
                     DefaultY = (uint) configuration_result;
+                    break;
+                case "deleted_user_account":
+                    DeletedUserAccount = (string)configuration_result;
                     break;
                 case "enable_hg_login":
                     EnableHGLogin = (bool)configuration_result;
