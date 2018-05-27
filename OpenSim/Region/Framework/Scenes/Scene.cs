@@ -2137,6 +2137,12 @@ namespace OpenSim.Region.Framework.Scenes
             return false;
         }
 
+        private UUID RemapUserUUID(UUID uuid)
+        {
+            UserProfileData userProfile = this.CommsManager.UserService.GetUserProfile(uuid);
+            return (userProfile == null) ? uuid : userProfile.ID;
+        }
+
         /// <summary>
         /// Loads the World's objects
         /// </summary>
@@ -2154,11 +2160,19 @@ namespace OpenSim.Region.Framework.Scenes
                                       group.GetParts().Count);
                 }
 
+                // Remap user UUIDs to handle deleted user accounts
+                group.OwnerID = RemapUserUUID(group.OwnerID);
+
                 if (IsBadUserLoad(group) || IsBlacklistedLoad(group))
                     continue;   // already reported above
 
                 group.ForEachPart(delegate(SceneObjectPart part)
                 {
+                    // Remap user UUIDs to handle deleted user accounts
+                    part.OwnerID = RemapUserUUID(part.OwnerID);
+                    part.CreatorID = RemapUserUUID(part.CreatorID);
+                    part.LastOwnerID = RemapUserUUID(part.LastOwnerID);
+
                     /// This fixes inconsistencies between this part and the root part.
                     /// In the past, there was a bug in Link operations that did not force
                     /// these permissions on child prims when linking.
