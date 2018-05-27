@@ -31,6 +31,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using log4net;
+using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -126,6 +127,8 @@ namespace OpenSim.Framework.Communications
         private readonly Dictionary<string, CachedUserInfo> m_userInfoByName
             = new Dictionary<string, CachedUserInfo>();
 
+        private Dictionary<String, UUID> customUserMap = new Dictionary<string, UUID>();
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -136,6 +139,31 @@ namespace OpenSim.Framework.Communications
             m_userInfoByUUID.OnItemPurged += _cachedUserInfo_OnItemPurged;
 
             m_isUserServer = System.Diagnostics.Process.GetCurrentProcess().ProcessName.Contains("OpenSim.Grid.UserServer");
+        }
+
+        public void InitConfig(UserConfig cfg)
+        {
+            // Currently we only support DeletedUserAccount from the XML config.
+            string customType = "DELETED";
+            string deletedStr = cfg.DeletedUserAccount;
+            if (deletedStr != String.Empty)
+            {
+                UUID uuid = UUID.Zero;
+                if (UUID.TryParse(deletedStr.Trim(), out uuid))
+                {
+                    customUserMap.Add(customType, uuid);
+                }
+            }
+        }
+
+        // Allow deleted users to be remapped to a different account.
+        public UUID RemapCustomProfile(UUID targetUUID, string customType)
+        {
+            string testKey = customType.Trim().ToUpper();
+            if ((testKey != String.Empty)  && customUserMap.ContainsKey(testKey))
+                return customUserMap[testKey];  // special customType override (DELETED)
+
+            return targetUUID;  // just pass this one through
         }
 
         /// <summary>
@@ -263,6 +291,36 @@ namespace OpenSim.Framework.Communications
 
         private Dictionary<UUID, object> m_fetchLocks = new Dictionary<UUID, object>();
 
+        private UserProfileData _GetUserProfileData(UserProfileData profile)
+        {
+            if (profile == null)
+                return null;
+
+            // Check if it's a special
+            string customType = profile.CustomType.Trim().ToUpper();
+            UUID remappedID = UUID.Zero;
+            if (!customUserMap.TryGetValue(customType, out remappedID))
+                return profile;
+
+            if (profile.ID == remappedID)
+                return profile; // avoid infinite recursion
+
+            // Otherwise it's a special customType (DELETED) and remap the UUID to the special account.
+            return GetUserProfile(remappedID);
+        }
+
+        private UserProfileData _GetUserProfileData(UUID uuid)
+        {
+            UserProfileData profile = m_storage.GetUserProfileData(uuid);
+            return _GetUserProfileData(profile);
+        }
+
+        private UserProfileData _GetUserProfileData(string firstName, string lastName)
+        {
+            UserProfileData profile = m_storage.GetUserProfileData(firstName, lastName);
+            return _GetUserProfileData(profile);
+        }
+
         public UserProfileData GetUserProfile(UUID uuid, bool forceRefresh)
         {
             if (uuid == UUID.Zero)
@@ -329,7 +387,8 @@ namespace OpenSim.Framework.Communications
                                 if (profile == null)
                                 {
                                     // still not found, get it from User service (or db if this is User).
-                                    profile = m_storage.GetUserProfileData(uuid);
+                                    profile = _GetUserProfileData(uuid);
+                                    if (profile != null)
                                     if (profile != null)
                                     {
                                         // Refresh agent data (possibly forced refresh)
@@ -396,7 +455,7 @@ namespace OpenSim.Framework.Communications
                 return GetUserProfile(uuid, forceRefresh);  // in case it has expired
 
             // Not cached, UUID unknown, fetch from storage/XMLRPC by name.
-            profile = m_storage.GetUserProfileData(firstName, lastName);
+            profile = _GetUserProfileData(firstName, lastName);
             lock (m_userDataLock)
             {
                 // Now that it's locked again, ensure the lists have the correct data.
