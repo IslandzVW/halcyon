@@ -129,6 +129,9 @@ namespace OpenSim.Framework.Communications
 
         private Dictionary<String, UUID> customUserMap = new Dictionary<string, UUID>();
 
+        public const string CUSTOM_TYPE_DELETED = "DELETED";
+        private UUID m_deletedUserAccount = UUID.Zero;
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -144,26 +147,28 @@ namespace OpenSim.Framework.Communications
         public void InitConfig(UserConfig cfg)
         {
             // Currently we only support DeletedUserAccount from the XML config.
-            string customType = "DELETED";
             string deletedStr = cfg.DeletedUserAccount;
             if (deletedStr != String.Empty)
             {
                 UUID uuid = UUID.Zero;
                 if (UUID.TryParse(deletedStr.Trim(), out uuid))
                 {
-                    customUserMap.Add(customType, uuid);
+                    customUserMap.Add(CUSTOM_TYPE_DELETED, uuid);
+                    m_deletedUserAccount = uuid;
                 }
             }
         }
 
-        // Allow deleted users to be remapped to a different account.
-        public UUID RemapCustomProfile(UUID targetUUID, string customType)
-        {
-            string testKey = customType.Trim().ToUpper();
-            if ((testKey != String.Empty)  && customUserMap.ContainsKey(testKey))
-                return customUserMap[testKey];  // special customType override (DELETED)
+        public UUID DeletedUserAccount { get => m_deletedUserAccount; set => m_deletedUserAccount = value; }
 
-            return targetUUID;  // just pass this one through
+        public bool IsDeletedUserAccount(UserProfileData user)
+        {
+            return (user != null) && (user.ID == m_deletedUserAccount);
+        }
+
+        public bool IsCustomTypeDeleted(string customType)
+        {
+            return customType.Trim().ToUpper() == CUSTOM_TYPE_DELETED;
         }
 
         /// <summary>
