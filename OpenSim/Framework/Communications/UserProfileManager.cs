@@ -156,7 +156,17 @@ namespace OpenSim.Framework.Communications
             }
         }
 
-        public UUID DeletedUserAccount { get => m_deletedUserAccount; set => m_deletedUserAccount = value; }
+        public UUID DeletedUserAccount
+        {
+            get
+            {
+                return m_deletedUserAccount;
+            }
+            set
+            {
+                m_deletedUserAccount = value;
+            }
+        }
 
         public bool IsDeletedUserAccount(UserProfileData user)
         {
