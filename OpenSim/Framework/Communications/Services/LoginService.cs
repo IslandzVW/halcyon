@@ -818,7 +818,20 @@ namespace OpenSim.Framework.Communications.Services
         public virtual UserProfileData GetTheUser(string firstname, string lastname)
         {
             // Login service must always force a refresh here, since local/VM User server may have updated data on logout.
-            return m_userManager.GetUserProfile(firstname, lastname, true);
+            UserProfileData userProfile = m_userManager.GetUserProfile(firstname, lastname, true);
+            if (userProfile == null)
+                return null;
+
+            // Is this a deleted account?
+            if (m_userManager.IsCustomTypeDeleted(userProfile.CustomType))
+                return null;
+
+            // Is it a profile that was remapped from a deleted account?
+            if (m_userManager.IsDeletedUserAccount(userProfile))
+                if ((userProfile.FirstName != firstname) || (userProfile.SurName != lastname))
+                    return null;
+
+            return userProfile;
         }
 
         /// <summary>
