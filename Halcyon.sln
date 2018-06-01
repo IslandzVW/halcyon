@@ -136,6 +136,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSim.TestSuite", "OpenSi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSimProfile.Modules", "OpenSimProfile\Modules\OpenSimProfile.Modules.csproj", "{CD7723CB-0000-0000-0000-000000000000}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Root Files", "Root Files", "{7E0BFFF7-4E41-46E8-9414-DD25EEDE002C}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE = LICENSE
+		README.md = README.md
+		runprebuild.bat = runprebuild.bat
+		runprebuild.sh = runprebuild.sh
+		.appveyor.yml = .appveyor.yml
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
