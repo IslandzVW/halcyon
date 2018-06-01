@@ -57,7 +57,7 @@ for:
 after_build:
 - ps: |
     If (Test-Path "bin/OpenSim.Framework.Servers.dll") {
-      $halcyon_version = (ls bin/OpenSim.Framework.Servers.dll | % versioninfo).ProductVersion
+      $halcyon_version = (Get-ChildItem -Path bin/OpenSim.Framework.Servers.dll | % versioninfo).ProductVersion
       Update-AppveyorBuild -Version "0.$($halcyon_version.Substring(0, $halcyon_version.lastIndexOf('.')))-$env:APPVEYOR_BUILD_NUMBER"
     }
 - ps: Rename-Item -Path bin -NewName halcyon
