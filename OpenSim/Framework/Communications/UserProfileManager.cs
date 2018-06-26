@@ -127,8 +127,9 @@ namespace OpenSim.Framework.Communications
         private readonly Dictionary<string, CachedUserInfo> m_userInfoByName
             = new Dictionary<string, CachedUserInfo>();
 
-        public const string CUSTOM_TYPE_DELETED = "DELETED";
-        private UUID m_deletedUserAccount = UUID.Zero;
+        private string m_deletedCustomType = "DELETED";
+        private string m_deletedUsername = "Deleted";
+        private string m_deletedLastname = "Account";
 
         /// <summary>
         /// Constructor
@@ -145,37 +146,22 @@ namespace OpenSim.Framework.Communications
         public void InitConfig(UserConfig cfg)
         {
             // Currently we only support DeletedUserAccount from the XML config.
-            string deletedStr = cfg.DeletedUserAccount;
-            if (deletedStr != String.Empty)
-            {
-                UUID uuid = UUID.Zero;
-                if (UUID.TryParse(deletedStr.Trim(), out uuid))
-                {
-                    m_deletedUserAccount = uuid;
-                }
-            }
-        }
-
-        public UUID DeletedUserAccount
-        {
-            get
-            {
-                return m_deletedUserAccount;
-            }
-            set
-            {
-                m_deletedUserAccount = value;
-            }
-        }
-
-        public bool IsDeletedUserAccount(UserProfileData user)
-        {
-            return (user != null) && (user.ID == m_deletedUserAccount);
+            if (!String.IsNullOrWhiteSpace(cfg.DeletedCustomType))
+                m_deletedCustomType = cfg.DeletedCustomType;
+            if (!String.IsNullOrWhiteSpace(cfg.DeletedUsername))
+                m_deletedUsername = cfg.DeletedUsername;
+            if (!String.IsNullOrWhiteSpace(cfg.DeletedLastname))
+                m_deletedLastname = cfg.DeletedLastname;
         }
 
         public bool IsCustomTypeDeleted(string customType)
         {
-            return customType.Trim().ToUpper() == CUSTOM_TYPE_DELETED;
+            return customType.Trim().ToUpper() == m_deletedCustomType;
+        }
+
+        public bool IsDeletedName(string first, string last)
+        {
+            return (first.ToLower() == m_deletedUsername.ToLower()) && (last.ToLower() == m_deletedLastname.ToLower());
         }
 
         /// <summary>
@@ -309,25 +295,39 @@ namespace OpenSim.Framework.Communications
                 return null;
 
             // Continue on right away if it's not a deleted account.
-            if (profile.CustomType.Trim().ToUpper() != CUSTOM_TYPE_DELETED)
+            if (profile.CustomType.Trim().ToUpper() != m_deletedCustomType)
                 return profile;
 
             // Check if it's THE substitute deleted account
-            if (profile.ID == DeletedUserAccount)
-                return profile; // avoid infinite recursion
-
-            // Otherwise it's a special customType==DELETED and remap the UUID to the special account.
-            return GetUserProfile(DeletedUserAccount);
+            profile.FirstName = m_deletedUsername;
+            profile.SurName = m_deletedLastname;
+            return profile;
         }
 
         private UserProfileData _GetUserProfileData(UUID uuid)
         {
             UserProfileData profile = m_storage.GetUserProfileData(uuid);
+            if (IsCustomTypeDeleted(profile.CustomType))
+            {
+                profile.FirstName = m_deletedUsername;
+                profile.SurName = m_deletedLastname;
+                profile.AboutText = "";
+                profile.FirstLifeAboutText = "";
+                profile.FirstLifeImage = UUID.Zero;
+                profile.GodLevel = 0;
+                profile.Image = UUID.Zero;
+                profile.Partner = UUID.Zero;
+            }
+
             return _GetUserProfileData(profile);
         }
 
         private UserProfileData _GetUserProfileData(string firstName, string lastName)
         {
+            // Never return the profile for the deleted user name, there may even be many matches.
+            if (IsDeletedName(firstName, lastName))
+                return null;
+
             UserProfileData profile = m_storage.GetUserProfileData(firstName, lastName);
             return _GetUserProfileData(profile);
         }

@@ -47,7 +47,9 @@ namespace OpenSim.Framework
         public uint HttpPort = ConfigSettings.DefaultUserServerHttpPort;
         public bool HttpSSL = ConfigSettings.DefaultUserServerHttpSSL;
         public uint DefaultUserLevel = 0;
-        public string DeletedUserAccount = String.Empty;
+        public string DeletedCustomType = "DELETED";
+        public string DeletedUsername = "Deleted";
+        public string DeletedLastname = "Account";
 
         public string LibraryName = String.Empty;
         public string LibraryXmlfile = String.Empty;
@@ -216,8 +218,14 @@ namespace OpenSim.Framework
                 case "default_Y":
                     DefaultY = (uint) configuration_result;
                     break;
-                case "deleted_user_account":
-                    DeletedUserAccount = (string)configuration_result;
+                case "deleted_customtype":
+                    DeletedCustomType = (string)configuration_result;
+                    break;
+                case "deleted_username":
+                    DeletedUsername = (string)configuration_result;
+                    break;
+                case "deleted_lastname":
+                    DeletedLastname = (string)configuration_result;
                     break;
                 case "enable_hg_login":
                     EnableHGLogin = (bool)configuration_result;

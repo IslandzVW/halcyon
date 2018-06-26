@@ -826,11 +826,6 @@ namespace OpenSim.Framework.Communications.Services
             if (m_userManager.IsCustomTypeDeleted(userProfile.CustomType))
                 return null;
 
-            // Is it a profile that was remapped from a deleted account?
-            if (m_userManager.IsDeletedUserAccount(userProfile))
-                if ((userProfile.FirstName != firstname) || (userProfile.SurName != lastname))
-                    return null;
-
             return userProfile;
         }
 
