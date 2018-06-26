@@ -154,8 +154,12 @@ namespace OpenSim.Framework
                                                 "Known good region X", "1000", false);
             m_configMember.addConfigurationOption("default_Y", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Known good region Y", "1000", false);
-            m_configMember.addConfigurationOption("deleted_user_account", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
-                                                "Dummy account UUID for deleted users", "1f7d5b12-2241-48fb-8837-9124af453fb5", true);
+            m_configMember.addConfigurationOption("deleted_customtype", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "customType to recognize as deleted account, e.g. 'DELETED'", DeletedCustomType, true);
+            m_configMember.addConfigurationOption("deleted_username", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "Text to use to replace user profile first name for deleted users", DeletedUsername, true);
+            m_configMember.addConfigurationOption("deleted_lastname", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "Text to use to replace user profile last name for deleted users", DeletedLastname, true);
             m_configMember.addConfigurationOption("map_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                 "Map server URI?", String.Empty, false);
             m_configMember.addConfigurationOption("profile_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
