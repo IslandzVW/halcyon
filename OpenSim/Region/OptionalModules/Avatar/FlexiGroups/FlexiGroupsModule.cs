@@ -1049,11 +1049,14 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
             }
 
             UUID groupID = m_groupData.CreateGroup(grID, name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, remoteClient.AgentId);
-            if (groupID != UUID.Zero)
+            if (groupID == UUID.Zero)
             {
-                mm.ApplyGroupCreationCharge(remoteClient.AgentId);
-                remoteClient.SendCreateGroupReply(groupID, true, "Group created successfullly");
+                remoteClient.SendCreateGroupReply(groupID, true, "Server error attempting to create group (try again later).");
+                return UUID.Zero;
             }
+
+            mm.ApplyGroupCreationCharge(remoteClient.AgentId);
+            remoteClient.SendCreateGroupReply(groupID, true, "Group created successfully.");
 
             // Update the founder with new group information.
             SendAgentGroupDataUpdate(remoteClient, remoteClient.AgentId);
