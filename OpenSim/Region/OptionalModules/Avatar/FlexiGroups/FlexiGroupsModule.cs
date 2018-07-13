@@ -1034,14 +1034,32 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 remoteClient.SendCreateGroupReply(UUID.Zero, false, "A group with the same name already exists.");
                 return UUID.Zero;
             }
-            
-            UUID groupID = m_groupData.CreateGroup(grID, name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, remoteClient.AgentId);
 
-            remoteClient.SendCreateGroupReply(groupID, true, "Group created successfullly");
+            IScene scene = (remoteClient == null) ? m_sceneList[0] : remoteClient.Scene;
+            IMoneyModule mm = scene.RequestModuleInterface<IMoneyModule>();
+            if (mm == null)
+            {
+                remoteClient.SendAgentAlertMessage("Server configuration error - cannot create group without money module.", false);
+                return UUID.Zero;
+            }
+
+            if (!mm.GroupCreationCovered(remoteClient.AgentId)) {
+                remoteClient.SendAgentAlertMessage("Unable to create group. Insufficient funds.", false);
+                return UUID.Zero;
+            }
+
+            UUID groupID = m_groupData.CreateGroup(grID, name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, remoteClient.AgentId);
+            if (groupID == UUID.Zero)
+            {
+                remoteClient.SendCreateGroupReply(groupID, true, "Server error attempting to create group (try again later).");
+                return UUID.Zero;
+            }
+
+            mm.ApplyGroupCreationCharge(remoteClient.AgentId);
+            remoteClient.SendCreateGroupReply(groupID, true, "Group created successfully.");
 
             // Update the founder with new group information.
             SendAgentGroupDataUpdate(remoteClient, remoteClient.AgentId);
-
             return groupID;
         }
 

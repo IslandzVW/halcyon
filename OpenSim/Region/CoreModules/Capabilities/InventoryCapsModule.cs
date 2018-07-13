@@ -454,10 +454,15 @@ namespace OpenSim.Region.CoreModules.Capabilities
                 CalculateCosts(mm, asset_type, map, out uploadCost, out resourceCost);
 
                 IClientAPI client = m_Scene.SceneContents.GetControllingClient(m_agentID);
-                if (!mm.AmountCovered(client.AgentId, uploadCost))
+                if ((mm == null) || !mm.AmountCovered(client.AgentId, uploadCost))
                 {
                     if (client != null)
-                        client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
+                    {
+                        if (mm == null)
+                            client.SendAgentAlertMessage("Unable to upload asset. Missing money module.", false);
+                        else
+                            client.SendAgentAlertMessage("Unable to upload asset. Insufficient funds.", false);
+                    }
 
                     OSDMap errorResponse = new OSDMap();
                     errorResponse["uploader"] = String.Empty;
