@@ -1034,7 +1034,21 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 remoteClient.SendCreateGroupReply(UUID.Zero, false, "A group with the same name already exists.");
                 return UUID.Zero;
             }
-            
+
+            IScene scene = (remoteClient == null) ? m_sceneList[0] : remoteClient.Scene;
+            IMoneyModule mm = scene.RequestModuleInterface<IMoneyModule>();
+            if (mm == null)
+            {
+                remoteClient.SendAgentAlertMessage("Server configuration error - cannot create group without money module.", false);
+                return UUID.Zero;
+            }
+
+            if (!mm.GroupCreationCovered(remoteClient.AgentId)) {
+                remoteClient.SendAgentAlertMessage("Unable to create group. Insufficient funds.", false);
+                return UUID.Zero;
+            }
+            mm.ApplyGroupCreationCharge(remoteClient.AgentId);
+
             UUID groupID = m_groupData.CreateGroup(grID, name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, remoteClient.AgentId);
 
             remoteClient.SendCreateGroupReply(groupID, true, "Group created successfullly");

@@ -283,7 +283,6 @@ namespace OpenSim.Region.CoreModules.Avatar.Currency
 
         public bool GroupCreationCovered(UUID agentID)
         {
-            m_log.Debug("[MONEY]: In Group Creating, of GroupCreationCovered.");
             return AmountCovered(agentID, PriceGroupCreate);
         }
 
