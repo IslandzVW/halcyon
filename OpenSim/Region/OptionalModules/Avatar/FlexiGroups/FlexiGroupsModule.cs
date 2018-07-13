@@ -1047,15 +1047,16 @@ namespace OpenSim.Region.OptionalModules.Avatar.FlexiGroups
                 remoteClient.SendAgentAlertMessage("Unable to create group. Insufficient funds.", false);
                 return UUID.Zero;
             }
-            mm.ApplyGroupCreationCharge(remoteClient.AgentId);
 
             UUID groupID = m_groupData.CreateGroup(grID, name, charter, showInList, insigniaID, membershipFee, openEnrollment, allowPublish, maturePublish, remoteClient.AgentId);
-
-            remoteClient.SendCreateGroupReply(groupID, true, "Group created successfullly");
+            if (groupID != UUID.Zero)
+            {
+                mm.ApplyGroupCreationCharge(remoteClient.AgentId);
+                remoteClient.SendCreateGroupReply(groupID, true, "Group created successfullly");
+            }
 
             // Update the founder with new group information.
             SendAgentGroupDataUpdate(remoteClient, remoteClient.AgentId);
-
             return groupID;
         }
 
