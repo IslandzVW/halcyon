@@ -1673,7 +1673,7 @@ namespace OpenSim
         protected void SavePortableOar(string module, string[] cmdparams)
         {
             //saveportable oar <oar filename> [creator_uuid creator_uuid ...]
-            if (cmdparams.Length < 4)
+            if (cmdparams.Length < 3)
             {
                 m_console.Error("Usage: saveportable oar <oar filename> [creator_uuid creator_uuid ...]");
                 return;
