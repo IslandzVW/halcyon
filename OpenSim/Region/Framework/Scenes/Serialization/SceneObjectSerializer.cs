@@ -102,7 +102,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             catch (Exception e)
             {
                 m_log.ErrorFormat(
-                    "[SERIALIZER]: Deserialization of root part xml failed with {0}.  xml was {1}", e, xmlData);
+                    "[SERIALIZER]: Deserialization of root part xml failed with {0}.", e);
             }
             return null;
         }
@@ -178,7 +178,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             catch (Exception e)
             {
                 m_log.ErrorFormat(
-                    "[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, xmlData);
+                    "[SERIALIZER]: Deserialization of xml failed with {0}.", e);
             }
             return null;
         }      
@@ -294,7 +294,7 @@ namespace OpenSim.Region.Framework.Scenes.Serialization
             }
             catch (Exception e)
             {
-                m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.  xml was {1}", e, xmlData);
+                m_log.ErrorFormat("[SERIALIZER]: Deserialization of xml failed with {0}.", e);
             }
             return null;
         }         
