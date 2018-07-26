@@ -507,18 +507,21 @@ namespace OpenSim.Data.MySQL
                 {
                     using (ISimpleDB conn = _connFactory.GetConnection())
                     {
-                        string squery = "SELECT UUID,username,lastname FROM " + m_usersTableName +
+                        string squery = "SELECT UUID,username,lastname,customType FROM " + m_usersTableName +
                                 " WHERE username like ?first AND lastname like ?second LIMIT 100";
 
                         using (IDataReader reader = conn.QueryAndUseReader(squery, param))
                         {
                             while (reader.Read())
                             {
-                                AvatarPickerAvatar user = new AvatarPickerAvatar();
-                                user.AvatarID = new UUID(Convert.ToString(reader["UUID"]));
-                                user.firstName = (string)reader["username"];
-                                user.lastName = (string)reader["lastname"];
-                                returnlist.Add(user);
+                                if ((string)reader["customType"] != "DELETED")
+                                {
+                                    AvatarPickerAvatar user = new AvatarPickerAvatar();
+                                    user.AvatarID = new UUID(Convert.ToString(reader["UUID"]));
+                                    user.firstName = (string)reader["username"];
+                                    user.lastName = (string)reader["lastname"];
+                                    returnlist.Add(user);
+                                }
                             }
                         }
                     }
@@ -538,18 +541,21 @@ namespace OpenSim.Data.MySQL
 
                     using (ISimpleDB conn = _connFactory.GetConnection())
                     {
-                        string squery = "SELECT UUID,username,lastname FROM " + m_usersTableName +
+                        string squery = "SELECT UUID,username,lastname,customType FROM " + m_usersTableName +
                             " WHERE username like ?first OR lastname like ?first LIMIT 100";
 
                         using (IDataReader reader = conn.QueryAndUseReader(squery, param))
                         {
                             while (reader.Read())
                             {
-                                AvatarPickerAvatar user = new AvatarPickerAvatar();
-                                user.AvatarID = new UUID(Convert.ToString(reader["UUID"]));
-                                user.firstName = (string)reader["username"];
-                                user.lastName = (string)reader["lastname"];
-                                returnlist.Add(user);
+                                if ((string)reader["customType"] != "DELETED")
+                                {
+                                    AvatarPickerAvatar user = new AvatarPickerAvatar();
+                                    user.AvatarID = new UUID(Convert.ToString(reader["UUID"]));
+                                    user.firstName = (string)reader["username"];
+                                    user.lastName = (string)reader["lastname"];
+                                    returnlist.Add(user);
+                                }
                             }
                         }
                     }

@@ -31,6 +31,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using log4net;
+using Nini.Config;
 using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
@@ -126,6 +127,10 @@ namespace OpenSim.Framework.Communications
         private readonly Dictionary<string, CachedUserInfo> m_userInfoByName
             = new Dictionary<string, CachedUserInfo>();
 
+        private string m_deletedCustomType = "DELETED";
+        private string m_deletedUsername = "Deleted";
+        private string m_deletedLastname = "Account";
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -136,6 +141,27 @@ namespace OpenSim.Framework.Communications
             m_userInfoByUUID.OnItemPurged += _cachedUserInfo_OnItemPurged;
 
             m_isUserServer = System.Diagnostics.Process.GetCurrentProcess().ProcessName.Contains("OpenSim.Grid.UserServer");
+        }
+
+        public void InitConfig(UserConfig cfg)
+        {
+            // Currently we only support DeletedUserAccount from the XML config.
+            if (!String.IsNullOrWhiteSpace(cfg.DeletedCustomType))
+                m_deletedCustomType = cfg.DeletedCustomType;
+            if (!String.IsNullOrWhiteSpace(cfg.DeletedUsername))
+                m_deletedUsername = cfg.DeletedUsername;
+            if (!String.IsNullOrWhiteSpace(cfg.DeletedLastname))
+                m_deletedLastname = cfg.DeletedLastname;
+        }
+
+        public bool IsCustomTypeDeleted(string customType)
+        {
+            return customType.Trim().ToUpper() == m_deletedCustomType;
+        }
+
+        public bool IsDeletedName(string first, string last)
+        {
+            return (first.ToLower() == m_deletedUsername.ToLower()) && (last.ToLower() == m_deletedLastname.ToLower());
         }
 
         /// <summary>
@@ -263,6 +289,49 @@ namespace OpenSim.Framework.Communications
 
         private Dictionary<UUID, object> m_fetchLocks = new Dictionary<UUID, object>();
 
+        private UserProfileData _GetUserProfileData(UserProfileData profile)
+        {
+            if (profile == null)
+                return null;
+
+            // Continue on right away if it's not a deleted account.
+            if (profile.CustomType.Trim().ToUpper() != m_deletedCustomType)
+                return profile;
+
+            // Check if it's THE substitute deleted account
+            profile.FirstName = m_deletedUsername;
+            profile.SurName = m_deletedLastname;
+            return profile;
+        }
+
+        private UserProfileData _GetUserProfileData(UUID uuid)
+        {
+            UserProfileData profile = m_storage.GetUserProfileData(uuid);
+            if (IsCustomTypeDeleted(profile.CustomType))
+            {
+                profile.FirstName = m_deletedUsername;
+                profile.SurName = m_deletedLastname;
+                profile.AboutText = "";
+                profile.FirstLifeAboutText = "";
+                profile.FirstLifeImage = UUID.Zero;
+                profile.GodLevel = 0;
+                profile.Image = UUID.Zero;
+                profile.Partner = UUID.Zero;
+            }
+
+            return _GetUserProfileData(profile);
+        }
+
+        private UserProfileData _GetUserProfileData(string firstName, string lastName)
+        {
+            // Never return the profile for the deleted user name, there may even be many matches.
+            if (IsDeletedName(firstName, lastName))
+                return null;
+
+            UserProfileData profile = m_storage.GetUserProfileData(firstName, lastName);
+            return _GetUserProfileData(profile);
+        }
+
         public UserProfileData GetUserProfile(UUID uuid, bool forceRefresh)
         {
             if (uuid == UUID.Zero)
@@ -329,7 +398,7 @@ namespace OpenSim.Framework.Communications
                                 if (profile == null)
                                 {
                                     // still not found, get it from User service (or db if this is User).
-                                    profile = m_storage.GetUserProfileData(uuid);
+                                    profile = _GetUserProfileData(uuid);
                                     if (profile != null)
                                     {
                                         // Refresh agent data (possibly forced refresh)
@@ -396,7 +465,7 @@ namespace OpenSim.Framework.Communications
                 return GetUserProfile(uuid, forceRefresh);  // in case it has expired
 
             // Not cached, UUID unknown, fetch from storage/XMLRPC by name.
-            profile = m_storage.GetUserProfileData(firstName, lastName);
+            profile = _GetUserProfileData(firstName, lastName);
             lock (m_userDataLock)
             {
                 // Now that it's locked again, ensure the lists have the correct data.

@@ -47,6 +47,9 @@ namespace OpenSim.Framework
         public uint HttpPort = ConfigSettings.DefaultUserServerHttpPort;
         public bool HttpSSL = ConfigSettings.DefaultUserServerHttpSSL;
         public uint DefaultUserLevel = 0;
+        public string DeletedCustomType = "DELETED";
+        public string DeletedUsername = "Deleted";
+        public string DeletedLastname = "Account";
 
         public string LibraryName = String.Empty;
         public string LibraryXmlfile = String.Empty;
@@ -151,6 +154,12 @@ namespace OpenSim.Framework
                                                 "Known good region X", "1000", false);
             m_configMember.addConfigurationOption("default_Y", ConfigurationOption.ConfigurationTypes.TYPE_UINT32,
                                                 "Known good region Y", "1000", false);
+            m_configMember.addConfigurationOption("deleted_customtype", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "customType to recognize as deleted account, e.g. 'DELETED'", DeletedCustomType, true);
+            m_configMember.addConfigurationOption("deleted_username", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "Text to use to replace user profile first name for deleted users", DeletedUsername, true);
+            m_configMember.addConfigurationOption("deleted_lastname", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
+                                                "Text to use to replace user profile last name for deleted users", DeletedLastname, true);
             m_configMember.addConfigurationOption("map_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
                                                 "Map server URI?", String.Empty, false);
             m_configMember.addConfigurationOption("profile_server_uri", ConfigurationOption.ConfigurationTypes.TYPE_STRING,
@@ -212,6 +221,15 @@ namespace OpenSim.Framework
                     break;
                 case "default_Y":
                     DefaultY = (uint) configuration_result;
+                    break;
+                case "deleted_customtype":
+                    DeletedCustomType = (string)configuration_result;
+                    break;
+                case "deleted_username":
+                    DeletedUsername = (string)configuration_result;
+                    break;
+                case "deleted_lastname":
+                    DeletedLastname = (string)configuration_result;
                     break;
                 case "enable_hg_login":
                     EnableHGLogin = (bool)configuration_result;
