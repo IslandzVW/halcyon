@@ -12,8 +12,8 @@
 	  <DefaultClientScript>JScript</DefaultClientScript>
 	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
 	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
-	  <DelaySign>false</DelaySign>
-	  <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+	  
+	  <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
 	  <OutputPath>../../bin/</OutputPath>
 	  <OutputType>Exe</OutputType>
 	  <AppDesignerFolder></AppDesignerFolder>
@@ -64,45 +64,45 @@
 	  <PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
 	<ItemGroup>
-	  <Reference Include="LibreMetaverse" >
+	  <Reference Include="LibreMetaverse">
 		  <Name>LibreMetaverse</Name>
 		<HintPath>..\..\bin\LibreMetaverse.dll</HintPath>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="LibreMetaverse.StructuredData" >
+	  <Reference Include="LibreMetaverse.StructuredData">
 		  <Name>LibreMetaverse.StructuredData</Name>
 		<HintPath>..\..\bin\LibreMetaverse.StructuredData.dll</HintPath>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="LibreMetaverse.Types" >
+	  <Reference Include="LibreMetaverse.Types">
 		  <Name>LibreMetaverse.Types</Name>
 		<HintPath>..\..\bin\LibreMetaverse.Types.dll</HintPath>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="log4net" >
+	  <Reference Include="log4net">
 		  <Name>log4net</Name>
 		<HintPath>..\..\bin\log4net.dll</HintPath>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="Mono.Addins" >
+	  <Reference Include="Mono.Addins">
 		  <Name>Mono.Addins</Name>
 		<HintPath>..\..\bin\Mono.Addins.dll</HintPath>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="Nini" >
+	  <Reference Include="Nini">
 		  <Name>Nini</Name>
 		<HintPath>..\..\bin\Nini.dll</HintPath>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="System" >
+	  <Reference Include="System">
 		  <Name>System</Name>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="System.Xml" >
+	  <Reference Include="System.Xml">
 		  <Name>System.Xml</Name>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="XmlRpcCS" >
+	  <Reference Include="XmlRpcCS">
 		  <Name>XmlRpcCS</Name>
 		<HintPath>..\..\bin\XmlRpcCS.dll</HintPath>
 		<Private>False</Private>
