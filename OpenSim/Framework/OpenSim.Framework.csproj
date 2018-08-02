@@ -13,6 +13,7 @@
 	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
 	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
 	  <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+	  <OutputPath>..\..\bin\</OutputPath>
 	  <OutputType>Library</OutputType>
 	  <AppDesignerFolder></AppDesignerFolder>
 	  <RootNamespace>OpenSim.Framework</RootNamespace>
