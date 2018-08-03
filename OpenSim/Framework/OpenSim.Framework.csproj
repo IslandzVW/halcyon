@@ -164,7 +164,7 @@
 			<Name>System.Data</Name>
 		<Private>False</Private>
 		</Reference>
-		<Reference Include="System.DirectoryServices.AccountManagement" Condition=" '$OS' == 'Window_NT' ">
+		<Reference Include="System.DirectoryServices.AccountManagement" Condition=" '$(OS)' == 'Windows_NT' ">
 			<Name>System.DirectoryServices.AccountManagement</Name>
 		<Private>False</Private>
 		</Reference>
