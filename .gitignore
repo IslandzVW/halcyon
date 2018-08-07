@@ -253,3 +253,5 @@ bin4
 bin/blacklist.old
 bin/blacklist.txt
 *.pid
+
+OpenSim/Framework/Servers/VersionInfo\.cs

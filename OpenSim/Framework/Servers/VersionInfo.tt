@@ -1,3 +1,9 @@
+﻿<#@ output extension=".cs" #>
+<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
 /*
  * Copyright (c) InWorldz Halcyon Developers
  * Copyright (c) Contributors, http://opensimulator.org/
@@ -25,12 +31,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// THIS CS FILE IS AUTO GENERATED FROM A T4 TEMPLATE. MODIFY THE TEMPLATE, NOT THE CS FILE!
+
 using System.Reflection;
 
-// Using a * for the third number means auto-fill with the # days since 2000. Good for us here.
-// That only leaves us with two in front, so we'll divide the first number by 10.
-// i.e. 9.18.R in the assembly is presented as 0.9.18.R
-[assembly: AssemblyVersion("9.40.*")]
+// Version format is Major.Minor.Patch.Revision
+// Using the "build" number, the 3rd value, as patch is a bit non-standard from MS's perspective. However this is what https://semver.org/ uses it as.
+// Using day since 2000 is good for us here as we've always historically used the revision field as a unique ID value. Originally it was the SVN revision number, but since the switch to git that went away.
+[assembly: AssemblyVersion("0.9.40.<#= (int)DateTimeOffset.UtcNow.Subtract(new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalDays #>")]
 // Do not provide AssemblyFileVersion and it will be kept in sync.
 
 namespace OpenSim
@@ -56,11 +64,26 @@ namespace OpenSim
             if (_revision == null)
             {
                 Version ver = typeof(VersionInfo).Assembly.GetName().Version;
-                _version = String.Format("{0}.{1}.{2}", ver.Major/10, ver.Major % 10, ver.Minor);
+                _version = String.Format("{0}.{1}.{2}", ver.Major, ver.Minor, ver.Build);
                 _revision = ver.Build.ToString();
             }
             return _revision;
         }
+
+        /// <value>
+        /// This is the external interface version.  It is separate from the externally-visible version info.
+        /// 
+        /// This version number should be increased by 1 every time a code change makes the previous revision incompatible
+        /// with the new revision.  This will usually be due to interregion or grid facing interface changes.
+        /// 
+        /// Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
+        /// but not outright failure) do not need a version number increment.
+        /// 
+        /// Having this version number allows the grid service to reject connections from regions running a version
+        /// of the code that is too old. 
+        ///   
+        /// </value>
+        public readonly static int MajorInterfaceVersion = 4;
 
 
         public static string Revision
@@ -107,20 +130,5 @@ namespace OpenSim
                 return _version + "." + Revision;
             }
         }
-
-        /// <value>
-        /// This is the external interface version.  It is separate from the externally-visible version info.
-        /// 
-        /// This version number should be increased by 1 every time a code change makes the previous revision incompatible
-        /// with the new revision.  This will usually be due to interregion or grid facing interface changes.
-        /// 
-        /// Changes which are compatible with an older revision (e.g. older revisions experience degraded functionality
-        /// but not outright failure) do not need a version number increment.
-        /// 
-        /// Having this version number allows the grid service to reject connections from regions running a version
-        /// of the code that is too old. 
-        ///   
-        /// </value>
-        public readonly static int MajorInterfaceVersion = 4;
     }
 }
