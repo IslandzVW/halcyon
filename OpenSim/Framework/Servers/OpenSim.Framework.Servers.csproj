@@ -12,7 +12,6 @@
 	  <DefaultClientScript>JScript</DefaultClientScript>
 	  <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
 	  <DefaultTargetSchema>IE50</DefaultTargetSchema>
-	  <DelaySign>false</DelaySign>
 	  <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
 	  <OutputPath>../../../bin/</OutputPath>
 	  <OutputType>Library</OutputType>
@@ -22,6 +21,7 @@
 	  <StartArguments></StartArguments>
 	  <FileUpgradeFlags>
 	  </FileUpgradeFlags>
+		<PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
 	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
@@ -42,6 +42,7 @@
 	  <NoStdLib>False</NoStdLib>
 	  <NoWarn></NoWarn>
 	  <PlatformTarget>x64</PlatformTarget>
+		<PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
 	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
@@ -62,40 +63,45 @@
 	  <NoStdLib>False</NoStdLib>
 	  <NoWarn></NoWarn>
 	  <PlatformTarget>x64</PlatformTarget>
+		<PreBuildEventUseInBuild>true</PreBuildEventUseInBuild>
 	</PropertyGroup>
 	<ItemGroup>
-	  <Reference Include="LibreMetaverse.StructuredData" >
+	  <Reference Include="LibreMetaverse.StructuredData">
 		  <Name>LibreMetaverse.StructuredData</Name>
 		<HintPath>..\..\..\bin\LibreMetaverse.StructuredData.dll</HintPath>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="LibreMetaverse.Types" >
+	  <Reference Include="LibreMetaverse.Types">
 		  <Name>LibreMetaverse.Types</Name>
 		<HintPath>..\..\..\bin\LibreMetaverse.Types.dll</HintPath>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="log4net" >
+	  <Reference Include="log4net">
 		  <Name>log4net</Name>
 		<HintPath>..\..\..\bin\log4net.dll</HintPath>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="Nini" >
+	  <Reference Include="Nini">
 		  <Name>Nini</Name>
 		<HintPath>..\..\..\bin\Nini.dll</HintPath>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="System" >
+	  <Reference Include="System">
 		  <Name>System</Name>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="System.Xml" >
+	  <Reference Include="System.Xml">
 		  <Name>System.Xml</Name>
 		<Private>False</Private>
 	  </Reference>
-	  <Reference Include="XmlRpcCS" >
+	  <Reference Include="XmlRpcCS">
 		  <Name>XmlRpcCS</Name>
 		<HintPath>..\..\..\bin\XmlRpcCS.dll</HintPath>
 		<Private>False</Private>
+	  </Reference>
+	  <Reference Include="Mono.TextTemplating">
+	    <!-- If this gets updated, be sure to update the PreBuildEvent. -->
+	    <HintPath>..\..\..\packages\Mono.TextTemplating.1.3.1\lib\net45\Mono.TextTemplating.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
@@ -144,9 +150,15 @@
 		<SubType>Code</SubType>
 	  </Compile>
 	</ItemGroup>
+	<ItemGroup>
+	  <None Include="VersionInfo.tt" />
+	  <None Include="packages.config" />
+	</ItemGroup>
 	<Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 	<PropertyGroup>
+			<!-- MS's T4 template engine requires copying around some DLLS. Meh, I'll just import the Mono based unit - I know it works on Linux. -->
 	  <PreBuildEvent>
+			$(SolutionDir)packages\Mono.TextTemplating.1.3.1\tools\TextTransform.exe -o $(ProjectDir)VersionInfo.cs $(ProjectDir)VersionInfo.tt
 	  </PreBuildEvent>
 	  <PostBuildEvent>
 	  </PostBuildEvent>
