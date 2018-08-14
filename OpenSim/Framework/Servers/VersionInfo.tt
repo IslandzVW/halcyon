@@ -38,7 +38,7 @@ using System.Reflection;
 // Version format is Major.Minor.Patch.Revision
 // Using the "build" number, the 3rd value, as patch is a bit non-standard from MS's perspective. However this is what https://semver.org/ uses it as.
 // Using day since 2000 is good for us here as we've always historically used the revision field as a unique ID value. Originally it was the SVN revision number, but since the switch to git that went away.
-[assembly: AssemblyVersion("0.9.40.<#= (int)DateTimeOffset.UtcNow.Subtract(new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalDays #>")]
+[assembly: AssemblyVersion("0.9.41.<#= (int)DateTimeOffset.UtcNow.Subtract(new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero)).TotalDays #>")]
 // Do not provide AssemblyFileVersion and it will be kept in sync.
 
 namespace OpenSim
