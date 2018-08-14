@@ -526,6 +526,8 @@ namespace OpenSim.Region.CoreModules.World.Archiver
             currentRegionSettings.UseEstateSun = loadedRegionSettings.UseEstateSun;
             currentRegionSettings.WaterHeight = loadedRegionSettings.WaterHeight;
 
+            currentRegionSettings.Save();
+
             IEstateModule estateModule = m_scene.RequestModuleInterface<IEstateModule>();
             estateModule.sendRegionHandshakeToAll();
 
