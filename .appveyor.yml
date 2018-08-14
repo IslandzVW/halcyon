@@ -69,3 +69,13 @@ artifacts:
 - path: halcyon
   name: Halcyon-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH)-$(EDITION)
   type: zip
+
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: "CfI4VUu86RwI9MC8YoMfj9PJRiyoVkwD8AAyiUgKXpPU32Zw"
+  artifact: Halcyon-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH)-$(EDITION)
+  draft: true
+  prerelease: false
+  on:
+    APPVEYOR_REPO_TAG: true
